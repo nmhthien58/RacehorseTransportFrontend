@@ -1,0 +1,98 @@
+import { Routes, Route, Navigate } from 'react-router-dom';
+import PrivateRoute from './PrivateRoute';
+import { ROUTES } from './routes';
+import { ROLES } from '@utils/constants';
+
+// Layouts
+import MainLayout from '@layouts/MainLayout';
+import AuthLayout from '@layouts/AuthLayout';
+
+// Auth pages
+import LoginPage from '@features/auth/pages/LoginPage';
+import RegisterPage from '@features/auth/pages/RegisterPage';
+import VerifyEmailPage from '@features/auth/pages/VerifyEmailPage';
+import ForgotPasswordPage from '@features/auth/pages/ForgotPasswordPage';
+import VerifyCodePage from '@features/auth/pages/VerifyCodePage';
+import ResetPasswordPage from '@features/auth/pages/ResetPasswordPage';
+import ForbiddenPage from '@features/auth/pages/ForbiddenPage';
+import NotFoundPage from '@features/auth/pages/NotFoundPage';
+
+// Customer pages
+import CustomerDashboard from '@features/customer/pages/DashboardPage';
+import CustomerBookings from '@features/customer/pages/BookingsPage';
+import CustomerHorses from '@features/customer/pages/HorsesPage';
+
+// Manager pages
+import ManagerDashboard from '@features/manager/pages/DashboardPage';
+import ManagerBookings from '@features/manager/pages/BookingsPage';
+
+// Specialist pages
+import SpecialistDashboard from '@features/specialist/pages/DashboardPage';
+
+// Coordinator pages
+import CoordinatorDashboard from '@features/coordinator/pages/DashboardPage';
+
+// Driver pages
+import DriverDashboard from '@features/driver/pages/DashboardPage';
+
+export default function AppRoutes() {
+  return (
+    <Routes>
+      {/* Public / Auth */}
+      <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.LOGIN} replace />} />
+
+      {/* Auth layout chứa carousel ảnh 30s không reload */}
+      <Route element={<AuthLayout />}>
+        <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+        <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+        <Route path={ROUTES.VERIFY_EMAIL} element={<VerifyEmailPage />} />
+        <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
+        <Route path={ROUTES.VERIFY_CODE} element={<VerifyCodePage />} />
+        <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
+      </Route>
+
+      <Route path={ROUTES.FORBIDDEN} element={<ForbiddenPage />} />
+
+      {/* Customer */}
+      <Route element={<PrivateRoute allowedRoles={[ROLES.CUSTOMER]} />}>
+        <Route element={<MainLayout />}>
+          <Route path={ROUTES.CUSTOMER_DASHBOARD} element={<CustomerDashboard />} />
+          <Route path={ROUTES.CUSTOMER_BOOKINGS} element={<CustomerBookings />} />
+          <Route path={ROUTES.CUSTOMER_HORSES} element={<CustomerHorses />} />
+        </Route>
+      </Route>
+
+      {/* Manager */}
+      <Route element={<PrivateRoute allowedRoles={[ROLES.MANAGER]} />}>
+        <Route element={<MainLayout />}>
+          <Route path={ROUTES.MANAGER_DASHBOARD} element={<ManagerDashboard />} />
+          <Route path={ROUTES.MANAGER_BOOKINGS} element={<ManagerBookings />} />
+        </Route>
+      </Route>
+
+      {/* Specialist */}
+      <Route element={<PrivateRoute allowedRoles={[ROLES.SPECIALIST]} />}>
+        <Route element={<MainLayout />}>
+          <Route path={ROUTES.SPECIALIST_DASHBOARD} element={<SpecialistDashboard />} />
+        </Route>
+      </Route>
+
+      {/* Coordinator */}
+      <Route element={<PrivateRoute allowedRoles={[ROLES.COORDINATOR]} />}>
+        <Route element={<MainLayout />}>
+          <Route path={ROUTES.COORDINATOR_DASHBOARD} element={<CoordinatorDashboard />} />
+        </Route>
+      </Route>
+
+      {/* Driver */}
+      <Route element={<PrivateRoute allowedRoles={[ROLES.DRIVER]} />}>
+        <Route element={<MainLayout />}>
+          <Route path={ROUTES.DRIVER_DASHBOARD} element={<DriverDashboard />} />
+        </Route>
+      </Route>
+
+      {/* 404 */}
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
+  );
+}

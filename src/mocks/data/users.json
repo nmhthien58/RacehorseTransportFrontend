@@ -1,0 +1,47 @@
+[
+  {
+    "UserID": 1,
+    "FullName": "Trần Quốc Bảo",
+    "Email": "manager@test.com",
+    "PhoneNumber": "+84912000001",
+    "Role": "LogisticsManager",
+    "IsActive": true,
+    "CreatedAt": "2026-01-01T00:00:00Z"
+  },
+  {
+    "UserID": 2,
+    "FullName": "Nguyễn Thị Mai",
+    "Email": "specialist@test.com",
+    "PhoneNumber": "+84912000002",
+    "Role": "TransportSpecialist",
+    "IsActive": true,
+    "CreatedAt": "2026-01-01T00:00:00Z"
+  },
+  {
+    "UserID": 3,
+    "FullName": "Lê Hoàng Nam",
+    "Email": "coordinator@test.com",
+    "PhoneNumber": "+84912000003",
+    "Role": "FleetCoordinator",
+    "IsActive": true,
+    "CreatedAt": "2026-01-01T00:00:00Z"
+  },
+  {
+    "UserID": 4,
+    "FullName": "Phạm Văn Đức",
+    "Email": "driver@test.com",
+    "PhoneNumber": "+84912000004",
+    "Role": "DriverEscort",
+    "IsActive": true,
+    "CreatedAt": "2026-01-01T00:00:00Z"
+  },
+  {
+    "UserID": 5,
+    "FullName": "Jane Smith",
+    "Email": "customer@test.com",
+    "PhoneNumber": "+84988111222",
+    "Role": "Customer",
+    "IsActive": true,
+    "CreatedAt": "2026-01-01T00:00:00Z"
+  }
+]

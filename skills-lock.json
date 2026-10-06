@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "skills": {
+    "forms-validation": {
+      "source": "omer-metin/skills-for-antigravity",
+      "sourceType": "github",
+      "skillPath": "skills/forms-validation/SKILL.md",
+      "computedHash": "8a083f6a8d2758aa51289659e7080b17773774525d29765dfce9f331b0f9d537"
+    },
+    "frontend-code-review": {
+      "source": "danielteles/awesome-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-code-review/SKILL.md",
+      "computedHash": "7e038044a7f8bbc7f41bfc772966aa16a96e79fa538be026d6e9d72bfc6a4647"
+    },
+    "frontend-developer": {
+      "source": "cappyeo/antigravity-kit",
+      "sourceType": "github",
+      "skillPath": ".agent/skills/frontend-developer/SKILL.md",
+      "computedHash": "184e8aa8872d67ab01753e2faefa0a7c876f6b33c1334ef5825caeea126f638d"
+    },
+    "react-ant-patterns": {
+      "source": "Cosmian/kms",
+      "sourceType": "github",
+      "skillPath": ".github/skills/react-ant-patterns/SKILL.md",
+      "computedHash": "6dc605f659449d5122798cc718c8de89a543085812bfdb67dcf2b1610fbc6de5"
+    },
+    "systematic-debugging": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/systematic-debugging/SKILL.md",
+      "computedHash": "a068447aa5ea14badc62eef51da09f6cdb8d6ecfe06c3acfa07419a3da8ccaea"
+    },
+    "zustand-store-ts": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/zustand-store-ts/SKILL.md",
+      "computedHash": "bb054aa44998e737e573568b8c7f9a3ef481e5d40bd590f781c0c4eabe95e267"
+    }
+  }
+}

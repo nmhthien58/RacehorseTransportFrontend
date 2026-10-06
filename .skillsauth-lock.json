@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-04T15:09:40.315Z",
+  "skills": {
+    "vuralserhat86-react-expert": {
+      "slug": "vuralserhat86-react-expert",
+      "name": "skills/react_expert",
+      "repoOwner": "vuralserhat86",
+      "repoName": "antigravity-agentic-skills",
+      "version": "1.0.0",
+      "sha": "78873262f642bb60cacf444c90992c02bb939128",
+      "description": "---\nname: react_expert\nrouter_kit: FullStackKit\ndescription: React specialist for production-grade web applications. Invoke for component architecture, hooks, state management, Server Components, performance. Keywords: React, JSX, hooks, useState, useEffect, use(), Suspense, RSC.\ntriggers:\n  - React\n  - JSX\n  - hooks\n  - useState\n  - useEffect\n  - useContext\n  - Server Components\n  - React 19\n  - Suspense\n  - TanStack Query\n  - Redux\n  - Zustand\n  - component\n  - frontend\nrole: specialist\nscope:",
+      "installedAt": "2026-10-04T15:09:40.315Z",
+      "updatedAt": "2026-10-04T15:09:40.315Z",
+      "agents": [
+        "antigravity",
+        "claude-code",
+        "codex",
+        "gemini-cli",
+        "github-copilot",
+        "qwen-code"
+      ],
+      "scope": "local",
+      "paths": {
+        "antigravity": ".agents/skills/vuralserhat86-react-expert/SKILL.md",
+        "claude-code": ".claude/skills/vuralserhat86-react-expert/SKILL.md",
+        "codex": ".agents/skills/vuralserhat86-react-expert/SKILL.md",
+        "gemini-cli": ".agents/skills/vuralserhat86-react-expert/SKILL.md",
+        "github-copilot": ".agents/skills/vuralserhat86-react-expert/SKILL.md",
+        "qwen-code": ".qwen/skills/vuralserhat86-react-expert/SKILL.md"
+      }
+    }
+  }
+}

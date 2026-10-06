@@ -1,0 +1,24 @@
+[
+  {
+    "DossierID": 1,
+    "DossierCode": "DOS-2026-0001",
+    "BookingHorseID": 1,
+    "SpecialistUserID": 2,
+    "Status": "Cleared",
+    "ClearanceNumber": "VET-CERT-VN-CN-2026-001",
+    "IssueReason": null,
+    "ClearedAt": "2026-09-30T15:00:00Z",
+    "CreatedAt": "2026-09-30T10:00:00Z"
+  },
+  {
+    "DossierID": 2,
+    "DossierCode": "DOS-2026-0002",
+    "BookingHorseID": 2,
+    "SpecialistUserID": 2,
+    "Status": "AwaitingDocs",
+    "ClearanceNumber": null,
+    "IssueReason": null,
+    "ClearedAt": null,
+    "CreatedAt": "2026-09-30T10:00:00Z"
+  }
+]

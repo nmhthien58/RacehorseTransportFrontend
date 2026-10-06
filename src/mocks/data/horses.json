@@ -1,0 +1,32 @@
+[
+  {
+    "HorseID": 1,
+    "OwnerUserID": 5,
+    "Name": "Red Flash",
+    "MicrochipNumber": "982000412345671",
+    "PassportNumber": "FEI-VN-2023-01",
+    "Breed": "Thoroughbred",
+    "Gender": "Stallion",
+    "DateOfBirth": "2020-04-15",
+    "Color": "Hồng sắc",
+    "SpecialCareRequirements": "Cần lót đệm rơm dày, nhiệt độ cabin 16-19°C",
+    "PhotoUrl": null,
+    "IsActive": true,
+    "CreatedAt": "2026-01-01T00:00:00Z"
+  },
+  {
+    "HorseID": 2,
+    "OwnerUserID": 5,
+    "Name": "Golden Pegasus",
+    "MicrochipNumber": "982000412345672",
+    "PassportNumber": "FEI-VN-2023-02",
+    "Breed": "Thoroughbred",
+    "Gender": "Mare",
+    "DateOfBirth": "2021-03-10",
+    "Color": "Bạch sắc",
+    "SpecialCareRequirements": "Dễ say xe nhẹ, cần treo bao cỏ tươi",
+    "PhotoUrl": null,
+    "IsActive": true,
+    "CreatedAt": "2026-01-01T00:00:00Z"
+  }
+]

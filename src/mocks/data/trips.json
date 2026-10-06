@@ -1,0 +1,29 @@
+[
+  {
+    "TripID": 1,
+    "TripCode": "TRP-2026-0001",
+    "BookingID": 1,
+    "VehicleID": 1,
+    "DriverID": 4,
+    "EscortID": 4,
+    "PlannedByUserID": 3,
+    "ApprovedByUserID": 1,
+    "ApprovedAt": "2026-09-30T09:30:00Z",
+    "PlanRejectionCount": 0,
+    "PlanRejectionReason": null,
+    "PlannedStartDate": "2026-10-01T06:00:00+07:00",
+    "PlannedEndDate": "2026-10-02T18:00:00+08:00",
+    "ActualStartDate": "2026-10-01T06:30:00+07:00",
+    "ActualEndDate": null,
+    "PlannedCost": 4200.0,
+    "ActualCost": 0.0,
+    "OverallStatus": "InTransit",
+    "DelayMinutes": 0,
+    "OnTimeStatus": "OnTime",
+    "KPIScore": 100.0,
+    "ClosedByUserID": null,
+    "ClosedAt": null,
+    "ExecutiveRemarks": null,
+    "CreatedAt": "2026-09-30T08:00:00Z"
+  }
+]

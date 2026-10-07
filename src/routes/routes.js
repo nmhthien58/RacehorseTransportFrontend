@@ -13,6 +13,7 @@ export const ROUTES = {
   // Customer
   CUSTOMER_DASHBOARD: '/customer/dashboard',
   CUSTOMER_HORSES: '/customer/horses',
+  CUSTOMER_HORSE_NEW: '/customer/horses/new',
   CUSTOMER_HORSE_DETAIL: '/customer/horses/:id',
   CUSTOMER_BOOKINGS: '/customer/bookings',
   CUSTOMER_BOOKING_NEW: '/customer/bookings/new',
@@ -20,6 +21,7 @@ export const ROUTES = {
   CUSTOMER_TRIPS: '/customer/trips',
   CUSTOMER_MESSAGES: '/customer/messages',
   CUSTOMER_PROFILE: '/customer/profile',
+  CUSTOMER_SETTINGS: '/customer/settings',
 
   // Manager
   MANAGER_DASHBOARD: '/manager/dashboard',

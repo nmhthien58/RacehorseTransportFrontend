@@ -11,7 +11,8 @@
     "back": "Back",
     "next": "Next",
     "submit": "Submit",
-    "close": "Close"
+    "close": "Close",
+    "detail": "Details"
   },
   "auth": {
     "login": "Login",
@@ -122,13 +123,70 @@
   "horses": {
     "title": "My Horses",
     "subtitle": "Manage racehorse identification, microchips, and passports",
+    "addNewTitle": "Add a New Horse",
+    "addNewSubtitle": "Register horse identification, microchip number, FEI passport, and veterinary care profile",
+    "myHorsesTitle": "My Horses List",
+    "myHorsesSubtitle": "Manage your racehorses, track biometric microchips, and monitor health passports",
+    "detailTitle": "Horse Profile Details",
+    "detailSubtitle": "Biometric identification, passports, and verified veterinary health records",
+    "viewAction": "View",
+    "yearsOld": "years old",
+    "notFound": "Horse profile not found",
+    "columns": {
+      "name": "Horse Name",
+      "breed": "Breed",
+      "age": "Age",
+      "microchip": "Microchip",
+      "health": "Health Status",
+      "action": "Action"
+    },
+    "tabs": {
+      "general": "General Information",
+      "vetRecords": "Veterinary Records",
+      "tripHistory": "Transport History"
+    },
+    "healthOptions": {
+      "excellent": "Excellent",
+      "good": "Good",
+      "attention": "Attention"
+    },
+    "listTitle": "Stable Fleet & Horses",
+    "listSubtitle": "Manage horse profiles, health risk tags, and transport readiness",
     "add": "Add New Horse",
+    "saveHorse": "Save Horse Profile",
     "edit": "Edit Horse",
     "delete": "Delete Profile",
     "deleteConfirm": "Are you sure you want to delete this horse profile?",
     "deleteSuccess": "Horse profile deleted successfully",
     "createSuccess": "Horse profile created successfully",
+    "createFailed": "Failed to create horse profile, please try again",
+    "modalSuccessTitle": "Horse Profile Created Successfully!",
+    "modalSuccessSubtitle": "The profile for {{name}} has been safely added to your stable.",
+    "backToList": "Back to Horses",
+    "addAnother": "Add Another Horse",
     "updateSuccess": "Horse profile updated successfully",
+    "emptyText": "No horses in your stable yet",
+    "addNow": "Add Your First Horse",
+    "viewProfile": "View Profile",
+    "vetRecords": "Vet Records",
+    "noColorDesc": "No color or markings specified",
+    "photoPreviewTitle": "Identification Photo Preview",
+    "photoPreviewHint": "Photo will be displayed on profile card and transport dossier",
+    "sections": {
+      "basicInfo": "Basic Identification",
+      "basicInfoDesc": "Enter biological identification and legal transport passport details",
+      "specialCare": "Special Care & Veterinary Profile",
+      "specialCareDesc": "Bedding preferences, motion sickness, cabin climate, and health handling notes"
+    },
+    "stats": {
+      "totalHorses": "Total Horses",
+      "docsComplete": "Docs Complete",
+      "needAttention": "Need Attention"
+    },
+    "views": {
+      "grid": "Grid View",
+      "table": "Table View"
+    },
     "fields": {
       "name": "Horse Name",
       "breed": "Breed",
@@ -136,9 +194,20 @@
       "dob": "Date of Birth",
       "microchip": "Microchip Number",
       "passport": "Passport Number",
-      "color": "Color",
+      "color": "Color / Markings",
+      "photoUrl": "Photo URL",
       "specialCare": "Special Care",
       "status": "Status"
+    },
+    "placeholders": {
+      "name": "e.g. Midnight Gunner, Red Flash",
+      "breed": "Select horse breed",
+      "dob": "Select date of birth",
+      "color": "e.g. Dark Bay, Chestnut, Grey...",
+      "microchip": "e.g. 985141008472910 (15-digit RFID code)",
+      "passport": "e.g. FEI-VN-2026-01, AQHA-5920184",
+      "photoUrl": "https://images.unsplash.com/...",
+      "specialCare": "Bedding straw preferences, electrolyte supplements, isolation requirements, cabin temperature 16-19°C..."
     },
     "genderOptions": {
       "stallion": "Stallion",
@@ -147,8 +216,14 @@
     },
     "validation": {
       "nameRequired": "Please enter horse name",
+      "nameMaxLength": "Horse name cannot exceed 100 characters",
+      "breedRequired": "Please select horse breed",
+      "genderRequired": "Please select horse gender",
+      "dobRequired": "Please select date of birth",
       "microchipRequired": "Please enter microchip number",
-      "breedRequired": "Please select or enter breed"
+      "microchipFormat": "Microchip number must be 9 to 30 alphanumeric characters",
+      "passportRequired": "Please enter passport number",
+      "passportMaxLength": "Passport number cannot exceed 50 characters"
     }
   },
   "dashboard": {
@@ -176,6 +251,131 @@
       "medium": "MEDIUM risk",
       "high": "HIGH risk",
       "critical": "CRITICAL risk"
+    }
+  },
+  "bookings": {
+    "title": "Transport Requests",
+    "subtitle": "Track quote approval, route planning, and dedicated fleet scheduling for your racehorses",
+    "addNew": "+ New Request",
+    "addNewTitle": "New Horse Transport Request",
+    "addNewSubtitle": "Complete 4 steps to get an instant cost estimate and connect with our transport specialist team",
+    "add": "New Request",
+    "createSuccess": "Transport request created successfully!",
+    "createFailed": "Failed to create transport request",
+    "modalSuccessTitle": "Request Posted Successfully!",
+    "modalSuccessSubtitle": "Transport request #{{code}} has been submitted to Logistics Management for route verification and quote approval.",
+    "backToList": "View Transport Requests",
+    "createAnother": "Create Another Request",
+    "stepWhereTitle": "Route & Location Information",
+    "stepWhereSubtitle": "Enter detailed pickup farm and destination delivery locations",
+    "stepWhatTitle": "Select Horses for Shipment",
+    "stepWhatSubtitle": "Select one or more horses from your stable and assign suitable stall classes",
+    "stepWhenTitle": "Transport Mode & Schedule",
+    "stepWhenSubtitle": "Select transportation mode, departure/arrival dates, and technical preferences",
+    "stepReviewTitle": "Review Details & Estimated Cost",
+    "stepReviewSubtitle": "Please verify all information before officially submitting to logistics dispatchers",
+    "submitRequest": "Submit Transport Request",
+    "noHorsesHint": "Please register horses in your stable before creating a transport request.",
+    "createdAt": "Created at",
+    "horseUnit": "horses",
+    "climateControlTag": "Climate Control",
+    "cancelConfirmTitle": "Cancel Transport Request?",
+    "cancelConfirmDesc": "Are you sure you want to cancel this transport request?",
+    "cancelRequest": "Cancel Request",
+    "cancelSuccess": "Transport request cancelled successfully",
+    "cancelFailed": "Failed to cancel transport request",
+    "detailTitle": "Transport Request Details",
+    "emptyTitle": "No transport requests found",
+    "emptyFilterHint": "No requests match your current filters",
+    "emptyCreateHint": "Create your first transport request to schedule specialized transit.",
+    "filterAllModes": "All Modes",
+    "searchPlaceholder": "Search by booking code, pickup/delivery address...",
+    "steps": {
+      "where": "Where",
+      "what": "What (Horses)",
+      "when": "When & Mode",
+      "review": "Review & Quote"
+    },
+    "modes": {
+      "ground": "Ground Transport (Specialized Rig)",
+      "groundDesc": "Air-ride suspension truck, VN - CN - TH corridor",
+      "air": "Air Transport (Air Stall Charter)",
+      "airDesc": "IATA LAR stall, direct international charter"
+    },
+    "options": {
+      "climateTitle": "Cabin Climate Control (16-19°C)",
+      "climateDesc": "Active cabin temperature control",
+      "expressTitle": "Express Dispatch Service",
+      "expressDesc": "Priority green lane customs, direct transit"
+    },
+    "fields": {
+      "bookingCode": "Booking Code",
+      "pickupLocation": "PICKUP LOCATION",
+      "pickupCountry": "Origin Country",
+      "pickupAddress": "Detailed Pickup Address",
+      "deliveryLocation": "DELIVERY LOCATION",
+      "dropoffCountry": "Destination Country",
+      "dropoffAddress": "Detailed Delivery Address",
+      "departureDate": "Estimated Departure Date",
+      "deliveryDate": "Estimated Delivery Date",
+      "totalHorses": "Total Horses",
+      "estimatedCost": "Estimated Cost"
+    },
+    "stats": {
+      "totalRequests": "Total Requests",
+      "pendingApproval": "Pending Approval",
+      "activeTrips": "Active / Approved"
+    },
+    "tabs": {
+      "all": "All",
+      "submitted": "Pending",
+      "active": "In Progress",
+      "completed": "Completed"
+    },
+    "validation": {
+      "pickupRequired": "Please enter pickup address",
+      "dropoffRequired": "Please enter delivery address",
+      "selectHorseRequired": "Please select at least 1 horse to continue"
+    }
+  },
+  "profile": {
+    "title": "Account Profile",
+    "subtitle": "Owner contact details, farm registration, and club memberships",
+    "fullName": "Full Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "club": "Racing Club / Stable",
+    "role": "System Role",
+    "address": "Contact Address",
+    "createdAt": "Member Since",
+    "status": "Account Status",
+    "edit": "Edit Profile",
+    "editDisabledHint": "Profile editing is currently being updated"
+  },
+  "settings": {
+    "title": "Account Settings",
+    "subtitle": "Manage automated notifications and security preferences",
+    "tabs": {
+      "notifications": "Notifications",
+      "security": "Security"
+    },
+    "notifications": {
+      "emailTrips": "Trip progress notifications via Email",
+      "emailTripsDesc": "Receive automatic email alerts on departure, checkpoint transit, and safe delivery.",
+      "smsAlerts": "Emergency & equine welfare SMS alerts",
+      "smsAlertsDesc": "Receive urgent SMS on route congestion, rerouting, or unusual biometric vital stats.",
+      "quoteApproval": "Transport quote approval notification",
+      "quoteApprovalDesc": "Instant alert when Logistics Management completes review and approves your booking price.",
+      "marketing": "Service newsletter & member promotions",
+      "marketingDesc": "Receive updates regarding new transport corridors, aircraft charters, and member discounts."
+    },
+    "security": {
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "twoFactor": "Two-Factor Authentication (2FA)",
+      "twoFactorDesc": "Protect your account with OTP sent via Authenticator app or SMS upon sign in.",
+      "saveSettings": "Save Security Settings"
     }
   }
 }

@@ -170,9 +170,26 @@ docs/glossary.md — Thuật ngữ nghiệp vụ (Booking, Dossier, Trip, ...).
 
 docs/workflow.md — Quy trình làm việc chi tiết theo phase.
 
-### Layout components
-- Layout components (Sidebar, Header) trong dự án dùng **Router hooks trực tiếp** (`useNavigate`, `useLocation`).
-- KHÔNG nhận props `currentPath`, `onNavigate` từ parent.
+### Về cải tiến UI khi Figma chưa hoàn hảo
+
+**ĐƯỢC PHÉP:**
+- Điều chỉnh `padding`, `margin`, `gap` nếu Figma không ghi số cụ thể.
+- Căn chỉnh lại vị trí element trong layout (align left/right/center).
+- Sắp xếp thứ tự nút Primary/Cancel theo convention (Primary phải, Cancel trái).
+- Thêm `size="large"` cho button chính nếu Figma không ghi size.
+
+**CẤM:**
+- Thêm element mới không có trong Figma (badge, tag, icon, tooltip...).
+- Bớt element có trong Figma.
+- Đổi màu ngoài theme `#F59E0B`.
+- Đổi font chữ.
+- Đổi vị trí các section trong layout.
+- Thêm animation, transition không có trong Figma.
+- Đổi component type (Button → Link, Table → Card...).
+
+**NẾU AGENT THẤY FIGMA THIẾU ELEMENT:**
+- PHẢI HỎI user trước khi thêm.
+- Format: "Figma không có [element X]. Tôi có nên thêm không? Lý do: [Y]."
 
 ### Field name — QUAN TRỌNG
 - **Field name trong types, mock data, component PHẢI dùng PascalCase** khớp DB schema.
@@ -180,3 +197,14 @@ docs/workflow.md — Quy trình làm việc chi tiết theo phase.
 - Khi BE chốt API:
   - Nếu BE trả PascalCase → giữ nguyên.
   - Nếu BE trả camelCase → viết transform layer ở `services/api.js` interceptor. **KHÔNG sửa types/mock/components.**
+
+### Về field name case (cập nhật)
+- Giữ PascalCase cho types, mock, components — khớp DB schema.
+- Khi BE chốt API:
+  - Nếu BE trả PascalCase → giữ nguyên.
+  - Nếu BE trả camelCase → dùng helper `toPascalCase` ở `src/utils/transform.js` (dùng lodash, recursive) áp dụng trong `api.js` interceptor. KHÔNG viết mapping thủ công.
+
+### Về data fetching
+- Dùng custom hook `useFetch` ở `src/hooks/useFetch.js` làm nền tảng.
+- Các hook riêng chỉ wrap `useFetch` 3-5 dòng, KHÔNG tự viết `useState` + `useEffect` lặp lại.
+- CẤM cài React Query/SWR.

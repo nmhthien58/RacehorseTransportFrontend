@@ -11,7 +11,8 @@
     "back": "Quay lại",
     "next": "Tiếp theo",
     "submit": "Gửi",
-    "close": "Đóng"
+    "close": "Đóng",
+    "detail": "Chi tiết"
   },
   "auth": {
     "login": "Đăng nhập",
@@ -122,13 +123,70 @@
   "horses": {
     "title": "Hồ sơ ngựa của tôi",
     "subtitle": "Quản lý thông tin định danh, vi mạch và hộ chiếu các cá thể ngựa đua",
+    "addNewTitle": "Thêm hồ sơ ngựa mới",
+    "addNewSubtitle": "Khai báo thông tin định danh, số vi mạch, hộ chiếu FEI và yêu cầu chăm sóc thú y",
+    "myHorsesTitle": "Danh sách ngựa của tôi",
+    "myHorsesSubtitle": "Quản lý danh sách ngựa đua, theo dõi số vi mạch sinh trắc học và lịch sử sức khỏe",
+    "detailTitle": "Hồ sơ chi tiết ngựa đua",
+    "detailSubtitle": "Thông tin nhận diện sinh trắc học, lý lịch thi đấu và hồ sơ kiểm dịch thú y",
+    "viewAction": "Xem",
+    "yearsOld": "tuổi",
+    "notFound": "Không tìm thấy thông tin cá thể ngựa",
+    "columns": {
+      "name": "Tên ngựa",
+      "breed": "Giống",
+      "age": "Tuổi",
+      "microchip": "Microchip",
+      "health": "Sức khỏe",
+      "action": "Action"
+    },
+    "tabs": {
+      "general": "Thông tin chung",
+      "vetRecords": "Hồ sơ thú y",
+      "tripHistory": "Lịch sử vận chuyển"
+    },
+    "healthOptions": {
+      "excellent": "Xuất sắc",
+      "good": "Khỏe mạnh",
+      "attention": "Cần theo dõi"
+    },
+    "listTitle": "Danh sách cá thể ngựa",
+    "listSubtitle": "Quản lý hồ sơ, thẻ rủi ro và tình trạng sẵn sàng vận chuyển",
     "add": "Thêm ngựa mới",
+    "saveHorse": "Lưu hồ sơ ngựa",
     "edit": "Chỉnh sửa thông tin",
     "delete": "Xóa hồ sơ",
     "deleteConfirm": "Bạn có chắc chắn muốn xóa hồ sơ ngựa này không?",
     "deleteSuccess": "Xóa hồ sơ ngựa thành công",
     "createSuccess": "Thêm hồ sơ ngựa thành công",
+    "createFailed": "Không thể tạo hồ sơ ngựa, vui lòng thử lại",
+    "modalSuccessTitle": "Thêm hồ sơ ngựa thành công!",
+    "modalSuccessSubtitle": "Hồ sơ của cá thể {{name}} đã được lưu trữ an toàn trong chuồng của bạn.",
+    "backToList": "Quay lại danh sách ngựa",
+    "addAnother": "Thêm tiếp cá thể khác",
     "updateSuccess": "Cập nhật hồ sơ ngựa thành công",
+    "emptyText": "Chưa có hồ sơ ngựa nào trong chuồng của bạn",
+    "addNow": "Thêm cá thể đầu tiên",
+    "viewProfile": "Xem hồ sơ",
+    "vetRecords": "Sổ thú y",
+    "noColorDesc": "Chưa có mô tả màu sắc và dấu hiệu nhận dạng",
+    "photoPreviewTitle": "Xem trước ảnh nhận diện",
+    "photoPreviewHint": "Ảnh sẽ hiển thị trên thẻ hồ sơ và tài liệu vận chuyển",
+    "sections": {
+      "basicInfo": "Thông tin định danh cơ bản",
+      "basicInfoDesc": "Nhập các thông tin nhận dạng sinh trắc học và hộ chiếu pháp lý của ngựa đua",
+      "specialCare": "Yêu cầu chăm sóc đặc biệt & Thú y",
+      "specialCareDesc": "Chế độ đệm lót, say xe, nhiệt độ cabin và các lưu ý thể trạng khi vận chuyển"
+    },
+    "stats": {
+      "totalHorses": "Tổng số ngựa",
+      "docsComplete": "Hồ sơ đủ giấy tờ",
+      "needAttention": "Cần chú ý / Rủi ro"
+    },
+    "views": {
+      "grid": "Lưới thẻ",
+      "table": "Bảng biểu"
+    },
     "fields": {
       "name": "Tên ngựa",
       "breed": "Giống ngựa",
@@ -137,8 +195,19 @@
       "microchip": "Số vi mạch",
       "passport": "Số hộ chiếu",
       "color": "Màu lông",
+      "photoUrl": "Ảnh nhận diện (URL)",
       "specialCare": "Chăm sóc đặc biệt",
       "status": "Trạng thái"
+    },
+    "placeholders": {
+      "name": "Ví dụ: Midnight Gunner, Red Flash",
+      "breed": "Chọn giống ngựa",
+      "dob": "Chọn ngày sinh",
+      "color": "Ví dụ: Dark Bay, Hồng sắc, Bạch sắc...",
+      "microchip": "Ví dụ: 985141008472910 (Mã RFID)",
+      "passport": "Ví dụ: FEI-VN-2026-01, AQHA-5920184",
+      "photoUrl": "https://images.unsplash.com/...",
+      "specialCare": "Ghi chú chế độ đệm rơm dày, bổ sung điện giải, cách ly với ngựa đực khác, nhiệt độ cabin 16-19°C..."
     },
     "genderOptions": {
       "stallion": "Ngựa đực (Stallion)",
@@ -147,8 +216,14 @@
     },
     "validation": {
       "nameRequired": "Vui lòng nhập tên ngựa",
-      "microchipRequired": "Vui lòng nhập số vi mạch",
-      "breedRequired": "Vui lòng chọn hoặc nhập giống ngựa"
+      "nameMaxLength": "Tên ngựa không được vượt quá 100 ký tự",
+      "breedRequired": "Vui lòng chọn hoặc nhập giống ngựa",
+      "genderRequired": "Vui lòng chọn giới tính ngựa",
+      "dobRequired": "Vui lòng chọn ngày sinh của ngựa",
+      "microchipRequired": "Vui lòng nhập số vi mạch sinh trắc học",
+      "microchipFormat": "Mã vi mạch phải gồm 9 đến 30 ký tự số hoặc chữ",
+      "passportRequired": "Vui lòng nhập số hộ chiếu vận chuyển",
+      "passportMaxLength": "Số hộ chiếu không được vượt quá 50 ký tự"
     }
   },
   "dashboard": {
@@ -176,6 +251,131 @@
       "medium": "Rủi ro trung bình",
       "high": "Rủi ro cao",
       "critical": "Rủi ro nguy cấp"
+    }
+  },
+  "bookings": {
+    "title": "Yêu cầu vận chuyển",
+    "subtitle": "Theo dõi tiến độ báo giá, phê duyệt và điều phối lộ trình vận chuyển ngựa của bạn",
+    "addNew": "+ Tạo yêu cầu mới",
+    "addNewTitle": "Tạo yêu cầu vận chuyển ngựa",
+    "addNewSubtitle": "Hoàn tất 4 bước để nhận báo giá chi tiết và kết nối đội ngũ vận chuyển chuyên nghiệp",
+    "add": "Tạo mới",
+    "createSuccess": "Tạo yêu cầu vận chuyển thành công!",
+    "createFailed": "Có lỗi xảy ra khi gửi yêu cầu vận chuyển",
+    "modalSuccessTitle": "Yêu cầu đã được gửi thành công!",
+    "modalSuccessSubtitle": "Đơn vận chuyển #{{code}} đã được gửi tới Ban quản lý Logistics để kiểm tra tuyến và phê duyệt báo giá.",
+    "backToList": "Xem danh sách yêu cầu",
+    "createAnother": "Tạo thêm yêu cầu mới",
+    "stepWhereTitle": "Thông tin lộ trình vận chuyển",
+    "stepWhereSubtitle": "Nhập chi tiết địa điểm nhận ngựa và địa điểm giao nhận tại đích đến",
+    "stepWhatTitle": "Chọn các cá thể ngựa tham gia chuyến đi",
+    "stepWhatSubtitle": "Chọn một hoặc nhiều con ngựa từ đàn của bạn và phân bổ hạng chuồng phù hợp",
+    "stepWhenTitle": "Phương thức vận chuyển & Thời gian",
+    "stepWhenSubtitle": "Chọn phương thức di chuyển, ngày giờ khởi hành và các tùy chọn bổ sung",
+    "stepReviewTitle": "Kiểm tra thông tin & Dự toán cước phí",
+    "stepReviewSubtitle": "Vui lòng xem lại chi tiết yêu cầu trước khi chính thức gửi đơn tới ban điều hành",
+    "submitRequest": "Gửi yêu cầu đặt chuyến",
+    "noHorsesHint": "Vui lòng thêm ngựa vào hồ sơ trước khi tạo đơn đặt chuyến.",
+    "createdAt": "Tạo ngày",
+    "horseUnit": "con",
+    "climateControlTag": "Điều hòa cabin",
+    "cancelConfirmTitle": "Hủy yêu cầu đặt chuyến?",
+    "cancelConfirmDesc": "Bạn có chắc chắn muốn hủy yêu cầu vận chuyển này không?",
+    "cancelRequest": "Hủy đơn",
+    "cancelSuccess": "Đã hủy yêu cầu vận chuyển thành công",
+    "cancelFailed": "Không thể hủy đơn vận chuyển",
+    "detailTitle": "Chi tiết đơn vận chuyển",
+    "emptyTitle": "Chưa có yêu cầu vận chuyển nào",
+    "emptyFilterHint": "Không tìm thấy yêu cầu phù hợp với bộ lọc",
+    "emptyCreateHint": "Hãy tạo yêu cầu vận chuyển đầu tiên để kết nối với mạng lưới chuồng xe chuyên dụng.",
+    "filterAllModes": "Mọi phương thức",
+    "searchPlaceholder": "Tìm kiếm mã đơn, địa chỉ đón/giao...",
+    "steps": {
+      "where": "Lộ trình",
+      "what": "Chọn ngựa",
+      "when": "Phương thức & Ngày",
+      "review": "Báo giá & Xác nhận"
+    },
+    "modes": {
+      "ground": "Đường bộ (Xe tải chuyên dụng)",
+      "groundDesc": "Xe thùng đệm khí, tuyến Việt - Trung - Thái",
+      "air": "Đường hàng không (Air Stall)",
+      "airDesc": "Khoang IATA LAR, bay thẳng quốc tế"
+    },
+    "options": {
+      "climateTitle": "Điều hòa nhiệt độ cabin (16-19°C)",
+      "climateDesc": "Kiểm soát nhiệt độ cabin",
+      "expressTitle": "Vận chuyển hỏa tốc (Express Dispatch)",
+      "expressDesc": "Thông quan ưu tiên, không ghép chuyến"
+    },
+    "fields": {
+      "bookingCode": "Mã đơn",
+      "pickupLocation": "Điểm đón",
+      "pickupCountry": "Quốc gia xuất phát",
+      "pickupAddress": "Địa chỉ đón chi tiết",
+      "deliveryLocation": "Điểm giao",
+      "dropoffCountry": "Quốc gia đến",
+      "dropoffAddress": "Địa chỉ giao chi tiết",
+      "departureDate": "Ngày xuất phát dự kiến",
+      "deliveryDate": "Ngày giao dự kiến tại đích",
+      "totalHorses": "Số lượng ngựa",
+      "estimatedCost": "Dự toán cước phí"
+    },
+    "stats": {
+      "totalRequests": "Tổng số yêu cầu",
+      "pendingApproval": "Chờ phê duyệt",
+      "activeTrips": "Đang triển khai / Đã duyệt"
+    },
+    "tabs": {
+      "all": "Tất cả",
+      "submitted": "Chờ duyệt",
+      "active": "Đang xử lý",
+      "completed": "Hoàn tất"
+    },
+    "validation": {
+      "pickupRequired": "Vui lòng nhập địa chỉ đón",
+      "dropoffRequired": "Vui lòng nhập địa chỉ giao",
+      "selectHorseRequired": "Vui lòng chọn ít nhất 1 cá thể ngựa để tiếp tục"
+    }
+  },
+  "profile": {
+    "title": "Hồ sơ tài khoản",
+    "subtitle": "Thông tin chủ sở hữu, thông tin liên lạc và tư cách thành viên câu lạc bộ đua ngựa",
+    "fullName": "Họ và tên",
+    "email": "Địa chỉ Email",
+    "phone": "Số điện thoại",
+    "club": "CLB / Trang trại",
+    "role": "Role (Vai trò)",
+    "address": "Địa chỉ liên hệ",
+    "createdAt": "Ngày gia nhập",
+    "status": "Trạng thái tài khoản",
+    "edit": "Chỉnh sửa hồ sơ",
+    "editDisabledHint": "Tính năng chỉnh sửa hồ sơ đang được cập nhật"
+  },
+  "settings": {
+    "title": "Cài đặt hệ thống",
+    "subtitle": "Quản lý tùy chọn thông báo tự động và cấu hình an toàn bảo mật tài khoản",
+    "tabs": {
+      "notifications": "Thông báo",
+      "security": "Bảo mật"
+    },
+    "notifications": {
+      "emailTrips": "Thông báo tiến độ chuyến đi qua Email",
+      "emailTripsDesc": "Nhận email thông báo tự động khi xe xuất phát, qua trạm kiểm soát hoặc đến đích an toàn.",
+      "smsAlerts": "Cảnh báo khẩn cấp & phúc lợi ngựa qua SMS",
+      "smsAlertsDesc": "Nhận tin nhắn SMS khẩn cấp khi có sự cố giao thông hoặc cảnh báo chỉ số sinh trắc học lạ.",
+      "quoteApproval": "Thông báo phê duyệt báo giá vận chuyển",
+      "quoteApprovalDesc": "Nhận thông báo ngay khi Ban Logistics hoàn tất kiểm tra lộ trình và duyệt báo giá cước.",
+      "marketing": "Bản tin cập nhật dịch vụ & ưu đãi định kỳ",
+      "marketingDesc": "Nhận thông tin về các tuyến bay chở ngựa mới, cải tiến chuồng xe và chính sách ưu đãi thành viên."
+    },
+    "security": {
+      "currentPassword": "Mật khẩu hiện tại",
+      "newPassword": "Mật khẩu mới",
+      "confirmPassword": "Xác nhận mật khẩu mới",
+      "twoFactor": "Xác thực hai yếu tố (2FA)",
+      "twoFactorDesc": "Bảo vệ tài khoản bằng mã OTP gửi về ứng dụng Authenticator hoặc tin nhắn SMS khi đăng nhập.",
+      "saveSettings": "Lưu cài đặt bảo mật"
     }
   }
 }

@@ -70,33 +70,19 @@ export default function CustomerDashboard() {
     (bk) => bk.Status === 'Submitted' || bk.Status === 'Approved',
   ).length;
 
-  // Dữ liệu hiển thị thẻ ngựa theo đúng thiết kế mẫu Figma
-  const displayHorses = [
-    {
-      id: horses[0]?.HorseID || 1,
-      name: horses[0]?.Name || 'Midnight Gunner',
-      breed: horses[0]?.Breed || 'Quarter Horse',
-      risk: 'CRITICAL risk',
-      riskBg: '#FCA5A5',
-      riskColor: '#7F1D1D',
-    },
-    {
-      id: horses[1]?.HorseID || 2,
-      name: horses[1]?.Name || 'Royal Duchess',
-      breed: horses[1]?.Breed || 'Thoroughbred',
-      risk: 'HIGH risk',
-      riskBg: '#FDE68A',
-      riskColor: '#78350F',
-    },
-    {
-      id: horses[2]?.HorseID || 3,
-      name: horses[2]?.Name || 'Lightning',
-      breed: horses[2]?.Breed || 'Thoroughbred',
-      risk: 'LOW risk',
-      riskBg: '#BBF7D0',
-      riskColor: '#14532D',
-    },
-  ];
+  // Dữ liệu hiển thị thẻ ngựa lấy động theo danh sách thực tế từ API
+  const displayHorses = horses.map((h, index) => {
+    const isCritical = index === 0;
+    const isHigh = index === 1;
+    return {
+      id: h.HorseID,
+      name: h.Name,
+      breed: h.Breed,
+      risk: isCritical ? 'CRITICAL risk' : isHigh ? 'HIGH risk' : 'LOW risk',
+      riskBg: isCritical ? '#FCA5A5' : isHigh ? '#FDE68A' : '#BBF7D0',
+      riskColor: isCritical ? '#7F1D1D' : isHigh ? '#78350F' : '#14532D',
+    };
+  });
 
   return (
     <div>
@@ -294,7 +280,7 @@ export default function CustomerDashboard() {
                   margin: '18px 0 6px 0',
                 }}
               >
-                {horses.length || 3}
+                {horses.length}
               </div>
               <div style={{ fontSize: 15, fontWeight: 500, color: '#475569' }}>
                 {t('dashboard.metrics.myHorses')}

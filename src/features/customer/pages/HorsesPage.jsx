@@ -4,44 +4,62 @@ import {
   Card,
   Col,
   DatePicker,
+  Empty,
+  Flex,
   Form,
   Input,
   Modal,
   Popconfirm,
   Row,
+  Segmented,
   Select,
   Space,
+  Spin,
   Tag,
+  Typography,
   message,
 } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
+  AppstoreOutlined,
+  BarsOutlined,
+  CheckCircleOutlined,
+  ExclamationCircleOutlined,
+  FireOutlined,
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
-import PageHeader from '@components/common/PageHeader';
+import PageHeader from '@components/layout/PageHeader';
 import DataTable from '@components/common/DataTable';
 import StatusTag from '@components/common/StatusTag';
+import HorseCard from '@features/customer/components/HorseCard';
 import horseService from '@services/horseService';
 import { useAuthStore } from '@features/auth/store/authStore';
+import { ROUTES } from '@routes/routes';
 
+const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 /**
  * Trang quản lý hồ sơ ngựa đua dành cho khách hàng (Customer)
+ * Tái hiện phong cách Frame 70:706 của Figma kết hợp linh hoạt Grid & Table view
+ *
  * @returns {JSX.Element}
  */
 export default function CustomerHorses() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   const [form] = Form.useForm();
 
   const [horses, setHorses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [viewMode, setViewMode] = useState('grid');
+  const [editModalVisible, setEditModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [editingHorse, setEditingHorse] = useState(null);
 
@@ -83,16 +101,14 @@ export default function CustomerHorses() {
   };
 
   /**
-   * Mở modal thêm ngựa mới
+   * Điều hướng sang trang thêm ngựa mới (/customer/horses/new)
    */
-  const handleOpenCreateModal = () => {
-    setEditingHorse(null);
-    form.resetFields();
-    setModalVisible(true);
+  const handleNavigateToAddHorse = () => {
+    navigate(ROUTES.CUSTOMER_HORSE_NEW);
   };
 
   /**
-   * Mở modal sửa thông tin ngựa
+   * Mở modal sửa thông tin nhanh
    * @param {import('@types/database').Horse} record
    */
   const handleOpenEditModal = (record) => {
@@ -107,22 +123,22 @@ export default function CustomerHorses() {
       Color: record.Color,
       SpecialCareRequirements: record.SpecialCareRequirements,
     });
-    setModalVisible(true);
+    setEditModalVisible(true);
   };
 
   /**
-   * Đóng modal và reset form
+   * Đóng modal chỉnh sửa
    */
-  const handleCloseModal = () => {
-    setModalVisible(false);
+  const handleCloseEditModal = () => {
+    setEditModalVisible(false);
     setEditingHorse(null);
     form.resetFields();
   };
 
   /**
-   * Xử lý submit form Thêm / Sửa
+   * Xử lý submit form Chỉnh sửa nhanh
    */
-  const handleFormSubmit = async (values) => {
+  const handleEditSubmit = async (values) => {
     try {
       setSubmitting(true);
       const payload = {
@@ -130,18 +146,14 @@ export default function CustomerHorses() {
         DateOfBirth: values.DateOfBirth
           ? values.DateOfBirth.format('YYYY-MM-DD')
           : null,
-        OwnerUserID: user?.UserID || 5,
       };
 
       if (editingHorse) {
         await horseService.updateHorse(editingHorse.HorseID, payload);
         message.success(t('horses.updateSuccess'));
-      } else {
-        await horseService.createHorse(payload);
-        message.success(t('horses.createSuccess'));
       }
 
-      handleCloseModal();
+      handleCloseEditModal();
       triggerReload();
     } catch {
       message.error(t('common.save'));
@@ -164,7 +176,16 @@ export default function CustomerHorses() {
     }
   };
 
-  // Cấu hình các cột của bảng danh sách
+  // Tính toán số liệu thống kê đầu trang theo Frame 70:706 của Figma
+  const totalCount = horses.length;
+  const docsCompleteCount = horses.filter(
+    (h) => h.PassportNumber && h.MicrochipNumber,
+  ).length;
+  const needAttentionCount = horses.filter(
+    (h) => !h.PassportNumber || (h.SpecialCareRequirements && h.SpecialCareRequirements.length > 20),
+  ).length;
+
+  // Cấu hình các cột của bảng danh sách khi chuyển qua Table View
   const columns = [
     {
       title: t('horses.fields.name'),
@@ -172,8 +193,8 @@ export default function CustomerHorses() {
       key: 'Name',
       render: (text) => (
         <Space size="small">
-          <span style={{ fontSize: 16 }}>🐴</span>
-          <strong style={{ color: '#1f2937' }}>{text}</strong>
+          <span style={{ fontSize: 18 }}>🐴</span>
+          <strong style={{ color: '#0f172a' }}>{text}</strong>
         </Space>
       ),
     },
@@ -200,9 +221,9 @@ export default function CustomerHorses() {
         <code
           style={{
             fontSize: 12,
-            background: '#f3f4f6',
-            padding: '2px 6px',
-            borderRadius: 4,
+            background: '#f1f5f9',
+            padding: '3px 8px',
+            borderRadius: 6,
           }}
         >
           {code || '-'}
@@ -261,34 +282,229 @@ export default function CustomerHorses() {
 
   return (
     <div>
+      {/* Tiêu đề trang + Nút Thêm ngựa mới dẫn tới /customer/horses/new */}
       <PageHeader
         title={t('horses.title')}
         subtitle={t('horses.subtitle')}
-        extra={
+        actions={
           <Button
             type="primary"
+            size="large"
             icon={<PlusOutlined />}
-            onClick={handleOpenCreateModal}
+            onClick={handleNavigateToAddHorse}
+            style={{
+              fontWeight: 700,
+              borderRadius: 9999,
+              height: 44,
+              padding: '0 24px',
+              backgroundColor: '#f59e0b',
+              borderColor: '#f59e0b',
+            }}
           >
             {t('horses.add')}
           </Button>
         }
       />
 
-      <Card styles={{ body: { padding: 0 } }}>
-        <DataTable
-          columns={columns}
-          dataSource={horses}
-          rowKey="HorseID"
-          loading={loading}
-        />
-      </Card>
+      {/* 3 THẺ THỐNG KÊ TỔNG QUAN THEO FIGMA FRAME 70:706 */}
+      <Row gutter={[20, 20]} style={{ marginBottom: 28 }}>
+        <Col xs={24} sm={8}>
+          <Card
+            bordered
+            style={{
+              borderRadius: 14,
+              borderColor: '#e2e8f0',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+            }}
+            styles={{ body: { padding: '20px 24px' } }}
+          >
+            <Flex justify="space-between" align="center">
+              <div>
+                <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>
+                  {t('horses.stats.totalHorses')}
+                </Text>
+                <Title level={2} style={{ margin: '4px 0 0', fontWeight: 800, color: '#0f172a' }}>
+                  {totalCount}
+                </Title>
+              </div>
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  backgroundColor: '#fef3c7',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#d97706',
+                  fontSize: 22,
+                }}
+              >
+                <FireOutlined />
+              </div>
+            </Flex>
+          </Card>
+        </Col>
 
-      {/* Modal Thêm / Chỉnh sửa thông tin ngựa */}
+        <Col xs={24} sm={8}>
+          <Card
+            bordered
+            style={{
+              borderRadius: 14,
+              borderColor: '#e2e8f0',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+            }}
+            styles={{ body: { padding: '20px 24px' } }}
+          >
+            <Flex justify="space-between" align="center">
+              <div>
+                <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>
+                  {t('horses.stats.docsComplete')}
+                </Text>
+                <Title level={2} style={{ margin: '4px 0 0', fontWeight: 800, color: '#10b981' }}>
+                  {docsCompleteCount}
+                </Title>
+              </div>
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  backgroundColor: '#dcfce7',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#10b981',
+                  fontSize: 22,
+                }}
+              >
+                <CheckCircleOutlined />
+              </div>
+            </Flex>
+          </Card>
+        </Col>
+
+        <Col xs={24} sm={8}>
+          <Card
+            bordered
+            style={{
+              borderRadius: 14,
+              borderColor: '#e2e8f0',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+            }}
+            styles={{ body: { padding: '20px 24px' } }}
+          >
+            <Flex justify="space-between" align="center">
+              <div>
+                <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>
+                  {t('horses.stats.needAttention')}
+                </Text>
+                <Title level={2} style={{ margin: '4px 0 0', fontWeight: 800, color: '#f59e0b' }}>
+                  {needAttentionCount}
+                </Title>
+              </div>
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  backgroundColor: '#fee2e2',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#ef4444',
+                  fontSize: 22,
+                }}
+              >
+                <ExclamationCircleOutlined />
+              </div>
+            </Flex>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* THANH ĐIỀU HƯỚNG CHUYỂN ĐỔI GIAO DIỆN (GRID vs TABLE) */}
+      <Flex justify="space-between" align="center" style={{ marginBottom: 20 }}>
+        <div>
+          <Title level={4} style={{ margin: 0, fontWeight: 700, color: '#0f172a' }}>
+            {t('horses.listTitle')}
+          </Title>
+          <Text type="secondary" style={{ fontSize: 13 }}>
+            {t('horses.listSubtitle')}
+          </Text>
+        </div>
+
+        <Segmented
+          value={viewMode}
+          onChange={setViewMode}
+          options={[
+            {
+              value: 'grid',
+              label: t('horses.views.grid'),
+              icon: <AppstoreOutlined />,
+            },
+            {
+              value: 'table',
+              label: t('horses.views.table'),
+              icon: <BarsOutlined />,
+            },
+          ]}
+        />
+      </Flex>
+
+      {/* NỘI DUNG HIỂN THỊ DANH SÁCH */}
+      {loading ? (
+        <Card style={{ textAlign: 'center', padding: '60px 0', borderRadius: 12 }}>
+          <Spin size="large" />
+          <Text type="secondary" style={{ display: 'block', marginTop: 16 }}>
+            {t('common.loading')}
+          </Text>
+        </Card>
+      ) : horses.length === 0 ? (
+        <Card style={{ padding: '60px 0', textAlign: 'center', borderRadius: 12 }}>
+          <Empty
+            description={t('horses.emptyText')}
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          >
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleNavigateToAddHorse}
+              style={{ backgroundColor: '#f59e0b', borderColor: '#f59e0b' }}
+            >
+              {t('horses.addNow')}
+            </Button>
+          </Empty>
+        </Card>
+      ) : viewMode === 'grid' ? (
+        <Row gutter={[20, 20]}>
+          {horses.map((horse) => (
+            <Col key={horse.HorseID} xs={24} sm={12} lg={8}>
+              <HorseCard
+                horse={horse}
+                onEdit={handleOpenEditModal}
+                onDelete={handleDeleteHorse}
+                onView={() => handleOpenEditModal(horse)}
+              />
+            </Col>
+          ))}
+        </Row>
+      ) : (
+        <Card styles={{ body: { padding: 0 } }} style={{ borderRadius: 12, overflow: 'hidden' }}>
+          <DataTable
+            columns={columns}
+            dataSource={horses}
+            rowKey="HorseID"
+            loading={loading}
+          />
+        </Card>
+      )}
+
+      {/* Modal Chỉnh sửa thông tin nhanh */}
       <Modal
-        title={editingHorse ? t('horses.edit') : t('horses.add')}
-        open={modalVisible}
-        onCancel={handleCloseModal}
+        title={t('horses.edit')}
+        open={editModalVisible}
+        onCancel={handleCloseEditModal}
         onOk={() => form.submit()}
         confirmLoading={submitting}
         okText={t('common.save')}
@@ -299,7 +515,7 @@ export default function CustomerHorses() {
         <Form
           form={form}
           layout="vertical"
-          onFinish={handleFormSubmit}
+          onFinish={handleEditSubmit}
           initialValues={{
             Gender: 'Stallion',
             Breed: 'Thoroughbred',
@@ -333,13 +549,9 @@ export default function CustomerHorses() {
                 ]}
               >
                 <Select>
-                  <Select.Option value="Thoroughbred">
-                    Thoroughbred
-                  </Select.Option>
+                  <Select.Option value="Thoroughbred">Thoroughbred</Select.Option>
                   <Select.Option value="Arabian">Arabian</Select.Option>
-                  <Select.Option value="Quarter Horse">
-                    Quarter Horse
-                  </Select.Option>
+                  <Select.Option value="Quarter Horse">Quarter Horse</Select.Option>
                   <Select.Option value="Warmblood">Warmblood</Select.Option>
                 </Select>
               </Form.Item>

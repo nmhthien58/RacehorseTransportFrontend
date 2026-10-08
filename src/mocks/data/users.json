@@ -1,47 +1,47 @@
 [
   {
-    "UserID": 1,
-    "FullName": "Trần Quốc Bảo",
-    "Email": "manager@test.com",
-    "PhoneNumber": "+84912000001",
-    "Role": "LogisticsManager",
-    "IsActive": true,
-    "CreatedAt": "2026-01-01T00:00:00Z"
+    "userId": 1,
+    "fullName": "Trần Quốc Bảo",
+    "email": "manager@test.com",
+    "phoneNumber": "+84912000001",
+    "role": "LogisticsManager",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00Z"
   },
   {
-    "UserID": 2,
-    "FullName": "Nguyễn Thị Mai",
-    "Email": "specialist@test.com",
-    "PhoneNumber": "+84912000002",
-    "Role": "TransportSpecialist",
-    "IsActive": true,
-    "CreatedAt": "2026-01-01T00:00:00Z"
+    "userId": 2,
+    "fullName": "Nguyễn Thị Mai",
+    "email": "specialist@test.com",
+    "phoneNumber": "+84912000002",
+    "role": "TransportSpecialist",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00Z"
   },
   {
-    "UserID": 3,
-    "FullName": "Lê Hoàng Nam",
-    "Email": "coordinator@test.com",
-    "PhoneNumber": "+84912000003",
-    "Role": "FleetCoordinator",
-    "IsActive": true,
-    "CreatedAt": "2026-01-01T00:00:00Z"
+    "userId": 3,
+    "fullName": "Lê Hoàng Nam",
+    "email": "coordinator@test.com",
+    "phoneNumber": "+84912000003",
+    "role": "FleetCoordinator",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00Z"
   },
   {
-    "UserID": 4,
-    "FullName": "Phạm Văn Đức",
-    "Email": "driver@test.com",
-    "PhoneNumber": "+84912000004",
-    "Role": "DriverEscort",
-    "IsActive": true,
-    "CreatedAt": "2026-01-01T00:00:00Z"
+    "userId": 4,
+    "fullName": "Phạm Văn Đức",
+    "email": "driver@test.com",
+    "phoneNumber": "+84912000004",
+    "role": "DriverEscort",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00Z"
   },
   {
-    "UserID": 5,
-    "FullName": "Jane Smith",
-    "Email": "customer@test.com",
-    "PhoneNumber": "+84988111222",
-    "Role": "Customer",
-    "IsActive": true,
-    "CreatedAt": "2026-01-01T00:00:00Z"
+    "userId": 5,
+    "fullName": "Jane Smith",
+    "email": "customer@test.com",
+    "phoneNumber": "+84988111222",
+    "role": "Customer",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00Z"
   }
 ]

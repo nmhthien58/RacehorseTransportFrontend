@@ -1,21 +1,21 @@
 [
   {
-    "IncidentID": 1,
-    "IncidentCode": "INC-2026-0001",
-    "TripID": 1,
-    "ReportedByUserID": 4,
-    "IncidentType": "BorderCongestion",
-    "Severity": "Moderate",
-    "AffectedTripHorseID": 1,
-    "Description": "Tắc biên Hữu Nghị kéo dài hơn 8 tiếng do hỏng máy soi hải quan",
-    "Location": "Cửa khẩu Hữu Nghị",
-    "ProposedAction": "Nắn tuyến sang Cửa khẩu Tân Thanh cách 18km",
-    "RevisedRouteNotes": "Đã liên hệ trạm thú y Tân Thanh hỗ trợ làn xanh ưu tiên",
-    "AdditionalCost": 400.0,
-    "Status": "Approved",
-    "ApprovedByUserID": 1,
-    "ApprovedAt": "2026-10-01T12:00:00Z",
-    "ResolvedAt": null,
-    "ReportedAt": "2026-10-01T11:00:00Z"
+    "incidentId": 1,
+    "incidentCode": "INC-2026-0001",
+    "tripId": 1,
+    "reportedByUserId": 4,
+    "incidentType": "BorderCongestion",
+    "severity": "Moderate",
+    "affectedTripHorseId": 1,
+    "description": "Tắc biên Hữu Nghị kéo dài hơn 8 tiếng do hỏng máy soi hải quan",
+    "location": "Cửa khẩu Hữu Nghị",
+    "proposedAction": "Nắn tuyến sang Cửa khẩu Tân Thanh cách 18km",
+    "revisedRouteNotes": "Đã liên hệ trạm thú y Tân Thanh hỗ trợ làn xanh ưu tiên",
+    "additionalCost": 400.0,
+    "status": "Approved",
+    "approvedByUserId": 1,
+    "approvedAt": "2026-10-01T12:00:00Z",
+    "resolvedAt": null,
+    "reportedAt": "2026-10-01T11:00:00Z"
   }
 ]

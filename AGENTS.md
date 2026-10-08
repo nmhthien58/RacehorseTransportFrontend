@@ -28,18 +28,23 @@
 - `src/features/auth/store/authStore.js` là nguồn chuẩn duy nhất cho user + token.
 - **CẤM đọc `localStorage` trực tiếp** ở bất kỳ file nào khác ngoài `api.js` (nơi interceptor đọc).
 
-### 2.3. Data Shape
+### 2.3. Data Shape — camelCase BẮT BUỘC
 
-- Shape dữ liệu (User, Horse, BookingRequest, BookingHorse, DigitalDossier, DossierDocument, TransportAsset, Trip, TripHorse, RouteCheckpoint, HorseWelfareLog, TripIncident, HandoverAcceptance, SystemNotification) định nghĩa tại `src/types/database.js` dưới dạng JSDoc typedef.
-- **Field name PHẢI khớp DB schema** (PascalCase): `UserID`, `FullName`, `BookingCode`, `HorseID`, ...
-- **Status value PHẢI khớp DB** (PascalCase, KHÔNG camelCase):
-  - Booking: `Submitted` | `Approved` | `Rejected` | `Cancelled`
-  - Trip: `Scheduled` | `InTransit` | `EmergencyRerouting` | `ArrivedDestination` | `Completed` | `Cancelled`
-  - Dossier: `Draft` | `AwaitingDocs` | `Reviewing` | `SubmittedToAuthorities` | `Cleared` | `Issue`
-  - Incident: `Reported` | `PlanProposed` | `Approved` | `Resolved`
-  - Asset: `Available` | `InTransit` | `Maintenance`
-- **Role value PHẢI khớp DB:** `Customer` | `LogisticsManager` | `TransportSpecialist` | `FleetCoordinator` | `DriverEscort` | `Admin`.
-- **CẤM bịa thêm trường.** Không chắc → HỎI người dùng.
+**Field name:** camelCase, khớp 100% API contract của BE.
+Ví dụ: `userId`, `fullName`, `email`, `bookingId`, `bookingCode`, `horseId`, `checkpointId`.
+
+**Status value:** PascalCase (khớp DB enum).
+- Booking: `Submitted` | `Approved` | `Rejected` | `Cancelled` | `Assigned`
+- Trip: `Scheduled` | `InTransit` | `EmergencyRerouting` | `ArrivedDestination` | `Completed` | `Cancelled`
+- Dossier: `Draft` | `AwaitingDocs` | `Reviewing` | `SubmittedToAuthorities` | `Cleared` | `Issue`
+- Incident: `Reported` | `PlanProposed` | `Approved` | `Resolved`
+- Asset: `Available` | `InTransit` | `Maintenance`
+
+**Role value:** PascalCase.
+`Customer` | `LogisticsManager` | `TransportSpecialist` | `FleetCoordinator` | `DriverEscort` | `Admin`
+
+**KHÔNG dùng transform layer.** BE và FE dùng chung camelCase.
+**Route param:** camelCase. Ví dụ: `/manager/requests/:bookingId`.
 
 ### 2.4. Mock API
 
@@ -191,18 +196,7 @@ docs/workflow.md — Quy trình làm việc chi tiết theo phase.
 - PHẢI HỎI user trước khi thêm.
 - Format: "Figma không có [element X]. Tôi có nên thêm không? Lý do: [Y]."
 
-### Field name — QUAN TRỌNG
-- **Field name trong types, mock data, component PHẢI dùng PascalCase** khớp DB schema.
-- Ví dụ: `user.FullName`, `user.Role`, `booking.BookingCode`.
-- Khi BE chốt API:
-  - Nếu BE trả PascalCase → giữ nguyên.
-  - Nếu BE trả camelCase → viết transform layer ở `services/api.js` interceptor. **KHÔNG sửa types/mock/components.**
 
-### Về field name case (cập nhật)
-- Giữ PascalCase cho types, mock, components — khớp DB schema.
-- Khi BE chốt API:
-  - Nếu BE trả PascalCase → giữ nguyên.
-  - Nếu BE trả camelCase → dùng helper `toPascalCase` ở `src/utils/transform.js` (dùng lodash, recursive) áp dụng trong `api.js` interceptor. KHÔNG viết mapping thủ công.
 
 ### Về data fetching
 - Dùng custom hook `useFetch` ở `src/hooks/useFetch.js` làm nền tảng.

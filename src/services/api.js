@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { useAuthStore } from '@features/auth/store/authStore';
-import { toPascalCase, toCamelCase } from '@utils/transform';
 
 const isMock = import.meta.env.VITE_USE_MOCK === 'true';
 
@@ -62,24 +61,13 @@ const getRefreshToken = () => {
   return null;
 };
 
-// Request interceptor - gắn token và chuyển đổi payload sang camelCase
+// Request interceptor - tự động gắn token
 api.interceptors.request.use(
   (config) => {
     const token = getAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
-    // Tự động chuyển đổi dữ liệu JSON sang camelCase cho BE
-    if (
-      config.data &&
-      typeof config.data === 'object' &&
-      !(typeof FormData !== 'undefined' && config.data instanceof FormData) &&
-      !(typeof Blob !== 'undefined' && config.data instanceof Blob)
-    ) {
-      config.data = toCamelCase(config.data);
-    }
-
     return config;
   },
   (error) => Promise.reject(error),
@@ -88,15 +76,9 @@ api.interceptors.request.use(
 // Biến lưu trữ promise refresh token tránh gọi trùng lặp khi nhiều request đồng thời
 let refreshPromise = null;
 
-// Response interceptor - chuyển đổi dữ liệu sang PascalCase và tự động refresh token khi 401
+// Response interceptor - trả về response.data và tự động refresh token khi 401
 api.interceptors.response.use(
-  (response) => {
-    // Chuyển đổi dữ liệu trả về sang PascalCase cho FE khớp với DB schema
-    if (response.data !== undefined) {
-      return toPascalCase(response.data);
-    }
-    return response.data;
-  },
+  (response) => response.data,
   async (error) => {
     const originalRequest = error.config;
 
@@ -158,4 +140,3 @@ api.interceptors.response.use(
 );
 
 export default api;
-

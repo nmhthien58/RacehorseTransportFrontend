@@ -26,8 +26,8 @@ const { Text } = Typography;
 export default function BookingCard({ booking, onCancel, onViewDetail }) {
   const { t } = useTranslation();
 
-  const isAir = booking.TransportMode === 'Air';
-  const canCancel = booking.Status === 'Submitted';
+  const isAir = booking.transportMode === 'Air';
+  const canCancel = booking.status === 'Submitted';
 
   return (
     <Card
@@ -55,9 +55,9 @@ export default function BookingCard({ booking, onCancel, onViewDetail }) {
               fontFamily: 'monospace',
             }}
           >
-            #{booking.BookingCode}
+            #{booking.bookingCode}
           </Text>
-          <StatusTag status={booking.Status} />
+          <StatusTag status={booking.status} />
           <Tag color={isAir ? 'blue' : 'orange'} style={{ borderRadius: 6, fontWeight: 500 }}>
             {isAir ? (
               <span>
@@ -71,7 +71,7 @@ export default function BookingCard({ booking, onCancel, onViewDetail }) {
               </span>
             )}
           </Tag>
-          {booking.RequiresClimateControl && (
+          {booking.requiresClimateControl && (
             <Tag color="cyan" style={{ borderRadius: 6 }}>
               ❄ {t('bookings.climateControlTag') || 'Điều hòa cabin'}
             </Tag>
@@ -80,7 +80,7 @@ export default function BookingCard({ booking, onCancel, onViewDetail }) {
 
         <Text type="secondary" style={{ fontSize: 13 }}>
           {t('bookings.createdAt') || 'Tạo ngày'}:{' '}
-          {dayjs(booking.CreatedAt).format('DD/MM/YYYY HH:mm')}
+          {dayjs(booking.createdAt).format('DD/MM/YYYY HH:mm')}
         </Text>
       </Flex>
 
@@ -100,11 +100,11 @@ export default function BookingCard({ booking, onCancel, onViewDetail }) {
             <Flex orientation="horizontal" align="center" gap="small" style={{ marginBottom: 4 }}>
               <EnvironmentOutlined style={{ color: '#d97706', fontSize: 16 }} />
               <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', fontWeight: 600 }}>
-                {t('bookings.fields.pickupLocation') || 'ĐIỂM ĐÓN'} ({booking.PickupCountryCode})
+                {t('bookings.fields.pickupLocation') || 'ĐIỂM ĐÓN'} ({booking.pickupCountryCode})
               </Text>
             </Flex>
             <Text strong style={{ fontSize: 14, color: '#1e293b', display: 'block' }}>
-              {booking.PickupAddress}
+              {booking.pickupAddress}
             </Text>
           </div>
 
@@ -118,11 +118,11 @@ export default function BookingCard({ booking, onCancel, onViewDetail }) {
             <Flex orientation="horizontal" align="center" gap="small" style={{ marginBottom: 4 }}>
               <EnvironmentOutlined style={{ color: '#10b981', fontSize: 16 }} />
               <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', fontWeight: 600 }}>
-                {t('bookings.fields.deliveryLocation') || 'ĐIỂM GIAO'} ({booking.DropoffCountryCode})
+                {t('bookings.fields.deliveryLocation') || 'ĐIỂM GIAO'} ({booking.dropoffCountryCode})
               </Text>
             </Flex>
             <Text strong style={{ fontSize: 14, color: '#1e293b', display: 'block' }}>
-              {booking.DropoffAddress}
+              {booking.dropoffAddress}
             </Text>
           </div>
         </Flex>
@@ -136,7 +136,7 @@ export default function BookingCard({ booking, onCancel, onViewDetail }) {
               {t('bookings.fields.totalHorses') || 'Số lượng ngựa'}:
             </Text>
             <strong style={{ fontSize: 15, color: '#0f172a' }}>
-              🐴 {booking.TotalHorses || 1} {t('bookings.horseUnit') || 'con'}
+              🐴 {booking.totalHorses || 1} {t('bookings.horseUnit') || 'con'}
             </strong>
           </div>
 
@@ -147,7 +147,7 @@ export default function BookingCard({ booking, onCancel, onViewDetail }) {
             <Space size={4}>
               <CalendarOutlined style={{ color: '#64748b' }} />
               <Text strong style={{ fontSize: 14, color: '#0f172a' }}>
-                {dayjs(booking.DepartureDate).format('DD/MM/YYYY')}
+                {dayjs(booking.departureDate).format('DD/MM/YYYY')}
               </Text>
             </Space>
           </div>
@@ -157,7 +157,7 @@ export default function BookingCard({ booking, onCancel, onViewDetail }) {
               {t('bookings.fields.estimatedCost') || 'Dự toán cước phí'}:
             </Text>
             <span style={{ fontSize: 18, fontWeight: 700, color: '#d97706' }}>
-              ${Number(booking.EstimatedCost || 0).toLocaleString()} {booking.CurrencyCode || 'USD'}
+              ${Number(booking.estimatedCost || 0).toLocaleString()} {booking.currencyCode || 'USD'}
             </span>
           </div>
         </Space>
@@ -171,7 +171,7 @@ export default function BookingCard({ booking, onCancel, onViewDetail }) {
                 t('bookings.cancelConfirmDesc') ||
                 'Bạn có chắc chắn muốn hủy yêu cầu vận chuyển này không?'
               }
-              onConfirm={() => onCancel(booking.BookingID)}
+              onConfirm={() => onCancel(booking.bookingId)}
               okText={t('common.confirm')}
               cancelText={t('common.cancel')}
               okButtonProps={{ danger: true }}

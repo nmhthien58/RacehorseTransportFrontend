@@ -6,11 +6,40 @@ export const authHandlers = [
     const body = await request.json();
     const user = usersData.find((u) => u.Email === body.email);
     if (!user) {
-      return HttpResponse.json({ message: 'Email hoặc mật khẩu không đúng' }, { status: 401 });
+      return HttpResponse.json(
+        { success: false, message: 'Email hoặc mật khẩu không đúng', errors: ['Invalid credentials'] },
+        { status: 401 },
+      );
     }
+    const token = `mock-token-${user.UserID}`;
+    const refreshToken = `mock-refresh-token-${user.UserID}`;
     return HttpResponse.json({
-      token: `mock-token-${user.UserID}`,
+      success: true,
+      message: 'Đăng nhập thành công',
+      data: {
+        accessToken: token,
+        refreshToken,
+        user,
+      },
+      // Giữ tương thích trực tiếp
+      token,
+      refreshToken,
       user,
+    });
+  }),
+
+  http.post('/api/auth/refresh', async ({ request }) => {
+    const body = await request.json();
+    const refreshedToken = `mock-token-refreshed-${Date.now()}`;
+    const newRefreshToken = body.refreshToken || `mock-refresh-token-${Date.now()}`;
+    return HttpResponse.json({
+      success: true,
+      message: 'Làm mới token thành công',
+      data: {
+        accessToken: refreshedToken,
+        refreshToken: newRefreshToken,
+      },
+      token: refreshedToken,
     });
   }),
 
@@ -18,7 +47,10 @@ export const authHandlers = [
     const body = await request.json();
     return HttpResponse.json({
       success: true,
-      message: `Mã xác minh 6 chữ số đã được gửi tới email ${body.Email || body.email}`,
+      message: `Đăng ký thành công. Mã xác minh đã được gửi tới email ${body.Email || body.email}`,
+      data: {
+        email: body.Email || body.email,
+      },
       email: body.Email || body.email,
     });
   }),
@@ -36,8 +68,18 @@ export const authHandlers = [
       IsActive: true,
       CreatedAt: new Date().toISOString(),
     };
+    const token = `mock-google-token-${user.UserID}`;
+    const refreshToken = `mock-google-refresh-${user.UserID}`;
     return HttpResponse.json({
-      token: `mock-google-token-${user.UserID}`,
+      success: true,
+      message: 'Đăng nhập Google thành công',
+      data: {
+        accessToken: token,
+        refreshToken,
+        user,
+      },
+      token,
+      refreshToken,
       user,
     });
   }),
@@ -53,8 +95,14 @@ export const authHandlers = [
       IsActive: true,
       CreatedAt: new Date().toISOString(),
     };
+    const token = `mock-token-${newUser.UserID}`;
     return HttpResponse.json({
-      token: `mock-token-${newUser.UserID}`,
+      success: true,
+      data: {
+        accessToken: token,
+        user: newUser,
+      },
+      token,
       user: newUser,
     });
   }),
@@ -71,13 +119,12 @@ export const authHandlers = [
     const body = await request.json();
     return HttpResponse.json({
       success: true,
-      message: `Mã OTP đã được gửi đến email ${body.email}`,
+      message: `Mã OTP hoặc liên kết đặt lại đã được gửi đến email ${body.email}`,
     });
   }),
 
   http.post('/api/auth/verify-code', async ({ request }) => {
     const body = await request.json();
-    // Chấp nhận mọi mã 6 ký tự hoặc 123456
     return HttpResponse.json({
       success: true,
       verifyToken: `verify-token-${Date.now()}`,
@@ -93,19 +140,38 @@ export const authHandlers = [
   }),
 
   http.post('/api/auth/logout', () => {
-    return HttpResponse.json({ success: true });
+    return HttpResponse.json({ success: true, message: 'Đăng xuất thành công' });
   }),
 
   http.get('/api/auth/me', ({ request }) => {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) {
-      return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+      return HttpResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
     const userId = authHeader.replace('Bearer mock-token-', '');
-    const user = usersData.find((u) => u.UserID === Number(userId));
-    if (!user) {
-      return HttpResponse.json({ message: 'User not found' }, { status: 404 });
+    const user = usersData.find((u) => u.UserID === Number(userId)) || usersData[0];
+    return HttpResponse.json({
+      success: true,
+      data: user,
+    });
+  }),
+
+  // Dropdown nhân sự
+  http.get('/api/users/staff', ({ request }) => {
+    const url = new URL(request.url);
+    const role = url.searchParams.get('role');
+    let list = usersData;
+    if (role) {
+      list = usersData.filter((u) => u.Role === role);
     }
-    return HttpResponse.json(user);
+    return HttpResponse.json({
+      success: true,
+      data: list.map((u) => ({
+        UserID: u.UserID,
+        FullName: u.FullName,
+        Email: u.Email,
+        Role: u.Role,
+      })),
+    });
   }),
 ];

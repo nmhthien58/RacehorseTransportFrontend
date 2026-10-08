@@ -3,21 +3,21 @@ import { ENDPOINTS } from './endpoints';
 
 /**
  * @file horseService.js
- * @description Tầng Service xử lý nghiệp vụ hồ sơ ngựa đua
+ * @description Tầng Service xử lý nghiệp vụ hồ sơ ngựa đua (Horses)
  */
 
 export const horseService = {
   /**
-   * Lấy danh sách hồ sơ ngựa đua (hỗ trợ lọc theo query params)
-   * @param {Object} [params] - Tham số lọc (ví dụ: ownerId)
-   * @returns {Promise<{ data: import('../types/database').Horse[], total: number }>}
+   * Lấy danh sách hồ sơ ngựa đua (hỗ trợ phân trang, tìm kiếm và lọc theo chủ ngựa)
+   * @param {{ ownerUserId?: number, includeInactive?: boolean, search?: string, sort?: string, page?: number, size?: number }} [params]
+   * @returns {Promise<{ data: import('../types/database').Horse[], pagination?: any }>}
    */
   async getHorses(params) {
     return api.get(ENDPOINTS.HORSES.LIST, { params });
   },
 
   /**
-   * Lấy chi tiết hồ sơ ngựa đua theo ID
+   * Lấy chi tiết hồ sơ một con ngựa theo ID
    * @param {number|string} id - Mã định danh HorseID
    * @returns {Promise<import('../types/database').Horse>}
    */
@@ -26,26 +26,32 @@ export const horseService = {
   },
 
   /**
-   * Tạo mới một hồ sơ ngựa đua
-   * @param {Partial<import('../types/database').Horse>} horseData - Dữ liệu hồ sơ ngựa
+   * Khai báo hồ sơ ngựa đua mới (hỗ trợ FormData kèm file ảnh hoặc JSON)
+   * @param {FormData|Partial<import('../types/database').Horse>} horseData - Dữ liệu hồ sơ ngựa
    * @returns {Promise<import('../types/database').Horse>}
    */
   async createHorse(horseData) {
-    return api.post(ENDPOINTS.HORSES.CREATE, horseData);
+    const isFormData = typeof FormData !== 'undefined' && horseData instanceof FormData;
+    return api.post(ENDPOINTS.HORSES.CREATE, horseData, {
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
+    });
   },
 
   /**
    * Cập nhật thông tin hồ sơ ngựa đua
    * @param {number|string} id - Mã định danh HorseID
-   * @param {Partial<import('../types/database').Horse>} horseData - Dữ liệu cập nhật
+   * @param {FormData|Partial<import('../types/database').Horse>} horseData - Dữ liệu cập nhật
    * @returns {Promise<import('../types/database').Horse>}
    */
   async updateHorse(id, horseData) {
-    return api.put(ENDPOINTS.HORSES.UPDATE(id), horseData);
+    const isFormData = typeof FormData !== 'undefined' && horseData instanceof FormData;
+    return api.put(ENDPOINTS.HORSES.UPDATE(id), horseData, {
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
+    });
   },
 
   /**
-   * Xóa hồ sơ ngựa đua
+   * Xóa hồ sơ ngựa đua khỏi hệ thống
    * @param {number|string} id - Mã định danh HorseID
    * @returns {Promise<any>}
    */

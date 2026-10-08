@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
+import { horseService } from '@services/horseService';
 import { MOCK_HORSES } from '@mocks/data/horses.mock';
 
 /**
- * Hook lấy danh sách ngựa của Customer hiện tại.
- * Hiện tại: trả mock data. Khi có API: đổi sang gọi horseService.getHorses().
+ * Hook lấy danh sách ngựa của Customer hiện tại qua horseService.
  *
  * @returns {{ data: Array<any>, loading: boolean, error: Error|null }}
  */
@@ -13,18 +13,31 @@ export function useMyHorses() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // TODO: khi BE xong → gọi horseService.getHorses()
-    const timer = setTimeout(() => {
-      try {
-        setData(MOCK_HORSES);
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    }, 150);
+    let isSubscribed = true;
 
-    return () => clearTimeout(timer);
+    horseService
+      .getHorses()
+      .then((res) => {
+        if (isSubscribed) {
+          const list = res.data?.data || res.data || [];
+          setData(Array.isArray(list) && list.length > 0 ? list : MOCK_HORSES);
+        }
+      })
+      .catch((err) => {
+        if (isSubscribed) {
+          setData(MOCK_HORSES);
+          setError(err);
+        }
+      })
+      .finally(() => {
+        if (isSubscribed) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isSubscribed = false;
+    };
   }, []);
 
   return { data, loading, error };

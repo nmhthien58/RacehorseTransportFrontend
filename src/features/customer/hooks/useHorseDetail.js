@@ -1,40 +1,50 @@
 import { useState, useEffect } from 'react';
+import { horseService } from '@services/horseService';
 import { MOCK_HORSES } from '@mocks/data/horses.mock';
 
 /**
- * Hook lấy thông tin chi tiết một cá thể ngựa theo ID.
- * Hiện tại: tìm kiếm trong mock data. Khi có API: gọi horseService.getHorseById(id).
+ * Hook lấy thông tin chi tiết một cá thể ngựa theo ID qua horseService.
  *
  * @param {number|string} id - Mã định danh HorseID
  * @returns {{ data: any|null, loading: boolean, error: Error|null }}
  */
 export function useHorseDetail(id) {
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(id));
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!id) {
-        setLoading(false);
-        return;
-      }
+    let isSubscribed = true;
+    if (!id) {
+      return;
+    }
 
-      try {
-        const found = MOCK_HORSES.find((h) => String(h.HorseID) === String(id));
-        if (found) {
-          setData(found);
-        } else {
-          setError(new Error(`Horse with ID ${id} not found`));
+    horseService
+      .getHorseById(id)
+      .then((res) => {
+        if (isSubscribed) {
+          setData(res.data || res);
         }
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    }, 150);
+      })
+      .catch((err) => {
+        if (isSubscribed) {
+          const found = MOCK_HORSES.find((h) => String(h.HorseID) === String(id));
+          if (found) {
+            setData(found);
+          } else {
+            setError(err);
+          }
+        }
+      })
+      .finally(() => {
+        if (isSubscribed) {
+          setLoading(false);
+        }
+      });
 
-    return () => clearTimeout(timer);
+    return () => {
+      isSubscribed = false;
+    };
   }, [id]);
 
   return { data, loading, error };

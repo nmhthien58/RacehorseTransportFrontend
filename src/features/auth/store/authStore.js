@@ -6,19 +6,28 @@ export const useAuthStore = create(
     (set, get) => ({
       user: null,
       token: null,
+      refreshToken: null,
       isAuthenticated: false,
 
-      login: (user, token) =>
+      login: (user, token, refreshToken = null) =>
         set({
           user,
           token,
+          refreshToken,
           isAuthenticated: true,
         }),
+
+      setTokens: (token, refreshToken = null) =>
+        set((state) => ({
+          token,
+          refreshToken: refreshToken || state.refreshToken,
+        })),
 
       logout: () =>
         set({
           user: null,
           token: null,
+          refreshToken: null,
           isAuthenticated: false,
         }),
 
@@ -36,6 +45,7 @@ export const useAuthStore = create(
       partialize: (state) => ({
         user: state.user,
         token: state.token,
+        refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
     },

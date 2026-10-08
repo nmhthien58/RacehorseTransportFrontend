@@ -38,9 +38,10 @@ export default function LoginPage() {
         password: values.password,
       });
 
-      const user = res.user;
-      const token = res.token || `mock-token-${user.UserID}`;
-      login(user, token);
+      const user = res.user || res.data?.user;
+      const token = res.token || res.data?.accessToken || `mock-token-${user?.UserID}`;
+      const refreshToken = res.refreshToken || res.data?.refreshToken || null;
+      login(user, token, refreshToken);
 
       message.success(t('auth.loginSuccess', 'Đăng nhập thành công!'));
 

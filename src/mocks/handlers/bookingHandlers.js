@@ -5,11 +5,51 @@ import initialBookings from '../data/bookings.json';
 let bookings = [...initialBookings];
 
 export const bookingHandlers = [
+  // POST /api/bookings/quote-preview - Xem trước bảng giá
+  http.post('/api/bookings/quote-preview', async ({ request }) => {
+    const body = await request.json();
+    const horsesList = body.horses || body.Horses || [];
+    const count = horsesList.length > 0 ? horsesList.length : 1;
+    const isAir = (body.transportMode || body.TransportMode) === 'Air';
+    const ratePerHorse = isAir ? 4200 : 1800;
+    const climateSurcharge = (body.requiresClimateControl || body.RequiresClimateControl) ? 350 : 0;
+    const estimatedCost = count * ratePerHorse + climateSurcharge;
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Tính toán bảng báo giá thành công',
+      data: {
+        estimatedCost,
+        currencyCode: 'USD',
+        quoteLines: [
+          {
+            code: isAir ? 'FREIGHT_AIR' : 'FREIGHT_GROUND',
+            name: isAir ? 'Cước đường hàng không chuyên dụng' : 'Cước vận chuyển xe thùng chuyên dụng',
+            quantity: count,
+            unitPrice: ratePerHorse,
+            amount: count * ratePerHorse,
+          },
+          ...(climateSurcharge > 0
+            ? [
+                {
+                  code: 'SUR_CLIMATE',
+                  name: 'Phụ phí kiểm soát nhiệt độ cabin',
+                  quantity: 1,
+                  unitPrice: 350,
+                  amount: 350,
+                },
+              ]
+            : []),
+        ],
+      },
+    });
+  }),
+
   // GET /api/bookings - Lấy danh sách đơn đặt chuyến
   http.get('/api/bookings', ({ request }) => {
     const url = new URL(request.url);
     const status = url.searchParams.get('status');
-    const customerId = url.searchParams.get('customerId');
+    const customerId = url.searchParams.get('customerId') || url.searchParams.get('customerUserId');
 
     let filtered = bookings;
 
@@ -27,8 +67,15 @@ export const bookingHandlers = [
     }
 
     return HttpResponse.json({
+      success: true,
       data: filtered,
       total: filtered.length,
+      pagination: {
+        page: 1,
+        pageSize: 10,
+        totalItems: filtered.length,
+        totalPages: Math.ceil(filtered.length / 10) || 1,
+      },
     });
   }),
 
@@ -36,9 +83,13 @@ export const bookingHandlers = [
   http.get('/api/bookings/:id', ({ params }) => {
     const booking = bookings.find((b) => b.BookingID === Number(params.id));
     if (!booking) {
-      return HttpResponse.json({ message: 'Booking not found' }, { status: 404 });
+      return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
     }
-    return HttpResponse.json(booking);
+    return HttpResponse.json({
+      success: true,
+      data: booking,
+      ...booking,
+    });
   }),
 
   // POST /api/bookings - Tạo mới yêu cầu đặt chuyến
@@ -46,16 +97,20 @@ export const bookingHandlers = [
     const body = await request.json();
 
     // 1. Kiểm tra các trường thông tin bắt buộc
-    if (!body.PickupAddress || !body.DropoffAddress) {
+    const pickup = body.PickupAddress || body.pickupAddress;
+    const dropoff = body.DropoffAddress || body.dropoffAddress;
+    const departure = body.DepartureDate || body.departureDate;
+
+    if (!pickup || !dropoff) {
       return HttpResponse.json(
-        { message: 'Địa chỉ đón và giao là bắt buộc' },
+        { success: false, message: 'Địa chỉ đón và giao là bắt buộc' },
         { status: 400 },
       );
     }
 
-    if (!body.DepartureDate) {
+    if (!departure) {
       return HttpResponse.json(
-        { message: 'Ngày khởi hành dự kiến là bắt buộc' },
+        { success: false, message: 'Ngày khởi hành dự kiến là bắt buộc' },
         { status: 400 },
       );
     }
@@ -67,70 +122,39 @@ export const bookingHandlers = [
     const newId = maxId + 1;
     const newCode = `BKG-2026-${String(newId).padStart(4, '0')}`;
 
-    const totalHorsesCount = Array.isArray(body.BookingHorses)
-      ? body.BookingHorses.length
-      : Number(body.TotalHorses) || 1;
+    const rawHorses = body.BookingHorses || body.horses || [];
+    const totalHorsesCount = Array.isArray(rawHorses)
+      ? rawHorses.length
+      : Number(body.TotalHorses || body.totalHorses) || 1;
 
-    // Dự toán chi phí mẫu nếu FE chưa truyền
+    const transportMode = body.TransportMode || body.transportMode || 'Ground';
     const estimatedCost =
-      Number(body.EstimatedCost) ||
-      (body.TransportMode === 'Air'
+      Number(body.EstimatedCost || body.estimatedCost) ||
+      (transportMode === 'Air'
         ? totalHorsesCount * 4200
-        : totalHorsesCount * 1800 + (body.RequiresClimateControl ? 350 : 0));
+        : totalHorsesCount * 1800);
 
     const newBooking = {
       BookingID: newId,
       BookingCode: newCode,
-      CustomerUserID: Number(body.CustomerUserID) || 5,
-      PickupAddress: body.PickupAddress.trim(),
-      PickupCountryCode: body.PickupCountryCode || 'VN',
-      DropoffAddress: body.DropoffAddress.trim(),
-      DropoffCountryCode: body.DropoffCountryCode || 'CN',
-      DepartureDate: body.DepartureDate,
-      DeliveryDate: body.DeliveryDate || body.DepartureDate,
+      CustomerUserID: Number(body.CustomerUserID || body.customerUserId) || 5,
+      PickupAddress: String(pickup).trim(),
+      PickupCountryCode: body.PickupCountryCode || body.pickupCountryCode || 'VN',
+      DropoffAddress: String(dropoff).trim(),
+      DropoffCountryCode: body.DropoffCountryCode || body.dropoffCountryCode || 'CN',
+      DepartureDate: departure,
+      DeliveryDate: body.DeliveryDate || body.deliveryDate || departure,
       TotalHorses: totalHorsesCount,
-      SpecialInstructions: body.SpecialInstructions?.trim() || null,
+      SpecialInstructions: body.SpecialInstructions || body.specialInstructions || null,
       EstimatedCost: estimatedCost,
       CurrencyCode: 'USD',
       Status: 'Submitted',
-      TransportMode: body.TransportMode || 'Ground',
-      DistanceKm: body.DistanceKm || (body.TransportMode === 'Ground' ? 1200 : null),
-      IsExpress: Boolean(body.IsExpress),
-      RequiresClimateControl: Boolean(body.RequiresClimateControl),
-      DeclaredValue: Number(body.DeclaredValue) || null,
-      QuoteBreakdown:
-        body.QuoteBreakdown ||
-        JSON.stringify([
-          {
-            code: body.TransportMode === 'Air' ? 'FREIGHT_AIR' : 'FREIGHT_GROUND',
-            name:
-              body.TransportMode === 'Air'
-                ? 'Cước bay quốc tế (Air Stall)'
-                : 'Cước vận chuyển xe thùng chuyên dụng',
-            qty: totalHorsesCount,
-            unitPrice: body.TransportMode === 'Air' ? 3500.0 : 1500.0,
-            amount: totalHorsesCount * (body.TransportMode === 'Air' ? 3500.0 : 1500.0),
-          },
-          ...(body.RequiresClimateControl
-            ? [
-                {
-                  code: 'SUR_CLIMATE',
-                  name: 'Phụ phí điều hòa nhiệt độ cabin',
-                  qty: 1,
-                  unitPrice: 350.0,
-                  amount: 350.0,
-                },
-              ]
-            : []),
-          {
-            code: 'FEE_CLEARANCE',
-            name: 'Phí thủ tục kiểm dịch & thông quan hải quan',
-            qty: totalHorsesCount,
-            unitPrice: 250.0,
-            amount: totalHorsesCount * 250.0,
-          },
-        ]),
-      BookingHorses: body.BookingHorses || [],
+      TransportMode: transportMode,
+      DistanceKm: Number(body.DistanceKm || body.distanceKm) || 1200,
+      IsExpress: Boolean(body.IsExpress || body.isExpress),
+      RequiresClimateControl: Boolean(body.RequiresClimateControl || body.requiresClimateControl),
+      DeclaredValue: Number(body.DeclaredValue || body.declaredValue) || null,
+      BookingHorses: rawHorses,
       RejectionReason: null,
       ReviewedByUserID: null,
       ReviewedAt: null,
@@ -141,7 +165,12 @@ export const bookingHandlers = [
 
     // Đưa đơn mới lên đầu danh sách để hiển thị ngay lập tức
     bookings.unshift(newBooking);
-    return HttpResponse.json(newBooking, { status: 201 });
+    return HttpResponse.json({
+      success: true,
+      message: 'Tạo đơn đặt chuyến thành công',
+      data: newBooking,
+      ...newBooking,
+    }, { status: 201 });
   }),
 
   // POST /api/bookings/:id/approve - Manager duyệt đơn
@@ -149,39 +178,66 @@ export const bookingHandlers = [
     const body = await request.json();
     const index = bookings.findIndex((b) => b.BookingID === Number(params.id));
     if (index === -1) {
-      return HttpResponse.json({ message: 'Booking not found' }, { status: 404 });
+      return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
     }
 
-    const nextStatus =
-      body.specialistId && body.coordinatorId ? 'Assigned' : 'Approved';
-
+    const specId = body.specialistUserId || body.specialistId;
     bookings[index] = {
       ...bookings[index],
-      Status: nextStatus,
-      AssignedSpecialistID: body.specialistId || bookings[index].AssignedSpecialistID,
-      AssignedCoordinatorID: body.coordinatorId || bookings[index].AssignedCoordinatorID,
+      Status: 'Approved',
+      AssignedSpecialistID: specId || bookings[index].AssignedSpecialistID,
       ReviewedAt: new Date().toISOString(),
     };
 
-    return HttpResponse.json(bookings[index]);
+    return HttpResponse.json({
+      success: true,
+      message: 'Duyệt đơn vận chuyển thành công',
+      data: bookings[index],
+      ...bookings[index],
+    });
   }),
 
-  // POST /api/bookings/:id/assign - Phân công nhân sự
+  // POST /api/bookings/:id/reassign-specialist & assign
+  http.post('/api/bookings/:id/reassign-specialist', async ({ params, request }) => {
+    const body = await request.json();
+    const index = bookings.findIndex((b) => b.BookingID === Number(params.id));
+    if (index === -1) {
+      return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
+    }
+
+    bookings[index] = {
+      ...bookings[index],
+      AssignedSpecialistID: body.specialistUserId || body.specialistId,
+    };
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Cập nhật chuyên viên phụ trách thành công',
+      data: bookings[index],
+      ...bookings[index],
+    });
+  }),
+
+  // POST /api/bookings/:id/assign
   http.post('/api/bookings/:id/assign', async ({ params, request }) => {
     const body = await request.json();
     const index = bookings.findIndex((b) => b.BookingID === Number(params.id));
     if (index === -1) {
-      return HttpResponse.json({ message: 'Booking not found' }, { status: 404 });
+      return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
     }
 
     bookings[index] = {
       ...bookings[index],
       Status: 'Assigned',
-      AssignedSpecialistID: body.specialistId,
+      AssignedSpecialistID: body.specialistId || body.specialistUserId,
       AssignedCoordinatorID: body.coordinatorId,
     };
 
-    return HttpResponse.json(bookings[index]);
+    return HttpResponse.json({
+      success: true,
+      data: bookings[index],
+      ...bookings[index],
+    });
   }),
 
   // POST /api/bookings/:id/reject - Từ chối đơn
@@ -189,7 +245,7 @@ export const bookingHandlers = [
     const body = await request.json();
     const index = bookings.findIndex((b) => b.BookingID === Number(params.id));
     if (index === -1) {
-      return HttpResponse.json({ message: 'Booking not found' }, { status: 404 });
+      return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
     }
 
     bookings[index] = {
@@ -199,14 +255,19 @@ export const bookingHandlers = [
       ReviewedAt: new Date().toISOString(),
     };
 
-    return HttpResponse.json(bookings[index]);
+    return HttpResponse.json({
+      success: true,
+      message: 'Từ chối đơn vận chuyển thành công',
+      data: bookings[index],
+      ...bookings[index],
+    });
   }),
 
   // POST /api/bookings/:id/cancel - Hủy đơn
   http.post('/api/bookings/:id/cancel', ({ params }) => {
     const index = bookings.findIndex((b) => b.BookingID === Number(params.id));
     if (index === -1) {
-      return HttpResponse.json({ message: 'Booking not found' }, { status: 404 });
+      return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
     }
 
     bookings[index] = {
@@ -214,6 +275,11 @@ export const bookingHandlers = [
       Status: 'Cancelled',
     };
 
-    return HttpResponse.json(bookings[index]);
+    return HttpResponse.json({
+      success: true,
+      message: 'Hủy đơn thành công',
+      data: bookings[index],
+      ...bookings[index],
+    });
   }),
 ];

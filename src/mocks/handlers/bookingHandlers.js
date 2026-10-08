@@ -8,11 +8,11 @@ export const bookingHandlers = [
   // POST /api/bookings/quote-preview - Xem trước bảng giá
   http.post('/api/bookings/quote-preview', async ({ request }) => {
     const body = await request.json();
-    const horsesList = body.horses || body.Horses || [];
+    const horsesList = body.horses || [];
     const count = horsesList.length > 0 ? horsesList.length : 1;
-    const isAir = (body.transportMode || body.TransportMode) === 'Air';
+    const isAir = body.transportMode === 'Air';
     const ratePerHorse = isAir ? 4200 : 1800;
-    const climateSurcharge = (body.requiresClimateControl || body.RequiresClimateControl) ? 350 : 0;
+    const climateSurcharge = body.requiresClimateControl ? 350 : 0;
     const estimatedCost = count * ratePerHorse + climateSurcharge;
 
     return HttpResponse.json({
@@ -57,13 +57,13 @@ export const bookingHandlers = [
     if (customerId) {
       const parsedId = Number(customerId);
       filtered = filtered.filter(
-        (b) => b.CustomerUserID === parsedId || b.CustomerUserID === 5,
+        (b) => b.customerUserId === parsedId || b.customerUserId === 5,
       );
     }
 
     // Lọc theo trạng thái
     if (status && status !== 'All') {
-      filtered = filtered.filter((b) => b.Status === status);
+      filtered = filtered.filter((b) => b.status === status);
     }
 
     return HttpResponse.json({
@@ -81,7 +81,7 @@ export const bookingHandlers = [
 
   // GET /api/bookings/:id - Lấy chi tiết đơn đặt chuyến
   http.get('/api/bookings/:id', ({ params }) => {
-    const booking = bookings.find((b) => b.BookingID === Number(params.id));
+    const booking = bookings.find((b) => b.bookingId === Number(params.id));
     if (!booking) {
       return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
     }
@@ -97,9 +97,9 @@ export const bookingHandlers = [
     const body = await request.json();
 
     // 1. Kiểm tra các trường thông tin bắt buộc
-    const pickup = body.PickupAddress || body.pickupAddress;
-    const dropoff = body.DropoffAddress || body.dropoffAddress;
-    const departure = body.DepartureDate || body.departureDate;
+    const pickup = body.pickupAddress;
+    const dropoff = body.dropoffAddress;
+    const departure = body.departureDate;
 
     if (!pickup || !dropoff) {
       return HttpResponse.json(
@@ -116,51 +116,51 @@ export const bookingHandlers = [
     }
 
     const maxId = bookings.reduce(
-      (max, b) => Math.max(max, Number(b.BookingID) || 0),
+      (max, b) => Math.max(max, Number(b.bookingId) || 0),
       0,
     );
     const newId = maxId + 1;
     const newCode = `BKG-2026-${String(newId).padStart(4, '0')}`;
 
-    const rawHorses = body.BookingHorses || body.horses || [];
+    const rawHorses = body.bookingHorses || body.horses || [];
     const totalHorsesCount = Array.isArray(rawHorses)
       ? rawHorses.length
-      : Number(body.TotalHorses || body.totalHorses) || 1;
+      : Number(body.totalHorses) || 1;
 
-    const transportMode = body.TransportMode || body.transportMode || 'Ground';
+    const transportMode = body.transportMode || 'Ground';
     const estimatedCost =
-      Number(body.EstimatedCost || body.estimatedCost) ||
+      Number(body.estimatedCost) ||
       (transportMode === 'Air'
         ? totalHorsesCount * 4200
         : totalHorsesCount * 1800);
 
     const newBooking = {
-      BookingID: newId,
-      BookingCode: newCode,
-      CustomerUserID: Number(body.CustomerUserID || body.customerUserId) || 5,
-      PickupAddress: String(pickup).trim(),
-      PickupCountryCode: body.PickupCountryCode || body.pickupCountryCode || 'VN',
-      DropoffAddress: String(dropoff).trim(),
-      DropoffCountryCode: body.DropoffCountryCode || body.dropoffCountryCode || 'CN',
-      DepartureDate: departure,
-      DeliveryDate: body.DeliveryDate || body.deliveryDate || departure,
-      TotalHorses: totalHorsesCount,
-      SpecialInstructions: body.SpecialInstructions || body.specialInstructions || null,
-      EstimatedCost: estimatedCost,
-      CurrencyCode: 'USD',
-      Status: 'Submitted',
-      TransportMode: transportMode,
-      DistanceKm: Number(body.DistanceKm || body.distanceKm) || 1200,
-      IsExpress: Boolean(body.IsExpress || body.isExpress),
-      RequiresClimateControl: Boolean(body.RequiresClimateControl || body.requiresClimateControl),
-      DeclaredValue: Number(body.DeclaredValue || body.declaredValue) || null,
-      BookingHorses: rawHorses,
-      RejectionReason: null,
-      ReviewedByUserID: null,
-      ReviewedAt: null,
-      AssignedSpecialistID: null,
-      AssignedCoordinatorID: null,
-      CreatedAt: new Date().toISOString(),
+      bookingId: newId,
+      bookingCode: newCode,
+      customerUserId: Number(body.customerUserId) || 5,
+      pickupAddress: String(pickup).trim(),
+      pickupCountryCode: body.pickupCountryCode || 'VN',
+      dropoffAddress: String(dropoff).trim(),
+      dropoffCountryCode: body.dropoffCountryCode || 'CN',
+      departureDate: departure,
+      deliveryDate: body.deliveryDate || departure,
+      totalHorses: totalHorsesCount,
+      specialInstructions: body.specialInstructions || null,
+      estimatedCost,
+      currencyCode: 'USD',
+      status: 'Submitted',
+      transportMode,
+      distanceKm: Number(body.distanceKm) || 1200,
+      isExpress: Boolean(body.isExpress),
+      requiresClimateControl: Boolean(body.requiresClimateControl),
+      declaredValue: Number(body.declaredValue) || null,
+      quoteBreakdown: null,
+      rejectionReason: null,
+      reviewedByUserId: null,
+      reviewedAt: null,
+      assignedSpecialistId: null,
+      assignedCoordinatorId: null,
+      createdAt: new Date().toISOString(),
     };
 
     // Đưa đơn mới lên đầu danh sách để hiển thị ngay lập tức
@@ -176,7 +176,7 @@ export const bookingHandlers = [
   // POST /api/bookings/:id/approve - Manager duyệt đơn
   http.post('/api/bookings/:id/approve', async ({ params, request }) => {
     const body = await request.json();
-    const index = bookings.findIndex((b) => b.BookingID === Number(params.id));
+    const index = bookings.findIndex((b) => b.bookingId === Number(params.id));
     if (index === -1) {
       return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
     }
@@ -184,9 +184,9 @@ export const bookingHandlers = [
     const specId = body.specialistUserId || body.specialistId;
     bookings[index] = {
       ...bookings[index],
-      Status: 'Approved',
-      AssignedSpecialistID: specId || bookings[index].AssignedSpecialistID,
-      ReviewedAt: new Date().toISOString(),
+      status: 'Approved',
+      assignedSpecialistId: specId || bookings[index].assignedSpecialistId,
+      reviewedAt: new Date().toISOString(),
     };
 
     return HttpResponse.json({
@@ -200,14 +200,14 @@ export const bookingHandlers = [
   // POST /api/bookings/:id/reassign-specialist & assign
   http.post('/api/bookings/:id/reassign-specialist', async ({ params, request }) => {
     const body = await request.json();
-    const index = bookings.findIndex((b) => b.BookingID === Number(params.id));
+    const index = bookings.findIndex((b) => b.bookingId === Number(params.id));
     if (index === -1) {
       return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
     }
 
     bookings[index] = {
       ...bookings[index],
-      AssignedSpecialistID: body.specialistUserId || body.specialistId,
+      assignedSpecialistId: body.specialistUserId || body.specialistId,
     };
 
     return HttpResponse.json({
@@ -221,16 +221,16 @@ export const bookingHandlers = [
   // POST /api/bookings/:id/assign
   http.post('/api/bookings/:id/assign', async ({ params, request }) => {
     const body = await request.json();
-    const index = bookings.findIndex((b) => b.BookingID === Number(params.id));
+    const index = bookings.findIndex((b) => b.bookingId === Number(params.id));
     if (index === -1) {
       return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
     }
 
     bookings[index] = {
       ...bookings[index],
-      Status: 'Assigned',
-      AssignedSpecialistID: body.specialistId || body.specialistUserId,
-      AssignedCoordinatorID: body.coordinatorId,
+      status: 'Assigned',
+      assignedSpecialistId: body.specialistId || body.specialistUserId,
+      assignedCoordinatorId: body.coordinatorId,
     };
 
     return HttpResponse.json({
@@ -243,16 +243,16 @@ export const bookingHandlers = [
   // POST /api/bookings/:id/reject - Từ chối đơn
   http.post('/api/bookings/:id/reject', async ({ params, request }) => {
     const body = await request.json();
-    const index = bookings.findIndex((b) => b.BookingID === Number(params.id));
+    const index = bookings.findIndex((b) => b.bookingId === Number(params.id));
     if (index === -1) {
       return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
     }
 
     bookings[index] = {
       ...bookings[index],
-      Status: 'Rejected',
-      RejectionReason: body.reason,
-      ReviewedAt: new Date().toISOString(),
+      status: 'Rejected',
+      rejectionReason: body.reason,
+      reviewedAt: new Date().toISOString(),
     };
 
     return HttpResponse.json({
@@ -265,14 +265,14 @@ export const bookingHandlers = [
 
   // POST /api/bookings/:id/cancel - Hủy đơn
   http.post('/api/bookings/:id/cancel', ({ params }) => {
-    const index = bookings.findIndex((b) => b.BookingID === Number(params.id));
+    const index = bookings.findIndex((b) => b.bookingId === Number(params.id));
     if (index === -1) {
       return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
     }
 
     bookings[index] = {
       ...bookings[index],
-      Status: 'Cancelled',
+      status: 'Cancelled',
     };
 
     return HttpResponse.json({

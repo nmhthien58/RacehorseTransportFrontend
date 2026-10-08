@@ -69,7 +69,7 @@ export const tripHandlers = [
 
   // GET /api/trips/:id
   http.get('/api/trips/:id', ({ params }) => {
-    const trip = trips.find((t) => t.TripID === Number(params.id));
+    const trip = trips.find((t) => t.tripId === Number(params.id));
     if (!trip) {
       return HttpResponse.json({ success: false, message: 'Trip not found' }, { status: 404 });
     }
@@ -85,12 +85,11 @@ export const tripHandlers = [
     const body = await request.json();
     const newId = trips.length + 1;
     const newTrip = {
-      TripID: newId,
-      TripCode: `TRP-2026-${String(newId).padStart(4, '0')}`,
-      OverallStatus: 'Draft',
-      Status: 'Draft',
+      tripId: newId,
+      tripCode: `TRP-2026-${String(newId).padStart(4, '0')}`,
+      overallStatus: 'Draft',
       ...body,
-      CreatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     };
     trips.unshift(newTrip);
     return HttpResponse.json({
@@ -103,13 +102,12 @@ export const tripHandlers = [
 
   // POST /api/trips/:id/start
   http.post('/api/trips/:id/start', ({ params }) => {
-    const trip = trips.find((t) => t.TripID === Number(params.id));
+    const trip = trips.find((t) => t.tripId === Number(params.id));
     if (!trip) {
       return HttpResponse.json({ success: false, message: 'Trip not found' }, { status: 404 });
     }
-    trip.OverallStatus = 'InTransit';
-    trip.Status = 'InTransit';
-    trip.ActualStartDate = new Date().toISOString();
+    trip.overallStatus = 'InTransit';
+    trip.actualStartDate = new Date().toISOString();
     return HttpResponse.json({
       success: true,
       message: 'Chuyến xe đã xuất phát',
@@ -121,12 +119,11 @@ export const tripHandlers = [
   // POST /api/trips/:id/status
   http.post('/api/trips/:id/status', async ({ params, request }) => {
     const body = await request.json();
-    const trip = trips.find((t) => t.TripID === Number(params.id));
+    const trip = trips.find((t) => t.tripId === Number(params.id));
     if (!trip) {
       return HttpResponse.json({ success: false, message: 'Trip not found' }, { status: 404 });
     }
-    trip.OverallStatus = body.status;
-    trip.Status = body.status;
+    trip.overallStatus = body.status;
     return HttpResponse.json({
       success: true,
       data: trip,
@@ -139,10 +136,10 @@ export const tripHandlers = [
     return HttpResponse.json({
       success: true,
       data: trips.map((t) => ({
-        tripId: t.TripID,
-        tripCode: t.TripCode,
-        overallStatus: t.OverallStatus || t.Status,
-        delayMinutes: 0,
+        tripId: t.tripId,
+        tripCode: t.tripCode,
+        overallStatus: t.overallStatus,
+        delayMinutes: t.delayMinutes || 0,
       })),
     });
   }),
@@ -211,7 +208,7 @@ export const tripHandlers = [
       success: true,
       data: {
         totalTrips: trips.length,
-        completedTrips: trips.filter((t) => t.Status === 'Completed').length,
+        completedTrips: trips.filter((t) => t.overallStatus === 'Completed').length,
         onTimeRatePercent: 98.5,
         totalHorsesTransported: 45,
       },
@@ -237,12 +234,12 @@ export const tripHandlers = [
   http.post('/api/incidents', async ({ request }) => {
     const body = await request.json();
     const newIncident = {
-      IncidentID: incidents.length + 1,
-      IncidentCode: `INC-2026-${String(incidents.length + 1).padStart(4, '0')}`,
-      Severity: body.Severity || body.severity || 'Moderate',
+      incidentId: incidents.length + 1,
+      incidentCode: `INC-2026-${String(incidents.length + 1).padStart(4, '0')}`,
+      severity: body.severity || 'Moderate',
       ...body,
-      Status: 'Reported',
-      ReportedAt: new Date().toISOString(),
+      status: 'Reported',
+      reportedAt: new Date().toISOString(),
     };
     incidents.unshift(newIncident);
     return HttpResponse.json({
@@ -256,14 +253,14 @@ export const tripHandlers = [
   // POST /api/incidents/:id/plan
   http.post('/api/incidents/:id/plan', async ({ params, request }) => {
     const body = await request.json();
-    const incident = incidents.find((i) => i.IncidentID === Number(params.id));
+    const incident = incidents.find((i) => i.incidentId === Number(params.id));
     if (!incident) {
       return HttpResponse.json({ success: false, message: 'Incident not found' }, { status: 404 });
     }
-    incident.Status = 'PlanProposed';
-    incident.ProposedAction = body.proposedAction || incident.ProposedAction;
-    incident.AdditionalCost = body.additionalCost ?? incident.AdditionalCost;
-    incident.RevisedRouteNotes = body.revisedRouteNotes || incident.RevisedRouteNotes;
+    incident.status = 'PlanProposed';
+    incident.proposedAction = body.proposedAction || incident.proposedAction;
+    incident.additionalCost = body.additionalCost ?? incident.additionalCost;
+    incident.revisedRouteNotes = body.revisedRouteNotes || incident.revisedRouteNotes;
     return HttpResponse.json({
       success: true,
       data: incident,
@@ -274,13 +271,13 @@ export const tripHandlers = [
   // POST /api/incidents/:id/approve
   http.post('/api/incidents/:id/approve', async ({ params, request }) => {
     const body = await request.json();
-    const incident = incidents.find((i) => i.IncidentID === Number(params.id));
+    const incident = incidents.find((i) => i.incidentId === Number(params.id));
     if (!incident) {
       return HttpResponse.json({ success: false, message: 'Incident not found' }, { status: 404 });
     }
-    incident.Status = 'Approved';
-    incident.ApprovedByUserID = body.approvedByUserId || 1;
-    incident.ApprovedAt = new Date().toISOString();
+    incident.status = 'Approved';
+    incident.approvedByUserId = body.approvedByUserId || 1;
+    incident.approvedAt = new Date().toISOString();
     return HttpResponse.json({
       success: true,
       data: incident,
@@ -290,11 +287,11 @@ export const tripHandlers = [
 
   // POST /api/incidents/:id/reject
   http.post('/api/incidents/:id/reject', ({ params }) => {
-    const incident = incidents.find((i) => i.IncidentID === Number(params.id));
+    const incident = incidents.find((i) => i.incidentId === Number(params.id));
     if (!incident) {
       return HttpResponse.json({ success: false, message: 'Incident not found' }, { status: 404 });
     }
-    incident.Status = 'Rejected';
+    incident.status = 'Rejected';
     return HttpResponse.json({
       success: true,
       data: incident,
@@ -304,12 +301,12 @@ export const tripHandlers = [
 
   // POST /api/incidents/:id/resolve
   http.post('/api/incidents/:id/resolve', ({ params }) => {
-    const incident = incidents.find((i) => i.IncidentID === Number(params.id));
+    const incident = incidents.find((i) => i.incidentId === Number(params.id));
     if (!incident) {
       return HttpResponse.json({ success: false, message: 'Incident not found' }, { status: 404 });
     }
-    incident.Status = 'Resolved';
-    incident.ResolvedAt = new Date().toISOString();
+    incident.status = 'Resolved';
+    incident.resolvedAt = new Date().toISOString();
     return HttpResponse.json({
       success: true,
       data: incident,

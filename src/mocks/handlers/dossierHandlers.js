@@ -21,7 +21,7 @@ export const dossierHandlers = [
 
   // GET /api/dossiers/:id
   http.get('/api/dossiers/:id', ({ params }) => {
-    const dossier = dossiers.find((d) => d.DossierID === Number(params.id));
+    const dossier = dossiers.find((d) => d.dossierId === Number(params.id));
     if (!dossier) {
       return HttpResponse.json({ success: false, message: 'Dossier not found' }, { status: 404 });
     }
@@ -67,9 +67,9 @@ export const dossierHandlers = [
 
   // POST /api/dossiers/:id/submit-to-authorities
   http.post('/api/dossiers/:id/submit-to-authorities', ({ params }) => {
-    const dossier = dossiers.find((d) => d.DossierID === Number(params.id));
+    const dossier = dossiers.find((d) => d.dossierId === Number(params.id));
     if (dossier) {
-      dossier.Status = 'SubmittedToAuthorities';
+      dossier.status = 'SubmittedToAuthorities';
     }
     return HttpResponse.json({
       success: true,
@@ -80,13 +80,13 @@ export const dossierHandlers = [
 
   // POST /api/dossiers/:id/clear
   http.post('/api/dossiers/:id/clear', ({ params }) => {
-    const dossier = dossiers.find((d) => d.DossierID === Number(params.id));
+    const dossier = dossiers.find((d) => d.dossierId === Number(params.id));
     if (!dossier) {
       return HttpResponse.json({ success: false, message: 'Dossier not found' }, { status: 404 });
     }
-    dossier.Status = 'Cleared';
-    dossier.ClearanceNumber = `VET-CERT-${Date.now()}`;
-    dossier.ClearedAt = new Date().toISOString();
+    dossier.status = 'Cleared';
+    dossier.clearanceNumber = `VET-CERT-${Date.now()}`;
+    dossier.clearedAt = new Date().toISOString();
 
     return HttpResponse.json({
       success: true,
@@ -98,9 +98,9 @@ export const dossierHandlers = [
 
   // POST /api/dossiers/:id/issue
   http.post('/api/dossiers/:id/issue', ({ params }) => {
-    const dossier = dossiers.find((d) => d.DossierID === Number(params.id));
+    const dossier = dossiers.find((d) => d.dossierId === Number(params.id));
     if (dossier) {
-      dossier.Status = 'Issue';
+      dossier.status = 'Issue';
     }
     return HttpResponse.json({
       success: true,

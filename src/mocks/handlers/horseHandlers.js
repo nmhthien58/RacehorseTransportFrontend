@@ -15,7 +15,7 @@ export const horseHandlers = [
       const parsedId = Number(ownerId);
       // Luôn đảm bảo tài khoản Customer thấy cả ngựa mẫu (ID=5) lẫn các cá thể mình tạo mới
       result = horses.filter(
-        (h) => h.OwnerUserID === parsedId || h.OwnerUserID === 5,
+        (h) => h.ownerUserId === parsedId || h.ownerUserId === 5,
       );
     }
 
@@ -34,7 +34,7 @@ export const horseHandlers = [
 
   // GET /api/horses/:id - Chi tiết một con ngựa
   http.get('/api/horses/:id', ({ params }) => {
-    const horse = horses.find((h) => h.HorseID === Number(params.id));
+    const horse = horses.find((h) => h.horseId === Number(params.id));
     if (!horse) {
       return HttpResponse.json({ success: false, message: 'Horse not found' }, { status: 404 });
     }
@@ -66,8 +66,8 @@ export const horseHandlers = [
       body = await request.json();
     }
 
-    const horseName = body.Name || body.name;
-    const microchip = body.MicrochipNumber || body.microchipNumber;
+    const horseName = body.name;
+    const microchip = body.microchipNumber;
 
     // 1. Kiểm tra các trường dữ liệu bắt buộc theo DB schema
     if (!horseName || !String(horseName).trim()) {
@@ -85,12 +85,12 @@ export const horseHandlers = [
     }
 
     const trimmedMicrochip = String(microchip).trim();
-    const passport = body.PassportNumber || body.passportNumber;
+    const passport = body.passportNumber;
     const trimmedPassport = passport ? String(passport).trim() : '';
 
     // 2. Kiểm tra trùng lặp mã vi mạch (Unique constraint)
     const duplicateChip = horses.find(
-      (h) => h.MicrochipNumber && h.MicrochipNumber.toLowerCase() === trimmedMicrochip.toLowerCase(),
+      (h) => h.microchipNumber && h.microchipNumber.toLowerCase() === trimmedMicrochip.toLowerCase(),
     );
     if (duplicateChip) {
       return HttpResponse.json(
@@ -102,7 +102,7 @@ export const horseHandlers = [
     // 3. Kiểm tra trùng lặp số hộ chiếu (nếu có nhập)
     if (trimmedPassport) {
       const duplicatePassport = horses.find(
-        (h) => h.PassportNumber && h.PassportNumber.toLowerCase() === trimmedPassport.toLowerCase(),
+        (h) => h.passportNumber && h.passportNumber.toLowerCase() === trimmedPassport.toLowerCase(),
       );
       if (duplicatePassport) {
         return HttpResponse.json(
@@ -112,26 +112,26 @@ export const horseHandlers = [
       }
     }
 
-    // 4. Sinh HorseID tuần tự kiểu số nguyên chuẩn DB IDENTITY
-    const maxId = horses.reduce((max, h) => Math.max(max, Number(h.HorseID) || 0), 0);
+    // 4. Sinh horseId tuần tự kiểu số nguyên chuẩn DB IDENTITY
+    const maxId = horses.reduce((max, h) => Math.max(max, Number(h.horseId) || 0), 0);
     const newHorseId = maxId + 1;
 
     const newHorse = {
-      HorseID: newHorseId,
-      OwnerUserID: Number(body.OwnerUserID || body.ownerUserId) || 5,
-      Name: String(horseName).trim(),
-      MicrochipNumber: trimmedMicrochip,
-      PassportNumber: trimmedPassport || `FEI-VN-2026-${String(newHorseId).padStart(2, '0')}`,
-      Breed: body.Breed || body.breed || 'Thoroughbred',
-      Gender: body.Gender || body.gender || 'Stallion',
-      DateOfBirth: body.DateOfBirth || body.dateOfBirth || null,
-      Color: body.Color || body.color ? String(body.Color || body.color).trim() : '',
-      SpecialCareRequirements: body.SpecialCareRequirements || body.specialCareRequirements
-        ? String(body.SpecialCareRequirements || body.specialCareRequirements).trim()
+      horseId: newHorseId,
+      ownerUserId: Number(body.ownerUserId) || 5,
+      name: String(horseName).trim(),
+      microchipNumber: trimmedMicrochip,
+      passportNumber: trimmedPassport || `FEI-VN-2026-${String(newHorseId).padStart(2, '0')}`,
+      breed: body.breed || 'Thoroughbred',
+      gender: body.gender || 'Stallion',
+      dateOfBirth: body.dateOfBirth || null,
+      color: body.color ? String(body.color).trim() : '',
+      specialCareRequirements: body.specialCareRequirements
+        ? String(body.specialCareRequirements).trim()
         : null,
-      PhotoUrl: body.PhotoUrl || body.photoUrl || null,
-      IsActive: true,
-      CreatedAt: new Date().toISOString(),
+      photoUrl: body.photoUrl || null,
+      isActive: true,
+      createdAt: new Date().toISOString(),
     };
 
     // Đưa ngựa mới lên đầu danh sách để hiển thị ngay lập tức
@@ -148,7 +148,7 @@ export const horseHandlers = [
   http.put('/api/horses/:id', async ({ params, request }) => {
     const horseId = Number(params.id);
     const body = await request.json();
-    const index = horses.findIndex((h) => h.HorseID === horseId);
+    const index = horses.findIndex((h) => h.horseId === horseId);
 
     if (index === -1) {
       return HttpResponse.json({ success: false, message: 'Horse not found' }, { status: 404 });
@@ -157,7 +157,7 @@ export const horseHandlers = [
     horses[index] = {
       ...horses[index],
       ...body,
-      HorseID: horseId,
+      horseId,
     };
 
     return HttpResponse.json({
@@ -171,7 +171,7 @@ export const horseHandlers = [
   // DELETE /api/horses/:id - Xóa hồ sơ ngựa
   http.delete('/api/horses/:id', ({ params }) => {
     const horseId = Number(params.id);
-    const index = horses.findIndex((h) => h.HorseID === horseId);
+    const index = horses.findIndex((h) => h.horseId === horseId);
 
     if (index === -1) {
       return HttpResponse.json({ success: false, message: 'Horse not found' }, { status: 404 });

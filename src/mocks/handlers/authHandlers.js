@@ -4,15 +4,15 @@ import usersData from '../data/users.json';
 export const authHandlers = [
   http.post('/api/auth/login', async ({ request }) => {
     const body = await request.json();
-    const user = usersData.find((u) => u.Email === body.email);
+    const user = usersData.find((u) => u.email === body.email);
     if (!user) {
       return HttpResponse.json(
         { success: false, message: 'Email hoặc mật khẩu không đúng', errors: ['Invalid credentials'] },
         { status: 401 },
       );
     }
-    const token = `mock-token-${user.UserID}`;
-    const refreshToken = `mock-refresh-token-${user.UserID}`;
+    const token = `mock-token-${user.userId}`;
+    const refreshToken = `mock-refresh-token-${user.userId}`;
     return HttpResponse.json({
       success: true,
       message: 'Đăng nhập thành công',
@@ -47,29 +47,29 @@ export const authHandlers = [
     const body = await request.json();
     return HttpResponse.json({
       success: true,
-      message: `Đăng ký thành công. Mã xác minh đã được gửi tới email ${body.Email || body.email}`,
+      message: `Đăng ký thành công. Mã xác minh đã được gửi tới email ${body.email}`,
       data: {
-        email: body.Email || body.email,
+        email: body.email,
       },
-      email: body.Email || body.email,
+      email: body.email,
     });
   }),
 
   http.post('/api/auth/google', async ({ request }) => {
     const body = await request.json();
-    const email = body.email || body.Email || 'google_user@gmail.com';
-    const fullName = body.FullName || body.fullName || body.name || 'Google User';
+    const email = body.email || 'google_user@gmail.com';
+    const fullName = body.fullName || body.name || 'Google User';
     const user = {
-      UserID: Date.now(),
-      FullName: fullName,
-      Email: email,
-      PhoneNumber: '+84988000999',
-      Role: 'Customer',
-      IsActive: true,
-      CreatedAt: new Date().toISOString(),
+      userId: Date.now(),
+      fullName,
+      email,
+      phoneNumber: '+84988000999',
+      role: 'Customer',
+      isActive: true,
+      createdAt: new Date().toISOString(),
     };
-    const token = `mock-google-token-${user.UserID}`;
-    const refreshToken = `mock-google-refresh-${user.UserID}`;
+    const token = `mock-google-token-${user.userId}`;
+    const refreshToken = `mock-google-refresh-${user.userId}`;
     return HttpResponse.json({
       success: true,
       message: 'Đăng nhập Google thành công',
@@ -87,15 +87,15 @@ export const authHandlers = [
   http.post('/api/auth/verify-email', async ({ request }) => {
     const body = await request.json();
     const newUser = {
-      UserID: Date.now(),
-      FullName: body.FullName || body.fullName || 'New Customer',
-      Email: body.Email || body.email,
-      PhoneNumber: body.PhoneNumber || '+84988000999',
-      Role: 'Customer',
-      IsActive: true,
-      CreatedAt: new Date().toISOString(),
+      userId: Date.now(),
+      fullName: body.fullName || 'New Customer',
+      email: body.email,
+      phoneNumber: body.phoneNumber || '+84988000999',
+      role: 'Customer',
+      isActive: true,
+      createdAt: new Date().toISOString(),
     };
-    const token = `mock-token-${newUser.UserID}`;
+    const token = `mock-token-${newUser.userId}`;
     return HttpResponse.json({
       success: true,
       data: {
@@ -149,7 +149,7 @@ export const authHandlers = [
       return HttpResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
     const userId = authHeader.replace('Bearer mock-token-', '');
-    const user = usersData.find((u) => u.UserID === Number(userId)) || usersData[0];
+    const user = usersData.find((u) => u.userId === Number(userId)) || usersData[0];
     return HttpResponse.json({
       success: true,
       data: user,
@@ -162,15 +162,15 @@ export const authHandlers = [
     const role = url.searchParams.get('role');
     let list = usersData;
     if (role) {
-      list = usersData.filter((u) => u.Role === role);
+      list = usersData.filter((u) => u.role === role);
     }
     return HttpResponse.json({
       success: true,
       data: list.map((u) => ({
-        UserID: u.UserID,
-        FullName: u.FullName,
-        Email: u.Email,
-        Role: u.Role,
+        userId: u.userId,
+        fullName: u.fullName,
+        email: u.email,
+        role: u.role,
       })),
     });
   }),

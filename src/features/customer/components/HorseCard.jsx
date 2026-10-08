@@ -8,42 +8,13 @@ import {
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import {
+  calculateHorseRisk,
+  HealthStatusTag,
+  RiskBadge,
+} from '@utils/horseHealth';
 
 const { Title, Text } = Typography;
-
-/**
- * Tính toán mức độ rủi ro sức khỏe / vận chuyển minh họa theo tuổi và yêu cầu chăm sóc
- * @param {import('@types/database').Horse} horse
- * @returns {{ label: string, bg: string, color: string, border: string }}
- */
-const getRiskTag = (horse, t) => {
-  const birthYear = horse.DateOfBirth ? dayjs(horse.DateOfBirth).year() : null;
-  const currentYear = dayjs().year();
-  const age = birthYear ? currentYear - birthYear : 4;
-
-  if (age >= 6 || (horse.SpecialCareRequirements && horse.SpecialCareRequirements.toLowerCase().includes('say xe'))) {
-    return {
-      label: t('dashboard.riskLevels.critical') || 'Critical Risk',
-      bg: '#fee2e2',
-      color: '#991b1b',
-      border: '#fca5a5',
-    };
-  }
-  if (horse.Gender === 'Stallion' || (horse.SpecialCareRequirements && horse.SpecialCareRequirements.length > 30)) {
-    return {
-      label: t('dashboard.riskLevels.high') || 'High Risk',
-      bg: '#fef3c7',
-      color: '#92400e',
-      border: '#fcd34d',
-    };
-  }
-  return {
-    label: t('dashboard.riskLevels.low') || 'Low Risk',
-    bg: '#dcfce7',
-    color: '#166534',
-    border: '#86efac',
-  };
-};
 
 /**
  * Component hiển thị Thẻ hồ sơ ngựa đua (Horse Card)
@@ -58,7 +29,7 @@ const getRiskTag = (horse, t) => {
  */
 export default function HorseCard({ horse, onEdit, onDelete, onView }) {
   const { t } = useTranslation();
-  const risk = getRiskTag(horse, t);
+  const risk = calculateHorseRisk(horse);
   const birthYear = horse.DateOfBirth ? dayjs(horse.DateOfBirth).year() : null;
 
   return (
@@ -127,30 +98,20 @@ export default function HorseCard({ horse, onEdit, onDelete, onView }) {
             >
               {horse.Name}
             </Title>
-            <Text type="secondary" style={{ fontSize: 13, display: 'block', marginTop: 2 }}>
-              {horse.Breed || 'Thoroughbred'} ·{' '}
-              <span style={{ textTransform: 'uppercase', fontWeight: 600 }}>
-                {t(`horses.genderOptions.${horse.Gender?.toLowerCase()}`) || horse.Gender}
-              </span>
-              {birthYear ? ` · Born ${birthYear}` : ''}
-            </Text>
+            <Flex align="center" gap={6} wrap="wrap" style={{ marginTop: 3 }}>
+              <Text type="secondary" style={{ fontSize: 13 }}>
+                {horse.Breed || 'Thoroughbred'} ·{' '}
+                <span style={{ textTransform: 'uppercase', fontWeight: 600 }}>
+                  {t(`horses.genderOptions.${horse.Gender?.toLowerCase()}`) || horse.Gender}
+                </span>
+                {birthYear ? ` · ${t('horses.bornYear', { year: birthYear })}` : ''}
+              </Text>
+              <HealthStatusTag status={horse.HealthStatus} size="small" />
+            </Flex>
           </div>
         </Flex>
 
-        <Tag
-          style={{
-            margin: 0,
-            padding: '3px 10px',
-            borderRadius: 9999,
-            fontSize: 12,
-            fontWeight: 700,
-            backgroundColor: risk.bg,
-            color: risk.color,
-            border: `1px solid ${risk.border}`,
-          }}
-        >
-          {risk.label}
-        </Tag>
+        <RiskBadge risk={risk} />
       </Flex>
 
       {/* Màu sắc & dấu hiệu nhận dạng */}

@@ -474,7 +474,7 @@ export default function CustomerBookings() {
             <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
               <StatusTag status={selectedBooking.Status} />
               <Text type="secondary" style={{ fontSize: 13 }}>
-                Ngày tạo: {dayjs(selectedBooking.CreatedAt).format('DD/MM/YYYY HH:mm')}
+                {t('bookings.createdAt')}: {dayjs(selectedBooking.CreatedAt).format('DD/MM/YYYY HH:mm')}
               </Text>
             </Flex>
 
@@ -483,7 +483,7 @@ export default function CustomerBookings() {
               <div style={{ marginBottom: 10 }}>
                 <Text type="secondary" style={{ fontSize: 12 }}>
                   <EnvironmentOutlined style={{ color: '#d97706', marginRight: 4 }} />
-                  ĐIỂM ĐÓN ({selectedBooking.PickupCountryCode}):
+                  {t('bookings.pickupLocation')} ({selectedBooking.PickupCountryCode}):
                 </Text>
                 <div style={{ fontWeight: 600, color: '#0f172a', marginTop: 2 }}>
                   {selectedBooking.PickupAddress}
@@ -493,7 +493,7 @@ export default function CustomerBookings() {
               <div>
                 <Text type="secondary" style={{ fontSize: 12 }}>
                   <EnvironmentOutlined style={{ color: '#10b981', marginRight: 4 }} />
-                  ĐIỂM GIAO ({selectedBooking.DropoffCountryCode}):
+                  {t('bookings.dropoffLocation')} ({selectedBooking.DropoffCountryCode}):
                 </Text>
                 <div style={{ fontWeight: 600, color: '#0f172a', marginTop: 2 }}>
                   {selectedBooking.DropoffAddress}
@@ -504,29 +504,35 @@ export default function CustomerBookings() {
             {/* Thông số kỹ thuật */}
             <Row gutter={[16, 12]} style={{ marginBottom: 16 }}>
               <Col span={12}>
-                <Text type="secondary">Phương thức vận chuyển: </Text>
+                <Text type="secondary">{t('bookings.transportMode')}: </Text>
                 <Tag color={selectedBooking.TransportMode === 'Air' ? 'blue' : 'orange'}>
-                  {selectedBooking.TransportMode === 'Air' ? '✈ Hàng không' : '🚛 Đường bộ'}
+                  {selectedBooking.TransportMode === 'Air'
+                    ? `✈ ${t('bookings.modes.air')}`
+                    : `🚛 ${t('bookings.modes.ground')}`}
                 </Tag>
               </Col>
               <Col span={12}>
-                <Text type="secondary">Số lượng ngựa: </Text>
-                <strong>🐴 {selectedBooking.TotalHorses} con</strong>
+                <Text type="secondary">{t('bookings.fields.totalHorses')}: </Text>
+                <strong>🐴 {t('bookings.totalHorsesCount', { count: selectedBooking.TotalHorses })}</strong>
               </Col>
               <Col span={12}>
-                <Text type="secondary">Khởi hành dự kiến: </Text>
+                <Text type="secondary">{t('bookings.fields.departureDate')}: </Text>
                 <strong>
                   <CalendarOutlined style={{ marginRight: 4 }} />
                   {dayjs(selectedBooking.DepartureDate).format('DD/MM/YYYY')}
                 </strong>
               </Col>
               <Col span={12}>
-                <Text type="secondary">Điều hòa nhiệt độ: </Text>
-                <strong>{selectedBooking.RequiresClimateControl ? 'Có (16-19°C)' : 'Không'}</strong>
+                <Text type="secondary">{t('bookings.climateControl')}: </Text>
+                <strong>
+                  {selectedBooking.RequiresClimateControl
+                    ? t('bookings.climateControlYes')
+                    : t('bookings.climateControlNo')}
+                </strong>
               </Col>
               {selectedBooking.SpecialInstructions && (
                 <Col span={24}>
-                  <Text type="secondary">Ghi chú đặc biệt: </Text>
+                  <Text type="secondary">{t('bookings.specialNotes')}: </Text>
                   <div style={{ fontStyle: 'italic', marginTop: 2 }}>
                     &ldquo;{selectedBooking.SpecialInstructions}&rdquo;
                   </div>
@@ -539,7 +545,7 @@ export default function CustomerBookings() {
               <div style={{ marginTop: 16 }}>
                 <Divider style={{ margin: '12px 0' }} />
                 <Title level={5} style={{ margin: '0 0 10px', color: '#0f172a' }}>
-                  Bảng phân tích chi phí dự kiến
+                  {t('bookings.quoteBreakdownTitle')}
                 </Title>
                 <Table
                   dataSource={parsedQuote}
@@ -547,17 +553,17 @@ export default function CustomerBookings() {
                   pagination={false}
                   size="small"
                   columns={[
-                    { title: 'Khoản mục', dataIndex: 'name', key: 'name' },
-                    { title: 'SL', dataIndex: 'qty', key: 'qty', align: 'center' },
+                    { title: t('bookings.quoteItem'), dataIndex: 'name', key: 'name' },
+                    { title: t('bookings.quoteQty'), dataIndex: 'qty', key: 'qty', align: 'center' },
                     {
-                      title: 'Đơn giá',
+                      title: t('bookings.quoteUnitPrice'),
                       dataIndex: 'unitPrice',
                       key: 'unitPrice',
                       align: 'right',
                       render: (v) => `$${Number(v).toLocaleString()}`,
                     },
                     {
-                      title: 'Thành tiền',
+                      title: t('bookings.quoteAmount'),
                       dataIndex: 'amount',
                       key: 'amount',
                       align: 'right',
@@ -572,7 +578,7 @@ export default function CustomerBookings() {
 
             <Flex justify="space-between" align="center">
               <Text strong style={{ fontSize: 15 }}>
-                Tổng dự toán cước phí:
+                {t('bookings.totalEstimatedCost')}:
               </Text>
               <span style={{ fontSize: 24, fontWeight: 800, color: '#d97706' }}>
                 ${Number(selectedBooking.EstimatedCost || 0).toLocaleString()} USD

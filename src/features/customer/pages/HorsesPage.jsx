@@ -39,6 +39,11 @@ import HorseCard from '@features/customer/components/HorseCard';
 import horseService from '@services/horseService';
 import { useAuthStore } from '@features/auth/store/authStore';
 import { ROUTES } from '@routes/routes';
+import {
+  calculateHorseRisk,
+  HealthStatusTag,
+  RiskBadge,
+} from '@utils/horseHealth';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -121,6 +126,7 @@ export default function CustomerHorses() {
       MicrochipNumber: record.MicrochipNumber,
       PassportNumber: record.PassportNumber,
       Color: record.Color,
+      HealthStatus: record.HealthStatus || 'Good',
       SpecialCareRequirements: record.SpecialCareRequirements,
     });
     setEditModalVisible(true);
@@ -241,6 +247,20 @@ export default function CustomerHorses() {
       dataIndex: 'DateOfBirth',
       key: 'DateOfBirth',
       render: (dob) => (dob ? dayjs(dob).format('DD/MM/YYYY') : '-'),
+    },
+    {
+      title: t('horses.columns.health') || 'Sức khỏe',
+      dataIndex: 'HealthStatus',
+      key: 'HealthStatus',
+      render: (status) => <HealthStatusTag status={status} size="small" />,
+    },
+    {
+      title: 'Mức rủi ro',
+      key: 'RiskLevel',
+      render: (_, record) => {
+        const risk = calculateHorseRisk(record);
+        return <RiskBadge risk={risk} size="small" />;
+      },
     },
     {
       title: t('horses.fields.status'),
@@ -609,9 +629,45 @@ export default function CustomerHorses() {
           </Row>
 
           <Row gutter={16}>
-            <Col span={24}>
+            <Col xs={24} sm={12}>
               <Form.Item name="Color" label={t('horses.fields.color')}>
                 <Input placeholder="e.g. Hồng sắc, Bạch sắc, Ô sắc" />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} sm={12}>
+              <Form.Item name="HealthStatus" label="Đánh giá sức khỏe (Health Status)">
+                <Select
+                  options={[
+                    {
+                      value: 'Excellent',
+                      label: (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                          <HealthStatusTag status="Excellent" size="small" />
+                          <span style={{ fontSize: 13 }}>Xuất sắc (Tối ưu thi đấu)</span>
+                        </div>
+                      ),
+                    },
+                    {
+                      value: 'Good',
+                      label: (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                          <HealthStatusTag status="Good" size="small" />
+                          <span style={{ fontSize: 13 }}>Khỏe mạnh (Ổn định)</span>
+                        </div>
+                      ),
+                    },
+                    {
+                      value: 'Attention',
+                      label: (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                          <HealthStatusTag status="Attention" size="small" />
+                          <span style={{ fontSize: 13 }}>Cần theo dõi (Có lưu ý)</span>
+                        </div>
+                      ),
+                    },
+                  ]}
+                />
               </Form.Item>
             </Col>
           </Row>

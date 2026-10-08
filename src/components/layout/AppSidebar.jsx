@@ -45,7 +45,7 @@ export default function AppSidebar({ collapsed, user }) {
           label: t('nav.horses'),
         },
         {
-          key: '/customer/vet-records',
+          key: ROUTES.CUSTOMER_VET_RECORDS,
           icon: <MedicineBoxOutlined style={{ fontSize: 18 }} />,
           label: t('nav.vetRecords'),
         },
@@ -134,10 +134,12 @@ export default function AppSidebar({ collapsed, user }) {
   const getSelectedKey = () => {
     const current = location.pathname;
     if (current.startsWith('/customer/horses')) return ROUTES.CUSTOMER_HORSES;
+    if (current.startsWith('/customer/vet-record') || current.startsWith('/customer/vetrecord') || current.startsWith('/vet-record')) return ROUTES.CUSTOMER_VET_RECORDS;
     if (current.startsWith('/customer/bookings')) return ROUTES.CUSTOMER_BOOKINGS;
     if (current.startsWith('/customer/trips')) return ROUTES.CUSTOMER_TRIPS;
     if (current.startsWith('/customer/messages')) return ROUTES.CUSTOMER_MESSAGES;
     if (current.startsWith('/customer/profile')) return ROUTES.CUSTOMER_PROFILE;
+    if (current.startsWith('/customer/billing') || current.startsWith('/billing')) return ROUTES.CUSTOMER_BILLING;
     return current;
   };
 

@@ -109,7 +109,7 @@ export default function ProfilePage() {
               </Tag>
               <Tag color="purple">{profile?.MembershipTier}</Tag>
               <Tag color="success" icon={<CheckCircleOutlined />}>
-                Đã xác thực danh tính
+                {t('profile.verified')}
               </Tag>
             </Flex>
           </div>
@@ -122,33 +122,33 @@ export default function ProfilePage() {
           size="middle"
           styles={{ label: { fontWeight: 600, width: '28%', color: '#475569' } }}
         >
-          <Descriptions.Item label={t('profile.fullName') || 'Họ và tên'}>
+          <Descriptions.Item label={t('profile.fullName')}>
             <strong style={{ color: '#0f172a' }}>{profile?.FullName}</strong>
           </Descriptions.Item>
 
-          <Descriptions.Item label={t('profile.role') || 'Role (Vai trò)'}>
+          <Descriptions.Item label={t('profile.role')}>
             <Tag color="blue">{profile?.Role}</Tag>
           </Descriptions.Item>
 
-          <Descriptions.Item label={t('profile.email') || 'Email'}>
+          <Descriptions.Item label={t('profile.email')}>
             <Space size="small">
               <MailOutlined style={{ color: '#64748b' }} />
               <span>{profile?.Email}</span>
             </Space>
           </Descriptions.Item>
 
-          <Descriptions.Item label={t('profile.phone') || 'Số điện thoại'}>
+          <Descriptions.Item label={t('profile.phone')}>
             <Space size="small">
               <PhoneOutlined style={{ color: '#64748b' }} />
               <span>{profile?.PhoneNumber}</span>
             </Space>
           </Descriptions.Item>
 
-          <Descriptions.Item label={t('profile.club') || 'CLB / Trang trại'}>
+          <Descriptions.Item label={t('profile.club')}>
             <strong>{profile?.ClubName}</strong>
           </Descriptions.Item>
 
-          <Descriptions.Item label="Mã chủ ngựa FEI (FEI Owner ID)">
+          <Descriptions.Item label={t('profile.feiOwnerId')}>
             <code
               style={{
                 backgroundColor: '#f1f5f9',
@@ -162,19 +162,19 @@ export default function ProfilePage() {
             </code>
           </Descriptions.Item>
 
-          <Descriptions.Item label={t('profile.address') || 'Địa chỉ liên hệ'} span={2}>
+          <Descriptions.Item label={t('profile.address')} span={2}>
             {profile?.Address}
           </Descriptions.Item>
 
-          <Descriptions.Item label={t('profile.createdAt') || 'Ngày gia nhập'}>
+          <Descriptions.Item label={t('profile.createdAt')}>
             <Space size="small">
               <CalendarOutlined style={{ color: '#64748b' }} />
               <span>{dayjs(profile?.CreatedAt).format('DD/MM/YYYY')}</span>
             </Space>
           </Descriptions.Item>
 
-          <Descriptions.Item label={t('profile.status') || 'Trạng thái tài khoản'}>
-            <Tag color="success">Đang hoạt động</Tag>
+          <Descriptions.Item label={t('profile.status')}>
+            <Tag color="success">{t('profile.activeStatus')}</Tag>
           </Descriptions.Item>
         </Descriptions>
       </Card>

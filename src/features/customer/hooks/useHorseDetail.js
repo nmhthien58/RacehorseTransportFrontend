@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { MOCK_HORSES } from '@mocks/data/horses.mock';
+import horseService from '@services/horseService';
+import { getStoredHorseById } from '@utils/horseStorage';
 
 /**
  * Hook lấy thông tin chi tiết một cá thể ngựa theo ID.
- * Hiện tại: tìm kiếm trong mock data. Khi có API: gọi horseService.getHorseById(id).
  *
  * @param {number|string} id - Mã định danh HorseID
  * @returns {{ data: any|null, loading: boolean, error: Error|null }}
@@ -14,30 +14,58 @@ export function useHorseDetail(id) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    let isSubscribed = true;
+
+    async function loadDetail() {
       if (!id) {
         setLoading(false);
         return;
       }
 
       try {
-        const found = MOCK_HORSES.find((h) => String(h.HorseID) === String(id));
-        if (found) {
-          setData(found);
+        setLoading(true);
+        // Ưu tiên lấy từ stored horse hoặc gọi service
+        const stored = getStoredHorseById(id);
+        if (stored) {
+          if (isSubscribed) setData(stored);
         } else {
-          setError(new Error(`Horse with ID ${id} not found`));
+          const res = await horseService.getHorseById(id);
+          const found = res?.data || res;
+          if (found && isSubscribed) {
+            setData(found);
+          } else if (isSubscribed) {
+            setError(new Error(`Horse with ID ${id} not found`));
+          }
         }
       } catch (err) {
-        setError(err);
+        if (isSubscribed) {
+          // Thử lại lần cuối từ stored
+          const fallback = getStoredHorseById(id);
+          if (fallback) {
+            setData(fallback);
+          } else {
+            setError(err);
+          }
+        }
       } finally {
-        setLoading(false);
+        if (isSubscribed) setLoading(false);
       }
-    }, 150);
+    }
 
-    return () => clearTimeout(timer);
+    loadDetail();
+
+    const handleUpdate = () => {
+      loadDetail();
+    };
+    window.addEventListener('horses_updated', handleUpdate);
+
+    return () => {
+      isSubscribed = false;
+      window.removeEventListener('horses_updated', handleUpdate);
+    };
   }, [id]);
 
-  return { data, loading, error };
+  return { data, loading, error, refetch: () => setData(getStoredHorseById(id)) };
 }
 
 export default useHorseDetail;

@@ -132,23 +132,108 @@
     "viewAction": "Xem",
     "yearsOld": "tuổi",
     "notFound": "Không tìm thấy thông tin cá thể ngựa",
+    "noPassport": "Không có hộ chiếu",
+    "editModalTitle": "Chỉnh sửa hồ sơ ngựa",
+    "saveChanges": "Lưu thay đổi",
+    "cancel": "Hủy",
+    "totalCount": "Tổng cộng: {{count}} con ngựa",
+    "bornYear": "Sinh năm {{year}}",
+    "born": "Sinh: {{dob}}",
+    "noDob": "Chưa cập nhật ngày sinh",
+    "prohibitedTitle": "CẤM VẬN CHUYỂN (NON-FIT-TO-TRAVEL)",
+    "prohibitedDetail": "Cá thể ngựa này thuộc mức RỦI RO NGUY CẤP ({{status}}). Theo tiêu chuẩn an toàn phúc lợi động vật IATA LAR và quy định kiểm dịch thú y quốc tế, nghiêm cấm nhận vận chuyển cho đến khi ngựa được chữa trị bình phục và cập nhật hồ sơ y tế.",
+    "prohibitedTooltip": "Ngựa thuộc mức Rủi ro Nguy cấp (Critical Risk), cấm điều phối vận chuyển!",
+    "viewFullProfile": "Xem hồ sơ đầy đủ",
+    "vetRecordBook": "Sổ khám thú y",
+    "bookTransport": "+ Đặt chuyến",
+    "prohibitedTransport": "🚫 Cấm vận chuyển",
+    "riskEvaluation": "ĐÁNH GIÁ RỦI RO VẬN CHUYỂN",
+    "cabinTemp": "NHIỆT ĐỘ KHOANG QUY ĐỊNH",
+    "colorMarkings": "MÀU SẮC & ĐẶC ĐIỂM",
+    "notIssued": "Chưa cấp",
+    "noColor": "Chưa có thông tin",
+    "dobAge": "Ngày sinh & Tuổi",
+    "activeRacing": "Sẵn sàng thi đấu",
+    "resting": "Tạm nghỉ",
+    "activeStatus": "Đang hoạt động",
+    "inactiveStatus": "Tạm dừng",
+    "editHorse": "Chỉnh sửa thông tin",
+    "deleteHorse": "Xóa hồ sơ ngựa",
+    "deleteConfirmText": "Bạn có chắc chắn muốn xóa ngựa \"{{name}}\" không?",
+    "deleteHorseSuccess": "Đã xóa hồ sơ ngựa \"{{name}}\"",
+    "updateHorseSuccess": "Cập nhật hồ sơ ngựa thành công!",
+    "updateHorseError": "Không thể cập nhật hồ sơ ngựa",
+    "specialCareLabel": "YÊU CẦU CHĂM SÓC ĐẶC BIỆT",
+    "specialCareNone": "Không có yêu cầu đặc biệt.",
+    "biometricCare": "Đặc điểm sinh trắc học & Lưu ý chăm sóc đặc biệt",
+    "vaccineStatus": "Tình trạng tiêm chủng",
+    "vaccineCompleted": "Đã hoàn thành",
+    "fitCertificate": "Chứng nhận Fit-to-Travel",
+    "iataStandard": "Đạt chuẩn IATA LAR",
+    "registrationDate": "Ngày đăng ký hồ sơ",
+    "recordStatus": "Trạng thái hồ sơ",
+    "vetHistory": "Lịch sử chứng nhận kiểm dịch & tiêm phòng",
+    "vetSupervised": "Được giám sát và xác thực bởi bác sĩ thú y có chứng chỉ FEI quốc tế",
+    "totalRecords": "Tổng cộng: {{count}} bản ghi",
+    "tripHistory": "Các chuyến vận chuyển đã tham gia",
+    "tripHistoryDesc": "Lưu trữ hành trình di chuyển và báo cáo phúc lợi e-POD sau mỗi chặng",
+    "totalTrips": "Tổng cộng: {{count}} chuyến",
+    "modeAir": "✈ Hàng không",
+    "modeGround": "🚛 Đường bộ",
+    "statusInTransit": "Đang vận chuyển",
+    "statusCompleted": "Đã hoàn thành",
+    "statusValid": "Còn hiệu lực",
+    "assignedVet": "Bác sĩ phụ trách: {{vet}} · {{clinic}}",
+    "vetItem": "Hạng mục kiểm dịch / Y tế",
+    "issueDate": "Ngày cấp",
+    "validUntil": "Hiệu lực đến",
+    "notes": "Ghi chú",
+    "tripCode": "Mã đơn / Chuyến đi",
+    "tripRoute": "Lộ trình vận chuyển",
+    "tripTime": "Thời gian",
+    "welfareScore": "Thể trạng khi bàn giao",
+    "healthStatusForm": "Tình trạng sức khỏe (Health Status)",
+    "specialCarePlaceholder": "Ghi chú bệnh án, chỉ định thuốc, nhiệt độ khoang hoặc lưu ý vận chuyển...",
     "columns": {
       "name": "Tên ngựa",
       "breed": "Giống",
       "age": "Tuổi",
       "microchip": "Microchip",
       "health": "Sức khỏe",
-      "action": "Action"
+      "risk": "Mức rủi ro",
+      "action": "Thao tác"
     },
     "tabs": {
       "general": "Thông tin chung",
       "vetRecords": "Hồ sơ thú y",
       "tripHistory": "Lịch sử vận chuyển"
     },
+    "riskLevels": {
+      "low": "RỦI RO THẤP",
+      "medium": "RỦI RO TRUNG BÌNH",
+      "high": "RỦI RO CAO",
+      "critical": "RỦI RO NGUY CẤP"
+    },
     "healthOptions": {
-      "excellent": "Xuất sắc",
-      "good": "Khỏe mạnh",
-      "attention": "Cần theo dõi"
+      "excellent": "Xuất sắc (Tối ưu thi đấu & bay quốc tế)",
+      "good": "Khỏe mạnh (Thể trạng ổn định)",
+      "attention": "Cần theo dõi (Có lưu ý y tế / đang phục hồi)",
+      "critical": "Nguy kịch (CẤM VẬN CHUYỂN)"
+    },
+    "healthDescriptions": {
+      "excellent": "Tối ưu thi đấu & bay quốc tế (Fit-to-Travel)",
+      "good": "Khỏe mạnh, thể trạng ổn định, sẵn sàng di chuyển",
+      "attention": "Cần theo dõi sát, có tiền sử say xe hoặc đang hồi phục",
+      "critical": "Nguy kịch, có triệu chứng cấp tính (CẤM VẬN CHUYỂN)"
+    },
+    "breedOptions": {
+      "Thoroughbred": "Thoroughbred (Thuần chủng Anh)",
+      "Quarter Horse": "Quarter Horse",
+      "Arabian": "Arabian (Ngựa Ả Rập)",
+      "Warmblood": "Warmblood",
+      "Appaloosa": "Appaloosa",
+      "Standardbred": "Standardbred",
+      "Andalusian": "Andalusian"
     },
     "listTitle": "Danh sách cá thể ngựa",
     "listSubtitle": "Quản lý hồ sơ, thẻ rủi ro và tình trạng sẵn sàng vận chuyển",
@@ -247,10 +332,10 @@
       "viewAll": "Xem tất cả"
     },
     "riskLevels": {
-      "low": "Rủi ro thấp",
-      "medium": "Rủi ro trung bình",
-      "high": "Rủi ro cao",
-      "critical": "Rủi ro nguy cấp"
+      "low": "RỦI RO THẤP",
+      "medium": "RỦI RO TRUNG BÌNH",
+      "high": "RỦI RO CAO",
+      "critical": "RỦI RO NGUY CẤP"
     }
   },
   "bookings": {
@@ -290,6 +375,35 @@
     "emptyCreateHint": "Hãy tạo yêu cầu vận chuyển đầu tiên để kết nối với mạng lưới chuồng xe chuyên dụng.",
     "filterAllModes": "Mọi phương thức",
     "searchPlaceholder": "Tìm kiếm mã đơn, địa chỉ đón/giao...",
+    "stallClass": "Hạng chuồng",
+    "stallClassNotes": "Ghi chú vị trí/thể trạng",
+    "stallClassPlaceholder": "Ví dụ: Khoang trái",
+    "stallClasses": {
+      "shared": "Shared (Chuồng chung)",
+      "comfort": "Comfort (Tiện nghi)",
+      "private": "Private (VIP riêng)"
+    },
+    "quoteItems": {
+      "freightAir": "Cước bay quốc tế chuyên dụng (Air Stall)",
+      "freightGround": "Cước vận chuyển xe thùng chuyên dụng",
+      "stallSurcharge": "Phụ phí nâng cấp hạng chuồng (Comfort/Private)",
+      "climateSurcharge": "Phụ phí duy trì điều hòa cabin (16-19°C)",
+      "clearanceFee": "Phí thủ tục hải quan & chứng nhận kiểm dịch biên giới"
+    },
+    "costBreakdownTitle": "Bảng phân tích chi phí dự kiến",
+    "itemCol": "Khoản mục",
+    "qtyCol": "Số lượng",
+    "amountCol": "Thành tiền",
+    "totalEstimate": "Tổng dự toán chi phí (USD):",
+    "quoteDisclaimer": "Báo giá chính thức sẽ do Quản lý phê duyệt",
+    "specialInstructionsLabel": "Hướng dẫn thêm cho tài xế & tổ áp tải",
+    "specialInstructionsPlaceholder": "Ví dụ: Cần dừng nghỉ mỗi 4 tiếng để kiểm tra nước uống...",
+    "declaredValueLabel": "Khai báo giá trị bảo hiểm (USD)",
+    "departureDateLabel": "Ngày xuất phát dự kiến",
+    "deliveryDateLabel": "Ngày giao dự kiến tại đích",
+    "routeAndVehicle": "Lộ trình & Phương tiện",
+    "selectedHorsesList": "Danh sách cá thể ngựa ({{count}})",
+    "prohibitedBanner": "🚫 CẤM VẬN CHUYỂN (Non-Fit-to-Travel): Ngựa đang ở mức Rủi ro Nguy cấp ({{status}}). Theo quy định IATA LAR, không đủ điều kiện an toàn để tham gia bất kỳ hành trình vận chuyển nào.",
     "steps": {
       "where": "Lộ trình",
       "what": "Chọn ngựa",
@@ -299,7 +413,7 @@
     "modes": {
       "ground": "Đường bộ (Xe tải chuyên dụng)",
       "groundDesc": "Xe thùng đệm khí, tuyến Việt - Trung - Thái",
-      "air": "Đường hàng không (Air Stall)",
+      "air": "Đường hàng không (Air Stall Charter)",
       "airDesc": "Khoang IATA LAR, bay thẳng quốc tế"
     },
     "options": {
@@ -336,7 +450,40 @@
       "pickupRequired": "Vui lòng nhập địa chỉ đón",
       "dropoffRequired": "Vui lòng nhập địa chỉ giao",
       "selectHorseRequired": "Vui lòng chọn ít nhất 1 cá thể ngựa để tiếp tục"
-    }
+    },
+    "detailTitle": "Chi tiết đơn vận chuyển",
+    "createdAt": "Ngày tạo",
+    "pickupLocation": "ĐIỂM ĐÓN",
+    "dropoffLocation": "ĐIỂM GIAO",
+    "transportMode": "Phương thức vận chuyển",
+    "totalHorsesCount": "{{count}} con",
+    "climateControl": "Điều hòa nhiệt độ",
+    "climateControlYes": "Có (16-19°C)",
+    "climateControlNo": "Không",
+    "specialNotes": "Ghi chú đặc biệt",
+    "quoteBreakdownTitle": "Bảng phân tích chi phí dự kiến",
+    "quoteItem": "Khoản mục",
+    "quoteQty": "SL",
+    "quoteUnitPrice": "Đơn giá",
+    "quoteAmount": "Thành tiền",
+    "totalEstimatedCost": "Tổng dự toán cước phí",
+    "cancelSuccess": "Đã hủy yêu cầu vận chuyển thành công",
+    "cancelFailed": "Không thể hủy đơn"
+  },
+  "messages": {
+    "title": "Tin nhắn & Liên lạc Trực tiếp",
+    "subtitle": "Trao đổi trực tiếp 24/7 với tài xế chuyên trách, bác sĩ thú y áp tải và điều phối viên vận tải",
+    "activeChats": "Hội thoại đang hoạt động",
+    "online": "Đang trực tuyến",
+    "offline": "Ngoại tuyến",
+    "emergencyCall": "Gọi khẩn cấp",
+    "encryptedChannel": "Kênh bảo mật hành trình được mã hóa đầu cuối (E2EE)",
+    "inputPlaceholder": "Nhập tin nhắn gửi đến tài xế & bác sĩ áp tải...",
+    "send": "Gửi",
+    "driverRole": "Tài xế vận tải FEI",
+    "vetRole": "Bác sĩ Thú y FEI Cấp cao",
+    "dispatcherRole": "Điều phối viên GPS 24/7",
+    "autoReply": "Dạ tôi đã nhận được tin nhắn: \"{{text}}\". Tình trạng khoang xe và ngựa vẫn hoàn toàn bình thường và an toàn tuyệt đối."
   },
   "profile": {
     "title": "Hồ sơ tài khoản",
@@ -350,7 +497,10 @@
     "createdAt": "Ngày gia nhập",
     "status": "Trạng thái tài khoản",
     "edit": "Chỉnh sửa hồ sơ",
-    "editDisabledHint": "Tính năng chỉnh sửa hồ sơ đang được cập nhật"
+    "editDisabledHint": "Tính năng chỉnh sửa hồ sơ đang được cập nhật",
+    "verified": "Đã xác thực danh tính",
+    "feiOwnerId": "Mã chủ ngựa FEI (FEI Owner ID)",
+    "activeStatus": "Đang hoạt động"
   },
   "settings": {
     "title": "Cài đặt hệ thống",
@@ -359,6 +509,9 @@
       "notifications": "Thông báo",
       "security": "Bảo mật"
     },
+    "notificationsTitle": "Cấu hình kênh thông báo tự động",
+    "notificationsDesc": "Chọn các loại thông báo bạn muốn nhận về lịch trình di chuyển và phúc lợi của đàn ngựa.",
+    "saveNotifications": "Lưu cài đặt thông báo",
     "notifications": {
       "emailTrips": "Thông báo tiến độ chuyến đi qua Email",
       "emailTripsDesc": "Nhận email thông báo tự động khi xe xuất phát, qua trạm kiểm soát hoặc đến đích an toàn.",
@@ -369,6 +522,13 @@
       "marketing": "Bản tin cập nhật dịch vụ & ưu đãi định kỳ",
       "marketingDesc": "Nhận thông tin về các tuyến bay chở ngựa mới, cải tiến chuồng xe và chính sách ưu đãi thành viên."
     },
+    "passwordTitle": "Đổi mật khẩu tài khoản",
+    "passwordDesc": "Mật khẩu nên chứa ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và chữ số.",
+    "currentPasswordPlaceholder": "Nhập mật khẩu hiện tại",
+    "newPasswordPlaceholder": "Nhập mật khẩu mới",
+    "confirmPasswordPlaceholder": "Nhập lại mật khẩu mới",
+    "loginAlerts": "Cảnh báo phát hiện đăng nhập lạ",
+    "loginAlertsDesc": "Nhận cảnh báo ngay lập tức nếu tài khoản được đăng nhập từ một địa chỉ IP hoặc trình duyệt mới.",
     "security": {
       "currentPassword": "Mật khẩu hiện tại",
       "newPassword": "Mật khẩu mới",
@@ -377,5 +537,55 @@
       "twoFactorDesc": "Bảo vệ tài khoản bằng mã OTP gửi về ứng dụng Authenticator hoặc tin nhắn SMS khi đăng nhập.",
       "saveSettings": "Lưu cài đặt bảo mật"
     }
+  },
+  "trips": {
+    "title": "Chuyến xe đang vận chuyển",
+    "subtitle": "Giám sát GPS thời gian thực, điều hòa vi khí hậu cabin và lộ trình di chuyển của đàn ngựa",
+    "columns": {
+      "codeAndVehicle": "Mã chuyến & Xe",
+      "horses": "Ngựa vận chuyển",
+      "route": "Lộ trình di chuyển",
+      "climateSensor": "Cảm biến khoang xe",
+      "progressAndEta": "Tiến độ & ETA",
+      "status": "Trạng thái",
+      "action": "Thao tác"
+    },
+    "gpsTrack": "Theo dõi GPS",
+    "modalTitle": "Theo dõi GPS trực tiếp",
+    "currentLocation": "Vị trí GPS hiện tại:",
+    "speed": "Tốc độ di chuyển:",
+    "driver": "Tài xế chuyên trách:",
+    "gpsSignal": "Tín hiệu GPS vệ tinh hoạt động chính xác (Độ trễ 0.4s)",
+    "coordinates": "Tọa độ: 10.9574° N, 106.8427° E · Cao tốc Dầu Giây",
+    "cabinTemp": "Nhiệt độ buồng",
+    "cabinHumidity": "Độ ẩm buồng",
+    "o2Quality": "Chất lượng khí O2",
+    "tempLabel": "Nhiệt độ",
+    "humidityLabel": "Độ ẩm",
+    "o2Label": "Oxy",
+    "contactDriver": "Liên hệ tài xế",
+    "close": "Đóng"
+  },
+  "billing": {
+    "title": "Thanh toán & Hóa đơn",
+    "subtitle": "Theo dõi lịch sử giao dịch cước vận chuyển, hóa đơn GTGT và trạng thái quyết toán",
+    "stats": {
+      "monthlyTotal": "Tổng chi tiêu tháng này",
+      "paid": "Đã quyết toán",
+      "pending": "Chờ xử lý"
+    },
+    "columns": {
+      "invoiceCode": "Mã hóa đơn",
+      "description": "Mô tả dịch vụ",
+      "tripCode": "Mã chuyến",
+      "date": "Ngày xuất",
+      "amount": "Số tiền",
+      "method": "Phương thức",
+      "status": "Trạng thái",
+      "action": "Thao tác"
+    },
+    "viewInvoice": "Xem hóa đơn",
+    "downloadPdf": "Tải PDF",
+    "close": "Đóng"
   }
 }

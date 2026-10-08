@@ -36,6 +36,7 @@ import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import horseService from '@services/horseService';
 import { useAuthStore } from '@features/auth/store/authStore';
+import { calculateHorseRisk, RiskBadge } from '@utils/horseHealth';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -122,8 +123,15 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
     };
   }, [user]);
 
-  // Toggle chọn cá thể ngựa
+  // Toggle chọn cá thể ngựa (Chặn nghiêm ngặt ngựa Critical Risk)
   const handleToggleHorse = (horseId) => {
+    const targetHorse = availableHorses.find((h) => h.HorseID === horseId);
+    if (targetHorse) {
+      const risk = calculateHorseRisk(targetHorse);
+      if (risk.level === 'CRITICAL') {
+        return; // CẤM chọn ngựa Critical Risk!
+      }
+    }
     setSelectedHorseIds((prev) => {
       if (prev.includes(horseId)) {
         return prev.filter((id) => id !== horseId);
@@ -147,8 +155,8 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
       key: 'freight',
       code: isAir ? 'FREIGHT_AIR' : 'FREIGHT_GROUND',
       name: isAir
-        ? 'Cước bay quốc tế chuyên dụng (Air Stall)'
-        : 'Cước vận chuyển xe thùng chuyên dụng',
+        ? t('bookings.quoteItems.freightAir')
+        : t('bookings.quoteItems.freightGround'),
       qty: horseCount,
       unitPrice: baseFreightRate,
       amount: horseCount * baseFreightRate,
@@ -165,7 +173,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
       items.push({
         key: 'stall',
         code: 'SUR_STALL_CLASS',
-        name: 'Phụ phí nâng cấp hạng chuồng (Comfort/Private)',
+        name: t('bookings.quoteItems.stallSurcharge'),
         qty: 1,
         unitPrice: stallSurcharge,
         amount: stallSurcharge,
@@ -178,7 +186,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
       items.push({
         key: 'climate',
         code: 'SUR_CLIMATE',
-        name: 'Phụ phí duy trì điều hòa cabin (16-19°C)',
+        name: t('bookings.quoteItems.climateSurcharge'),
         qty: 1,
         unitPrice: climateFee,
         amount: climateFee,
@@ -190,7 +198,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
     items.push({
       key: 'clearance',
       code: 'FEE_CLEARANCE',
-      name: 'Phí thủ tục hải quan & chứng nhận kiểm dịch biên giới',
+      name: t('bookings.quoteItems.clearanceFee'),
       qty: horseCount,
       unitPrice: clearanceFeePerHorse,
       amount: horseCount * clearanceFeePerHorse,
@@ -198,7 +206,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
 
     const total = items.reduce((sum, item) => sum + item.amount, 0);
     return { quoteItems: items, totalCost: total };
-  }, [selectedHorseIds, stallClasses, transportMode, requiresClimate]);
+  }, [selectedHorseIds, stallClasses, transportMode, requiresClimate, t]);
 
   // Chuyển sang bước kế tiếp sau khi kiểm tra hợp lệ
   const handleNext = async () => {
@@ -424,36 +432,77 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
             <Row gutter={[16, 16]}>
               {availableHorses.map((horse) => {
                 const isSelected = selectedHorseIds.includes(horse.HorseID);
+                const risk = calculateHorseRisk(horse);
+                const isCritical = risk.level === 'CRITICAL';
+
                 return (
                   <Col key={horse.HorseID} xs={24} md={12}>
                     <div
                       style={{
                         padding: 16,
                         borderRadius: 12,
-                        border: isSelected ? '2px solid #f59e0b' : '1px solid #e2e8f0',
-                        backgroundColor: isSelected ? '#fffdf5' : '#ffffff',
-                        cursor: 'pointer',
+                        border: isCritical
+                          ? '1.5px solid #FCA5A5'
+                          : isSelected
+                          ? '2px solid #f59e0b'
+                          : '1px solid #e2e8f0',
+                        backgroundColor: isCritical
+                          ? '#FEF2F2'
+                          : isSelected
+                          ? '#fffdf5'
+                          : '#ffffff',
+                        cursor: isCritical ? 'not-allowed' : 'pointer',
+                        opacity: isCritical ? 0.9 : 1,
                         transition: 'all 0.2s ease',
                       }}
-                      onClick={() => handleToggleHorse(horse.HorseID)}
+                      onClick={() => !isCritical && handleToggleHorse(horse.HorseID)}
                     >
                       <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
                         <Checkbox
                           checked={isSelected}
-                          onChange={() => handleToggleHorse(horse.HorseID)}
+                          disabled={isCritical}
+                          onChange={() => !isCritical && handleToggleHorse(horse.HorseID)}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <strong style={{ fontSize: 16, color: '#0f172a', marginLeft: 4 }}>
+                          <strong
+                            style={{
+                              fontSize: 16,
+                              color: isCritical ? '#991B1B' : '#0f172a',
+                              marginLeft: 4,
+                            }}
+                          >
                             🐴 {horse.Name}
                           </strong>
                         </Checkbox>
-                        <Tag color="blue">{horse.Breed}</Tag>
+                        <Space size={6}>
+                          <Tag color="blue">{horse.Breed}</Tag>
+                          <RiskBadge risk={risk} size="small" />
+                        </Space>
                       </Flex>
 
-                      <div style={{ fontSize: 13, color: '#64748b', marginLeft: 28, marginBottom: 12 }}>
-                        {t(`horses.genderOptions.${horse.Gender?.toLowerCase()}`) || horse.Gender} · Vi mạch:{' '}
+                      <div style={{ fontSize: 13, color: '#64748b', marginLeft: 28, marginBottom: 8 }}>
+                        {t(`horses.genderOptions.${horse.Gender?.toLowerCase()}`) || horse.Gender} · {t('horses.fields.microchip')}:{' '}
                         <code>{horse.MicrochipNumber}</code>
                       </div>
+
+                      {/* Cảnh báo cấm vận chuyển đối với Critical Risk */}
+                      {isCritical && (
+                        <div
+                          style={{
+                            marginLeft: 28,
+                            padding: '8px 12px',
+                            backgroundColor: '#FEE2E2',
+                            border: '1px solid #FECACA',
+                            borderRadius: 8,
+                            color: '#991B1B',
+                            fontSize: 12,
+                            fontWeight: 600,
+                            lineHeight: 1.45,
+                          }}
+                        >
+                          {t('bookings.prohibitedBanner', { status: horse.HealthStatus })}
+                        </div>
+                      )}
 
                       {/* Tùy chọn hạng chuồng khi được tick chọn */}
                       {isSelected && (
@@ -468,7 +517,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                           <Row gutter={12}>
                             <Col span={12}>
                               <Form.Item
-                                label={<span style={{ fontSize: 12 }}>Hạng chuồng</span>}
+                                label={<span style={{ fontSize: 12 }}>{t('bookings.stallClass')}</span>}
                                 style={{ margin: 0 }}
                               >
                                 <Select
@@ -477,16 +526,16 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                                     setStallClasses((prev) => ({ ...prev, [horse.HorseID]: val }))
                                   }
                                   options={[
-                                    { value: 'Shared', label: 'Shared (Chuồng chung)' },
-                                    { value: 'Comfort', label: 'Comfort (Tiện nghi)' },
-                                    { value: 'Private', label: 'Private (VIP riêng)' },
+                                    { value: 'Shared', label: t('bookings.stallClasses.shared') },
+                                    { value: 'Comfort', label: t('bookings.stallClasses.comfort') },
+                                    { value: 'Private', label: t('bookings.stallClasses.private') },
                                   ]}
                                 />
                               </Form.Item>
                             </Col>
                             <Col span={12}>
                               <Form.Item
-                                label={<span style={{ fontSize: 12 }}>Ghi chú vị trí/thể trạng</span>}
+                                label={<span style={{ fontSize: 12 }}>{t('bookings.stallClassNotes')}</span>}
                                 style={{ margin: 0 }}
                               >
                                 <Input
@@ -497,7 +546,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                                       [horse.HorseID]: e.target.value,
                                     }))
                                   }
-                                  placeholder="Ví dụ: Khoang trái"
+                                  placeholder={t('bookings.stallClassPlaceholder')}
                                 />
                               </Form.Item>
                             </Col>
@@ -527,7 +576,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
             name="TransportMode"
             control={control}
             render={({ field }) => (
-              <Form.Item label={<strong style={{ fontSize: 15 }}>Phương thức vận chuyển</strong>}>
+              <Form.Item label={<strong style={{ fontSize: 15 }}>{t('bookings.stepWhenTitle')}</strong>}>
                 <Radio.Group
                   {...field}
                   style={{ width: '100%', display: 'flex', gap: 16 }}
@@ -547,10 +596,10 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                     <CarOutlined style={{ fontSize: 24, color: '#f59e0b' }} />
                     <div>
                       <strong style={{ fontSize: 15, display: 'block' }}>
-                        Đường bộ (Xe tải chuyên dụng)
+                        {t('bookings.modes.ground')}
                       </strong>
                       <Text type="secondary" style={{ fontSize: 12 }}>
-                        {t('bookings.modes.groundDesc') || 'Xe thùng đệm khí, tuyến Việt - Trung - Thái'}
+                        {t('bookings.modes.groundDesc')}
                       </Text>
                     </div>
                   </Radio.Button>
@@ -570,10 +619,10 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                     <RocketOutlined style={{ fontSize: 24, color: '#2563eb' }} />
                     <div>
                       <strong style={{ fontSize: 15, display: 'block' }}>
-                        Đường hàng không (Air Stall Charter)
+                        {t('bookings.modes.air')}
                       </strong>
                       <Text type="secondary" style={{ fontSize: 12 }}>
-                        {t('bookings.modes.airDesc') || 'Khoang IATA LAR, bay thẳng quốc tế'}
+                        {t('bookings.modes.airDesc')}
                       </Text>
                     </div>
                   </Radio.Button>
@@ -588,9 +637,9 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
               <Controller
                 name="DepartureDate"
                 control={control}
-                rules={{ required: 'Vui lòng chọn ngày khởi hành' }}
+                rules={{ required: true }}
                 render={({ field }) => (
-                  <Form.Item label="Ngày xuất phát dự kiến" required>
+                  <Form.Item label={t('bookings.departureDateLabel')} required>
                     <DatePicker
                       value={field.value ? dayjs(field.value) : null}
                       onChange={(date) =>
@@ -612,7 +661,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                 name="DeliveryDate"
                 control={control}
                 render={({ field }) => (
-                  <Form.Item label="Ngày giao dự kiến tại đích">
+                  <Form.Item label={t('bookings.deliveryDateLabel')}>
                     <DatePicker
                       value={field.value ? dayjs(field.value) : null}
                       onChange={(date) =>
@@ -675,7 +724,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                   name="DeclaredValue"
                   control={control}
                   render={({ field }) => (
-                    <Form.Item label="Khai báo giá trị bảo hiểm (USD)" style={{ margin: 0 }}>
+                    <Form.Item label={t('bookings.declaredValueLabel')} style={{ margin: 0 }}>
                       <InputNumber
                         {...field}
                         size="large"
@@ -693,11 +742,11 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                   name="SpecialInstructions"
                   control={control}
                   render={({ field }) => (
-                    <Form.Item label="Hướng dẫn thêm cho tài xế & tổ áp tải" style={{ margin: 0 }}>
+                    <Form.Item label={t('bookings.specialInstructionsLabel')} style={{ margin: 0 }}>
                       <TextArea
                         {...field}
                         rows={2}
-                        placeholder="Ví dụ: Cần dừng nghỉ mỗi 4 tiếng để kiểm tra nước uống..."
+                        placeholder={t('bookings.specialInstructionsPlaceholder')}
                       />
                     </Form.Item>
                   )}
@@ -714,7 +763,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
       {currentStep === 3 && (
         <div>
           <Title level={4} style={{ margin: '0 0 20px', fontWeight: 700, color: '#0f172a' }}>
-            {t('bookings.stepReviewTitle') || 'Kiểm tra thông tin & Dự toán cước phí'}
+            {t('bookings.stepReviewTitle')}
           </Title>
 
           <Row gutter={24}>
@@ -730,32 +779,32 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                 }}
               >
                 <Title level={5} style={{ margin: '0 0 12px', color: '#0f172a' }}>
-                  🗺️ Lộ trình & Phương tiện
+                  🗺️ {t('bookings.routeAndVehicle')}
                 </Title>
                 <div style={{ fontSize: 14, marginBottom: 8 }}>
-                  <Text type="secondary">Điểm đón: </Text>
+                  <Text type="secondary">{t('bookings.fields.pickupLocation')}: </Text>
                   <strong>{getValues('PickupAddress')} ({getValues('PickupCountryCode')})</strong>
                 </div>
                 <div style={{ fontSize: 14, marginBottom: 8 }}>
-                  <Text type="secondary">Điểm giao: </Text>
+                  <Text type="secondary">{t('bookings.fields.deliveryLocation')}: </Text>
                   <strong>{getValues('DropoffAddress')} ({getValues('DropoffCountryCode')})</strong>
                 </div>
                 <div style={{ fontSize: 14, marginBottom: 8 }}>
-                  <Text type="secondary">Phương thức: </Text>
+                  <Text type="secondary">{t('bookings.steps.when')}: </Text>
                   <Tag color={transportMode === 'Air' ? 'blue' : 'orange'}>
-                    {transportMode === 'Air' ? '✈ Hàng không (Air Stall)' : '🚛 Đường bộ (Xe thùng)'}
+                    {transportMode === 'Air' ? t('bookings.modes.air') : t('bookings.modes.ground')}
                   </Tag>
-                  {requiresClimate && <Tag color="cyan">❄ Điều hòa cabin</Tag>}
+                  {requiresClimate && <Tag color="cyan">❄ {t('bookings.climateControlTag')}</Tag>}
                 </div>
                 <div style={{ fontSize: 14 }}>
-                  <Text type="secondary">Khởi hành: </Text>
+                  <Text type="secondary">{t('bookings.fields.departureDate')}: </Text>
                   <strong>{dayjs(getValues('DepartureDate')).format('DD/MM/YYYY')}</strong>
                 </div>
 
                 <Divider style={{ margin: '14px 0' }} />
 
                 <Title level={5} style={{ margin: '0 0 10px', color: '#0f172a' }}>
-                  🐴 Danh sách cá thể ngựa ({selectedHorseIds.length})
+                  🐴 {t('bookings.selectedHorsesList', { count: selectedHorseIds.length })}
                 </Title>
                 <Space direction="vertical" size="small" style={{ width: '100%' }}>
                   {availableHorses
@@ -775,7 +824,9 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                         <div>
                           <strong>{h.Name}</strong> ({h.Breed})
                         </div>
-                        <Tag color="gold">{stallClasses[h.HorseID] || 'Shared'}</Tag>
+                        <Tag color="gold">
+                          {t(`bookings.stallClasses.${(stallClasses[h.HorseID] || 'shared').toLowerCase()}`) || stallClasses[h.HorseID] || 'Shared'}
+                        </Tag>
                       </Flex>
                     ))}
                 </Space>
@@ -795,7 +846,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                 <Flex align="center" gap="small" style={{ marginBottom: 16 }}>
                   <DollarOutlined style={{ fontSize: 20, color: '#d97706' }} />
                   <Title level={5} style={{ margin: 0, color: '#92400e' }}>
-                    Bảng phân tích chi phí dự kiến
+                    {t('bookings.costBreakdownTitle')}
                   </Title>
                 </Flex>
 
@@ -805,20 +856,20 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                   size="small"
                   columns={[
                     {
-                      title: 'Khoản mục',
+                      title: t('bookings.itemCol'),
                       dataIndex: 'name',
                       key: 'name',
                       render: (name) => <span style={{ fontSize: 12 }}>{name}</span>,
                     },
                     {
-                      title: 'Số lượng',
+                      title: t('bookings.qtyCol'),
                       dataIndex: 'qty',
                       key: 'qty',
                       align: 'center',
                       render: (q) => <span style={{ fontSize: 12 }}>{q}</span>,
                     },
                     {
-                      title: 'Thành tiền',
+                      title: t('bookings.amountCol'),
                       dataIndex: 'amount',
                       key: 'amount',
                       align: 'right',
@@ -834,10 +885,10 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                 <Flex justify="space-between" align="center">
                   <div>
                     <Text type="secondary" style={{ fontSize: 13, display: 'block' }}>
-                      Tổng dự toán chi phí (USD):
+                      {t('bookings.totalEstimate')}
                     </Text>
                     <Text style={{ fontSize: 11, color: '#94a3b8' }}>
-                      Báo giá chính thức sẽ do Quản lý phê duyệt
+                      {t('bookings.quoteDisclaimer')}
                     </Text>
                   </div>
                   <div style={{ fontSize: 28, fontWeight: 800, color: '#d97706' }}>

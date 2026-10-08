@@ -23,6 +23,7 @@ import {
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import { HealthStatusTag } from '@utils/horseHealth';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -30,14 +31,14 @@ const { TextArea } = Input;
 /**
  * Danh sách các giống ngựa phổ biến trong vận chuyển thi đấu quốc tế
  */
-const BREED_OPTIONS = [
-  { value: 'Thoroughbred', label: 'Thoroughbred (Thuần chủng Anh)' },
-  { value: 'Quarter Horse', label: 'Quarter Horse' },
-  { value: 'Arabian', label: 'Arabian (Ngựa Ả Rập)' },
-  { value: 'Warmblood', label: 'Warmblood' },
-  { value: 'Appaloosa', label: 'Appaloosa' },
-  { value: 'Standardbred', label: 'Standardbred' },
-  { value: 'Andalusian', label: 'Andalusian' },
+const BREED_KEYS = [
+  'Thoroughbred',
+  'Quarter Horse',
+  'Arabian',
+  'Warmblood',
+  'Appaloosa',
+  'Standardbred',
+  'Andalusian',
 ];
 
 /**
@@ -74,6 +75,7 @@ export default function AddHorseForm({
       PassportNumber: initialValues?.PassportNumber || '',
       Color: initialValues?.Color || '',
       PhotoUrl: initialValues?.PhotoUrl || '',
+      HealthStatus: initialValues?.HealthStatus || 'Good',
       SpecialCareRequirements: initialValues?.SpecialCareRequirements || '',
     },
     mode: 'onTouched',
@@ -93,6 +95,7 @@ export default function AddHorseForm({
       PassportNumber: data.PassportNumber?.trim(),
       Color: data.Color?.trim() || '',
       PhotoUrl: data.PhotoUrl?.trim() || null,
+      HealthStatus: data.HealthStatus || 'Good',
       SpecialCareRequirements: data.SpecialCareRequirements?.trim() || null,
     };
     await onSubmit(payload);
@@ -176,7 +179,10 @@ export default function AddHorseForm({
                       size="large"
                       showSearch
                       placeholder={t('horses.placeholders.breed')}
-                      options={BREED_OPTIONS}
+                      options={BREED_KEYS.map((k) => ({
+                        value: k,
+                        label: t(`horses.breedOptions.${k}`) || k,
+                      }))}
                       disabled={isFormLoading}
                     />
                   </Form.Item>
@@ -428,6 +434,63 @@ export default function AddHorseForm({
           <Text type="secondary" style={{ display: 'block', marginBottom: 24, fontSize: 14 }}>
             {t('horses.sections.specialCareDesc')}
           </Text>
+
+          {/* Đánh giá tình trạng sức khỏe ban đầu */}
+          <Controller
+            name="HealthStatus"
+            control={control}
+            render={({ field }) => (
+              <Form.Item
+                label={
+                  <span style={{ fontWeight: 600 }}>
+                    {t('horses.columns.health') || 'Đánh giá sức khỏe (Health Status)'}
+                  </span>
+                }
+                style={{ marginBottom: 20 }}
+              >
+                <Select
+                  {...field}
+                  size="large"
+                  disabled={isFormLoading}
+                  options={[
+                    {
+                      value: 'Excellent',
+                      label: (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                          <HealthStatusTag status="Excellent" size="small" />
+                          <span style={{ fontSize: 13, color: '#334155' }}>
+                            {t('horses.healthDescriptions.excellent')}
+                          </span>
+                        </div>
+                      ),
+                    },
+                    {
+                      value: 'Good',
+                      label: (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                          <HealthStatusTag status="Good" size="small" />
+                          <span style={{ fontSize: 13, color: '#334155' }}>
+                            {t('horses.healthDescriptions.good')}
+                          </span>
+                        </div>
+                      ),
+                    },
+                    {
+                      value: 'Attention',
+                      label: (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                          <HealthStatusTag status="Attention" size="small" />
+                          <span style={{ fontSize: 13, color: '#334155' }}>
+                            {t('horses.healthDescriptions.attention')}
+                          </span>
+                        </div>
+                      ),
+                    },
+                  ]}
+                />
+              </Form.Item>
+            )}
+          />
 
           <Controller
             name="SpecialCareRequirements"

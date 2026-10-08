@@ -24,7 +24,11 @@ import NewBookingPage from '@features/customer/pages/NewBookingPage';
 import MyHorsesPage from '@features/customer/pages/MyHorsesPage';
 import HorseDetailPage from '@features/customer/pages/HorseDetailPage';
 import AddHorsePage from '@features/customer/pages/AddHorsePage';
+import VetRecordsPage from '@features/customer/pages/VetRecordsPage';
+import ActiveTripsPage from '@features/customer/pages/ActiveTripsPage';
+import MessagesPage from '@features/customer/pages/MessagesPage';
 import ProfilePage from '@features/customer/pages/ProfilePage';
+import BillingPage from '@features/customer/pages/BillingPage';
 import SettingsPage from '@features/customer/pages/SettingsPage';
 
 // Manager pages
@@ -43,10 +47,10 @@ import DriverDashboard from '@features/driver/pages/DashboardPage';
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Public / Auth */}
-      <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.LOGIN} replace />} />
+      {/* Mặc định vào thẳng Dashboard mà không bắt người dùng đăng nhập */}
+      <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.CUSTOMER_DASHBOARD} replace />} />
 
-      {/* Auth layout chứa carousel ảnh 30s không reload */}
+      {/* Auth layout chứa carousel ảnh */}
       <Route element={<AuthLayout />}>
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
         <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
@@ -58,16 +62,26 @@ export default function AppRoutes() {
 
       <Route path={ROUTES.FORBIDDEN} element={<ForbiddenPage />} />
 
-      {/* Customer */}
+      {/* Customer - Truy cập thẳng không cần đăng nhập */}
       <Route element={<PrivateRoute allowedRoles={[ROLES.CUSTOMER]} />}>
         <Route element={<MainLayout />}>
           <Route path={ROUTES.CUSTOMER_DASHBOARD} element={<CustomerDashboard />} />
-          <Route path={ROUTES.CUSTOMER_BOOKINGS} element={<CustomerBookings />} />
-          <Route path={ROUTES.CUSTOMER_BOOKING_NEW} element={<NewBookingPage />} />
           <Route path={ROUTES.CUSTOMER_HORSES} element={<MyHorsesPage />} />
           <Route path={ROUTES.CUSTOMER_HORSE_DETAIL} element={<HorseDetailPage />} />
           <Route path={ROUTES.CUSTOMER_HORSE_NEW} element={<AddHorsePage />} />
+          <Route path={ROUTES.CUSTOMER_VET_RECORDS} element={<VetRecordsPage />} />
+          <Route path="/customer/vet-record" element={<Navigate to={ROUTES.CUSTOMER_VET_RECORDS} replace />} />
+          <Route path="/customer/vetrecords" element={<Navigate to={ROUTES.CUSTOMER_VET_RECORDS} replace />} />
+          <Route path="/customer/vetrecord" element={<Navigate to={ROUTES.CUSTOMER_VET_RECORDS} replace />} />
+          <Route path="/vet-records" element={<Navigate to={ROUTES.CUSTOMER_VET_RECORDS} replace />} />
+          <Route path="/vet-record" element={<Navigate to={ROUTES.CUSTOMER_VET_RECORDS} replace />} />
+          <Route path={ROUTES.CUSTOMER_BOOKINGS} element={<CustomerBookings />} />
+          <Route path={ROUTES.CUSTOMER_BOOKING_NEW} element={<NewBookingPage />} />
+          <Route path={ROUTES.CUSTOMER_TRIPS} element={<ActiveTripsPage />} />
+          <Route path={ROUTES.CUSTOMER_MESSAGES} element={<MessagesPage />} />
           <Route path={ROUTES.CUSTOMER_PROFILE} element={<ProfilePage />} />
+          <Route path={ROUTES.CUSTOMER_BILLING} element={<BillingPage />} />
+          <Route path="/billing" element={<Navigate to={ROUTES.CUSTOMER_BILLING} replace />} />
           <Route path={ROUTES.CUSTOMER_SETTINGS} element={<SettingsPage />} />
         </Route>
       </Route>

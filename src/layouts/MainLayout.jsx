@@ -24,14 +24,16 @@ export default function MainLayout() {
     navigate(ROUTES.LOGIN);
   };
 
+  const currentUser = user || { FullName: 'Kaze Lee', Role: 'Customer' };
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <AppSidebar collapsed={collapsed} user={user} />
+      <AppSidebar collapsed={collapsed} user={currentUser} />
       <Layout>
         <AppHeader
           collapsed={collapsed}
           onToggleCollapse={() => setCollapsed(!collapsed)}
-          user={user}
+          user={currentUser}
           onLogout={handleLogout}
         />
         <ContentWrapper>

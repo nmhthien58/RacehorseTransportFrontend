@@ -9,6 +9,8 @@ import {
   BellOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@routes/routes';
 import { ROLES } from '@utils/constants';
 
 const { Header } = Layout;
@@ -29,12 +31,14 @@ export default function AppHeader({
   onLogout,
 }) {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
 
   const userMenuItems = [
     {
       key: 'profile',
       icon: <UserOutlined />,
       label: t('nav.profile'),
+      onClick: () => navigate(ROUTES.CUSTOMER_PROFILE),
     },
     {
       type: 'divider',
@@ -126,6 +130,7 @@ export default function AppHeader({
           <Flex
             align="center"
             gap="middle"
+            onClick={() => navigate(ROUTES.CUSTOMER_PROFILE)}
             style={{
               cursor: 'pointer',
               padding: '4px 6px',
@@ -148,7 +153,7 @@ export default function AppHeader({
                 {user?.FullName || 'Kaze Lee'}
               </div>
               <div style={{ fontSize: 12, color: '#64748b' }}>
-                {isCustomer ? 'Owner Portal' : user?.Role || ''}
+                {isCustomer ? t('nav.ownerPortal') : user?.Role || ''}
               </div>
             </div>
           </Flex>

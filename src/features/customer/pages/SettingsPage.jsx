@@ -63,11 +63,11 @@ export default function SettingsPage() {
   };
 
   const handleSaveNotifications = () => {
-    message.success(t('common.save') || 'Đã lưu cấu hình thông báo');
+    message.success(t('settings.saveNotificationsSuccess'));
   };
 
   const handleSaveSecurity = () => {
-    message.success(t('common.save') || 'Đã lưu cấu hình bảo mật');
+    message.success(t('settings.saveSecuritySuccess'));
   };
 
   if (loading) {
@@ -87,7 +87,7 @@ export default function SettingsPage() {
       key: 'notifications',
       label: (
         <span>
-          <BellOutlined /> {t('settings.tabs.notifications') || 'Thông báo'}
+          <BellOutlined /> {t('settings.tabs.notifications')}
         </span>
       ),
       children: (
@@ -102,10 +102,10 @@ export default function SettingsPage() {
           styles={{ body: { padding: '24px 28px' } }}
         >
           <Title level={5} style={{ margin: '0 0 4px', color: '#0f172a' }}>
-            Cấu hình kênh thông báo tự động
+            {t('settings.notificationsTitle')}
           </Title>
           <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
-            Chọn các loại thông báo bạn muốn nhận về lịch trình di chuyển và phúc lợi của đàn ngựa.
+            {t('settings.notificationsDesc')}
           </Text>
 
           {/* Item 1: Email updates */}
@@ -206,7 +206,7 @@ export default function SettingsPage() {
               borderColor: '#f59e0b',
             }}
           >
-            {t('common.save') || 'Lưu cài đặt'}
+            {t('settings.saveNotifications')}
           </Button>
         </Card>
       ),
@@ -215,7 +215,7 @@ export default function SettingsPage() {
       key: 'security',
       label: (
         <span>
-          <SafetyCertificateOutlined /> {t('settings.tabs.security') || 'Bảo mật'}
+          <SafetyCertificateOutlined /> {t('settings.tabs.security')}
         </span>
       ),
       children: (
@@ -230,33 +230,33 @@ export default function SettingsPage() {
           styles={{ body: { padding: '24px 28px' } }}
         >
           <Title level={5} style={{ margin: '0 0 4px', color: '#0f172a' }}>
-            Đổi mật khẩu tài khoản
+            {t('settings.passwordTitle')}
           </Title>
           <Text type="secondary" style={{ display: 'block', marginBottom: 20 }}>
-            Mật khẩu nên chứa ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và chữ số.
+            {t('settings.passwordDesc')}
           </Text>
 
           <Form layout="vertical" style={{ maxWidth: 440 }}>
-            <Form.Item label={t('settings.security.currentPassword') || 'Mật khẩu hiện tại'}>
+            <Form.Item label={t('settings.security.currentPassword')}>
               <Input.Password
                 prefix={<LockOutlined style={{ color: '#94a3b8' }} />}
-                placeholder="Nhập mật khẩu hiện tại"
+                placeholder={t('settings.currentPasswordPlaceholder')}
                 size="large"
               />
             </Form.Item>
 
-            <Form.Item label={t('settings.security.newPassword') || 'Mật khẩu mới'}>
+            <Form.Item label={t('settings.security.newPassword')}>
               <Input.Password
                 prefix={<LockOutlined style={{ color: '#94a3b8' }} />}
-                placeholder="Nhập mật khẩu mới"
+                placeholder={t('settings.newPasswordPlaceholder')}
                 size="large"
               />
             </Form.Item>
 
-            <Form.Item label={t('settings.security.confirmPassword') || 'Xác nhận mật khẩu mới'}>
+            <Form.Item label={t('settings.security.confirmPassword')}>
               <Input.Password
                 prefix={<LockOutlined style={{ color: '#94a3b8' }} />}
-                placeholder="Nhập lại mật khẩu mới"
+                placeholder={t('settings.confirmPasswordPlaceholder')}
                 size="large"
               />
             </Form.Item>
@@ -268,11 +268,10 @@ export default function SettingsPage() {
           <Flex justify="space-between" align="center" style={{ marginBottom: 20 }}>
             <div>
               <strong style={{ fontSize: 15, color: '#0f172a' }}>
-                {t('settings.security.twoFactor') || 'Xác thực hai yếu tố (2FA)'}
+                {t('settings.security.twoFactor')}
               </strong>
               <Text type="secondary" style={{ display: 'block', fontSize: 13, marginTop: 4 }}>
-                {t('settings.security.twoFactorDesc') ||
-                  'Bảo vệ tài khoản bằng mã OTP gửi về ứng dụng Authenticator hoặc tin nhắn SMS khi đăng nhập.'}
+                {t('settings.security.twoFactorDesc')}
               </Text>
             </div>
             <Switch
@@ -288,10 +287,10 @@ export default function SettingsPage() {
           <Flex justify="space-between" align="center" style={{ marginBottom: 24 }}>
             <div>
               <strong style={{ fontSize: 15, color: '#0f172a' }}>
-                Cảnh báo phát hiện đăng nhập lạ
+                {t('settings.loginAlerts')}
               </strong>
               <Text type="secondary" style={{ display: 'block', fontSize: 13, marginTop: 4 }}>
-                Nhận cảnh báo ngay lập tức nếu tài khoản được đăng nhập từ một địa chỉ IP hoặc trình duyệt mới.
+                {t('settings.loginAlertsDesc')}
               </Text>
             </div>
             <Switch
@@ -312,7 +311,7 @@ export default function SettingsPage() {
               borderColor: '#f59e0b',
             }}
           >
-            {t('settings.security.saveSettings') || 'Lưu cài đặt bảo mật'}
+            {t('settings.security.saveSettings')}
           </Button>
         </Card>
       ),

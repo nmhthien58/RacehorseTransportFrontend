@@ -1,65 +1,124 @@
-import { Button, Card, Space, Table, Tag, Typography } from 'antd';
+import { useState } from 'react';
+import {
+  Button,
+  Card,
+  Col,
+  DatePicker,
+  Form,
+  Input,
+  Modal,
+  Popconfirm,
+  Row,
+  Select,
+  Space,
+  Table,
+  Tag,
+  Typography,
+  message,
+} from 'antd';
 import {
   EyeOutlined,
   PlusOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
+  DeleteOutlined,
+  EditOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import PageHeader from '@components/layout/PageHeader';
 import useMyHorses from '@features/customer/hooks/useMyHorses';
+import horseService from '@services/horseService';
 import { ROUTES } from '@routes/routes';
+import {
+  HealthStatusTag,
+  RiskBadge,
+  calculateHorseRisk,
+} from '@utils/horseHealth';
 
 const { Text } = Typography;
 
 /**
  * Trang danh sách hồ sơ ngựa đua của khách hàng (My Horses List)
  * Đường dẫn: /customer/horses
- * Sử dụng AntD Table với các cột: [Tên, Giống, Tuổi, Microchip, Sức khỏe, Action]
+ * Sử dụng AntD Table với các cột: [Tên, Giống, Tuổi, Microchip, Sức khỏe, Mức rủi ro, Thao tác]
  *
  * @returns {JSX.Element}
  */
 export default function MyHorsesPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { data: horses, loading } = useMyHorses();
+  const { data: horses, loading, refetch } = useMyHorses();
 
-  /**
-   * Điều hướng xem chi tiết một cá thể ngựa
-   * @param {number} horseId
-   */
+  const [editingHorse, setEditingHorse] = useState(null);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [form] = Form.useForm();
+
+  const isEn = (i18n.language || 'vi').toLowerCase().startsWith('en');
+
+  const handleOpenEdit = (record) => {
+    setEditingHorse(record);
+    form.setFieldsValue({
+      Name: record.Name,
+      Breed: record.Breed || 'Thoroughbred',
+      Gender: record.Gender || 'Stallion',
+      DateOfBirth: record.DateOfBirth ? dayjs(record.DateOfBirth) : null,
+      Color: record.Color || '',
+      MicrochipNumber: record.MicrochipNumber || '',
+      PassportNumber: record.PassportNumber || '',
+      HealthStatus: record.HealthStatus || 'Good',
+      SpecialCareRequirements: record.SpecialCareRequirements || '',
+    });
+    setEditModalVisible(true);
+  };
+
+  const handleSaveEdit = async (values) => {
+    try {
+      setEditSubmitting(true);
+      const payload = {
+        ...values,
+        DateOfBirth: values.DateOfBirth
+          ? values.DateOfBirth.format('YYYY-MM-DD')
+          : null,
+      };
+      await horseService.updateHorse(editingHorse.HorseID, payload);
+      message.success(t('horses.updateHorseSuccess'));
+      setEditModalVisible(false);
+      refetch?.();
+    } catch {
+      message.error(t('horses.updateHorseError'));
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
   const handleViewDetail = (horseId) => {
     navigate(`/customer/horses/${horseId}`);
   };
 
-  /**
-   * Điều hướng sang trang thêm ngựa mới
-   */
   const handleAddNewHorse = () => {
     navigate(ROUTES.CUSTOMER_HORSE_NEW);
   };
 
-  // Cấu hình các cột của bảng AntD Table theo đúng yêu cầu
   const columns = [
     {
-      title: t('horses.columns.name') || 'Tên ngựa',
+      title: t('horses.columns.name'),
       dataIndex: 'Name',
       key: 'Name',
       render: (name, record) => (
         <Space size="middle">
           <div
             style={{
-              width: 36,
-              height: 36,
+              width: 38,
+              height: 38,
               borderRadius: '50%',
               backgroundColor: '#fef3c7',
               color: '#d97706',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 18,
+              fontSize: 19,
+              flexShrink: 0,
             }}
           >
             🐴
@@ -77,20 +136,20 @@ export default function MyHorsesPage() {
               {name}
             </Text>
             <div style={{ fontSize: 12, color: '#64748b' }}>
-              {t(`horses.genderOptions.${record.Gender?.toLowerCase()}`) || record.Gender} · {record.PassportNumber || 'No Passport'}
+              {t(`horses.genderOptions.${record.Gender?.toLowerCase()}`) || record.Gender} · {record.PassportNumber || t('horses.noPassport')}
             </div>
           </div>
         </Space>
       ),
     },
     {
-      title: t('horses.columns.breed') || 'Giống',
+      title: t('horses.columns.breed'),
       dataIndex: 'Breed',
       key: 'Breed',
-      render: (breed) => <Tag color="blue">{breed}</Tag>,
+      render: (breed) => <Tag color="blue">{t(`horses.breedOptions.${breed}`) || breed}</Tag>,
     },
     {
-      title: t('horses.columns.age') || 'Tuổi',
+      title: t('horses.columns.age'),
       dataIndex: 'DateOfBirth',
       key: 'Age',
       render: (dob) => {
@@ -98,13 +157,13 @@ export default function MyHorsesPage() {
         const age = dayjs().diff(dayjs(dob), 'year');
         return (
           <Text strong style={{ color: '#334155' }}>
-            {age} {t('horses.yearsOld') || 'tuổi'}
+            {age} {t('horses.yearsOld')}
           </Text>
         );
       },
     },
     {
-      title: t('horses.columns.microchip') || 'Microchip',
+      title: t('horses.columns.microchip'),
       dataIndex: 'MicrochipNumber',
       key: 'MicrochipNumber',
       render: (code) => (
@@ -118,51 +177,69 @@ export default function MyHorsesPage() {
             fontFamily: 'monospace',
           }}
         >
-          {code}
+          {code || '-'}
         </code>
       ),
     },
     {
-      title: t('horses.columns.health') || 'Sức khỏe',
+      title: t('horses.columns.health'),
       dataIndex: 'HealthStatus',
       key: 'HealthStatus',
-      render: (status) => {
-        if (status === 'Excellent') {
-          return (
-            <Tag color="success" icon={<CheckCircleOutlined />}>
-              {t('horses.healthOptions.excellent') || 'Xuất sắc'}
-            </Tag>
-          );
-        }
-        if (status === 'Good') {
-          return (
-            <Tag color="processing" icon={<CheckCircleOutlined />}>
-              {t('horses.healthOptions.good') || 'Khỏe mạnh'}
-            </Tag>
-          );
-        }
-        return (
-          <Tag color="warning" icon={<ExclamationCircleOutlined />}>
-            {t('horses.healthOptions.attention') || 'Cần theo dõi'}
-          </Tag>
-        );
+      render: (status) => <HealthStatusTag status={status} size="small" />,
+    },
+    {
+      title: t('horses.columns.risk'),
+      key: 'RiskLevel',
+      render: (_, record) => {
+        const risk = calculateHorseRisk(record, i18n.language);
+        return <RiskBadge risk={risk} size="small" />;
       },
     },
     {
-      title: t('horses.columns.action') || 'Action',
+      title: t('horses.columns.action'),
       key: 'action',
       align: 'right',
       render: (_, record) => (
-        <Button
-          type="primary"
-          ghost
-          icon={<EyeOutlined />}
-          size="middle"
-          onClick={() => handleViewDetail(record.HorseID)}
-          style={{ borderRadius: 6, fontWeight: 500 }}
-        >
-          {t('horses.viewAction') || 'Xem'}
-        </Button>
+        <Space size="small">
+          <Button
+            type="primary"
+            ghost
+            icon={<EyeOutlined />}
+            size="middle"
+            onClick={() => handleViewDetail(record.HorseID)}
+            style={{ borderRadius: 6, fontWeight: 500 }}
+          >
+            {t('horses.viewAction')}
+          </Button>
+          <Button
+            icon={<EditOutlined />}
+            size="middle"
+            onClick={() => handleOpenEdit(record)}
+            style={{ borderRadius: 6, fontWeight: 500 }}
+          >
+            {t('common.edit')}
+          </Button>
+          <Popconfirm
+            title={t('horses.deleteHorse')}
+            description={t('horses.deleteConfirmText', { name: record.Name })}
+            okText={t('common.delete')}
+            cancelText={t('common.cancel')}
+            okButtonProps={{ danger: true }}
+            onConfirm={async () => {
+              await horseService.deleteHorse(record.HorseID);
+              message.success(t('horses.deleteHorseSuccess', { name: record.Name }));
+              refetch();
+            }}
+          >
+            <Button
+              danger
+              type="text"
+              icon={<DeleteOutlined />}
+              size="middle"
+              style={{ borderRadius: 6 }}
+            />
+          </Popconfirm>
+        </Space>
       ),
     },
   ];
@@ -171,11 +248,8 @@ export default function MyHorsesPage() {
     <div>
       {/* Tiêu đề trang & Nút Thêm ngựa mới */}
       <PageHeader
-        title={t('horses.myHorsesTitle') || 'Danh sách ngựa của tôi'}
-        subtitle={
-          t('horses.myHorsesSubtitle') ||
-          'Quản lý danh sách ngựa đua, theo dõi số vi mạch sinh trắc học và lịch sử sức khỏe'
-        }
+        title={t('horses.myHorsesTitle')}
+        subtitle={t('horses.myHorsesSubtitle')}
         actions={
           <Button
             type="primary"
@@ -191,7 +265,7 @@ export default function MyHorsesPage() {
               borderColor: '#f59e0b',
             }}
           >
-            {t('horses.add') || '+ Thêm ngựa mới'}
+            {t('horses.add')}
           </Button>
         }
       />
@@ -208,12 +282,179 @@ export default function MyHorsesPage() {
       >
         <Table
           columns={columns}
-          dataSource={horses}
+          dataSource={Array.isArray(horses) ? horses : []}
           rowKey="HorseID"
           loading={loading}
-          pagination={{ pageSize: 8, showTotal: (total) => `Tổng cộng: ${total} con ngựa` }}
+          pagination={{
+            pageSize: 8,
+            showTotal: (total) => t('horses.totalCount', { count: total }),
+          }}
         />
       </Card>
+
+      {/* MODAL CHỈNH SỬA THÔNG TIN NGỰA */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 17, fontWeight: 700 }}>
+            <span>✏️ {t('horses.editModalTitle')}</span>
+            {editingHorse && <Tag color="gold">{editingHorse.Name}</Tag>}
+          </div>
+        }
+        open={editModalVisible}
+        onCancel={() => {
+          setEditModalVisible(false);
+          setEditingHorse(null);
+        }}
+        onOk={() => form.submit()}
+        confirmLoading={editSubmitting}
+        okText={t('horses.saveChanges')}
+        cancelText={t('horses.cancel')}
+        destroyOnClose
+        width={680}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSaveEdit}
+          style={{ marginTop: 16 }}
+        >
+          <Row gutter={16}>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="Name"
+                label={<span style={{ fontWeight: 600 }}>{t('horses.fields.name')}</span>}
+                rules={[{ required: true, message: t('horses.validation.nameRequired') }]}
+              >
+                <Input placeholder={t('horses.placeholders.name')} size="large" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="Breed"
+                label={<span style={{ fontWeight: 600 }}>{t('horses.fields.breed')}</span>}
+                rules={[{ required: true, message: t('horses.validation.breedRequired') }]}
+              >
+                <Select size="large">
+                  <Select.Option value="Thoroughbred">
+                    {t('horses.breedOptions.Thoroughbred')}
+                  </Select.Option>
+                  <Select.Option value="Quarter Horse">
+                    {t('horses.breedOptions.Quarter Horse')}
+                  </Select.Option>
+                  <Select.Option value="Arabian">
+                    {t('horses.breedOptions.Arabian')}
+                  </Select.Option>
+                  <Select.Option value="Warmblood">
+                    {t('horses.breedOptions.Warmblood')}
+                  </Select.Option>
+                  <Select.Option value="Appaloosa">
+                    {t('horses.breedOptions.Appaloosa')}
+                  </Select.Option>
+                  <Select.Option value="Standardbred">
+                    {t('horses.breedOptions.Standardbred')}
+                  </Select.Option>
+                  <Select.Option value="Andalusian">
+                    {t('horses.breedOptions.Andalusian')}
+                  </Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col xs={24} sm={8}>
+              <Form.Item name="Gender" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.gender')}</span>}>
+                <Select size="large">
+                  <Select.Option value="Stallion">{t('horses.genderOptions.stallion')}</Select.Option>
+                  <Select.Option value="Mare">{t('horses.genderOptions.mare')}</Select.Option>
+                  <Select.Option value="Gelding">{t('horses.genderOptions.gelding')}</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={8}>
+              <Form.Item name="DateOfBirth" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.dob')}</span>}>
+                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" size="large" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={8}>
+              <Form.Item name="Color" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.color')}</span>}>
+                <Input placeholder={t('horses.placeholders.color')} size="large" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col xs={24} sm={12}>
+              <Form.Item name="MicrochipNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.microchip')}</span>}>
+                <Input placeholder={t('horses.placeholders.microchip')} size="large" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item name="PassportNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.passport')}</span>}>
+                <Input placeholder={t('horses.placeholders.passport')} size="large" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          {/* ĐÁNH GIÁ SỨC KHỎE */}
+          <Form.Item
+            name="HealthStatus"
+            label={<span style={{ fontWeight: 600 }}>{t('horses.healthStatusForm')}</span>}
+          >
+            <Select
+              size="large"
+              options={[
+                {
+                  value: 'Excellent',
+                  label: (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                      <HealthStatusTag status="Excellent" size="small" />
+                      <span style={{ fontSize: 13 }}>{t('horses.healthOptions.excellent')}</span>
+                    </div>
+                  ),
+                },
+                {
+                  value: 'Good',
+                  label: (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                      <HealthStatusTag status="Good" size="small" />
+                      <span style={{ fontSize: 13 }}>{t('horses.healthOptions.good')}</span>
+                    </div>
+                  ),
+                },
+                {
+                  value: 'Attention',
+                  label: (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                      <HealthStatusTag status="Attention" size="small" />
+                      <span style={{ fontSize: 13 }}>{t('horses.healthOptions.attention')}</span>
+                    </div>
+                  ),
+                },
+                {
+                  value: 'Critical',
+                  label: (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                      <HealthStatusTag status="Critical" size="small" />
+                      <span style={{ fontSize: 13, color: '#991B1B', fontWeight: 600 }}>{t('horses.healthOptions.critical')}</span>
+                    </div>
+                  ),
+                },
+              ]}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="SpecialCareRequirements"
+            label={<span style={{ fontWeight: 600 }}>{t('horses.fields.specialCare')}</span>}
+          >
+            <Input.TextArea
+              rows={3}
+              placeholder={t('horses.specialCarePlaceholder')}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }

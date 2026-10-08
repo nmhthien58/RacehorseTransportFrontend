@@ -15,12 +15,14 @@ export const ROUTES = {
   CUSTOMER_HORSES: '/customer/horses',
   CUSTOMER_HORSE_NEW: '/customer/horses/new',
   CUSTOMER_HORSE_DETAIL: '/customer/horses/:id',
+  CUSTOMER_VET_RECORDS: '/customer/vet-records',
   CUSTOMER_BOOKINGS: '/customer/bookings',
   CUSTOMER_BOOKING_NEW: '/customer/bookings/new',
   CUSTOMER_BOOKING_DETAIL: '/customer/bookings/:id',
   CUSTOMER_TRIPS: '/customer/trips',
   CUSTOMER_MESSAGES: '/customer/messages',
   CUSTOMER_PROFILE: '/customer/profile',
+  CUSTOMER_BILLING: '/customer/billing',
   CUSTOMER_SETTINGS: '/customer/settings',
 
   // Manager

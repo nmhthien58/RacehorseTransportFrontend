@@ -132,12 +132,75 @@
     "viewAction": "View",
     "yearsOld": "years old",
     "notFound": "Horse profile not found",
+    "noPassport": "No Passport",
+    "editModalTitle": "Edit Horse Profile",
+    "saveChanges": "Save Changes",
+    "cancel": "Cancel",
+    "totalCount": "Total: {{count}} horses",
+    "bornYear": "Born {{year}}",
+    "born": "Born: {{dob}}",
+    "noDob": "Date of birth not recorded",
+    "prohibitedTitle": "NON-FIT-TO-TRAVEL WARNING",
+    "prohibitedDetail": "This horse is at CRITICAL RISK ({{status}}). Under IATA Live Animals Regulations (LAR) and international veterinary quarantine regulations, transport is strictly prohibited until treated and cleared by certified veterinarians.",
+    "prohibitedTooltip": "Critical Risk horse - transport booking is prohibited!",
+    "viewFullProfile": "View Full Profile",
+    "vetRecordBook": "Vet Records",
+    "bookTransport": "+ Book Transport",
+    "prohibitedTransport": "🚫 Prohibited",
+    "riskEvaluation": "TRANSPORT RISK ASSESSMENT",
+    "cabinTemp": "CABIN CLIMATE REQUIREMENT",
+    "colorMarkings": "COLOR & MARKINGS",
+    "notIssued": "Not issued",
+    "noColor": "No description",
+    "dobAge": "DOB & Age",
+    "activeRacing": "Ready for Competition",
+    "resting": "Resting",
+    "activeStatus": "Active",
+    "inactiveStatus": "Inactive",
+    "editHorse": "Edit Profile",
+    "deleteHorse": "Delete Horse Profile",
+    "deleteConfirmText": "Are you sure you want to delete horse \"{{name}}\"?",
+    "deleteHorseSuccess": "Deleted horse profile \"{{name}}\"",
+    "updateHorseSuccess": "Horse profile updated successfully!",
+    "updateHorseError": "Failed to update horse profile",
+    "specialCareLabel": "SPECIAL CARE REQUIREMENTS",
+    "specialCareNone": "No special requirements.",
+    "biometricCare": "Biometrics & Special Care Instructions",
+    "vaccineStatus": "Vaccination Status",
+    "vaccineCompleted": "Completed",
+    "fitCertificate": "Fit-to-Travel Certificate",
+    "iataStandard": "IATA LAR Compliant",
+    "registrationDate": "Registration Date",
+    "recordStatus": "Record Status",
+    "vetHistory": "Quarantine & Vaccination History",
+    "vetSupervised": "Supervised and certified by FEI-accredited veterinarians",
+    "totalRecords": "Total: {{count}} records",
+    "tripHistory": "Transport History",
+    "tripHistoryDesc": "Logged itineraries and e-POD equine welfare logs per leg",
+    "totalTrips": "Total: {{count}} trips",
+    "modeAir": "✈ Air Cargo",
+    "modeGround": "🚛 Ground Transport",
+    "statusInTransit": "In Transit",
+    "statusCompleted": "Completed",
+    "statusValid": "Valid",
+    "assignedVet": "Attending Vet: {{vet}} · {{clinic}}",
+    "vetItem": "Quarantine / Medical Item",
+    "issueDate": "Issue Date",
+    "validUntil": "Valid Until",
+    "notes": "Notes",
+    "tripCode": "Booking / Trip ID",
+    "tripRoute": "Transport Route",
+    "tripTime": "Schedule",
+    "welfareScore": "Welfare Score at Handover",
+    "healthStatusForm": "Health Status",
+    "specialCarePlaceholder": "Medical notes, medication schedule, cabin temperature, transit handling...",
     "columns": {
       "name": "Horse Name",
       "breed": "Breed",
       "age": "Age",
       "microchip": "Microchip",
       "health": "Health Status",
+      "risk": "Risk Level",
       "action": "Action"
     },
     "tabs": {
@@ -145,10 +208,32 @@
       "vetRecords": "Veterinary Records",
       "tripHistory": "Transport History"
     },
+    "riskLevels": {
+      "low": "LOW RISK",
+      "medium": "MEDIUM RISK",
+      "high": "HIGH RISK",
+      "critical": "CRITICAL RISK"
+    },
     "healthOptions": {
-      "excellent": "Excellent",
-      "good": "Good",
-      "attention": "Attention"
+      "excellent": "Excellent (Optimal racing & air transit)",
+      "good": "Good (Stable condition, ready for transit)",
+      "attention": "Attention (Medical observation required)",
+      "critical": "Critical (NON-FIT-TO-TRAVEL)"
+    },
+    "healthDescriptions": {
+      "excellent": "Optimal for competition & air transit (Fit-to-Travel)",
+      "good": "Healthy, stable condition, ready for transport",
+      "attention": "Requires close monitoring, motion sickness history or recovering",
+      "critical": "Critical condition, acute symptoms (PROHIBITED FROM TRANSPORT)"
+    },
+    "breedOptions": {
+      "Thoroughbred": "Thoroughbred",
+      "Quarter Horse": "Quarter Horse",
+      "Arabian": "Arabian",
+      "Warmblood": "Warmblood",
+      "Appaloosa": "Appaloosa",
+      "Standardbred": "Standardbred",
+      "Andalusian": "Andalusian"
     },
     "listTitle": "Stable Fleet & Horses",
     "listSubtitle": "Manage horse profiles, health risk tags, and transport readiness",
@@ -247,10 +332,10 @@
       "viewAll": "View All"
     },
     "riskLevels": {
-      "low": "LOW risk",
-      "medium": "MEDIUM risk",
-      "high": "HIGH risk",
-      "critical": "CRITICAL risk"
+      "low": "LOW RISK",
+      "medium": "MEDIUM RISK",
+      "high": "HIGH RISK",
+      "critical": "CRITICAL RISK"
     }
   },
   "bookings": {
@@ -290,6 +375,35 @@
     "emptyCreateHint": "Create your first transport request to schedule specialized transit.",
     "filterAllModes": "All Modes",
     "searchPlaceholder": "Search by booking code, pickup/delivery address...",
+    "stallClass": "Stall Class",
+    "stallClassNotes": "Position / Welfare Notes",
+    "stallClassPlaceholder": "e.g. Left stall bay",
+    "stallClasses": {
+      "shared": "Shared (Shared Stall)",
+      "comfort": "Comfort (Comfort Stall)",
+      "private": "Private (VIP Private)"
+    },
+    "quoteItems": {
+      "freightAir": "International Air Stall Charter",
+      "freightGround": "Specialized Rig Ground Freight",
+      "stallSurcharge": "Stall Class Upgrade Surcharge (Comfort/Private)",
+      "climateSurcharge": "Cabin Climate Control Surcharge (16-19°C)",
+      "clearanceFee": "Border Customs & Quarantine Clearance Fee"
+    },
+    "costBreakdownTitle": "Estimated Cost Breakdown",
+    "itemCol": "Item",
+    "qtyCol": "Qty",
+    "amountCol": "Amount",
+    "totalEstimate": "Total Estimated Cost (USD):",
+    "quoteDisclaimer": "Official quote subject to Dispatcher approval",
+    "specialInstructionsLabel": "Special Instructions for Driver & Handlers",
+    "specialInstructionsPlaceholder": "e.g. Mandatory 4-hour hydration stop...",
+    "declaredValueLabel": "Declared Value for Insurance (USD)",
+    "departureDateLabel": "Estimated Departure Date",
+    "deliveryDateLabel": "Estimated Delivery Date",
+    "routeAndVehicle": "Route & Transport Mode",
+    "selectedHorsesList": "Selected Horses ({{count}})",
+    "prohibitedBanner": "🚫 NON-FIT-TO-TRAVEL: This horse is at Critical Risk ({{status}}). Under IATA LAR regulations, it is strictly prohibited from participating in any transport transit.",
     "steps": {
       "where": "Where",
       "what": "What (Horses)",
@@ -336,7 +450,40 @@
       "pickupRequired": "Please enter pickup address",
       "dropoffRequired": "Please enter delivery address",
       "selectHorseRequired": "Please select at least 1 horse to continue"
-    }
+    },
+    "detailTitle": "Transport Request Details",
+    "createdAt": "Created At",
+    "pickupLocation": "PICKUP LOCATION",
+    "dropoffLocation": "DELIVERY LOCATION",
+    "transportMode": "Transport Mode",
+    "totalHorsesCount": "{{count}} horses",
+    "climateControl": "Climate Control",
+    "climateControlYes": "Yes (16-19°C)",
+    "climateControlNo": "No",
+    "specialNotes": "Special Instructions",
+    "quoteBreakdownTitle": "Estimated Cost Breakdown",
+    "quoteItem": "Item",
+    "quoteQty": "Qty",
+    "quoteUnitPrice": "Unit Price",
+    "quoteAmount": "Amount",
+    "totalEstimatedCost": "Total Estimated Cost",
+    "cancelSuccess": "Transport request cancelled successfully",
+    "cancelFailed": "Unable to cancel booking"
+  },
+  "messages": {
+    "title": "Messages & Live Dispatch",
+    "subtitle": "24/7 direct communication with dedicated drivers, transit veterinarians, and dispatchers",
+    "activeChats": "Active Conversations",
+    "online": "Online",
+    "offline": "Offline",
+    "emergencyCall": "Emergency Call",
+    "encryptedChannel": "End-to-End Encrypted Secure Journey Channel (E2EE)",
+    "inputPlaceholder": "Type a message to driver & veterinarian...",
+    "send": "Send",
+    "driverRole": "FEI Transport Driver",
+    "vetRole": "Senior FEI Transit Veterinarian",
+    "dispatcherRole": "24/7 GPS Logistics Coordinator",
+    "autoReply": "Message received: \"{{text}}\". Cabin conditions and horse vitals are completely normal and secure."
   },
   "profile": {
     "title": "Account Profile",
@@ -350,7 +497,10 @@
     "createdAt": "Member Since",
     "status": "Account Status",
     "edit": "Edit Profile",
-    "editDisabledHint": "Profile editing is currently being updated"
+    "editDisabledHint": "Profile editing is currently being updated",
+    "verified": "Identity Verified",
+    "feiOwnerId": "FEI Owner ID",
+    "activeStatus": "Active"
   },
   "settings": {
     "title": "Account Settings",
@@ -359,6 +509,9 @@
       "notifications": "Notifications",
       "security": "Security"
     },
+    "notificationsTitle": "Automated Notification Channels",
+    "notificationsDesc": "Choose the notifications you want to receive regarding journey schedules and horse welfare.",
+    "saveNotifications": "Save Notification Settings",
     "notifications": {
       "emailTrips": "Trip progress notifications via Email",
       "emailTripsDesc": "Receive automatic email alerts on departure, checkpoint transit, and safe delivery.",
@@ -369,6 +522,13 @@
       "marketing": "Service newsletter & member promotions",
       "marketingDesc": "Receive updates regarding new transport corridors, aircraft charters, and member discounts."
     },
+    "passwordTitle": "Change Account Password",
+    "passwordDesc": "Password should contain at least 8 characters, including uppercase, lowercase, and numbers.",
+    "currentPasswordPlaceholder": "Enter current password",
+    "newPasswordPlaceholder": "Enter new password",
+    "confirmPasswordPlaceholder": "Confirm new password",
+    "loginAlerts": "Unfamiliar Login Alerts",
+    "loginAlertsDesc": "Receive immediate alerts if your account is accessed from a new IP address or browser.",
     "security": {
       "currentPassword": "Current Password",
       "newPassword": "New Password",
@@ -377,5 +537,55 @@
       "twoFactorDesc": "Protect your account with OTP sent via Authenticator app or SMS upon sign in.",
       "saveSettings": "Save Security Settings"
     }
+  },
+  "trips": {
+    "title": "Active Transport Trips",
+    "subtitle": "Real-time GPS tracking, cabin climate control and transit route monitoring",
+    "columns": {
+      "codeAndVehicle": "Trip Code & Vehicle",
+      "horses": "Horses in Transit",
+      "route": "Transit Route",
+      "climateSensor": "Cabin Sensors",
+      "progressAndEta": "Progress & ETA",
+      "status": "Status",
+      "action": "Actions"
+    },
+    "gpsTrack": "Track GPS",
+    "modalTitle": "Live GPS Tracking",
+    "currentLocation": "Current GPS Location:",
+    "speed": "Transit Speed:",
+    "driver": "Assigned Driver:",
+    "gpsSignal": "Satellite GPS signal active (Latency 0.4s)",
+    "coordinates": "Coordinates: 10.9574° N, 106.8427° E · Dau Giay Expressway",
+    "cabinTemp": "Cabin Temp",
+    "cabinHumidity": "Cabin Humidity",
+    "o2Quality": "O2 Quality",
+    "tempLabel": "Temp",
+    "humidityLabel": "Humidity",
+    "o2Label": "O2",
+    "contactDriver": "Contact Driver",
+    "close": "Close"
+  },
+  "billing": {
+    "title": "Billing & Invoices",
+    "subtitle": "Track transportation transaction history, VAT invoices, and settlement status",
+    "stats": {
+      "monthlyTotal": "This Month's Spending",
+      "paid": "Settled / Paid",
+      "pending": "Pending Settlement"
+    },
+    "columns": {
+      "invoiceCode": "Invoice Code",
+      "description": "Service Description",
+      "tripCode": "Trip Code",
+      "date": "Issue Date",
+      "amount": "Amount",
+      "method": "Payment Method",
+      "status": "Status",
+      "action": "Actions"
+    },
+    "viewInvoice": "View Invoice",
+    "downloadPdf": "Download PDF",
+    "close": "Close"
   }
 }

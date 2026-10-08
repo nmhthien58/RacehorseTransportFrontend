@@ -91,7 +91,7 @@ export default function AppSidebar({ collapsed, user }) {
               label: t('nav.billing'),
             },
             {
-              key: '/customer/settings',
+              key: ROUTES.CUSTOMER_SETTINGS,
               icon: <SettingOutlined style={{ fontSize: 18 }} />,
               label: t('nav.settings'),
             },

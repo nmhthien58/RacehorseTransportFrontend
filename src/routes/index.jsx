@@ -20,7 +20,12 @@ import NotFoundPage from '@features/auth/pages/NotFoundPage';
 // Customer pages
 import CustomerDashboard from '@features/customer/pages/DashboardPage';
 import CustomerBookings from '@features/customer/pages/BookingsPage';
-import CustomerHorses from '@features/customer/pages/HorsesPage';
+import NewBookingPage from '@features/customer/pages/NewBookingPage';
+import MyHorsesPage from '@features/customer/pages/MyHorsesPage';
+import HorseDetailPage from '@features/customer/pages/HorseDetailPage';
+import AddHorsePage from '@features/customer/pages/AddHorsePage';
+import ProfilePage from '@features/customer/pages/ProfilePage';
+import SettingsPage from '@features/customer/pages/SettingsPage';
 
 // Manager pages
 import ManagerDashboard from '@features/manager/pages/DashboardPage';
@@ -58,7 +63,12 @@ export default function AppRoutes() {
         <Route element={<MainLayout />}>
           <Route path={ROUTES.CUSTOMER_DASHBOARD} element={<CustomerDashboard />} />
           <Route path={ROUTES.CUSTOMER_BOOKINGS} element={<CustomerBookings />} />
-          <Route path={ROUTES.CUSTOMER_HORSES} element={<CustomerHorses />} />
+          <Route path={ROUTES.CUSTOMER_BOOKING_NEW} element={<NewBookingPage />} />
+          <Route path={ROUTES.CUSTOMER_HORSES} element={<MyHorsesPage />} />
+          <Route path={ROUTES.CUSTOMER_HORSE_DETAIL} element={<HorseDetailPage />} />
+          <Route path={ROUTES.CUSTOMER_HORSE_NEW} element={<AddHorsePage />} />
+          <Route path={ROUTES.CUSTOMER_PROFILE} element={<ProfilePage />} />
+          <Route path={ROUTES.CUSTOMER_SETTINGS} element={<SettingsPage />} />
         </Route>
       </Route>
 

@@ -4,8 +4,8 @@ import {
   Descriptions,
   Empty,
   Flex,
-  Spin,
   Space,
+  Spin,
   Table,
   Tabs,
   Tag,
@@ -15,11 +15,11 @@ import {
   ArrowLeftOutlined,
   CheckCircleOutlined,
   ExclamationCircleOutlined,
+  InfoCircleOutlined,
   MedicineBoxOutlined,
   CarOutlined,
-  InfoCircleOutlined,
 } from '@ant-design/icons';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import PageHeader from '@components/layout/PageHeader';
@@ -29,20 +29,22 @@ import { ROUTES } from '@routes/routes';
 const { Title, Text } = Typography;
 
 /**
- * Trang chi tiết cá thể ngựa đua dành cho khách hàng (Horse Detail)
- * Đường dẫn: /customer/horses/:id
- * Giao diện AntD Descriptions + Tabs [Thông tin chung, Hồ sơ thú y, Lịch sử vận chuyển]
+ * Trang chi tiết hồ sơ ngựa đua (Horse Detail Profile)
+ * Tuyến đường dẫn: /customer/horses/:id
+ * Tái hiện cấu trúc quản lý hồ sơ chuyên sâu: Thông tin cơ bản, Hồ sơ thú y, Lịch sử vận chuyển
  *
  * @returns {JSX.Element}
  */
 export default function HorseDetailPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { id } = useParams();
+  const navigate = useNavigate();
+
+  // Lấy dữ liệu hồ sơ ngựa qua custom hook
   const { data: horse, loading, error } = useHorseDetail(id);
 
   /**
-   * Quay lại danh sách ngựa
+   * Quay lại trang danh sách ngựa
    */
   const handleBackToList = () => {
     navigate(ROUTES.CUSTOMER_HORSES);
@@ -53,7 +55,7 @@ export default function HorseDetailPage() {
       <div style={{ textAlign: 'center', padding: '100px 0' }}>
         <Spin size="large" />
         <Text type="secondary" style={{ display: 'block', marginTop: 16 }}>
-          {t('common.loading')}
+          {t('common.loading') || 'Đang tải thông tin cá thể ngựa...'}
         </Text>
       </div>
     );
@@ -82,35 +84,35 @@ export default function HorseDetailPage() {
     );
   }
 
-  const age = horse.DateOfBirth
-    ? dayjs().diff(dayjs(horse.DateOfBirth), 'year')
+  const age = horse.dateOfBirth
+    ? dayjs().diff(dayjs(horse.dateOfBirth), 'year')
     : null;
 
   // Cấu hình bảng Hồ sơ thú y
   const vetColumns = [
     {
       title: 'Hạng mục kiểm dịch / Y tế',
-      dataIndex: 'Title',
-      key: 'Title',
+      dataIndex: 'title',
+      key: 'title',
       render: (title, record) => (
         <div>
           <strong style={{ color: '#0f172a' }}>{title}</strong>
           <div style={{ fontSize: 12, color: '#64748b' }}>
-            Bác sĩ phụ trách: {record.Veterinarian} · {record.Clinic}
+            Bác sĩ phụ trách: {record.veterinarian} · {record.clinic}
           </div>
         </div>
       ),
     },
     {
       title: 'Ngày cấp',
-      dataIndex: 'Date',
-      key: 'Date',
+      dataIndex: 'date',
+      key: 'date',
       render: (date) => dayjs(date).format('DD/MM/YYYY'),
     },
     {
       title: 'Hiệu lực đến',
-      dataIndex: 'ValidUntil',
-      key: 'ValidUntil',
+      dataIndex: 'validUntil',
+      key: 'validUntil',
       render: (date) => (
         <span style={{ color: '#059669', fontWeight: 500 }}>
           {dayjs(date).format('DD/MM/YYYY')}
@@ -119,8 +121,8 @@ export default function HorseDetailPage() {
     },
     {
       title: 'Trạng thái',
-      dataIndex: 'Status',
-      key: 'Status',
+      dataIndex: 'status',
+      key: 'status',
       render: (status) => (
         <Tag color="success" icon={<CheckCircleOutlined />}>
           {status === 'Valid' ? 'Còn hiệu lực' : status}
@@ -129,8 +131,8 @@ export default function HorseDetailPage() {
     },
     {
       title: 'Ghi chú',
-      dataIndex: 'Notes',
-      key: 'Notes',
+      dataIndex: 'notes',
+      key: 'notes',
       render: (notes) => <span style={{ fontSize: 12 }}>{notes}</span>,
     },
   ];
@@ -139,25 +141,25 @@ export default function HorseDetailPage() {
   const tripColumns = [
     {
       title: 'Mã đơn / Chuyến đi',
-      dataIndex: 'BookingCode',
-      key: 'BookingCode',
+      dataIndex: 'bookingCode',
+      key: 'bookingCode',
       render: (code, record) => (
         <div>
           <strong style={{ color: '#0f172a', fontFamily: 'monospace' }}>#{code}</strong>
-          <div style={{ fontSize: 12, color: '#64748b' }}>{record.VehicleCode}</div>
+          <div style={{ fontSize: 12, color: '#64748b' }}>{record.vehicleCode}</div>
         </div>
       ),
     },
     {
       title: 'Lộ trình vận chuyển',
-      dataIndex: 'Route',
-      key: 'Route',
+      dataIndex: 'route',
+      key: 'route',
       render: (route, record) => (
         <div>
           <span>{route}</span>
           <div>
-            <Tag color={record.TransportMode === 'Air' ? 'blue' : 'orange'} style={{ fontSize: 11 }}>
-              {record.TransportMode === 'Air' ? '✈ Hàng không' : '🚛 Đường bộ'}
+            <Tag color={record.transportMode === 'Air' ? 'blue' : 'orange'} style={{ fontSize: 11 }}>
+              {record.transportMode === 'Air' ? '✈ Hàng không' : '🚛 Đường bộ'}
             </Tag>
           </div>
         </div>
@@ -165,24 +167,24 @@ export default function HorseDetailPage() {
     },
     {
       title: 'Thời gian',
-      dataIndex: 'DepartureDate',
-      key: 'DepartureDate',
+      dataIndex: 'departureDate',
+      key: 'departureDate',
       render: (dep, record) => (
         <span style={{ fontSize: 13 }}>
-          {dayjs(dep).format('DD/MM/YYYY')} ➔ {dayjs(record.ArrivalDate).format('DD/MM/YYYY')}
+          {dayjs(dep).format('DD/MM/YYYY')} ➔ {dayjs(record.arrivalDate).format('DD/MM/YYYY')}
         </span>
       ),
     },
     {
       title: 'Thể trạng khi bàn giao',
-      dataIndex: 'WelfareScore',
-      key: 'WelfareScore',
+      dataIndex: 'welfareScore',
+      key: 'welfareScore',
       render: (score) => <Tag color="green">{score}</Tag>,
     },
     {
       title: 'Trạng thái',
-      dataIndex: 'Status',
-      key: 'Status',
+      dataIndex: 'status',
+      key: 'status',
       render: (st) => (
         <Tag color={st === 'InTransit' ? 'processing' : 'success'}>
           {st === 'InTransit' ? 'Đang vận chuyển' : 'Đã hoàn thành'}
@@ -210,12 +212,12 @@ export default function HorseDetailPage() {
               Chăm sóc đặc biệt:
             </Text>
             <Text strong style={{ color: '#0f172a' }}>
-              {horse.SpecialCareRequirements || 'Không có yêu cầu đặc biệt.'}
+              {horse.specialCareRequirements || 'Không có yêu cầu đặc biệt.'}
             </Text>
           </div>
 
           <Descriptions bordered size="small" column={{ xs: 1, sm: 2, md: 3 }} styles={{ label: { fontWeight: 600, color: '#475569' } }}>
-            <Descriptions.Item label="Màu lông định danh">{horse.Color || '-'}</Descriptions.Item>
+            <Descriptions.Item label="Màu lông định danh">{horse.color || '-'}</Descriptions.Item>
             <Descriptions.Item label="Tình trạng tiêm chủng">
               <Tag color="success">Đã hoàn thành</Tag>
             </Descriptions.Item>
@@ -223,11 +225,11 @@ export default function HorseDetailPage() {
               <Tag color="cyan">Đạt chuẩn IATA LAR</Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Ngày đăng ký hồ sơ">
-              {dayjs(horse.CreatedAt).format('DD/MM/YYYY')}
+              {dayjs(horse.createdAt).format('DD/MM/YYYY')}
             </Descriptions.Item>
             <Descriptions.Item label="Trạng thái hồ sơ">
-              <Tag color={horse.IsActive ? 'success' : 'default'}>
-                {horse.IsActive ? 'Đang hoạt động' : 'Tạm dừng'}
+              <Tag color={horse.isActive ? 'success' : 'default'}>
+                {horse.isActive ? 'Đang hoạt động' : 'Tạm dừng'}
               </Tag>
             </Descriptions.Item>
           </Descriptions>
@@ -252,13 +254,13 @@ export default function HorseDetailPage() {
                 Được giám sát và xác thực bởi bác sĩ thú y có chứng chỉ FEI quốc tế
               </Text>
             </div>
-            <Tag color="blue">Tổng cộng: {horse.VetRecords?.length || 0} bản ghi</Tag>
+            <Tag color="blue">Tổng cộng: {horse.vetRecords?.length || 0} bản ghi</Tag>
           </Flex>
 
           <Table
             columns={vetColumns}
-            dataSource={horse.VetRecords || []}
-            rowKey="RecordID"
+            dataSource={horse.vetRecords || []}
+            rowKey="recordId"
             pagination={false}
           />
         </Card>
@@ -282,13 +284,13 @@ export default function HorseDetailPage() {
                 Lưu trữ hành trình di chuyển và báo cáo phúc lợi e-POD sau mỗi chặng
               </Text>
             </div>
-            <Tag color="orange">Tổng cộng: {horse.TransportHistory?.length || 0} chuyến</Tag>
+            <Tag color="orange">Tổng cộng: {horse.transportHistory?.length || 0} chuyến</Tag>
           </Flex>
 
           <Table
             columns={tripColumns}
-            dataSource={horse.TransportHistory || []}
-            rowKey="TripID"
+            dataSource={horse.transportHistory || []}
+            rowKey="tripId"
             pagination={false}
           />
         </Card>
@@ -303,7 +305,7 @@ export default function HorseDetailPage() {
         title={t('horses.detailTitle') || 'Hồ sơ chi tiết ngựa đua'}
         breadcrumb={[
           { label: t('nav.horses') || 'Ngựa của tôi', path: ROUTES.CUSTOMER_HORSES },
-          { label: horse.Name },
+          { label: horse.name },
         ]}
         actions={
           <Button icon={<ArrowLeftOutlined />} onClick={handleBackToList}>
@@ -342,24 +344,24 @@ export default function HorseDetailPage() {
             </div>
             <div>
               <Title level={3} style={{ margin: 0, fontWeight: 700, color: '#0f172a' }}>
-                {horse.Name}
+                {horse.name}
               </Title>
               <Space size="small" style={{ marginTop: 4 }}>
-                <Tag color="blue">{horse.Breed}</Tag>
+                <Tag color="blue">{horse.breed}</Tag>
                 <Tag color="gold">
-                  {t(`horses.genderOptions.${horse.Gender?.toLowerCase()}`) || horse.Gender}
+                  {t(`horses.genderOptions.${horse.gender?.toLowerCase()}`) || horse.gender}
                 </Tag>
-                {horse.HealthStatus === 'Excellent' && (
+                {horse.healthStatus === 'Excellent' && (
                   <Tag color="success" icon={<CheckCircleOutlined />}>
                     Sức khỏe xuất sắc
                   </Tag>
                 )}
-                {horse.HealthStatus === 'Good' && (
+                {horse.healthStatus === 'Good' && (
                   <Tag color="processing" icon={<CheckCircleOutlined />}>
                     Khỏe mạnh
                   </Tag>
                 )}
-                {horse.HealthStatus === 'Attention' && (
+                {horse.healthStatus === 'Attention' && (
                   <Tag color="warning" icon={<ExclamationCircleOutlined />}>
                     Cần theo dõi
                   </Tag>
@@ -388,33 +390,33 @@ export default function HorseDetailPage() {
                 whiteSpace: 'nowrap',
               }}
             >
-              {horse.MicrochipNumber}
+              {horse.microchipNumber}
             </code>
           </Descriptions.Item>
 
           <Descriptions.Item label="Hộ chiếu FEI">
             <span style={{ fontWeight: 600, whiteSpace: 'nowrap', color: '#0f172a' }}>
-              {horse.PassportNumber || 'Chưa cập nhật'}
+              {horse.passportNumber || 'Chưa cập nhật'}
             </span>
           </Descriptions.Item>
 
           <Descriptions.Item label="Ngày sinh & Tuổi">
             <span style={{ whiteSpace: 'nowrap' }}>
-              {dayjs(horse.DateOfBirth).format('DD/MM/YYYY')} ({age} tuổi)
+              {dayjs(horse.dateOfBirth).format('DD/MM/YYYY')} ({age} tuổi)
             </span>
           </Descriptions.Item>
 
           <Descriptions.Item label="Màu lông">
-            <span>{horse.Color || '-'}</span>
+            <span>{horse.color || '-'}</span>
           </Descriptions.Item>
 
           <Descriptions.Item label="Giới tính">
-            <span>{t(`horses.genderOptions.${horse.Gender?.toLowerCase()}`) || horse.Gender}</span>
+            <span>{t(`horses.genderOptions.${horse.gender?.toLowerCase()}`) || horse.gender}</span>
           </Descriptions.Item>
 
           <Descriptions.Item label="Trạng thái">
-            <Tag color={horse.IsActive ? 'success' : 'default'} style={{ margin: 0 }}>
-              {horse.IsActive ? 'Sẵn sàng thi đấu' : 'Tạm nghỉ'}
+            <Tag color={horse.isActive ? 'success' : 'default'} style={{ margin: 0 }}>
+              {horse.isActive ? 'Sẵn sàng thi đấu' : 'Tạm nghỉ'}
             </Tag>
           </Descriptions.Item>
         </Descriptions>

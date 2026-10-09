@@ -36,12 +36,24 @@ export const useAuthStore = create(
       hasRole: (roles) => {
         const { user } = get();
         if (!user) return false;
-        if (Array.isArray(roles)) return roles.includes(user.Role);
-        return user.Role === roles;
+        if (Array.isArray(roles)) return roles.includes(user.role);
+        return user.role === roles;
       },
     }),
     {
       name: 'auth-storage',
+      version: 2,
+      migrate: (persistedState, version) => {
+        if (!version || version < 2) {
+          return {
+            user: null,
+            token: null,
+            refreshToken: null,
+            isAuthenticated: false,
+          };
+        }
+        return persistedState;
+      },
       partialize: (state) => ({
         user: state.user,
         token: state.token,

@@ -28,7 +28,7 @@ export function useHorseDetail(id) {
       })
       .catch((err) => {
         if (isSubscribed) {
-          const found = MOCK_HORSES.find((h) => String(h.HorseID) === String(id));
+          const found = MOCK_HORSES.find((h) => String(h.horseId) === String(id));
           if (found) {
             setData(found);
           } else {

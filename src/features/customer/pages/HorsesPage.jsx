@@ -69,7 +69,7 @@ export default function CustomerHorses() {
 
     horseService
       .getHorses({
-        ownerId: user?.UserID || undefined,
+        ownerId: user?.userId || undefined,
       })
       .then((res) => {
         if (isSubscribed) {
@@ -114,14 +114,14 @@ export default function CustomerHorses() {
   const handleOpenEditModal = (record) => {
     setEditingHorse(record);
     form.setFieldsValue({
-      Name: record.Name,
-      Breed: record.Breed,
-      Gender: record.Gender,
-      DateOfBirth: record.DateOfBirth ? dayjs(record.DateOfBirth) : null,
-      MicrochipNumber: record.MicrochipNumber,
-      PassportNumber: record.PassportNumber,
-      Color: record.Color,
-      SpecialCareRequirements: record.SpecialCareRequirements,
+      name: record.name,
+      breed: record.breed,
+      gender: record.gender,
+      dateOfBirth: record.dateOfBirth ? dayjs(record.dateOfBirth) : null,
+      microchipNumber: record.microchipNumber,
+      passportNumber: record.passportNumber,
+      color: record.color,
+      specialCareRequirements: record.specialCareRequirements,
     });
     setEditModalVisible(true);
   };
@@ -143,13 +143,13 @@ export default function CustomerHorses() {
       setSubmitting(true);
       const payload = {
         ...values,
-        DateOfBirth: values.DateOfBirth
-          ? values.DateOfBirth.format('YYYY-MM-DD')
+        dateOfBirth: values.dateOfBirth
+          ? values.dateOfBirth.format('YYYY-MM-DD')
           : null,
       };
 
       if (editingHorse) {
-        await horseService.updateHorse(editingHorse.HorseID, payload);
+        await horseService.updateHorse(editingHorse.horseId, payload);
         message.success(t('horses.updateSuccess'));
       }
 
@@ -179,18 +179,18 @@ export default function CustomerHorses() {
   // Tính toán số liệu thống kê đầu trang theo Frame 70:706 của Figma
   const totalCount = horses.length;
   const docsCompleteCount = horses.filter(
-    (h) => h.PassportNumber && h.MicrochipNumber,
+    (h) => h.passportNumber && h.microchipNumber,
   ).length;
   const needAttentionCount = horses.filter(
-    (h) => !h.PassportNumber || (h.SpecialCareRequirements && h.SpecialCareRequirements.length > 20),
+    (h) => !h.passportNumber || (h.specialCareRequirements && h.specialCareRequirements.length > 20),
   ).length;
 
   // Cấu hình các cột của bảng danh sách khi chuyển qua Table View
   const columns = [
     {
       title: t('horses.fields.name'),
-      dataIndex: 'Name',
-      key: 'Name',
+      dataIndex: 'name',
+      key: 'name',
       render: (text) => (
         <Space size="small">
           <span style={{ fontSize: 18 }}>🐴</span>
@@ -200,14 +200,14 @@ export default function CustomerHorses() {
     },
     {
       title: t('horses.fields.breed'),
-      dataIndex: 'Breed',
-      key: 'Breed',
+      dataIndex: 'breed',
+      key: 'breed',
       render: (breed) => <Tag color="blue">{breed}</Tag>,
     },
     {
       title: t('horses.fields.gender'),
-      dataIndex: 'Gender',
-      key: 'Gender',
+      dataIndex: 'gender',
+      key: 'gender',
       render: (gender) => {
         const genderKey = gender ? gender.toLowerCase() : '';
         return t(`horses.genderOptions.${genderKey}`) || gender || '-';
@@ -215,8 +215,8 @@ export default function CustomerHorses() {
     },
     {
       title: t('horses.fields.microchip'),
-      dataIndex: 'MicrochipNumber',
-      key: 'MicrochipNumber',
+      dataIndex: 'microchipNumber',
+      key: 'microchipNumber',
       render: (code) => (
         <code
           style={{
@@ -232,20 +232,20 @@ export default function CustomerHorses() {
     },
     {
       title: t('horses.fields.passport'),
-      dataIndex: 'PassportNumber',
-      key: 'PassportNumber',
+      dataIndex: 'passportNumber',
+      key: 'passportNumber',
       render: (passport) => passport || '-',
     },
     {
       title: t('horses.fields.dob'),
-      dataIndex: 'DateOfBirth',
-      key: 'DateOfBirth',
+      dataIndex: 'dateOfBirth',
+      key: 'dateOfBirth',
       render: (dob) => (dob ? dayjs(dob).format('DD/MM/YYYY') : '-'),
     },
     {
       title: t('horses.fields.status'),
-      dataIndex: 'IsActive',
-      key: 'IsActive',
+      dataIndex: 'isActive',
+      key: 'isActive',
       render: (isActive) => (
         <StatusTag status={isActive ? 'Available' : 'Maintenance'} />
       ),
@@ -264,7 +264,7 @@ export default function CustomerHorses() {
           />
           <Popconfirm
             title={t('horses.deleteConfirm')}
-            onConfirm={() => handleDeleteHorse(record.HorseID)}
+            onConfirm={() => handleDeleteHorse(record.horseId)}
             okText={t('common.confirm')}
             cancelText={t('common.cancel')}
           >
@@ -479,7 +479,7 @@ export default function CustomerHorses() {
       ) : viewMode === 'grid' ? (
         <Row gutter={[20, 20]}>
           {horses.map((horse) => (
-            <Col key={horse.HorseID} xs={24} sm={12} lg={8}>
+            <Col key={horse.horseId} xs={24} sm={12} lg={8}>
               <HorseCard
                 horse={horse}
                 onEdit={handleOpenEditModal}
@@ -494,7 +494,7 @@ export default function CustomerHorses() {
           <DataTable
             columns={columns}
             dataSource={horses}
-            rowKey="HorseID"
+            rowKey="horseId"
             loading={loading}
           />
         </Card>
@@ -517,14 +517,14 @@ export default function CustomerHorses() {
           layout="vertical"
           onFinish={handleEditSubmit}
           initialValues={{
-            Gender: 'Stallion',
-            Breed: 'Thoroughbred',
+            gender: 'Stallion',
+            breed: 'Thoroughbred',
           }}
         >
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item
-                name="Name"
+                name="name"
                 label={t('horses.fields.name')}
                 rules={[
                   {
@@ -539,7 +539,7 @@ export default function CustomerHorses() {
 
             <Col xs={24} sm={12}>
               <Form.Item
-                name="Breed"
+                name="breed"
                 label={t('horses.fields.breed')}
                 rules={[
                   {
@@ -560,7 +560,7 @@ export default function CustomerHorses() {
 
           <Row gutter={16}>
             <Col xs={24} sm={12}>
-              <Form.Item name="Gender" label={t('horses.fields.gender')}>
+              <Form.Item name="gender" label={t('horses.fields.gender')}>
                 <Select>
                   <Select.Option value="Stallion">
                     {t('horses.genderOptions.stallion')}
@@ -576,7 +576,7 @@ export default function CustomerHorses() {
             </Col>
 
             <Col xs={24} sm={12}>
-              <Form.Item name="DateOfBirth" label={t('horses.fields.dob')}>
+              <Form.Item name="dateOfBirth" label={t('horses.fields.dob')}>
                 <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
               </Form.Item>
             </Col>
@@ -585,7 +585,7 @@ export default function CustomerHorses() {
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item
-                name="MicrochipNumber"
+                name="microchipNumber"
                 label={t('horses.fields.microchip')}
                 rules={[
                   {
@@ -600,7 +600,7 @@ export default function CustomerHorses() {
 
             <Col xs={24} sm={12}>
               <Form.Item
-                name="PassportNumber"
+                name="passportNumber"
                 label={t('horses.fields.passport')}
               >
                 <Input placeholder="e.g. FEI-VN-2026-01" />
@@ -610,14 +610,14 @@ export default function CustomerHorses() {
 
           <Row gutter={16}>
             <Col span={24}>
-              <Form.Item name="Color" label={t('horses.fields.color')}>
+              <Form.Item name="color" label={t('horses.fields.color')}>
                 <Input placeholder="e.g. Hồng sắc, Bạch sắc, Ô sắc" />
               </Form.Item>
             </Col>
           </Row>
 
           <Form.Item
-            name="SpecialCareRequirements"
+            name="specialCareRequirements"
             label={t('horses.fields.specialCare')}
           >
             <TextArea

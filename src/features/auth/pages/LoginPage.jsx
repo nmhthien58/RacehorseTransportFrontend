@@ -39,7 +39,7 @@ export default function LoginPage() {
       });
 
       const user = res.user || res.data?.user;
-      const token = res.token || res.data?.accessToken || `mock-token-${user?.UserID}`;
+      const token = res.token || res.data?.accessToken || `mock-token-${user?.userId}`;
       const refreshToken = res.refreshToken || res.data?.refreshToken || null;
       login(user, token, refreshToken);
 
@@ -54,7 +54,7 @@ export default function LoginPage() {
         [ROLES.DRIVER]: ROUTES.DRIVER_DASHBOARD,
       };
 
-      const targetRoute = dashboardMap[user.Role] || ROUTES.CUSTOMER_DASHBOARD;
+      const targetRoute = dashboardMap[user.role] || ROUTES.CUSTOMER_DASHBOARD;
       navigate(targetRoute, { replace: true });
     } catch {
       message.error(t('auth.loginFailed', 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'));

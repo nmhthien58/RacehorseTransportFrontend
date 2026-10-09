@@ -9,7 +9,7 @@ import { ENDPOINTS } from './endpoints';
 export const documentTypeService = {
   /**
    * Lấy danh sách gọn các loại giấy tờ phục vụ hiển thị trong dropdown
-   * @returns {Promise<Array<{ DocTypeID: number, DocTypeCode: string, DocTypeName: string }>>}
+   * @returns {Promise<Array<{ docTypeId: number, docTypeCode: string, docTypeName: string }>>}
    */
   async getLookup() {
     return api.get(ENDPOINTS.DOCUMENT_TYPES.LOOKUP);

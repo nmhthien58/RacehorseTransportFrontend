@@ -54,7 +54,7 @@ const COUNTRY_OPTIONS = [
  * Component Wizard 4 bước đặt chuyến vận chuyển ngựa đua
  *
  * @param {Object} props
- * @param {(payload: Partial<import('@types/database').Booking>) => Promise<void> | void} props.onSubmit
+ * @param {(payload: Partial<import('@types/database').BookingRequest>) => Promise<void> | void} props.onSubmit
  * @param {() => void} props.onCancel
  * @param {boolean} [props.loading]
  * @returns {JSX.Element}
@@ -79,37 +79,37 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
     getValues,
   } = useForm({
     defaultValues: {
-      PickupAddress: 'Trang trại Yên Bài, Ba Vì, Hà Nội',
-      PickupCountryCode: 'VN',
-      DropoffAddress: 'Trường đua Tùng Hóa, TP. Quảng Châu',
-      DropoffCountryCode: 'CN',
-      DepartureDate: dayjs().add(7, 'day').format('YYYY-MM-DDTHH:mm:ssZ'),
-      DeliveryDate: dayjs().add(9, 'day').format('YYYY-MM-DDTHH:mm:ssZ'),
-      TransportMode: 'Ground',
-      RequiresClimateControl: true,
-      IsExpress: false,
-      DeclaredValue: 100000,
-      SpecialInstructions: '',
+      pickupAddress: 'Trang trại Yên Bài, Ba Vì, Hà Nội',
+      pickupCountryCode: 'VN',
+      dropoffAddress: 'Trường đua Tùng Hóa, TP. Quảng Châu',
+      dropoffCountryCode: 'CN',
+      departureDate: dayjs().add(7, 'day').format('YYYY-MM-DDTHH:mm:ssZ'),
+      deliveryDate: dayjs().add(9, 'day').format('YYYY-MM-DDTHH:mm:ssZ'),
+      transportMode: 'Ground',
+      requiresClimateControl: true,
+      isExpress: false,
+      declaredValue: 100000,
+      specialInstructions: '',
     },
     mode: 'onTouched',
   });
 
-  const transportMode = useWatch({ control, name: 'TransportMode' });
-  const requiresClimate = useWatch({ control, name: 'RequiresClimateControl' });
+  const transportMode = useWatch({ control, name: 'transportMode' });
+  const requiresClimate = useWatch({ control, name: 'requiresClimateControl' });
 
   // Tải danh sách ngựa của user khi mở wizard
   useEffect(() => {
     let isSubscribed = true;
     horseService
-      .getHorses({ ownerId: user?.UserID || undefined })
+      .getHorses({ ownerId: user?.userId || undefined })
       .then((res) => {
         if (isSubscribed) {
           const horsesList = res.data?.data || res.data || [];
           setAvailableHorses(horsesList);
           // Mặc định chọn con đầu tiên nếu có
           if (horsesList.length > 0) {
-            setSelectedHorseIds([horsesList[0].HorseID]);
-            setStallClasses({ [horsesList[0].HorseID]: 'Comfort' });
+            setSelectedHorseIds([horsesList[0].horseId]);
+            setStallClasses({ [horsesList[0].horseId]: 'Comfort' });
           }
         }
       })
@@ -204,10 +204,10 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
   const handleNext = async () => {
     if (currentStep === 0) {
       const isValid = await trigger([
-        'PickupAddress',
-        'PickupCountryCode',
-        'DropoffAddress',
-        'DropoffCountryCode',
+        'pickupAddress',
+        'pickupCountryCode',
+        'dropoffAddress',
+        'dropoffCountryCode',
       ]);
       if (!isValid) return;
     }
@@ -219,7 +219,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
     }
 
     if (currentStep === 2) {
-      const isValid = await trigger(['DepartureDate', 'DeliveryDate']);
+      const isValid = await trigger(['departureDate', 'deliveryDate']);
       if (!isValid) return;
     }
 
@@ -234,25 +234,25 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
   const handleFinalSubmit = async () => {
     const values = getValues();
     const payload = {
-      PickupAddress: values.PickupAddress?.trim(),
-      PickupCountryCode: values.PickupCountryCode,
-      DropoffAddress: values.DropoffAddress?.trim(),
-      DropoffCountryCode: values.DropoffCountryCode,
-      DepartureDate: values.DepartureDate,
-      DeliveryDate: values.DeliveryDate || values.DepartureDate,
-      TransportMode: values.TransportMode,
-      RequiresClimateControl: Boolean(values.RequiresClimateControl),
-      IsExpress: Boolean(values.IsExpress),
-      DeclaredValue: Number(values.DeclaredValue) || null,
-      SpecialInstructions: values.SpecialInstructions?.trim() || null,
-      TotalHorses: selectedHorseIds.length,
-      EstimatedCost: totalCost,
-      CurrencyCode: 'USD',
-      QuoteBreakdown: JSON.stringify(quoteItems),
-      BookingHorses: selectedHorseIds.map((hId) => ({
-        HorseID: hId,
-        StallClass: stallClasses[hId] || 'Shared',
-        Notes: horseNotes[hId]?.trim() || null,
+      pickupAddress: values.pickupAddress?.trim(),
+      pickupCountryCode: values.pickupCountryCode,
+      dropoffAddress: values.dropoffAddress?.trim(),
+      dropoffCountryCode: values.dropoffCountryCode,
+      departureDate: values.departureDate,
+      deliveryDate: values.deliveryDate || values.departureDate,
+      transportMode: values.transportMode,
+      requiresClimateControl: Boolean(values.requiresClimateControl),
+      isExpress: Boolean(values.isExpress),
+      declaredValue: Number(values.declaredValue) || null,
+      specialInstructions: values.specialInstructions?.trim() || null,
+      totalHorses: selectedHorseIds.length,
+      estimatedCost: totalCost,
+      currencyCode: 'USD',
+      quoteBreakdown: JSON.stringify(quoteItems),
+      bookingHorses: selectedHorseIds.map((hId) => ({
+        horseId: hId,
+        stallClass: stallClasses[hId] || 'Shared',
+        notes: horseNotes[hId]?.trim() || null,
       })),
     };
 
@@ -310,7 +310,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                 </Tag>
 
                 <Controller
-                  name="PickupCountryCode"
+                  name="pickupCountryCode"
                   control={control}
                   rules={{ required: true }}
                   render={({ field }) => (
@@ -321,7 +321,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                 />
 
                 <Controller
-                  name="PickupAddress"
+                  name="pickupAddress"
                   control={control}
                   rules={{ required: t('bookings.validation.pickupRequired') || 'Vui lòng nhập địa chỉ đón' }}
                   render={({ field, fieldState: { error } }) => (
@@ -358,7 +358,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                 </Tag>
 
                 <Controller
-                  name="DropoffCountryCode"
+                  name="dropoffCountryCode"
                   control={control}
                   rules={{ required: true }}
                   render={({ field }) => (
@@ -369,7 +369,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                 />
 
                 <Controller
-                  name="DropoffAddress"
+                  name="dropoffAddress"
                   control={control}
                   rules={{ required: t('bookings.validation.dropoffRequired') || 'Vui lòng nhập địa chỉ giao' }}
                   render={({ field, fieldState: { error } }) => (
@@ -423,9 +423,9 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
           ) : (
             <Row gutter={[16, 16]}>
               {availableHorses.map((horse) => {
-                const isSelected = selectedHorseIds.includes(horse.HorseID);
+                const isSelected = selectedHorseIds.includes(horse.horseId);
                 return (
-                  <Col key={horse.HorseID} xs={24} md={12}>
+                  <Col key={horse.horseId} xs={24} md={12}>
                     <div
                       style={{
                         padding: 16,
@@ -435,24 +435,24 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                       }}
-                      onClick={() => handleToggleHorse(horse.HorseID)}
+                      onClick={() => handleToggleHorse(horse.horseId)}
                     >
                       <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
                         <Checkbox
                           checked={isSelected}
-                          onChange={() => handleToggleHorse(horse.HorseID)}
+                          onChange={() => handleToggleHorse(horse.horseId)}
                           onClick={(e) => e.stopPropagation()}
                         >
                           <strong style={{ fontSize: 16, color: '#0f172a', marginLeft: 4 }}>
-                            🐴 {horse.Name}
+                            🐴 {horse.name}
                           </strong>
                         </Checkbox>
-                        <Tag color="blue">{horse.Breed}</Tag>
+                        <Tag color="blue">{horse.breed}</Tag>
                       </Flex>
 
                       <div style={{ fontSize: 13, color: '#64748b', marginLeft: 28, marginBottom: 12 }}>
-                        {t(`horses.genderOptions.${horse.Gender?.toLowerCase()}`) || horse.Gender} · Vi mạch:{' '}
-                        <code>{horse.MicrochipNumber}</code>
+                        {t(`horses.genderOptions.${horse.gender?.toLowerCase()}`) || horse.gender} · Vi mạch:{' '}
+                        <code>{horse.microchipNumber}</code>
                       </div>
 
                       {/* Tùy chọn hạng chuồng khi được tick chọn */}
@@ -472,9 +472,9 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                                 style={{ margin: 0 }}
                               >
                                 <Select
-                                  value={stallClasses[horse.HorseID] || 'Comfort'}
+                                  value={stallClasses[horse.horseId] || 'Comfort'}
                                   onChange={(val) =>
-                                    setStallClasses((prev) => ({ ...prev, [horse.HorseID]: val }))
+                                    setStallClasses((prev) => ({ ...prev, [horse.horseId]: val }))
                                   }
                                   options={[
                                     { value: 'Shared', label: 'Shared (Chuồng chung)' },
@@ -490,11 +490,11 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                                 style={{ margin: 0 }}
                               >
                                 <Input
-                                  value={horseNotes[horse.HorseID] || ''}
+                                  value={horseNotes[horse.horseId] || ''}
                                   onChange={(e) =>
                                     setHorseNotes((prev) => ({
                                       ...prev,
-                                      [horse.HorseID]: e.target.value,
+                                      [horse.horseId]: e.target.value,
                                     }))
                                   }
                                   placeholder="Ví dụ: Khoang trái"
@@ -524,7 +524,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
 
           {/* Chọn Phương thức vận chuyển */}
           <Controller
-            name="TransportMode"
+            name="transportMode"
             control={control}
             render={({ field }) => (
               <Form.Item label={<strong style={{ fontSize: 15 }}>Phương thức vận chuyển</strong>}>
@@ -586,7 +586,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
             {/* Ngày khởi hành */}
             <Col xs={24} md={12}>
               <Controller
-                name="DepartureDate"
+                name="departureDate"
                 control={control}
                 rules={{ required: 'Vui lòng chọn ngày khởi hành' }}
                 render={({ field }) => (
@@ -609,7 +609,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
             {/* Ngày giao đến */}
             <Col xs={24} md={12}>
               <Controller
-                name="DeliveryDate"
+                name="deliveryDate"
                 control={control}
                 render={({ field }) => (
                   <Form.Item label="Ngày giao dự kiến tại đích">
@@ -642,7 +642,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
             <Row gutter={[24, 16]}>
               <Col xs={24} md={12}>
                 <Controller
-                  name="RequiresClimateControl"
+                  name="requiresClimateControl"
                   control={control}
                   render={({ field }) => (
                     <Checkbox checked={field.value} onChange={(e) => field.onChange(e.target.checked)}>
@@ -657,7 +657,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
 
               <Col xs={24} md={12}>
                 <Controller
-                  name="IsExpress"
+                  name="isExpress"
                   control={control}
                   render={({ field }) => (
                     <Checkbox checked={field.value} onChange={(e) => field.onChange(e.target.checked)}>
@@ -672,7 +672,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
 
               <Col xs={24} md={12}>
                 <Controller
-                  name="DeclaredValue"
+                  name="declaredValue"
                   control={control}
                   render={({ field }) => (
                     <Form.Item label="Khai báo giá trị bảo hiểm (USD)" style={{ margin: 0 }}>
@@ -690,7 +690,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
 
               <Col xs={24} md={12}>
                 <Controller
-                  name="SpecialInstructions"
+                  name="specialInstructions"
                   control={control}
                   render={({ field }) => (
                     <Form.Item label="Hướng dẫn thêm cho tài xế & tổ áp tải" style={{ margin: 0 }}>
@@ -734,11 +734,11 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                 </Title>
                 <div style={{ fontSize: 14, marginBottom: 8 }}>
                   <Text type="secondary">Điểm đón: </Text>
-                  <strong>{getValues('PickupAddress')} ({getValues('PickupCountryCode')})</strong>
+                  <strong>{getValues('pickupAddress')} ({getValues('pickupCountryCode')})</strong>
                 </div>
                 <div style={{ fontSize: 14, marginBottom: 8 }}>
                   <Text type="secondary">Điểm giao: </Text>
-                  <strong>{getValues('DropoffAddress')} ({getValues('DropoffCountryCode')})</strong>
+                  <strong>{getValues('dropoffAddress')} ({getValues('dropoffCountryCode')})</strong>
                 </div>
                 <div style={{ fontSize: 14, marginBottom: 8 }}>
                   <Text type="secondary">Phương thức: </Text>
@@ -749,7 +749,7 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                 </div>
                 <div style={{ fontSize: 14 }}>
                   <Text type="secondary">Khởi hành: </Text>
-                  <strong>{dayjs(getValues('DepartureDate')).format('DD/MM/YYYY')}</strong>
+                  <strong>{dayjs(getValues('departureDate')).format('DD/MM/YYYY')}</strong>
                 </div>
 
                 <Divider style={{ margin: '14px 0' }} />
@@ -759,10 +759,10 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                 </Title>
                 <Space direction="vertical" size="small" style={{ width: '100%' }}>
                   {availableHorses
-                    .filter((h) => selectedHorseIds.includes(h.HorseID))
+                    .filter((h) => selectedHorseIds.includes(h.horseId))
                     .map((h) => (
                       <Flex
-                        key={h.HorseID}
+                        key={h.horseId}
                         justify="space-between"
                         align="center"
                         style={{
@@ -773,9 +773,9 @@ export default function BookingWizard({ onSubmit, onCancel, loading = false }) {
                         }}
                       >
                         <div>
-                          <strong>{h.Name}</strong> ({h.Breed})
+                          <strong>{h.name}</strong> ({h.breed})
                         </div>
-                        <Tag color="gold">{stallClasses[h.HorseID] || 'Shared'}</Tag>
+                        <Tag color="gold">{stallClasses[h.horseId] || 'Shared'}</Tag>
                       </Flex>
                     ))}
                 </Space>

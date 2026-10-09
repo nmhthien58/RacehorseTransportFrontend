@@ -12,7 +12,7 @@ export default function PrivateRoute({ allowedRoles }) {
   }
 
   // Không đủ quyền → 403
-  if (allowedRoles && !allowedRoles.includes(user?.Role)) {
+  if (allowedRoles && !allowedRoles.includes(user?.role)) {
     return <Navigate to={ROUTES.FORBIDDEN} replace />;
   }
 

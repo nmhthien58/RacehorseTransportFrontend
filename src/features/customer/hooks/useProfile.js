@@ -19,10 +19,10 @@ export function useProfile() {
       try {
         const merged = {
           ...MOCK_PROFILE,
-          FullName: user?.FullName || MOCK_PROFILE.FullName,
-          Email: user?.Email || MOCK_PROFILE.Email,
-          PhoneNumber: user?.PhoneNumber || MOCK_PROFILE.PhoneNumber,
-          Role: user?.Role || MOCK_PROFILE.Role,
+          fullName: user?.fullName || MOCK_PROFILE.fullName,
+          email: user?.email || MOCK_PROFILE.email,
+          phoneNumber: user?.phoneNumber || MOCK_PROFILE.phoneNumber,
+          role: user?.role || MOCK_PROFILE.role,
         };
         setData(merged);
       } catch (err) {

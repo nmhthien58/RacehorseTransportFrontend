@@ -37,8 +37,8 @@ export default function CustomerDashboard() {
     let isSubscribed = true;
 
     Promise.all([
-      horseService.getHorses({ ownerId: user?.UserID || undefined }),
-      bookingService.getBookings({ customerId: user?.UserID || undefined }),
+      horseService.getHorses({ ownerId: user?.userId || undefined }),
+      bookingService.getBookings({ customerId: user?.userId || undefined }),
       tripService.getTrips(),
     ])
       .then(([horseRes, bookingRes, tripRes]) => {
@@ -63,11 +63,11 @@ export default function CustomerDashboard() {
   }, [user]);
 
   const activeTripsCount = trips.filter(
-    (tr) => tr.Status === 'InTransit' || tr.Status === 'Scheduled',
+    (tr) => tr.overallStatus === 'InTransit' || tr.overallStatus === 'Scheduled',
   ).length;
 
   const openBookingsCount = bookings.filter(
-    (bk) => bk.Status === 'Submitted' || bk.Status === 'Approved',
+    (bk) => bk.status === 'Submitted' || bk.status === 'Approved',
   ).length;
 
   // Dữ liệu hiển thị thẻ ngựa lấy động theo danh sách thực tế từ API
@@ -75,9 +75,9 @@ export default function CustomerDashboard() {
     const isCritical = index === 0;
     const isHigh = index === 1;
     return {
-      id: h.HorseID,
-      name: h.Name,
-      breed: h.Breed,
+      id: h.horseId || h.id,
+      name: h.name,
+      breed: h.breed,
       risk: isCritical ? 'CRITICAL risk' : isHigh ? 'HIGH risk' : 'LOW risk',
       riskBg: isCritical ? '#FCA5A5' : isHigh ? '#FDE68A' : '#BBF7D0',
       riskColor: isCritical ? '#7F1D1D' : isHigh ? '#78350F' : '#14532D',

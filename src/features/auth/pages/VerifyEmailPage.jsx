@@ -53,13 +53,13 @@ export default function VerifyEmailPage() {
 
       // Tự động lưu thông tin user vào Zustand authStore
       const user = res.user || {
-        UserID: Date.now(),
-        FullName: fullName,
-        Email: email,
-        Role: 'Customer',
-        IsActive: true,
+        userId: Date.now(),
+        fullName,
+        email,
+        role: 'Customer',
+        isActive: true,
       };
-      const token = res.token || `mock-token-${user.UserID}`;
+      const token = res.token || `mock-token-${user.userId}`;
       login(user, token);
 
       // Xóa bộ nhớ tạm sau khi kích hoạt thành công

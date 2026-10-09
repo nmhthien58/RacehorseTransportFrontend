@@ -41,7 +41,7 @@ export default function AddHorsePage() {
       setSubmitting(true);
       const payload = {
         ...formData,
-        OwnerUserID: user?.UserID || 5,
+        ownerUserId: user?.userId || 5,
       };
 
       const res = await horseService.createHorse(payload);
@@ -129,7 +129,7 @@ export default function AddHorsePage() {
           {t('horses.modalSuccessTitle')}
         </Title>
         <Text type="secondary" style={{ display: 'block', marginTop: 8, fontSize: 14 }}>
-          {t('horses.modalSuccessSubtitle', { name: createdHorse?.Name })}
+          {t('horses.modalSuccessSubtitle', { name: createdHorse?.name })}
         </Text>
 
         {createdHorse && (
@@ -146,22 +146,22 @@ export default function AddHorsePage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <Text type="secondary">{t('horses.fields.name')}:</Text>
               <Text strong style={{ color: '#0f172a' }}>
-                {createdHorse.Name}
+                {createdHorse.name}
               </Text>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <Text type="secondary">{t('horses.fields.breed')}:</Text>
-              <Text strong>{createdHorse.Breed}</Text>
+              <Text strong>{createdHorse.breed}</Text>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <Text type="secondary">{t('horses.fields.microchip')}:</Text>
               <Text code style={{ background: '#ffffff', padding: '1px 6px' }}>
-                {createdHorse.MicrochipNumber}
+                {createdHorse.microchipNumber}
               </Text>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <Text type="secondary">{t('horses.fields.passport')}:</Text>
-              <Text strong>{createdHorse.PassportNumber || '-'}</Text>
+              <Text strong>{createdHorse.passportNumber || '-'}</Text>
             </div>
           </div>
         )}
@@ -189,7 +189,11 @@ export default function AddHorsePage() {
             block
             icon={<PlusOutlined />}
             onClick={handleAddAnother}
-            style={{ height: 46, borderRadius: 10 }}
+            style={{
+              height: 46,
+              borderRadius: 10,
+              fontWeight: 600,
+            }}
           >
             {t('horses.addAnother')}
           </Button>

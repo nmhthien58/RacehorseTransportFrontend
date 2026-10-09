@@ -69,7 +69,7 @@ export default function CustomerBookings() {
 
     bookingService
       .getBookings({
-        customerId: user?.UserID || 5,
+        customerId: user?.userId || 5,
       })
       .then((res) => {
         if (isSubscribed) {
@@ -126,9 +126,9 @@ export default function CustomerBookings() {
 
   // Thống kê số lượng theo 3 chỉ số chính (Figma Frame 75:5337)
   const totalCount = bookings.length;
-  const pendingCount = bookings.filter((b) => b.Status === 'Submitted').length;
+  const pendingCount = bookings.filter((b) => b.status === 'Submitted').length;
   const activeCount = bookings.filter(
-    (b) => b.Status === 'Approved' || b.Status === 'Assigned' || b.Status === 'InTransit',
+    (b) => b.status === 'Approved' || b.status === 'Assigned' || b.status === 'InTransit',
   ).length;
 
   // Lọc danh sách theo Tab, Search và Mode
@@ -138,26 +138,26 @@ export default function CustomerBookings() {
       if (statusFilter !== 'All') {
         if (statusFilter === 'Active') {
           const isActive =
-            item.Status === 'Approved' ||
-            item.Status === 'Assigned' ||
-            item.Status === 'InTransit';
+            item.status === 'Approved' ||
+            item.status === 'Assigned' ||
+            item.status === 'InTransit';
           if (!isActive) return false;
-        } else if (item.Status !== statusFilter) {
+        } else if (item.status !== statusFilter) {
           return false;
         }
       }
 
       // Lọc phương thức vận chuyển
-      if (modeFilter !== 'All' && item.TransportMode !== modeFilter) {
+      if (modeFilter !== 'All' && item.transportMode !== modeFilter) {
         return false;
       }
 
       // Lọc từ khóa tìm kiếm (Mã đơn, Địa chỉ đón, Địa chỉ giao)
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
-        const code = (item.BookingCode || '').toLowerCase();
-        const pickup = (item.PickupAddress || '').toLowerCase();
-        const dropoff = (item.DropoffAddress || '').toLowerCase();
+        const code = (item.bookingCode || '').toLowerCase();
+        const pickup = (item.pickupAddress || '').toLowerCase();
+        const dropoff = (item.dropoffAddress || '').toLowerCase();
         if (!code.includes(q) && !pickup.includes(q) && !dropoff.includes(q)) {
           return false;
         }
@@ -169,11 +169,11 @@ export default function CustomerBookings() {
 
   // Parse bảng kê chi phí dự kiến nếu có
   const parsedQuote = useMemo(() => {
-    if (!selectedBooking?.QuoteBreakdown) return [];
+    if (!selectedBooking?.quoteBreakdown) return [];
     try {
-      return typeof selectedBooking.QuoteBreakdown === 'string'
-        ? JSON.parse(selectedBooking.QuoteBreakdown)
-        : selectedBooking.QuoteBreakdown;
+      return typeof selectedBooking.quoteBreakdown === 'string'
+        ? JSON.parse(selectedBooking.quoteBreakdown)
+        : selectedBooking.quoteBreakdown;
     } catch {
       return [];
     }
@@ -440,7 +440,7 @@ export default function CustomerBookings() {
         <div>
           {filteredBookings.map((b) => (
             <BookingCard
-              key={b.BookingID}
+              key={b.bookingId}
               booking={b}
               onCancel={handleCancelBooking}
               onViewDetail={handleOpenDetail}
@@ -462,7 +462,7 @@ export default function CustomerBookings() {
           <Flex align="center" gap="small">
             <CarOutlined style={{ color: '#f59e0b', fontSize: 20 }} />
             <span>
-              {t('bookings.detailTitle') || 'Chi tiết đơn vận chuyển'} #{selectedBooking?.BookingCode}
+              {t('bookings.detailTitle') || 'Chi tiết đơn vận chuyển'} #{selectedBooking?.bookingCode}
             </span>
           </Flex>
         }
@@ -472,9 +472,9 @@ export default function CustomerBookings() {
         {selectedBooking && (
           <div>
             <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-              <StatusTag status={selectedBooking.Status} />
+              <StatusTag status={selectedBooking.status} />
               <Text type="secondary" style={{ fontSize: 13 }}>
-                Ngày tạo: {dayjs(selectedBooking.CreatedAt).format('DD/MM/YYYY HH:mm')}
+                Ngày tạo: {dayjs(selectedBooking.createdAt).format('DD/MM/YYYY HH:mm')}
               </Text>
             </Flex>
 
@@ -483,20 +483,20 @@ export default function CustomerBookings() {
               <div style={{ marginBottom: 10 }}>
                 <Text type="secondary" style={{ fontSize: 12 }}>
                   <EnvironmentOutlined style={{ color: '#d97706', marginRight: 4 }} />
-                  ĐIỂM ĐÓN ({selectedBooking.PickupCountryCode}):
+                  ĐIỂM ĐÓN ({selectedBooking.pickupCountryCode}):
                 </Text>
                 <div style={{ fontWeight: 600, color: '#0f172a', marginTop: 2 }}>
-                  {selectedBooking.PickupAddress}
+                  {selectedBooking.pickupAddress}
                 </div>
               </div>
 
               <div>
                 <Text type="secondary" style={{ fontSize: 12 }}>
                   <EnvironmentOutlined style={{ color: '#10b981', marginRight: 4 }} />
-                  ĐIỂM GIAO ({selectedBooking.DropoffCountryCode}):
+                  ĐIỂM GIAO ({selectedBooking.dropoffCountryCode}):
                 </Text>
                 <div style={{ fontWeight: 600, color: '#0f172a', marginTop: 2 }}>
-                  {selectedBooking.DropoffAddress}
+                  {selectedBooking.dropoffAddress}
                 </div>
               </div>
             </Card>
@@ -505,30 +505,30 @@ export default function CustomerBookings() {
             <Row gutter={[16, 12]} style={{ marginBottom: 16 }}>
               <Col span={12}>
                 <Text type="secondary">Phương thức vận chuyển: </Text>
-                <Tag color={selectedBooking.TransportMode === 'Air' ? 'blue' : 'orange'}>
-                  {selectedBooking.TransportMode === 'Air' ? '✈ Hàng không' : '🚛 Đường bộ'}
+                <Tag color={selectedBooking.transportMode === 'Air' ? 'blue' : 'orange'}>
+                  {selectedBooking.transportMode === 'Air' ? '✈ Hàng không' : '🚛 Đường bộ'}
                 </Tag>
               </Col>
               <Col span={12}>
                 <Text type="secondary">Số lượng ngựa: </Text>
-                <strong>🐴 {selectedBooking.TotalHorses} con</strong>
+                <strong>🐴 {selectedBooking.totalHorses} con</strong>
               </Col>
               <Col span={12}>
                 <Text type="secondary">Khởi hành dự kiến: </Text>
                 <strong>
                   <CalendarOutlined style={{ marginRight: 4 }} />
-                  {dayjs(selectedBooking.DepartureDate).format('DD/MM/YYYY')}
+                  {dayjs(selectedBooking.departureDate).format('DD/MM/YYYY')}
                 </strong>
               </Col>
               <Col span={12}>
                 <Text type="secondary">Điều hòa nhiệt độ: </Text>
-                <strong>{selectedBooking.RequiresClimateControl ? 'Có (16-19°C)' : 'Không'}</strong>
+                <strong>{selectedBooking.requiresClimateControl ? 'Có (16-19°C)' : 'Không'}</strong>
               </Col>
-              {selectedBooking.SpecialInstructions && (
+              {selectedBooking.specialInstructions && (
                 <Col span={24}>
                   <Text type="secondary">Ghi chú đặc biệt: </Text>
                   <div style={{ fontStyle: 'italic', marginTop: 2 }}>
-                    &ldquo;{selectedBooking.SpecialInstructions}&rdquo;
+                    &ldquo;{selectedBooking.specialInstructions}&rdquo;
                   </div>
                 </Col>
               )}
@@ -575,7 +575,7 @@ export default function CustomerBookings() {
                 Tổng dự toán cước phí:
               </Text>
               <span style={{ fontSize: 24, fontWeight: 800, color: '#d97706' }}>
-                ${Number(selectedBooking.EstimatedCost || 0).toLocaleString()} USD
+                ${Number(selectedBooking.estimatedCost || 0).toLocaleString()} USD
               </span>
             </Flex>
           </div>

@@ -39,8 +39,8 @@ export default function RegisterPage() {
       setLoading(true);
       const fullName = `${values.firstName || ''} ${values.lastName || ''}`.trim();
       await registerApi({
-        FullName: fullName || 'New Customer',
-        Email: values.email,
+        fullName: fullName || 'New Customer',
+        email: values.email,
         password: values.password,
       });
 

@@ -67,7 +67,7 @@ export const userService = {
   /**
    * Lấy danh sách nhân sự rút gọn phục vụ chọn trong dropdown
    * @param {string} [role] - Lọc theo role (TransportSpecialist, FleetCoordinator, DriverEscort, ...)
-   * @returns {Promise<Array<{ UserID: number, FullName: string, Email: string, Role: string }>>}
+   * @returns {Promise<Array<{ userId: number, fullName: string, email: string, role: string }>>}
    */
   async getStaff(role) {
     const params = role ? { role } : undefined;

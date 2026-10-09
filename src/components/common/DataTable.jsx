@@ -8,13 +8,13 @@ import { useTranslation } from 'react-i18next';
  */
 const getDefaultRowKey = (record) => {
   return (
-    record?.HorseID ||
-    record?.BookingID ||
-    record?.TripID ||
-    record?.UserID ||
-    record?.DossierID ||
-    record?.IncidentID ||
-    record?.AssetID ||
+    record?.horseId ||
+    record?.bookingId ||
+    record?.tripId ||
+    record?.userId ||
+    record?.dossierId ||
+    record?.incidentId ||
+    record?.assetId ||
     record?.id ||
     record?.key ||
     JSON.stringify(record)

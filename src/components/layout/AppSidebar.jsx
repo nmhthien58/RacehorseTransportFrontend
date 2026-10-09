@@ -32,7 +32,7 @@ export default function AppSidebar({ collapsed, user }) {
 
   // Danh sách menu tương ứng theo vai trò người dùng
   const getMenuItems = () => {
-    if (user?.Role === ROLES.CUSTOMER) {
+    if (user?.role === ROLES.CUSTOMER) {
       return [
         {
           key: ROUTES.CUSTOMER_DASHBOARD,
@@ -100,7 +100,7 @@ export default function AppSidebar({ collapsed, user }) {
       ];
     }
 
-    if (user?.Role === ROLES.MANAGER) {
+    if (user?.role === ROLES.MANAGER) {
       return [
         {
           key: ROUTES.MANAGER_DASHBOARD,
@@ -122,7 +122,7 @@ export default function AppSidebar({ collapsed, user }) {
 
     return [
       {
-        key: getDashboardRoute(user?.Role),
+        key: getDashboardRoute(user?.role),
         icon: <AppstoreOutlined style={{ fontSize: 18 }} />,
         label: t('nav.dashboard'),
       },

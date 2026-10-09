@@ -45,8 +45,8 @@ export default function MyHorsesPage() {
   const columns = [
     {
       title: t('horses.columns.name') || 'Tên ngựa',
-      dataIndex: 'Name',
-      key: 'Name',
+      dataIndex: 'name',
+      key: 'name',
       render: (name, record) => (
         <Space size="middle">
           <div
@@ -72,12 +72,12 @@ export default function MyHorsesPage() {
                 color: '#0f172a',
                 cursor: 'pointer',
               }}
-              onClick={() => handleViewDetail(record.HorseID)}
+              onClick={() => handleViewDetail(record.horseId)}
             >
               {name}
             </Text>
             <div style={{ fontSize: 12, color: '#64748b' }}>
-              {t(`horses.genderOptions.${record.Gender?.toLowerCase()}`) || record.Gender} · {record.PassportNumber || 'No Passport'}
+              {t(`horses.genderOptions.${record.gender?.toLowerCase()}`) || record.gender} · {record.passportNumber || 'No Passport'}
             </div>
           </div>
         </Space>
@@ -85,14 +85,14 @@ export default function MyHorsesPage() {
     },
     {
       title: t('horses.columns.breed') || 'Giống',
-      dataIndex: 'Breed',
-      key: 'Breed',
+      dataIndex: 'breed',
+      key: 'breed',
       render: (breed) => <Tag color="blue">{breed}</Tag>,
     },
     {
       title: t('horses.columns.age') || 'Tuổi',
-      dataIndex: 'DateOfBirth',
-      key: 'Age',
+      dataIndex: 'dateOfBirth',
+      key: 'age',
       render: (dob) => {
         if (!dob) return '-';
         const age = dayjs().diff(dayjs(dob), 'year');
@@ -105,8 +105,8 @@ export default function MyHorsesPage() {
     },
     {
       title: t('horses.columns.microchip') || 'Microchip',
-      dataIndex: 'MicrochipNumber',
-      key: 'MicrochipNumber',
+      dataIndex: 'microchipNumber',
+      key: 'microchipNumber',
       render: (code) => (
         <code
           style={{
@@ -124,8 +124,8 @@ export default function MyHorsesPage() {
     },
     {
       title: t('horses.columns.health') || 'Sức khỏe',
-      dataIndex: 'HealthStatus',
-      key: 'HealthStatus',
+      dataIndex: 'healthStatus',
+      key: 'healthStatus',
       render: (status) => {
         if (status === 'Excellent') {
           return (
@@ -158,7 +158,7 @@ export default function MyHorsesPage() {
           ghost
           icon={<EyeOutlined />}
           size="middle"
-          onClick={() => handleViewDetail(record.HorseID)}
+          onClick={() => handleViewDetail(record.horseId)}
           style={{ borderRadius: 6, fontWeight: 500 }}
         >
           {t('horses.viewAction') || 'Xem'}
@@ -209,7 +209,7 @@ export default function MyHorsesPage() {
         <Table
           columns={columns}
           dataSource={horses}
-          rowKey="HorseID"
+          rowKey="horseId"
           loading={loading}
           pagination={{ pageSize: 8, showTotal: (total) => `Tổng cộng: ${total} con ngựa` }}
         />

@@ -78,6 +78,7 @@
     "horses": "My Horses",
     "vetRecords": "Vet Records",
     "transportRequests": "Transport Requests",
+    "pricing": "Pricing",
     "activeTrips": "Active Trips",
     "messages": "Messages",
     "accountGroup": "Account",
@@ -341,7 +342,7 @@
   "bookings": {
     "title": "Transport Requests",
     "subtitle": "Track quote approval, route planning, and dedicated fleet scheduling for your racehorses",
-    "addNew": "+ New Request",
+    "addNew": "New Request",
     "addNewTitle": "New Horse Transport Request",
     "addNewSubtitle": "Complete 4 steps to get an instant cost estimate and connect with our transport specialist team",
     "add": "New Request",
@@ -587,5 +588,108 @@
     "viewInvoice": "View Invoice",
     "downloadPdf": "Download PDF",
     "close": "Close"
+  },
+  "landing": {
+    "nav": {
+      "home": "Home",
+      "transport": "Transport",
+      "pricing": "Pricing",
+      "account": "Account",
+      "more": "More",
+      "howItWorks": "How it work",
+      "becomeHauler": "Become a hauler",
+      "doorToDoor": "Door-to-Door",
+      "routes": "Popular Routes",
+      "login": "Login",
+      "signUp": "Sign up",
+      "logout": "Log out",
+      "profile": "My Profile",
+      "dashboard": "Dashboard",
+      "myHorses": "My Horses",
+      "bookNow": "Book Now",
+      "loginRequired": "Please sign in to access your account.",
+      "loginRequiredBooking": "Please sign in to book transport service."
+    },
+    "hero": {
+      "badge": "PREMIER EQUINE LOGISTICS WORLDWIDE",
+      "titlePart1": "BOOKING",
+      "titlePart2": "YOUR TRANSPORT",
+      "subtitle": "Your horse. Our journey. Across borders.",
+      "bookNow": "Book Now →",
+      "learnMore": "Learn More",
+      "trustTag": "International Horse Transport · FEI Certified Drivers · Transit Veterinarians · 24/7 GPS Monitoring"
+    },
+    "quickQuote": {
+      "title": "Instant Journey Estimate",
+      "pickupPlaceholder": "Enter pickup location (stable, farm, track...)",
+      "dropoffPlaceholder": "Enter delivery location (club, airport, clinic...)",
+      "horses": "Horses",
+      "date": "Departure Date",
+      "btnCalculate": "Get Instant Quote →"
+    },
+    "howItWorks": {
+      "title": "How IET works",
+      "subtitle": "Hassle-free, transparent, and welfare-first equine transit in 3 simple steps",
+      "step1Title": "1. Hassle-free online booking",
+      "step1Desc": "Tell us your route, compare quotes from vetted drivers, and book the service you want. No phone tag, no guesswork, no shady operators.",
+      "step2Title": "2. Follow along the journey",
+      "step2Desc": "Picture driving where the action is, and update how each step of the trip will develop with live GPS tracking, cabin sensors, and vital stats.",
+      "step3Title": "3. Get your horse delivered",
+      "step3Desc": "From the moment the ride confirms to the moment your horse walks off at the new barn, you know what's happening with signed e-POD reports.",
+      "step1Action": "Book a Ride →",
+      "step2Action": "Live GPS Tracking →",
+      "step3Action": "Welfare Guarantee →"
+    },
+    "rides": {
+      "title": "No matter how you move, we have the right ride",
+      "subtitle": "Specialized climate-controlled trailers, air stalls, and dedicated care for every equine discipline",
+      "shortHaul": "Short Haul",
+      "shortHaulDesc": "Local barn transfers, regional show grounds, and emergency veterinary clinics.",
+      "mareAndFoal": "Mare and Foal",
+      "mareAndFoalDesc": "Extra-wide double box stalls, deep sanitized straw bedding, gentle transport.",
+      "commercial": "Commercial Hauling",
+      "commercialDesc": "Multi-horse state-of-the-art vans with air-ride suspension and FEI certified drivers.",
+      "medical": "Medical Transport",
+      "medicalDesc": "On-board oxygen, ICU transit monitors, and dedicated veterinarian accompaniments.",
+      "showHorses": "Show Horses",
+      "showHorsesDesc": "Climate-controlled VIP air-stalls, competition prep, and show circuit schedules."
+    },
+    "features": {
+      "doorToDoorTitle": "Door-to-door, simplified.",
+      "doorToDoorDesc": "Partner with vetted pro drivers, view competitive payments, and enjoy specialized transport with complete safety.",
+      "doorToDoorAction": "Get Free Estimate →",
+      "vettedDriversTitle": "Fully Vetted Drivers",
+      "vettedDriversDesc": "Insurance, equipment, and operating history verified before a single horse hits your trailer.",
+      "quoteComparisonTitle": "Side-by-Side Quote Comparison",
+      "quoteComparisonDesc": "Instant, unified quotes in real-time. Stop the endless calls and manual spreadsheets.",
+      "centralizedDocsTitle": "Centralized Trip Documentation",
+      "centralizedDocsDesc": "Equine pass, health certificates, and inspection records — accessible with one booking."
+    },
+    "routes": {
+      "title": "Where horses ship most",
+      "subtitle": "The nation's top routes for sport horses, racehorses, and breeding stock. Click any route to explore.",
+      "tabAll": "All Routes",
+      "tabWinter": "Winter Circuits",
+      "tabRacing": "Racing Meets",
+      "bookRoute": "Book This Route →"
+    },
+    "partner": {
+      "title": "Are you a professional horse transporter?",
+      "subtitle": "Join the IET driver network to connect with high-value equine owners and receive regular trip schedules.",
+      "btnJoin": "Become a Transporter →"
+    },
+    "footer": {
+      "aboutDesc": "International Equine Transport (IET) — The premier logistics and monitoring platform for sport and racehorse transit adhering to IATA LAR and FEI standards.",
+      "colCompany": "About IET",
+      "colDiscover": "Discover",
+      "colTypes": "Transport Types",
+      "colLocations": "Locations",
+      "colSupport": "Support 24/7",
+      "emergencyCall": "24/7 Emergency Dispatch Hotline",
+      "copyright": "© 2026 International Equine Transport. All rights reserved.",
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy",
+      "backToTop": "Back to Top ↑"
+    }
   }
 }

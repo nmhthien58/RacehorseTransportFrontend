@@ -93,6 +93,19 @@ export default function CustomerBookings() {
     };
   }, [user, refreshKey, t]);
 
+  // Lắng nghe sự kiện cập nhật đơn đặt chuyến để tự động đồng bộ
+  useEffect(() => {
+    const handleStorageUpdate = () => {
+      setRefreshKey((k) => k + 1);
+    };
+    window.addEventListener('bookings_updated', handleStorageUpdate);
+    window.addEventListener('storage', handleStorageUpdate);
+    return () => {
+      window.removeEventListener('bookings_updated', handleStorageUpdate);
+      window.removeEventListener('storage', handleStorageUpdate);
+    };
+  }, []);
+
   /**
    * Điều hướng sang trang tạo mới yêu cầu vận chuyển
    */
@@ -203,7 +216,7 @@ export default function CustomerBookings() {
               borderColor: '#f59e0b',
             }}
           >
-            {t('bookings.addNew') || '+ Tạo yêu cầu mới'}
+            {String(t('bookings.addNew') || 'Tạo yêu cầu mới').replace(/^\+\s*/, '')}
           </Button>
         }
       />
@@ -431,7 +444,7 @@ export default function CustomerBookings() {
                   borderColor: '#f59e0b',
                 }}
               >
-                {t('bookings.addNew') || '+ Tạo yêu cầu mới'}
+                {String(t('bookings.addNew') || 'Tạo yêu cầu mới').replace(/^\+\s*/, '')}
               </Button>
             )}
           </Empty>

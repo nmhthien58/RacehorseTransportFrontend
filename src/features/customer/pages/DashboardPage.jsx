@@ -200,16 +200,30 @@ export default function CustomerDashboard() {
       />
 
       <Spin spinning={loading}>
-        {/* Hàng 4 thẻ Metric bo tròn 24px có icon tròn phía trên */}
+        {/* Hàng 4 thẻ Metric bo tròn 24px có icon tròn phía trên - Click chuyển đến mục tương ứng */}
         <Row gutter={[20, 20]} style={{ marginBottom: 36 }}>
-          {/* Card 1: Active Trips */}
+          {/* Card 1: Active Trips -> Chuyển đến /customer/trips */}
           <Col xs={12} sm={12} md={6}>
             <div
+              onClick={() => navigate(ROUTES.CUSTOMER_TRIPS)}
               style={{
                 backgroundColor: '#ffffff',
                 borderRadius: 24,
                 padding: '24px 28px',
                 boxShadow: '0 4px 24px rgba(0, 0, 0, 0.02)',
+                border: '1.5px solid #F1F5F9',
+                cursor: 'pointer',
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
+                e.currentTarget.style.boxShadow = '0 12px 30px rgba(217, 119, 6, 0.15)';
+                e.currentTarget.style.borderColor = '#F59E0B';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                e.currentTarget.style.boxShadow = '0 4px 24px rgba(0, 0, 0, 0.02)';
+                e.currentTarget.style.borderColor = '#F1F5F9';
               }}
             >
               <div
@@ -239,19 +253,33 @@ export default function CustomerDashboard() {
                 {activeTripsCount}
               </div>
               <div style={{ fontSize: 15, fontWeight: 500, color: '#475569' }}>
-                {t('dashboard.metrics.activeTrips')}
+                {t('dashboard.metrics.activeTrips')} →
               </div>
             </div>
           </Col>
 
-          {/* Card 2: Open Requests */}
+          {/* Card 2: Open Requests -> Chuyển đến /customer/bookings */}
           <Col xs={12} sm={12} md={6}>
             <div
+              onClick={() => navigate(ROUTES.CUSTOMER_BOOKINGS)}
               style={{
                 backgroundColor: '#ffffff',
                 borderRadius: 24,
                 padding: '24px 28px',
                 boxShadow: '0 4px 24px rgba(0, 0, 0, 0.02)',
+                border: '1.5px solid #F1F5F9',
+                cursor: 'pointer',
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
+                e.currentTarget.style.boxShadow = '0 12px 30px rgba(37, 99, 235, 0.15)';
+                e.currentTarget.style.borderColor = '#3B82F6';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                e.currentTarget.style.boxShadow = '0 4px 24px rgba(0, 0, 0, 0.02)';
+                e.currentTarget.style.borderColor = '#F1F5F9';
               }}
             >
               <div
@@ -281,19 +309,33 @@ export default function CustomerDashboard() {
                 {openBookingsCount}
               </div>
               <div style={{ fontSize: 15, fontWeight: 500, color: '#475569' }}>
-                {t('dashboard.metrics.openRequests')}
+                {t('dashboard.metrics.openRequests')} →
               </div>
             </div>
           </Col>
 
-          {/* Card 3: Bids Received */}
+          {/* Card 3: Bids Received -> Chuyển đến /customer/bookings */}
           <Col xs={12} sm={12} md={6}>
             <div
+              onClick={() => navigate(ROUTES.CUSTOMER_BOOKINGS)}
               style={{
                 backgroundColor: '#ffffff',
                 borderRadius: 24,
                 padding: '24px 28px',
                 boxShadow: '0 4px 24px rgba(0, 0, 0, 0.02)',
+                border: '1.5px solid #F1F5F9',
+                cursor: 'pointer',
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
+                e.currentTarget.style.boxShadow = '0 12px 30px rgba(202, 138, 4, 0.15)';
+                e.currentTarget.style.borderColor = '#EAB308';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                e.currentTarget.style.boxShadow = '0 4px 24px rgba(0, 0, 0, 0.02)';
+                e.currentTarget.style.borderColor = '#F1F5F9';
               }}
             >
               <div
@@ -323,19 +365,33 @@ export default function CustomerDashboard() {
                 0
               </div>
               <div style={{ fontSize: 15, fontWeight: 500, color: '#475569' }}>
-                {t('dashboard.metrics.bidsReceived')}
+                {t('dashboard.metrics.bidsReceived')} →
               </div>
             </div>
           </Col>
 
-          {/* Card 4: My Horses */}
+          {/* Card 4: My Horses -> Chuyển đến /customer/horses */}
           <Col xs={12} sm={12} md={6}>
             <div
+              onClick={() => navigate(ROUTES.CUSTOMER_HORSES)}
               style={{
                 backgroundColor: '#ffffff',
                 borderRadius: 24,
                 padding: '24px 28px',
                 boxShadow: '0 4px 24px rgba(0, 0, 0, 0.02)',
+                border: '1.5px solid #F1F5F9',
+                cursor: 'pointer',
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
+                e.currentTarget.style.boxShadow = '0 12px 30px rgba(37, 99, 235, 0.15)';
+                e.currentTarget.style.borderColor = '#3B82F6';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                e.currentTarget.style.boxShadow = '0 4px 24px rgba(0, 0, 0, 0.02)';
+                e.currentTarget.style.borderColor = '#F1F5F9';
               }}
             >
               <div
@@ -365,7 +421,7 @@ export default function CustomerDashboard() {
                 {horses.length}
               </div>
               <div style={{ fontSize: 15, fontWeight: 500, color: '#475569' }}>
-                {t('dashboard.metrics.myHorses')}
+                {t('dashboard.metrics.myHorses')} →
               </div>
             </div>
           </Col>

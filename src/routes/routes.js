@@ -1,6 +1,11 @@
 export const ROUTES = {
   // Public
   HOME: '/',
+  TRANSPORT_TYPES: '/transport',
+  PRICING: '/pricing',
+  HOW_IT_WORKS: '/how-it-works',
+  BECOME_HAULER: '/become-a-hauler',
+  DOOR_TO_DOOR: '/door-to-door',
   LOGIN: '/login',
   REGISTER: '/register',
   VERIFY_EMAIL: '/verify-email',
@@ -19,6 +24,7 @@ export const ROUTES = {
   CUSTOMER_BOOKINGS: '/customer/bookings',
   CUSTOMER_BOOKING_NEW: '/customer/bookings/new',
   CUSTOMER_BOOKING_DETAIL: '/customer/bookings/:id',
+  CUSTOMER_PRICING: '/customer/pricing',
   CUSTOMER_TRIPS: '/customer/trips',
   CUSTOMER_MESSAGES: '/customer/messages',
   CUSTOMER_PROFILE: '/customer/profile',

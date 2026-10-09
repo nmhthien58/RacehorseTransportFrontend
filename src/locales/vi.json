@@ -78,6 +78,7 @@
     "horses": "Ngựa của tôi",
     "vetRecords": "Hồ sơ thú y",
     "transportRequests": "Yêu cầu vận chuyển",
+    "pricing": "Bảng giá dự tính",
     "activeTrips": "Chuyến đang hoạt động",
     "messages": "Tin nhắn",
     "accountGroup": "Tài khoản",
@@ -341,7 +342,7 @@
   "bookings": {
     "title": "Yêu cầu vận chuyển",
     "subtitle": "Theo dõi tiến độ báo giá, phê duyệt và điều phối lộ trình vận chuyển ngựa của bạn",
-    "addNew": "+ Tạo yêu cầu mới",
+    "addNew": "Tạo yêu cầu mới",
     "addNewTitle": "Tạo yêu cầu vận chuyển ngựa",
     "addNewSubtitle": "Hoàn tất 4 bước để nhận báo giá chi tiết và kết nối đội ngũ vận chuyển chuyên nghiệp",
     "add": "Tạo mới",
@@ -587,5 +588,108 @@
     "viewInvoice": "Xem hóa đơn",
     "downloadPdf": "Tải PDF",
     "close": "Đóng"
+  },
+  "landing": {
+    "nav": {
+      "home": "Home",
+      "transport": "Transport",
+      "pricing": "Bảng giá",
+      "account": "Account",
+      "more": "More",
+      "howItWorks": "How it work",
+      "becomeHauler": "Become a hauler",
+      "doorToDoor": "Door-to-door",
+      "routes": "Tuyến đường phổ biến",
+      "login": "Đăng nhập",
+      "signUp": "Đăng ký",
+      "logout": "Đăng xuất",
+      "profile": "Hồ sơ của tôi",
+      "dashboard": "Bảng điều khiển",
+      "myHorses": "Ngựa của tôi",
+      "bookNow": "Đặt chuyến ngay",
+      "loginRequired": "Vui lòng đăng nhập để truy cập tài khoản.",
+      "loginRequiredBooking": "Vui lòng đăng nhập để đặt dịch vụ vận chuyển."
+    },
+    "hero": {
+      "badge": "DỊCH VỤ VẬN CHUYỂN NGỰA ĐUA QUỐC TẾ HÀNG ĐẦU",
+      "titlePart1": "ĐẶT CHUYẾN",
+      "titlePart2": "VẬN TẢI NGỰA CỦA BẠN",
+      "subtitle": "Ngựa của bạn. Hành trình của chúng tôi. Vượt mọi biên giới an toàn tuyệt đối.",
+      "bookNow": "Đặt chuyến ngay →",
+      "learnMore": "Tìm hiểu thêm",
+      "trustTag": "Vận tải ngựa chuyên nghiệp · Tài xế chuẩn FEI · Bác sĩ thú y áp tải · Giám sát GPS 24/7"
+    },
+    "quickQuote": {
+      "title": "Dự toán nhanh chi phí chuyến đi",
+      "pickupPlaceholder": "Nhập địa điểm đón (trang trại, trường đua...)",
+      "dropoffPlaceholder": "Nhập địa điểm giao (CLB, sân bay, phòng khám...)",
+      "horses": "Số lượng ngựa",
+      "date": "Ngày khởi hành",
+      "btnCalculate": "Báo giá ngay →"
+    },
+    "howItWorks": {
+      "title": "Quy trình vận chuyển tại IET",
+      "subtitle": "Quy trình 3 bước khép kín, minh bạch và an toàn chuẩn phúc lợi động vật quốc tế",
+      "step1Title": "1. Đặt chuyến trực tuyến dễ dàng",
+      "step1Desc": "Khai báo lộ trình, chọn loại chuồng chuyên dụng và nhận báo giá tức thì. Không cần gọi điện chờ đợi hay lo lắng về nhà xe thiếu uy tín.",
+      "step2Title": "2. Giám sát liên tục suốt hành trình",
+      "step2Desc": "Theo dõi trực tiếp vị trí xe qua GPS, kiểm soát nhiệt độ buồng lái, độ ẩm và nhận cập nhật thể trạng ngựa định kỳ từ bác sĩ thú y.",
+      "step3Title": "3. Bàn giao an toàn tại đích đến",
+      "step3Desc": "Ngựa được đưa xuống nhẹ nhàng tại chuồng mới. Hoàn tất ký nhận e-POD điện tử và lưu trữ đầy đủ hồ sơ kiểm dịch thú y.",
+      "step1Action": "Đặt chuyến ngay →",
+      "step2Action": "Xem demo GPS →",
+      "step3Action": "Cam kết phúc lợi →"
+    },
+    "rides": {
+      "title": "Bất kể nhu cầu nào, chúng tôi đều có khoang xe phù hợp",
+      "subtitle": "Đội xe đa dạng từ xe van VIP cá nhân, rơ-moóc điều hòa đến chuyên cơ hàng không chuyên dụng",
+      "shortHaul": "Chặng ngắn & Nội đô",
+      "shortHaulDesc": "Vận chuyển nhanh giữa các chuồng trại, trường tập, khám chữa bệnh thú y khẩn cấp.",
+      "mareAndFoal": "Ngựa mẹ & Ngựa con",
+      "mareAndFoalDesc": "Khoang rộng gấp đôi, đệm rơm khử trùng dày êm ái, camera hồng ngoại theo dõi sát sao.",
+      "commercial": "Vận tải thương mại quy mô lớn",
+      "commercialDesc": "Đoàn xe rơ-moóc 6-9 ngựa chuẩn thi đấu quốc tế, hệ thống giảm xóc khí nén êm ái.",
+      "medical": "Xe cứu thương thú y (ICU)",
+      "medicalDesc": "Khoang cấp cứu trang bị bình oxy, thiết bị trợ thở và bác sĩ thú y FEI theo sát suốt chặng.",
+      "showHorses": "Ngựa thi đấu & Triển lãm VIP",
+      "showHorsesDesc": "Khoang điều hòa 16-19°C chống sốc nhiệt, không gian yên tĩnh bảo toàn phong độ thi đấu."
+    },
+    "features": {
+      "doorToDoorTitle": "Cửa đến cửa, tinh gọn tối đa.",
+      "doorToDoorDesc": "Đón tận chuồng và giao tận đích. Kết nối trực tiếp tài xế chuyên trách với chi phí cạnh tranh minh bạch.",
+      "doorToDoorAction": "Nhận ước tính cước →",
+      "vettedDriversTitle": "Tài xế thẩm định 100%",
+      "vettedDriversDesc": "Bảo hiểm hàng hóa giá trị cao, giấy phép FEI, trang thiết bị kiểm định kỹ thuật nghiêm ngặt trước mỗi chuyến lăn bánh.",
+      "quoteComparisonTitle": "So sánh báo giá minh bạch",
+      "quoteComparisonDesc": "Nhận bảng phân tích chi phí tức thời theo thời gian thực. Không phụ phí ẩn, không chênh lệch bất ngờ.",
+      "centralizedDocsTitle": "Hồ sơ số hóa tập trung",
+      "centralizedDocsDesc": "Hộ chiếu FEI, xét nghiệm Coggins, giấy kiểm dịch xuất nhập tỉnh/quốc gia đều tích hợp trọn vẹn trong một đơn đặt."
+    },
+    "routes": {
+      "title": "Những cung đường vận chuyển sôi động nhất",
+      "subtitle": "Tuyến đường huyết mạch cho các giải đua, triển lãm và trung tâm huấn luyện ngựa danh tiếng",
+      "tabAll": "Tất cả tuyến đường",
+      "tabWinter": "Mùa giải mùa đông",
+      "tabRacing": "Trường đua lớn",
+      "bookRoute": "Đặt tuyến này →"
+    },
+    "partner": {
+      "title": "Bạn là đơn vị vận tải ngựa chuyên nghiệp?",
+      "subtitle": "Gia nhập mạng lưới vận tải IET để tiếp cận hàng ngàn chủ ngựa đua và nhận lịch trình liên tục",
+      "btnJoin": "Đăng ký đối tác vận chuyển →"
+    },
+    "footer": {
+      "aboutDesc": "International Equine Transport (IET) — Nền tảng điều phối và giám sát vận chuyển ngựa đua quốc tế chuẩn IATA LAR và FEI.",
+      "colCompany": "Về IET",
+      "colDiscover": "Khám phá",
+      "colTypes": "Hạng mục xe",
+      "colLocations": "Điểm đến",
+      "colSupport": "Hỗ trợ 24/7",
+      "emergencyCall": "Hotline hỗ trợ khẩn cấp",
+      "copyright": "© 2026 International Equine Transport. Bản quyền thuộc về IET.",
+      "terms": "Điều khoản dịch vụ",
+      "privacy": "Chính sách bảo mật",
+      "backToTop": "Lên đầu trang ↑"
+    }
   }
 }

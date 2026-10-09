@@ -44,11 +44,23 @@ import CoordinatorDashboard from '@features/coordinator/pages/DashboardPage';
 // Driver pages
 import DriverDashboard from '@features/driver/pages/DashboardPage';
 
+// Landing pages
+import MainPage from '@features/landing/pages/MainPage';
+import TransportTypesPage from '@features/landing/pages/TransportTypesPage';
+import HowItWorksPage from '@features/landing/pages/HowItWorksPage';
+import BecomeHaulerPage from '@features/landing/pages/BecomeHaulerPage';
+import PublicPricingPage from '@features/landing/pages/PublicPricingPage';
+import CustomerPricingPage from '@features/customer/pages/PricingPage';
+
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Mặc định vào thẳng Dashboard mà không bắt người dùng đăng nhập */}
-      <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.CUSTOMER_DASHBOARD} replace />} />
+      {/* Trang chủ Landing Page giới thiệu dịch vụ */}
+      <Route path={ROUTES.HOME} element={<MainPage />} />
+      <Route path={ROUTES.TRANSPORT_TYPES} element={<TransportTypesPage />} />
+      <Route path={ROUTES.PRICING} element={<PublicPricingPage />} />
+      <Route path={ROUTES.HOW_IT_WORKS} element={<HowItWorksPage />} />
+      <Route path={ROUTES.BECOME_HAULER} element={<BecomeHaulerPage />} />
 
       {/* Auth layout chứa carousel ảnh */}
       <Route element={<AuthLayout />}>
@@ -77,6 +89,7 @@ export default function AppRoutes() {
           <Route path="/vet-record" element={<Navigate to={ROUTES.CUSTOMER_VET_RECORDS} replace />} />
           <Route path={ROUTES.CUSTOMER_BOOKINGS} element={<CustomerBookings />} />
           <Route path={ROUTES.CUSTOMER_BOOKING_NEW} element={<NewBookingPage />} />
+          <Route path={ROUTES.CUSTOMER_PRICING} element={<CustomerPricingPage />} />
           <Route path={ROUTES.CUSTOMER_TRIPS} element={<ActiveTripsPage />} />
           <Route path={ROUTES.CUSTOMER_MESSAGES} element={<MessagesPage />} />
           <Route path={ROUTES.CUSTOMER_PROFILE} element={<ProfilePage />} />

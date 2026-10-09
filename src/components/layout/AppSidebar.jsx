@@ -1,4 +1,4 @@
-import { Layout, Menu } from 'antd';
+import { Layout, Menu, Tag } from 'antd';
 import {
   AppstoreOutlined,
   ClockCircleOutlined,
@@ -9,6 +9,8 @@ import {
   UserOutlined,
   CreditCardOutlined,
   SettingOutlined,
+  DollarCircleOutlined,
+  HomeOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -35,6 +37,15 @@ export default function AppSidebar({ collapsed, user }) {
     if (user?.Role === ROLES.CUSTOMER) {
       return [
         {
+          key: ROUTES.HOME,
+          icon: <HomeOutlined style={{ fontSize: 18, color: '#f59e0b' }} />,
+          label: (
+            <span style={{ fontWeight: 700, color: '#0f172a' }}>
+              {t('landing.nav.home', 'Home')}
+            </span>
+          ),
+        },
+        {
           key: ROUTES.CUSTOMER_DASHBOARD,
           icon: <AppstoreOutlined style={{ fontSize: 18 }} />,
           label: t('nav.dashboard'),
@@ -53,6 +64,11 @@ export default function AppSidebar({ collapsed, user }) {
           key: ROUTES.CUSTOMER_BOOKINGS,
           icon: <CarOutlined style={{ fontSize: 18 }} />,
           label: t('nav.transportRequests'),
+        },
+        {
+          key: ROUTES.CUSTOMER_PRICING,
+          icon: <DollarCircleOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.pricing', 'Pricing'),
         },
         {
           key: ROUTES.CUSTOMER_TRIPS,
@@ -160,8 +176,9 @@ export default function AppSidebar({ collapsed, user }) {
         background: '#ffffff',
       }}
     >
-      {/* Khối Logo chuẩn theo Figma */}
+      {/* Khối Logo chuẩn theo Figma - Click để về trang chủ Home */}
       <div
+        onClick={() => navigate(ROUTES.HOME)}
         style={{
           height: 84,
           display: 'flex',
@@ -169,7 +186,12 @@ export default function AppSidebar({ collapsed, user }) {
           justifyContent: collapsed ? 'center' : 'flex-start',
           padding: collapsed ? '0 10px' : '0 20px',
           borderBottom: '1px solid #f8fafc',
+          cursor: 'pointer',
+          transition: 'opacity 0.2s ease',
         }}
+        title="Về Trang chủ (Home)"
+        onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.85')}
+        onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
       >
         <img
           src={logoSvg}

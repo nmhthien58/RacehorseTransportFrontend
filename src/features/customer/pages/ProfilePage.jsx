@@ -47,115 +47,167 @@ export default function ProfilePage() {
   }
 
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto', paddingBottom: 40 }}>
+    <div style={{ maxWidth: 1040, margin: '0 auto', paddingBottom: 40 }}>
       {/* Header trang */}
       <PageHeader
-        title={t('profile.title') || 'Hồ sơ tài khoản'}
+        title={t('profile.title') || 'Account Profile'}
         subtitle={
           t('profile.subtitle') ||
-          'Thông tin chủ sở hữu, thông tin liên lạc và tư cách thành viên câu lạc bộ đua ngựa'
+          'Owner contact details, farm registration, and club memberships'
         }
         actions={
           <Tooltip title={t('profile.editDisabledHint') || 'Tính năng chỉnh sửa hồ sơ đang được cập nhật'}>
             <Button
-              type="primary"
+              type="default"
               icon={<EditOutlined />}
               disabled
               style={{
-                borderRadius: 8,
+                borderRadius: 9999,
                 fontWeight: 600,
+                height: 40,
+                padding: '0 22px',
+                borderColor: '#e2e8f0',
+                color: '#94a3b8',
               }}
             >
-              {t('profile.edit') || 'Chỉnh sửa'}
+              {t('profile.edit') || 'Edit Profile'}
             </Button>
           </Tooltip>
         }
       />
 
-      {/* THẺ TỔNG QUAN TÀI KHOẢN */}
+      {/* THẺ TỔNG QUAN TÀI KHOẢN GỌN GÀNG, CHUẨN FIGMA */}
       <Card
         bordered
         style={{
-          borderRadius: 14,
+          borderRadius: 20,
           borderColor: '#e2e8f0',
-          boxShadow: '0 1px 4px rgba(0, 0, 0, 0.03)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
+          background: '#ffffff',
         }}
-        styles={{ body: { padding: '28px 32px' } }}
+        styles={{ body: { padding: '32px 36px' } }}
       >
-        <Flex align="center" gap="large" wrap="wrap" style={{ marginBottom: 28 }}>
+        <Flex align="center" gap={20} wrap="wrap" style={{ marginBottom: 28 }}>
           <div
             style={{
-              width: 72,
-              height: 72,
+              width: 76,
+              height: 76,
               borderRadius: '50%',
-              backgroundColor: '#fef3c7',
-              color: '#d97706',
+              backgroundColor: '#FEF3C7',
+              color: '#D97706',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 32,
+              fontSize: 34,
+              flexShrink: 0,
+              boxShadow: '0 2px 10px rgba(245, 158, 11, 0.15)',
             }}
           >
             <UserOutlined />
           </div>
 
           <div>
-            <Title level={3} style={{ margin: 0, fontWeight: 700, color: '#0f172a' }}>
+            <Title level={3} style={{ margin: 0, fontWeight: 800, color: '#0f172a' }}>
               {profile?.FullName}
             </Title>
-            <Flex gap="small" align="center" style={{ marginTop: 6 }} wrap="wrap">
-              <Tag color="orange" style={{ fontWeight: 600 }}>
+            <Flex gap={8} align="center" style={{ marginTop: 8 }} wrap="wrap">
+              <Tag
+                color="orange"
+                style={{
+                  fontWeight: 700,
+                  borderRadius: 9999,
+                  padding: '2px 12px',
+                  margin: 0,
+                }}
+              >
                 {profile?.Role}
               </Tag>
-              <Tag color="purple">{profile?.MembershipTier}</Tag>
-              <Tag color="success" icon={<CheckCircleOutlined />}>
+              <Tag
+                color="purple"
+                style={{
+                  fontWeight: 700,
+                  borderRadius: 9999,
+                  padding: '2px 12px',
+                  margin: 0,
+                }}
+              >
+                {profile?.MembershipTier}
+              </Tag>
+              <Tag
+                color="success"
+                icon={<CheckCircleOutlined />}
+                style={{
+                  fontWeight: 600,
+                  borderRadius: 9999,
+                  padding: '2px 12px',
+                  margin: 0,
+                }}
+              >
                 {t('profile.verified')}
               </Tag>
             </Flex>
           </div>
         </Flex>
 
-        {/* BẢNG THÔNG TIN AntD Descriptions THEO ĐÚNG YÊU CẦU */}
+        {/* BẢNG THÔNG TIN AntD Descriptions GỌN GÀNG, KHÔNG BỊ TRÀN CHỮ */}
         <Descriptions
           bordered
           column={{ xs: 1, sm: 2 }}
           size="middle"
-          styles={{ label: { fontWeight: 600, width: '28%', color: '#475569' } }}
+          styles={{
+            label: {
+              fontWeight: 700,
+              width: '20%',
+              color: '#475569',
+              backgroundColor: '#f8fafc',
+              fontSize: 13,
+            },
+            content: {
+              width: '30%',
+              fontSize: 13.5,
+              color: '#0f172a',
+            },
+          }}
         >
           <Descriptions.Item label={t('profile.fullName')}>
-            <strong style={{ color: '#0f172a' }}>{profile?.FullName}</strong>
+            <strong style={{ color: '#0f172a', fontWeight: 700 }}>{profile?.FullName}</strong>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('profile.role')}>
-            <Tag color="blue">{profile?.Role}</Tag>
+            <Tag color="blue" style={{ borderRadius: 6, fontWeight: 600 }}>
+              {profile?.Role}
+            </Tag>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('profile.email')}>
             <Space size="small">
               <MailOutlined style={{ color: '#64748b' }} />
-              <span>{profile?.Email}</span>
+              <span style={{ wordBreak: 'break-all' }}>{profile?.Email}</span>
             </Space>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('profile.phone')}>
             <Space size="small">
               <PhoneOutlined style={{ color: '#64748b' }} />
-              <span>{profile?.PhoneNumber}</span>
+              <span style={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{profile?.PhoneNumber}</span>
             </Space>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('profile.club')}>
-            <strong>{profile?.ClubName}</strong>
+            <strong style={{ color: '#0f172a' }}>{profile?.ClubName}</strong>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('profile.feiOwnerId')}>
             <code
               style={{
                 backgroundColor: '#f1f5f9',
-                padding: '2px 8px',
+                padding: '3px 10px',
                 borderRadius: 6,
-                fontSize: 12,
+                fontSize: 12.5,
                 fontFamily: 'monospace',
+                fontWeight: 700,
+                color: '#334155',
+                whiteSpace: 'nowrap',
               }}
             >
               {profile?.FEIOwnerID || 'VN-OWN-2024-0089'}
@@ -163,18 +215,22 @@ export default function ProfilePage() {
           </Descriptions.Item>
 
           <Descriptions.Item label={t('profile.address')} span={2}>
-            {profile?.Address}
+            <span>{profile?.Address}</span>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('profile.createdAt')}>
             <Space size="small">
               <CalendarOutlined style={{ color: '#64748b' }} />
-              <span>{dayjs(profile?.CreatedAt).format('DD/MM/YYYY')}</span>
+              <span style={{ whiteSpace: 'nowrap' }}>
+                {dayjs(profile?.CreatedAt).format('DD/MM/YYYY')}
+              </span>
             </Space>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('profile.status')}>
-            <Tag color="success">{t('profile.activeStatus')}</Tag>
+            <Tag color="success" style={{ borderRadius: 6, fontWeight: 700 }}>
+              {t('profile.activeStatus')}
+            </Tag>
           </Descriptions.Item>
         </Descriptions>
       </Card>

@@ -7,7 +7,7 @@ import {
   EnvironmentOutlined,
   CalendarOutlined,
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import PageHeader from '@components/layout/PageHeader';
@@ -28,8 +28,11 @@ const { Title, Text } = Typography;
 export default function NewBookingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuthStore();
   const { message } = App.useApp();
+
+  const prefillData = location.state || {};
 
   const [submitting, setSubmitting] = useState(false);
   const [createdBooking, setCreatedBooking] = useState(null);
@@ -98,6 +101,7 @@ export default function NewBookingPage() {
       {/* COMPONENT WIZARD 4 BƯỚC */}
       <BookingWizard
         key={wizardKey}
+        initialValues={prefillData}
         onSubmit={handleCreateBooking}
         onCancel={handleBackToList}
         loading={submitting}

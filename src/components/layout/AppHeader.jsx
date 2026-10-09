@@ -7,6 +7,7 @@ import {
   UserOutlined,
   LogoutOutlined,
   BellOutlined,
+  HomeOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -34,6 +35,12 @@ export default function AppHeader({
   const navigate = useNavigate();
 
   const userMenuItems = [
+    {
+      key: 'home',
+      icon: <HomeOutlined />,
+      label: t('landing.nav.home', 'Trang chủ (Home)'),
+      onClick: () => navigate(ROUTES.HOME),
+    },
     {
       key: 'profile',
       icon: <UserOutlined />,
@@ -103,8 +110,27 @@ export default function AppHeader({
         />
       </Flex>
 
-      {/* Cụm bên phải: Ngôn ngữ, Chuông thông báo & Thông tin người dùng */}
-      <Space size="large" align="center">
+      {/* Cụm bên phải: Về Trang chủ, Ngôn ngữ, Chuông thông báo & Thông tin người dùng */}
+      <Space size="middle" align="center">
+        {/* Nút về Trang chủ Home cho khách hàng dễ truy cập */}
+        <Button
+          type="default"
+          icon={<HomeOutlined style={{ color: '#F59E0B' }} />}
+          onClick={() => navigate(ROUTES.HOME)}
+          style={{
+            fontWeight: 700,
+            borderRadius: 9999,
+            borderColor: '#e2e8f0',
+            color: '#0f172a',
+            backgroundColor: '#ffffff',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+            height: 38,
+            padding: '0 18px',
+          }}
+        >
+          {t('landing.nav.home', 'Trang chủ')}
+        </Button>
+
         {/* Nút chuyển đổi ngôn ngữ */}
         <Button
           type="text"

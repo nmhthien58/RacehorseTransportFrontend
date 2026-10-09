@@ -70,7 +70,7 @@ export default function RegisterPage() {
     <div>
       {/* Header & Logo */}
       <div className={styles.headerSection}>
-        <div className={styles.logoContainer}>
+        <div className={styles.logoContainer} style={{ cursor: 'pointer' }} onClick={() => navigate(ROUTES.HOME)}>
           <img src={logoImg} alt="International Equine Transport" className={styles.logoImage} />
         </div>
         <h1 className={styles.pageTitle}>{t('auth.signUpTitle')}</h1>

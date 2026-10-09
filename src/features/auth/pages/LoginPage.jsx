@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Checkbox, Form, Input, message } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@features/auth/store/authStore';
 import { loginApi } from '@features/auth/services/authService';
@@ -25,6 +25,7 @@ const TEST_ACCOUNTS = [
 export default function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuthStore();
   const { loginWithGoogle, isGoogleLoading } = useGoogleAuth();
   const [form] = Form.useForm();
@@ -43,6 +44,15 @@ export default function LoginPage() {
       login(user, token);
 
       message.success(t('auth.loginSuccess', 'Đăng nhập thành công!'));
+
+      // Nếu có đường dẫn chờ trước đó (ví dụ đang đặt chuyến)
+      if (location.state?.returnTo && user.Role === ROLES.CUSTOMER) {
+        navigate(location.state.returnTo, {
+          state: location.state.bookingPrefill,
+          replace: true,
+        });
+        return;
+      }
 
       // Chuyển hướng theo role của người dùng
       const dashboardMap = {
@@ -77,7 +87,7 @@ export default function LoginPage() {
     <div>
       {/* Header & Logo */}
       <div className={styles.headerSection}>
-        <div className={styles.logoContainer}>
+        <div className={styles.logoContainer} style={{ cursor: 'pointer' }} onClick={() => navigate(ROUTES.HOME)}>
           <img src={logoImg} alt="International Equine Transport" className={styles.logoImage} />
         </div>
         <h1 className={styles.pageTitle}>{t('auth.signInTitle')}</h1>

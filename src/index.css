@@ -1,3 +1,7 @@
+html {
+  scroll-behavior: smooth;
+}
+
 *,
 *::before,
 *::after {
@@ -23,3 +27,35 @@ body {
   padding: 0;
   text-align: left;
 }
+
+/* Landing Page Smooth Animations */
+.landing-card-hover {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s ease;
+}
+
+.landing-card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.12);
+}
+
+.landing-img-zoom {
+  overflow: hidden;
+}
+
+.landing-img-zoom img {
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.landing-img-zoom:hover img {
+  transform: scale(1.05);
+}
+
+.landing-btn-shine {
+  transition: all 0.25s ease;
+}
+
+.landing-btn-shine:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(251, 169, 25, 0.35);
+}
+

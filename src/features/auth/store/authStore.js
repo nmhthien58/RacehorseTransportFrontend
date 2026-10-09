@@ -14,9 +14,9 @@ export const DEFAULT_USER = {
 export const useAuthStore = create(
   persist(
     (set, get) => ({
-      user: DEFAULT_USER,
-      token: 'mock-token-customer-5',
-      isAuthenticated: true,
+      user: null,
+      token: null,
+      isAuthenticated: false,
 
       login: (user, token) =>
         set({
@@ -27,9 +27,9 @@ export const useAuthStore = create(
 
       logout: () =>
         set({
-          user: DEFAULT_USER,
-          token: 'mock-token-customer-5',
-          isAuthenticated: true,
+          user: null,
+          token: null,
+          isAuthenticated: false,
         }),
 
       setUser: (user) => set({ user }),

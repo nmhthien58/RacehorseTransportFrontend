@@ -1,71 +1,55 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import horseService from '@services/horseService';
-import { getStoredHorseById } from '@utils/horseStorage';
 
 /**
- * Hook lấy thông tin chi tiết một cá thể ngựa theo ID.
+ * Hook lấy thông tin chi tiết một cá thể ngựa theo ID qua horseService.
  *
  * @param {number|string} id - Mã định danh HorseID
- * @returns {{ data: any|null, loading: boolean, error: Error|null }}
+ * @returns {{ data: any|null, loading: boolean, error: Error|null, refetch: () => void }}
  */
 export function useHorseDetail(id) {
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(id));
   const [error, setError] = useState(null);
+  const [refreshIndex, setRefreshIndex] = useState(0);
+
+  const refetch = useCallback(() => {
+    setLoading(true);
+    setRefreshIndex((prev) => prev + 1);
+  }, []);
 
   useEffect(() => {
     let isSubscribed = true;
-
-    async function loadDetail() {
-      if (!id) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        // Ưu tiên lấy từ stored horse hoặc gọi service
-        const stored = getStoredHorseById(id);
-        if (stored) {
-          if (isSubscribed) setData(stored);
-        } else {
-          const res = await horseService.getHorseById(id);
-          const found = res?.data || res;
-          if (found && isSubscribed) {
-            setData(found);
-          } else if (isSubscribed) {
-            setError(new Error(`Horse with ID ${id} not found`));
-          }
-        }
-      } catch (err) {
-        if (isSubscribed) {
-          // Thử lại lần cuối từ stored
-          const fallback = getStoredHorseById(id);
-          if (fallback) {
-            setData(fallback);
-          } else {
-            setError(err);
-          }
-        }
-      } finally {
-        if (isSubscribed) setLoading(false);
-      }
+    if (!id) {
+      return;
     }
 
-    loadDetail();
-
-    const handleUpdate = () => {
-      loadDetail();
-    };
-    window.addEventListener('horses_updated', handleUpdate);
+    horseService
+      .getHorseById(id)
+      .then((res) => {
+        if (isSubscribed) {
+          setData(res.data?.data || res.data || res);
+          setError(null);
+        }
+      })
+      .catch((err) => {
+        if (isSubscribed) {
+          console.error('Lỗi khi tải chi tiết ngựa:', err);
+          setError(err);
+        }
+      })
+      .finally(() => {
+        if (isSubscribed) {
+          setLoading(false);
+        }
+      });
 
     return () => {
       isSubscribed = false;
-      window.removeEventListener('horses_updated', handleUpdate);
     };
-  }, [id]);
+  }, [id, refreshIndex]);
 
-  return { data, loading, error, refetch: () => setData(getStoredHorseById(id)) };
+  return { data, loading, error, refetch };
 }
 
 export default useHorseDetail;

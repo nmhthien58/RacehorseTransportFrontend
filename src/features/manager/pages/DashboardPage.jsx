@@ -1,31 +1,11 @@
-import { Card, Col, Row, Statistic } from 'antd';
+import ManagerBookings from './BookingsPage';
 
+/**
+ * Trang Dashboard của Logistics Manager & Admin
+ * Hiển thị thống kê tổng quan và bảng danh sách toàn bộ các yêu cầu vận chuyển
+ *
+ * @returns {JSX.Element}
+ */
 export default function ManagerDashboard() {
-  return (
-    <div>
-      <h1>👔 Manager Dashboard</h1>
-      <Row gutter={16} style={{ marginTop: 20 }}>
-        <Col span={6}>
-          <Card>
-            <Statistic title="Pending" value={8} />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic title="Approved Today" value={3} />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic title="Assigned" value={12} />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic title="Rejected" value={5} />
-          </Card>
-        </Col>
-      </Row>
-    </div>
-  );
+  return <ManagerBookings isDashboardView={true} />;
 }

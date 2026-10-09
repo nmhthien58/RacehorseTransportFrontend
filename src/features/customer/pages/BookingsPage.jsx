@@ -93,19 +93,6 @@ export default function CustomerBookings() {
     };
   }, [user, refreshKey, t]);
 
-  // Lắng nghe sự kiện cập nhật đơn đặt chuyến để tự động đồng bộ
-  useEffect(() => {
-    const handleStorageUpdate = () => {
-      setRefreshKey((k) => k + 1);
-    };
-    window.addEventListener('bookings_updated', handleStorageUpdate);
-    window.addEventListener('storage', handleStorageUpdate);
-    return () => {
-      window.removeEventListener('bookings_updated', handleStorageUpdate);
-      window.removeEventListener('storage', handleStorageUpdate);
-    };
-  }, []);
-
   /**
    * Điều hướng sang trang tạo mới yêu cầu vận chuyển
    */
@@ -139,38 +126,44 @@ export default function CustomerBookings() {
 
   // Thống kê số lượng theo 3 chỉ số chính (Figma Frame 75:5337)
   const totalCount = bookings.length;
-  const pendingCount = bookings.filter((b) => b.Status === 'Submitted').length;
+  const pendingCount = bookings.filter((b) => (b.status || b.Status) === 'Submitted').length;
   const activeCount = bookings.filter(
-    (b) => b.Status === 'Approved' || b.Status === 'Assigned' || b.Status === 'InTransit',
+    (b) => {
+      const st = b.status || b.Status;
+      return st === 'Approved' || st === 'Assigned' || st === 'InTransit';
+    },
   ).length;
 
   // Lọc danh sách theo Tab, Search và Mode
   const filteredBookings = useMemo(() => {
     return bookings.filter((item) => {
+      const itemStatus = item.status || item.Status;
+      const itemMode = item.transportMode || item.TransportMode;
+
       // Lọc trạng thái
       if (statusFilter !== 'All') {
         if (statusFilter === 'Active') {
           const isActive =
-            item.Status === 'Approved' ||
-            item.Status === 'Assigned' ||
-            item.Status === 'InTransit';
+            itemStatus === 'Approved' ||
+            itemStatus === 'Assigned' ||
+            itemStatus === 'InTransit';
           if (!isActive) return false;
-        } else if (item.Status !== statusFilter) {
+        } else if (itemStatus !== statusFilter) {
           return false;
         }
       }
 
       // Lọc phương thức vận chuyển
-      if (modeFilter !== 'All' && item.TransportMode !== modeFilter) {
+      if (modeFilter !== 'All' && itemMode !== modeFilter) {
         return false;
       }
 
       // Lọc từ khóa tìm kiếm (Mã đơn, Địa chỉ đón, Địa chỉ giao)
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
-        const code = (item.BookingCode || '').toLowerCase();
-        const pickup = (item.PickupAddress || '').toLowerCase();
-        const dropoff = (item.DropoffAddress || '').toLowerCase();
+        const code = (item.bookingCode || item.BookingCode || '').toLowerCase();
+        const pickup = (item.pickupAddress || item.PickupAddress || '').toLowerCase();
+        const dropoff = (item.dropoffAddress || item.DropoffAddress || '').toLowerCase();
         if (!code.includes(q) && !pickup.includes(q) && !dropoff.includes(q)) {
           return false;
         }
@@ -182,11 +175,11 @@ export default function CustomerBookings() {
 
   // Parse bảng kê chi phí dự kiến nếu có
   const parsedQuote = useMemo(() => {
-    if (!selectedBooking?.QuoteBreakdown) return [];
+    if (!selectedBooking) return [];
+    const rawLines = selectedBooking.quoteLines || selectedBooking.quoteBreakdown || selectedBooking.QuoteBreakdown;
+    if (!rawLines) return [];
     try {
-      return typeof selectedBooking.QuoteBreakdown === 'string'
-        ? JSON.parse(selectedBooking.QuoteBreakdown)
-        : selectedBooking.QuoteBreakdown;
+      return typeof rawLines === 'string' ? JSON.parse(rawLines) : rawLines;
     } catch {
       return [];
     }
@@ -453,7 +446,7 @@ export default function CustomerBookings() {
         <div>
           {filteredBookings.map((b) => (
             <BookingCard
-              key={b.BookingID}
+              key={b.bookingId || b.BookingID}
               booking={b}
               onCancel={handleCancelBooking}
               onViewDetail={handleOpenDetail}
@@ -475,7 +468,7 @@ export default function CustomerBookings() {
           <Flex align="center" gap="small">
             <CarOutlined style={{ color: '#f59e0b', fontSize: 20 }} />
             <span>
-              {t('bookings.detailTitle') || 'Chi tiết đơn vận chuyển'} #{selectedBooking?.BookingCode}
+              {t('bookings.detailTitle') || 'Chi tiết đơn vận chuyển'} #{selectedBooking?.bookingCode || selectedBooking?.BookingCode}
             </span>
           </Flex>
         }
@@ -485,9 +478,9 @@ export default function CustomerBookings() {
         {selectedBooking && (
           <div>
             <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-              <StatusTag status={selectedBooking.Status} />
+              <StatusTag status={selectedBooking.status || selectedBooking.Status} />
               <Text type="secondary" style={{ fontSize: 13 }}>
-                {t('bookings.createdAt')}: {dayjs(selectedBooking.CreatedAt).format('DD/MM/YYYY HH:mm')}
+                {t('bookings.createdAt')}: {dayjs(selectedBooking.createdAt || selectedBooking.CreatedAt).format('DD/MM/YYYY HH:mm')}
               </Text>
             </Flex>
 
@@ -496,20 +489,20 @@ export default function CustomerBookings() {
               <div style={{ marginBottom: 10 }}>
                 <Text type="secondary" style={{ fontSize: 12 }}>
                   <EnvironmentOutlined style={{ color: '#d97706', marginRight: 4 }} />
-                  {t('bookings.pickupLocation')} ({selectedBooking.PickupCountryCode}):
+                  {t('bookings.pickupLocation')} ({selectedBooking.pickupCountryCode || selectedBooking.PickupCountryCode}):
                 </Text>
                 <div style={{ fontWeight: 600, color: '#0f172a', marginTop: 2 }}>
-                  {selectedBooking.PickupAddress}
+                  {selectedBooking.pickupAddress || selectedBooking.PickupAddress}
                 </div>
               </div>
 
               <div>
                 <Text type="secondary" style={{ fontSize: 12 }}>
                   <EnvironmentOutlined style={{ color: '#10b981', marginRight: 4 }} />
-                  {t('bookings.dropoffLocation')} ({selectedBooking.DropoffCountryCode}):
+                  {t('bookings.dropoffLocation')} ({selectedBooking.dropoffCountryCode || selectedBooking.DropoffCountryCode}):
                 </Text>
                 <div style={{ fontWeight: 600, color: '#0f172a', marginTop: 2 }}>
-                  {selectedBooking.DropoffAddress}
+                  {selectedBooking.dropoffAddress || selectedBooking.DropoffAddress}
                 </div>
               </div>
             </Card>
@@ -518,36 +511,36 @@ export default function CustomerBookings() {
             <Row gutter={[16, 12]} style={{ marginBottom: 16 }}>
               <Col span={12}>
                 <Text type="secondary">{t('bookings.transportMode')}: </Text>
-                <Tag color={selectedBooking.TransportMode === 'Air' ? 'blue' : 'orange'}>
-                  {selectedBooking.TransportMode === 'Air'
+                <Tag color={(selectedBooking.transportMode || selectedBooking.TransportMode) === 'Air' ? 'blue' : 'orange'}>
+                  {(selectedBooking.transportMode || selectedBooking.TransportMode) === 'Air'
                     ? `✈ ${t('bookings.modes.air')}`
                     : `🚛 ${t('bookings.modes.ground')}`}
                 </Tag>
               </Col>
               <Col span={12}>
                 <Text type="secondary">{t('bookings.fields.totalHorses')}: </Text>
-                <strong>🐴 {t('bookings.totalHorsesCount', { count: selectedBooking.TotalHorses })}</strong>
+                <strong>🐴 {t('bookings.totalHorsesCount', { count: selectedBooking.totalHorses || selectedBooking.TotalHorses || 1 })}</strong>
               </Col>
               <Col span={12}>
                 <Text type="secondary">{t('bookings.fields.departureDate')}: </Text>
                 <strong>
                   <CalendarOutlined style={{ marginRight: 4 }} />
-                  {dayjs(selectedBooking.DepartureDate).format('DD/MM/YYYY')}
+                  {dayjs(selectedBooking.departureDate || selectedBooking.DepartureDate).format('DD/MM/YYYY')}
                 </strong>
               </Col>
               <Col span={12}>
                 <Text type="secondary">{t('bookings.climateControl')}: </Text>
                 <strong>
-                  {selectedBooking.RequiresClimateControl
+                  {(selectedBooking.requiresClimateControl ?? selectedBooking.RequiresClimateControl)
                     ? t('bookings.climateControlYes')
                     : t('bookings.climateControlNo')}
                 </strong>
               </Col>
-              {selectedBooking.SpecialInstructions && (
+              {(selectedBooking.specialInstructions || selectedBooking.SpecialInstructions) && (
                 <Col span={24}>
                   <Text type="secondary">{t('bookings.specialNotes')}: </Text>
                   <div style={{ fontStyle: 'italic', marginTop: 2 }}>
-                    &ldquo;{selectedBooking.SpecialInstructions}&rdquo;
+                    &ldquo;{selectedBooking.specialInstructions || selectedBooking.SpecialInstructions}&rdquo;
                   </div>
                 </Col>
               )}
@@ -562,25 +555,25 @@ export default function CustomerBookings() {
                 </Title>
                 <Table
                   dataSource={parsedQuote}
-                  rowKey="code"
+                  rowKey={(r) => r.code || r.name || Math.random()}
                   pagination={false}
                   size="small"
                   columns={[
                     { title: t('bookings.quoteItem'), dataIndex: 'name', key: 'name' },
-                    { title: t('bookings.quoteQty'), dataIndex: 'qty', key: 'qty', align: 'center' },
+                    { title: t('bookings.quoteQty'), dataIndex: 'quantity', key: 'quantity', align: 'center', render: (q, r) => q ?? r.qty ?? 1 },
                     {
                       title: t('bookings.quoteUnitPrice'),
                       dataIndex: 'unitPrice',
                       key: 'unitPrice',
                       align: 'right',
-                      render: (v) => `$${Number(v).toLocaleString()}`,
+                      render: (v) => `$${Number(v || 0).toLocaleString()}`,
                     },
                     {
                       title: t('bookings.quoteAmount'),
                       dataIndex: 'amount',
                       key: 'amount',
                       align: 'right',
-                      render: (v) => <strong>${Number(v).toLocaleString()}</strong>,
+                      render: (v) => <strong>${Number(v || 0).toLocaleString()}</strong>,
                     },
                   ]}
                 />
@@ -594,7 +587,7 @@ export default function CustomerBookings() {
                 {t('bookings.totalEstimatedCost')}:
               </Text>
               <span style={{ fontSize: 24, fontWeight: 800, color: '#d97706' }}>
-                ${Number(selectedBooking.EstimatedCost || 0).toLocaleString()} USD
+                ${Number(selectedBooking.estimatedCost || selectedBooking.EstimatedCost || 0).toLocaleString()} USD
               </span>
             </Flex>
           </div>

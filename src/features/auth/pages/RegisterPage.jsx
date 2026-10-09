@@ -39,8 +39,8 @@ export default function RegisterPage() {
       setLoading(true);
       const fullName = `${values.firstName || ''} ${values.lastName || ''}`.trim();
       await registerApi({
-        FullName: fullName || 'New Customer',
-        Email: values.email,
+        fullName: fullName || 'New Customer',
+        email: values.email,
         password: values.password,
       });
 
@@ -70,7 +70,7 @@ export default function RegisterPage() {
     <div>
       {/* Header & Logo */}
       <div className={styles.headerSection}>
-        <div className={styles.logoContainer} style={{ cursor: 'pointer' }} onClick={() => navigate(ROUTES.HOME)}>
+        <div className={styles.logoContainer}>
           <img src={logoImg} alt="International Equine Transport" className={styles.logoImage} />
         </div>
         <h1 className={styles.pageTitle}>{t('auth.signUpTitle')}</h1>

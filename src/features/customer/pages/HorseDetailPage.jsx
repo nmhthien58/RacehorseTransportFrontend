@@ -35,11 +35,6 @@ import horseService from '@services/horseService';
 import PageHeader from '@components/layout/PageHeader';
 import useHorseDetail from '@features/customer/hooks/useHorseDetail';
 import { ROUTES } from '@routes/routes';
-import {
-  HealthStatusTag,
-  RiskBadge,
-  calculateHorseRisk,
-} from '@utils/horseHealth';
 
 const { Title, Text } = Typography;
 
@@ -51,7 +46,7 @@ const { Title, Text } = Typography;
  * @returns {JSX.Element}
  */
 export default function HorseDetailPage() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const { data: horse, loading, error, refetch } = useHorseDetail(id);
@@ -60,20 +55,18 @@ export default function HorseDetailPage() {
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [form] = Form.useForm();
 
-  const isEn = (i18n.language || 'vi').toLowerCase().startsWith('en');
-
   const handleOpenEdit = () => {
     if (!horse) return;
+    const dob = horse.dateOfBirth || horse.DateOfBirth;
     form.setFieldsValue({
-      Name: horse.Name,
-      Breed: horse.Breed || 'Thoroughbred',
-      Gender: horse.Gender || 'Stallion',
-      DateOfBirth: horse.DateOfBirth ? dayjs(horse.DateOfBirth) : null,
-      Color: horse.Color || '',
-      MicrochipNumber: horse.MicrochipNumber || '',
-      PassportNumber: horse.PassportNumber || '',
-      HealthStatus: horse.HealthStatus || 'Good',
-      SpecialCareRequirements: horse.SpecialCareRequirements || '',
+      name: horse.name || horse.Name,
+      breed: horse.breed || horse.Breed || 'Thoroughbred',
+      gender: horse.gender || horse.Gender || 'Stallion',
+      dateOfBirth: dob ? dayjs(dob) : null,
+      color: horse.color || horse.Color || '',
+      microchipNumber: horse.microchipNumber || horse.MicrochipNumber || '',
+      passportNumber: horse.passportNumber || horse.PassportNumber || '',
+      specialCareRequirements: horse.specialCareRequirements || horse.SpecialCareRequirements || '',
     });
     setEditModalVisible(true);
   };
@@ -82,16 +75,24 @@ export default function HorseDetailPage() {
     try {
       setEditSubmitting(true);
       const payload = {
-        ...values,
-        DateOfBirth: values.DateOfBirth
-          ? values.DateOfBirth.format('YYYY-MM-DD')
+        name: values.name?.trim(),
+        breed: values.breed,
+        gender: values.gender,
+        dateOfBirth: values.dateOfBirth
+          ? values.dateOfBirth.format('YYYY-MM-DD')
           : null,
+        color: values.color?.trim() || '',
+        microchipNumber: values.microchipNumber?.trim() || '',
+        passportNumber: values.passportNumber?.trim() || '',
+        specialCareRequirements: values.specialCareRequirements?.trim() || '',
       };
-      await horseService.updateHorse(horse.HorseID, payload);
+      const horseId = horse.horseId || horse.HorseID;
+      await horseService.updateHorse(horseId, payload);
       message.success(t('horses.updateHorseSuccess'));
       setEditModalVisible(false);
       refetch?.();
-    } catch {
+    } catch (err) {
+      console.error(err);
       message.error(t('horses.updateHorseError'));
     } finally {
       setEditSubmitting(false);
@@ -136,56 +137,69 @@ export default function HorseDetailPage() {
     );
   }
 
-  const age = horse.DateOfBirth
-    ? dayjs().diff(dayjs(horse.DateOfBirth), 'year')
-    : null;
+  const horseDob = horse.dateOfBirth || horse.DateOfBirth;
+  const age = horseDob ? dayjs().diff(dayjs(horseDob), 'year') : null;
 
   // Cấu hình bảng Hồ sơ thú y
   const vetColumns = [
     {
       title: t('horses.vetItem'),
-      dataIndex: 'Title',
-      key: 'Title',
-      render: (title, record) => (
-        <div>
-          <strong style={{ color: '#0f172a' }}>{title}</strong>
-          <div style={{ fontSize: 12, color: '#64748b' }}>
-            {t('horses.assignedVet', { vet: record.Veterinarian, clinic: record.Clinic })}
+      dataIndex: 'title',
+      key: 'title',
+      render: (text, record) => {
+        const itemTitle = text || record.Title || record.title;
+        const vet = record.veterinarian || record.Veterinarian;
+        const clinic = record.clinic || record.Clinic;
+        return (
+          <div>
+            <strong style={{ color: '#0f172a' }}>{itemTitle}</strong>
+            <div style={{ fontSize: 12, color: '#64748b' }}>
+              {t('horses.assignedVet', { vet, clinic })}
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       title: t('horses.issueDate'),
-      dataIndex: 'Date',
-      key: 'Date',
-      render: (date) => dayjs(date).format('DD/MM/YYYY'),
+      dataIndex: 'date',
+      key: 'date',
+      render: (d, record) => {
+        const val = d || record.Date;
+        return val ? dayjs(val).format('DD/MM/YYYY') : '-';
+      },
     },
     {
       title: t('horses.validUntil'),
-      dataIndex: 'ValidUntil',
-      key: 'ValidUntil',
-      render: (date) => (
-        <span style={{ color: '#059669', fontWeight: 500 }}>
-          {dayjs(date).format('DD/MM/YYYY')}
-        </span>
-      ),
+      dataIndex: 'validUntil',
+      key: 'validUntil',
+      render: (d, record) => {
+        const val = d || record.ValidUntil;
+        return val ? (
+          <span style={{ color: '#059669', fontWeight: 500 }}>
+            {dayjs(val).format('DD/MM/YYYY')}
+          </span>
+        ) : '-';
+      },
     },
     {
       title: t('horses.recordStatus'),
-      dataIndex: 'Status',
-      key: 'Status',
-      render: (status) => (
-        <Tag color="success" icon={<CheckCircleOutlined />}>
-          {status === 'Valid' ? t('horses.statusValid') : status}
-        </Tag>
-      ),
+      dataIndex: 'status',
+      key: 'status',
+      render: (st, record) => {
+        const val = st || record.Status;
+        return (
+          <Tag color="success" icon={<CheckCircleOutlined />}>
+            {val === 'Valid' ? t('horses.statusValid') : val}
+          </Tag>
+        );
+      },
     },
     {
       title: t('horses.notes'),
-      dataIndex: 'Notes',
-      key: 'Notes',
-      render: (notes) => <span style={{ fontSize: 12 }}>{notes}</span>,
+      dataIndex: 'notes',
+      key: 'notes',
+      render: (notes, record) => <span style={{ fontSize: 12 }}>{notes || record.Notes || '-'}</span>,
     },
   ];
 
@@ -193,57 +207,85 @@ export default function HorseDetailPage() {
   const tripColumns = [
     {
       title: t('horses.tripCode'),
-      dataIndex: 'BookingCode',
-      key: 'BookingCode',
-      render: (code, record) => (
-        <div>
-          <strong style={{ color: '#0f172a', fontFamily: 'monospace' }}>#{code}</strong>
-          <div style={{ fontSize: 12, color: '#64748b' }}>{record.VehicleCode}</div>
-        </div>
-      ),
+      dataIndex: 'bookingCode',
+      key: 'bookingCode',
+      render: (code, record) => {
+        const bCode = code || record.BookingCode;
+        const vCode = record.vehicleCode || record.VehicleCode;
+        return (
+          <div>
+            <strong style={{ color: '#0f172a', fontFamily: 'monospace' }}>#{bCode}</strong>
+            <div style={{ fontSize: 12, color: '#64748b' }}>{vCode}</div>
+          </div>
+        );
+      },
     },
     {
       title: t('horses.tripRoute'),
-      dataIndex: 'Route',
-      key: 'Route',
-      render: (route, record) => (
-        <div>
-          <span>{route}</span>
+      dataIndex: 'route',
+      key: 'route',
+      render: (route, record) => {
+        const rName = route || record.Route;
+        const mode = record.transportMode || record.TransportMode;
+        return (
           <div>
-            <Tag color={record.TransportMode === 'Air' ? 'blue' : 'orange'} style={{ fontSize: 11 }}>
-              {record.TransportMode === 'Air' ? t('horses.modeAir') : t('horses.modeGround')}
-            </Tag>
+            <span>{rName}</span>
+            <div>
+              <Tag color={mode === 'Air' ? 'blue' : 'orange'} style={{ fontSize: 11 }}>
+                {mode === 'Air' ? t('horses.modeAir') : t('horses.modeGround')}
+              </Tag>
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       title: t('horses.tripTime'),
-      dataIndex: 'DepartureDate',
-      key: 'DepartureDate',
-      render: (dep, record) => (
-        <span style={{ fontSize: 13 }}>
-          {dayjs(dep).format('DD/MM/YYYY')} ➔ {dayjs(record.ArrivalDate).format('DD/MM/YYYY')}
-        </span>
-      ),
+      dataIndex: 'departureDate',
+      key: 'departureDate',
+      render: (dep, record) => {
+        const depDate = dep || record.DepartureDate;
+        const arrDate = record.arrivalDate || record.ArrivalDate;
+        return (
+          <span style={{ fontSize: 13 }}>
+            {depDate ? dayjs(depDate).format('DD/MM/YYYY') : '-'} ➔ {arrDate ? dayjs(arrDate).format('DD/MM/YYYY') : '-'}
+          </span>
+        );
+      },
     },
     {
       title: t('horses.welfareScore'),
-      dataIndex: 'WelfareScore',
-      key: 'WelfareScore',
-      render: (score) => <Tag color="green">{score}</Tag>,
+      dataIndex: 'welfareScore',
+      key: 'welfareScore',
+      render: (score, record) => {
+        const val = score ?? record.WelfareScore;
+        return val ? <Tag color="green">{val}</Tag> : '-';
+      },
     },
     {
       title: t('horses.recordStatus'),
-      dataIndex: 'Status',
-      key: 'Status',
-      render: (st) => (
-        <Tag color={st === 'InTransit' ? 'processing' : 'success'}>
-          {st === 'InTransit' ? t('horses.statusInTransit') : t('horses.statusCompleted')}
-        </Tag>
-      ),
+      dataIndex: 'status',
+      key: 'status',
+      render: (st, record) => {
+        const status = st || record.Status;
+        return (
+          <Tag color={status === 'InTransit' ? 'processing' : 'success'}>
+            {status === 'InTransit' ? t('horses.statusInTransit') : t('horses.statusCompleted')}
+          </Tag>
+        );
+      },
     },
   ];
+
+  const horseName = horse.name || horse.Name;
+  const horseBreed = horse.breed || horse.Breed;
+  const horseGender = horse.gender || horse.Gender;
+  const horseMicrochip = horse.microchipNumber || horse.MicrochipNumber;
+  const horsePassport = horse.passportNumber || horse.PassportNumber;
+  const horseColor = horse.color || horse.Color;
+  const horseCare = horse.specialCareRequirements || horse.SpecialCareRequirements;
+  const horseActive = horse.isActive ?? horse.IsActive ?? true;
+  const horseCreated = horse.createdAt || horse.CreatedAt;
 
   // Danh sách các Tabs
   const tabItems = [
@@ -264,12 +306,12 @@ export default function HorseDetailPage() {
               {t('horses.fields.specialCare')}:
             </Text>
             <Text strong style={{ color: '#0f172a' }}>
-              {horse.SpecialCareRequirements || t('horses.specialCareNone')}
+              {horseCare || t('horses.specialCareNone')}
             </Text>
           </div>
 
           <Descriptions bordered size="small" column={{ xs: 1, sm: 2, md: 3 }} styles={{ label: { fontWeight: 600, color: '#475569' } }}>
-            <Descriptions.Item label={t('horses.fields.color')}>{horse.Color || '-'}</Descriptions.Item>
+            <Descriptions.Item label={t('horses.fields.color')}>{horseColor || '-'}</Descriptions.Item>
             <Descriptions.Item label={t('horses.vaccineStatus')}>
               <Tag color="success">{t('horses.vaccineCompleted')}</Tag>
             </Descriptions.Item>
@@ -277,11 +319,11 @@ export default function HorseDetailPage() {
               <Tag color="cyan">{t('horses.iataStandard')}</Tag>
             </Descriptions.Item>
             <Descriptions.Item label={t('horses.registrationDate')}>
-              {dayjs(horse.CreatedAt).format('DD/MM/YYYY')}
+              {horseCreated ? dayjs(horseCreated).format('DD/MM/YYYY') : '-'}
             </Descriptions.Item>
             <Descriptions.Item label={t('horses.recordStatus')}>
-              <Tag color={horse.IsActive ? 'success' : 'default'}>
-                {horse.IsActive ? t('horses.activeStatus') : t('horses.inactiveStatus')}
+              <Tag color={horseActive ? 'success' : 'default'}>
+                {horseActive ? t('horses.activeStatus') : t('horses.inactiveStatus')}
               </Tag>
             </Descriptions.Item>
           </Descriptions>
@@ -306,13 +348,13 @@ export default function HorseDetailPage() {
                 {t('horses.vetSupervised')}
               </Text>
             </div>
-            <Tag color="blue">{t('horses.totalRecords', { count: horse.VetRecords?.length || 0 })}</Tag>
+            <Tag color="blue">{t('horses.totalRecords', { count: (horse.vetRecords || horse.VetRecords || []).length })}</Tag>
           </Flex>
 
           <Table
             columns={vetColumns}
-            dataSource={horse.VetRecords || []}
-            rowKey="RecordID"
+            dataSource={horse.vetRecords || horse.VetRecords || []}
+            rowKey={(r) => r.recordId || r.RecordID || r.title || r.Title || Math.random()}
             pagination={false}
           />
         </Card>
@@ -336,13 +378,13 @@ export default function HorseDetailPage() {
                 {t('horses.tripHistoryDesc')}
               </Text>
             </div>
-            <Tag color="orange">{t('horses.totalTrips', { count: horse.TransportHistory?.length || 0 })}</Tag>
+            <Tag color="orange">{t('horses.totalTrips', { count: (horse.transportHistory || horse.TransportHistory || []).length })}</Tag>
           </Flex>
 
           <Table
             columns={tripColumns}
-            dataSource={horse.TransportHistory || []}
-            rowKey="TripID"
+            dataSource={horse.transportHistory || horse.TransportHistory || []}
+            rowKey={(r) => r.tripId || r.TripID || r.bookingCode || r.BookingCode || Math.random()}
             pagination={false}
           />
         </Card>
@@ -357,7 +399,7 @@ export default function HorseDetailPage() {
         title={t('horses.detailTitle')}
         breadcrumb={[
           { label: t('nav.horses'), path: ROUTES.CUSTOMER_HORSES },
-          { label: horse.Name },
+          { label: horseName },
         ]}
         actions={
           <Space>
@@ -375,36 +417,6 @@ export default function HorseDetailPage() {
           </Space>
         }
       />
-
-      {/* Cảnh báo nghiêm cấm vận chuyển khi ngựa ở mức Critical Risk */}
-      {(() => {
-        const risk = calculateHorseRisk(horse, i18n.language);
-        if (risk.level !== 'CRITICAL') return null;
-        return (
-          <div
-            style={{
-              backgroundColor: '#FEF2F2',
-              border: '1.5px solid #FCA5A5',
-              borderRadius: 14,
-              padding: '16px 20px',
-              marginBottom: 24,
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: 14,
-            }}
-          >
-            <span style={{ fontSize: 28, lineHeight: 1 }}>🚫</span>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#991B1B', textTransform: 'uppercase' }}>
-                {t('horses.prohibitedTitle')}
-              </div>
-              <div style={{ fontSize: 13, color: '#B91C1C', marginTop: 4, lineHeight: 1.45, fontWeight: 500 }}>
-                {t('horses.prohibitedDetail', { status: horse.HealthStatus })}
-              </div>
-            </div>
-          </div>
-        );
-      })()}
 
       {/* KHỐI TỔNG QUAN HỒ SƠ (AntD Descriptions) */}
       <Card
@@ -436,15 +448,16 @@ export default function HorseDetailPage() {
             </div>
             <div>
               <Title level={3} style={{ margin: 0, fontWeight: 700, color: '#0f172a' }}>
-                {horse.Name}
+                {horseName}
               </Title>
               <Space size="small" style={{ marginTop: 4 }}>
-                <Tag color="blue">{horse.Breed}</Tag>
+                <Tag color="blue">{horseBreed}</Tag>
                 <Tag color="gold">
-                  {t(`horses.genderOptions.${horse.Gender?.toLowerCase()}`) || horse.Gender}
+                  {t(`horses.genderOptions.${horseGender?.toLowerCase()}`) || horseGender}
                 </Tag>
-                <HealthStatusTag status={horse.HealthStatus} />
-                <RiskBadge risk={calculateHorseRisk(horse, i18n.language)} />
+                <Tag color={horseActive ? 'success' : 'default'}>
+                  {horseActive ? t('horses.activeRacing') : t('horses.resting')}
+                </Tag>
               </Space>
             </div>
           </Space>
@@ -469,33 +482,33 @@ export default function HorseDetailPage() {
                 whiteSpace: 'nowrap',
               }}
             >
-              {horse.MicrochipNumber || '-'}
+              {horseMicrochip || '-'}
             </code>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('horses.fields.passport')}>
             <span style={{ fontWeight: 600, whiteSpace: 'nowrap', color: '#0f172a' }}>
-              {horse.PassportNumber || t('horses.noPassport')}
+              {horsePassport || t('horses.noPassport')}
             </span>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('horses.dobAge')}>
             <span style={{ whiteSpace: 'nowrap' }}>
-              {horse.DateOfBirth ? `${dayjs(horse.DateOfBirth).format('DD/MM/YYYY')} (${age} ${t('horses.yearsOld')})` : '-'}
+              {horseDob ? `${dayjs(horseDob).format('DD/MM/YYYY')} (${age} ${t('horses.yearsOld')})` : '-'}
             </span>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('horses.fields.color')}>
-            <span>{horse.Color || '-'}</span>
+            <span>{horseColor || '-'}</span>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('horses.fields.gender')}>
-            <span>{t(`horses.genderOptions.${horse.Gender?.toLowerCase()}`) || horse.Gender}</span>
+            <span>{t(`horses.genderOptions.${horseGender?.toLowerCase()}`) || horseGender}</span>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('horses.fields.status')}>
-            <Tag color={horse.IsActive ? 'success' : 'default'} style={{ margin: 0 }}>
-              {horse.IsActive ? t('horses.activeRacing') : t('horses.resting')}
+            <Tag color={horseActive ? 'success' : 'default'} style={{ margin: 0 }}>
+              {horseActive ? t('horses.activeRacing') : t('horses.resting')}
             </Tag>
           </Descriptions.Item>
         </Descriptions>
@@ -509,7 +522,7 @@ export default function HorseDetailPage() {
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 17, fontWeight: 700 }}>
             <span>✏️ {t('horses.editModalTitle')}</span>
-            <Tag color="gold">{horse.Name}</Tag>
+            <Tag color="gold">{horseName}</Tag>
           </div>
         }
         open={editModalVisible}
@@ -530,7 +543,7 @@ export default function HorseDetailPage() {
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item
-                name="Name"
+                name="name"
                 label={<span style={{ fontWeight: 600 }}>{t('horses.fields.name')}</span>}
                 rules={[{ required: true, message: t('horses.validation.nameRequired') }]}
               >
@@ -539,32 +552,17 @@ export default function HorseDetailPage() {
             </Col>
             <Col xs={24} sm={12}>
               <Form.Item
-                name="Breed"
+                name="breed"
                 label={<span style={{ fontWeight: 600 }}>{t('horses.fields.breed')}</span>}
                 rules={[{ required: true, message: t('horses.validation.breedRequired') }]}
               >
                 <Select size="large">
-                  <Select.Option value="Thoroughbred">
-                    {t('horses.breedOptions.Thoroughbred')}
-                  </Select.Option>
-                  <Select.Option value="Quarter Horse">
-                    {t('horses.breedOptions.Quarter Horse')}
-                  </Select.Option>
-                  <Select.Option value="Arabian">
-                    {t('horses.breedOptions.Arabian')}
-                  </Select.Option>
-                  <Select.Option value="Warmblood">
-                    {t('horses.breedOptions.Warmblood')}
-                  </Select.Option>
-                  <Select.Option value="Appaloosa">
-                    {t('horses.breedOptions.Appaloosa')}
-                  </Select.Option>
-                  <Select.Option value="Standardbred">
-                    {t('horses.breedOptions.Standardbred')}
-                  </Select.Option>
-                  <Select.Option value="Andalusian">
-                    {t('horses.breedOptions.Andalusian')}
-                  </Select.Option>
+                  <Select.Option value="Thoroughbred">Thoroughbred (Thuần chủng Anh)</Select.Option>
+                  <Select.Option value="Quarter Horse">Quarter Horse</Select.Option>
+                  <Select.Option value="Arabian">Arabian (Ngựa Ả Rập)</Select.Option>
+                  <Select.Option value="Warmblood">Warmblood</Select.Option>
+                  <Select.Option value="Appaloosa">Appaloosa</Select.Option>
+                  <Select.Option value="Standardbred">Standardbred</Select.Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -572,7 +570,7 @@ export default function HorseDetailPage() {
 
           <Row gutter={16}>
             <Col xs={24} sm={8}>
-              <Form.Item name="Gender" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.gender')}</span>}>
+              <Form.Item name="gender" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.gender')}</span>}>
                 <Select size="large">
                   <Select.Option value="Stallion">{t('horses.genderOptions.stallion')}</Select.Option>
                   <Select.Option value="Mare">{t('horses.genderOptions.mare')}</Select.Option>
@@ -581,12 +579,12 @@ export default function HorseDetailPage() {
               </Form.Item>
             </Col>
             <Col xs={24} sm={8}>
-              <Form.Item name="DateOfBirth" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.dob')}</span>}>
+              <Form.Item name="dateOfBirth" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.dob')}</span>}>
                 <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" size="large" />
               </Form.Item>
             </Col>
             <Col xs={24} sm={8}>
-              <Form.Item name="Color" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.color')}</span>}>
+              <Form.Item name="color" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.color')}</span>}>
                 <Input placeholder={t('horses.placeholders.color')} size="large" />
               </Form.Item>
             </Col>
@@ -594,67 +592,19 @@ export default function HorseDetailPage() {
 
           <Row gutter={16}>
             <Col xs={24} sm={12}>
-              <Form.Item name="MicrochipNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.microchip')}</span>}>
+              <Form.Item name="microchipNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.microchip')}</span>}>
                 <Input placeholder={t('horses.placeholders.microchip')} size="large" />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
-              <Form.Item name="PassportNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.passport')}</span>}>
+              <Form.Item name="passportNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.passport')}</span>}>
                 <Input placeholder={t('horses.placeholders.passport')} size="large" />
               </Form.Item>
             </Col>
           </Row>
 
-          {/* ĐÁNH GIÁ SỨC KHỎE */}
           <Form.Item
-            name="HealthStatus"
-            label={<span style={{ fontWeight: 600 }}>{t('horses.healthStatusForm')}</span>}
-          >
-            <Select
-              size="large"
-              options={[
-                {
-                  value: 'Excellent',
-                  label: (
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                      <HealthStatusTag status="Excellent" size="small" />
-                      <span style={{ fontSize: 13 }}>{t('horses.healthOptions.excellent')}</span>
-                    </div>
-                  ),
-                },
-                {
-                  value: 'Good',
-                  label: (
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                      <HealthStatusTag status="Good" size="small" />
-                      <span style={{ fontSize: 13 }}>{t('horses.healthOptions.good')}</span>
-                    </div>
-                  ),
-                },
-                {
-                  value: 'Attention',
-                  label: (
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                      <HealthStatusTag status="Attention" size="small" />
-                      <span style={{ fontSize: 13 }}>{t('horses.healthOptions.attention')}</span>
-                    </div>
-                  ),
-                },
-                {
-                  value: 'Critical',
-                  label: (
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                      <HealthStatusTag status="Critical" size="small" />
-                      <span style={{ fontSize: 13, color: '#991B1B', fontWeight: 600 }}>{t('horses.healthOptions.critical')}</span>
-                    </div>
-                  ),
-                },
-              ]}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="SpecialCareRequirements"
+            name="specialCareRequirements"
             label={<span style={{ fontWeight: 600 }}>{t('horses.fields.specialCare')}</span>}
           >
             <Input.TextArea

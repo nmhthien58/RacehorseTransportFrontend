@@ -1,4 +1,4 @@
-import { Flex, Row, Col, Typography, Button, Space } from 'antd';
+import { Row, Col, Typography, Button, Space } from 'antd';
 import { UpOutlined, PhoneOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';

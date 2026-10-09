@@ -2,7 +2,6 @@ import {
   Button,
   Card,
   Col,
-  Flex,
   Row,
   Tag,
   Typography,
@@ -10,11 +9,6 @@ import {
 } from 'antd';
 import {
   CheckCircleFilled,
-  SafetyCertificateOutlined,
-  CompassOutlined,
-  ThunderboltOutlined,
-  HeartFilled,
-  ArrowRightOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';

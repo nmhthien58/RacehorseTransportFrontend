@@ -1,4 +1,4 @@
-import { Layout, Menu, Tag } from 'antd';
+import { Layout, Menu } from 'antd';
 import {
   AppstoreOutlined,
   ClockCircleOutlined,
@@ -24,7 +24,7 @@ const { Sider } = Layout;
  * Component thanh điều hướng bên trái (Sidebar) của hệ thống khớp thiết kế Figma
  * @param {Object} props
  * @param {boolean} props.collapsed - Trạng thái thu gọn của Sider
- * @param {Object} [props.user] - Thông tin tài khoản người dùng đăng nhập (PascalCase)
+ * @param {Object} [props.user] - Thông tin tài khoản người dùng đăng nhập
  * @returns {JSX.Element}
  */
 export default function AppSidebar({ collapsed, user }) {
@@ -32,9 +32,11 @@ export default function AppSidebar({ collapsed, user }) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const userRole = user?.role || user?.Role;
+
   // Danh sách menu tương ứng theo vai trò người dùng
   const getMenuItems = () => {
-    if (user?.Role === ROLES.CUSTOMER) {
+    if (userRole === ROLES.CUSTOMER) {
       return [
         {
           key: ROUTES.HOME,
@@ -116,7 +118,7 @@ export default function AppSidebar({ collapsed, user }) {
       ];
     }
 
-    if (user?.Role === ROLES.MANAGER) {
+    if (userRole === ROLES.MANAGER) {
       return [
         {
           key: ROUTES.MANAGER_DASHBOARD,
@@ -138,7 +140,7 @@ export default function AppSidebar({ collapsed, user }) {
 
     return [
       {
-        key: getDashboardRoute(user?.Role),
+        key: getDashboardRoute(userRole),
         icon: <AppstoreOutlined style={{ fontSize: 18 }} />,
         label: t('nav.dashboard'),
       },

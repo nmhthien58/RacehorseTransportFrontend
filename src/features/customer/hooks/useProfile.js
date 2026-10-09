@@ -1,6 +1,19 @@
 import { useState, useEffect } from 'react';
-import { MOCK_PROFILE } from '@mocks/data/profile.mock';
 import { useAuthStore } from '@features/auth/store/authStore';
+
+const DEFAULT_PROFILE = {
+  userId: 5,
+  fullName: 'Jane Smith',
+  email: 'customer@test.com',
+  phoneNumber: '+84988111222',
+  clubName: 'CLB Ngựa Đua Vina Equine & Ba Vì Racing Stables',
+  role: 'Customer',
+  address: 'Trang trại sinh thái Yên Bài, Ba Vì, Hà Nội, Việt Nam',
+  membershipTier: 'VIP Diamond Member (FEI Registered Owner)',
+  feiOwnerId: 'VN-OWN-2024-0089',
+  isActive: true,
+  createdAt: '2025-03-15T08:00:00Z',
+};
 
 /**
  * Hook lấy thông tin hồ sơ của khách hàng hiện tại.
@@ -18,14 +31,15 @@ export function useProfile() {
     const timer = setTimeout(() => {
       try {
         const merged = {
-          ...MOCK_PROFILE,
-          FullName: user?.FullName || MOCK_PROFILE.FullName,
-          Email: user?.Email || MOCK_PROFILE.Email,
-          PhoneNumber: user?.PhoneNumber || MOCK_PROFILE.PhoneNumber,
-          Role: user?.Role || MOCK_PROFILE.Role,
+          ...DEFAULT_PROFILE,
+          fullName: user?.fullName || user?.FullName || DEFAULT_PROFILE.fullName,
+          email: user?.email || user?.Email || DEFAULT_PROFILE.email,
+          phoneNumber: user?.phoneNumber || user?.PhoneNumber || DEFAULT_PROFILE.phoneNumber,
+          role: user?.role || user?.Role || DEFAULT_PROFILE.role,
         };
         setData(merged);
       } catch (err) {
+        console.error('Lỗi khi lấy thông tin profile:', err);
         setError(err);
       } finally {
         setLoading(false);

@@ -18,7 +18,6 @@ import {
   CheckCircleFilled,
   EnvironmentOutlined,
   SafetyCertificateOutlined,
-  SearchOutlined,
   InfoCircleOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';

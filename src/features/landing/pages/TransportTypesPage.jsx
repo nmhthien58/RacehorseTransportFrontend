@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   Button,
   Card,
@@ -13,7 +12,6 @@ import {
   ArrowRightOutlined,
   CheckCircleFilled,
   SafetyCertificateOutlined,
-  CompassOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';

@@ -66,7 +66,9 @@ export default function AppHeader({
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
-  const isCustomer = user?.Role === ROLES.CUSTOMER;
+  const userFullName = user?.fullName || user?.FullName || 'Kaze Lee';
+  const userRole = user?.role || user?.Role;
+  const isCustomer = userRole === ROLES.CUSTOMER;
 
   return (
     <Header
@@ -172,14 +174,14 @@ export default function AppHeader({
                 fontSize: 16,
               }}
             >
-              {getInitials(user?.FullName)}
+              {getInitials(userFullName)}
             </Avatar>
             <div style={{ lineHeight: 1.3, textAlign: 'left' }}>
               <div style={{ fontWeight: 700, fontSize: 15, color: '#0f172a' }}>
-                {user?.FullName || 'Kaze Lee'}
+                {userFullName}
               </div>
               <div style={{ fontSize: 12, color: '#64748b' }}>
-                {isCustomer ? t('nav.ownerPortal') : user?.Role || ''}
+                {isCustomer ? t('nav.ownerPortal') : userRole || ''}
               </div>
             </div>
           </Flex>

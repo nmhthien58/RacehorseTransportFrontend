@@ -1,10 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import horseService from '@services/horseService';
-import { useAuthStore } from '@features/auth/store/authStore';
-import { deduplicateHorses } from '@utils/horseStorage';
 
 /**
- * Hook lấy danh sách ngựa của Customer hiện tại, tự động cập nhật khi có ngựa mới
+ * Hook lấy danh sách ngựa của Customer hiện tại qua horseService.
  *
  * @returns {{ data: Array<any>, loading: boolean, error: Error|null, refetch: () => void }}
  */
@@ -12,40 +10,43 @@ export function useMyHorses() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user } = useAuthStore();
+  const [refreshIndex, setRefreshIndex] = useState(0);
 
-  const fetchHorses = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await horseService.getHorses({ ownerId: user?.UserID || undefined });
-      const horses = res?.data?.data || res?.data || res || [];
-      setData(deduplicateHorses(horses));
-      setError(null);
-    } catch (err) {
-      console.error('Lỗi khi tải danh sách ngựa:', err);
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
+  const refetch = useCallback(() => {
+    setLoading(true);
+    setRefreshIndex((prev) => prev + 1);
+  }, []);
 
   useEffect(() => {
-    fetchHorses();
+    let isSubscribed = true;
 
-    const handleUpdate = () => {
-      fetchHorses();
-    };
-
-    window.addEventListener('horses_updated', handleUpdate);
-    window.addEventListener('storage', handleUpdate);
+    horseService
+      .getHorses()
+      .then((res) => {
+        if (isSubscribed) {
+          const list = res.data?.data || res.data || [];
+          setData(Array.isArray(list) ? list : []);
+          setError(null);
+        }
+      })
+      .catch((err) => {
+        if (isSubscribed) {
+          console.error('Lỗi khi tải danh sách ngựa:', err);
+          setError(err);
+        }
+      })
+      .finally(() => {
+        if (isSubscribed) {
+          setLoading(false);
+        }
+      });
 
     return () => {
-      window.removeEventListener('horses_updated', handleUpdate);
-      window.removeEventListener('storage', handleUpdate);
+      isSubscribed = false;
     };
-  }, [fetchHorses]);
+  }, [refreshIndex]);
 
-  return { data, loading, error, refetch: fetchHorses };
+  return { data, loading, error, refetch };
 }
 
 export default useMyHorses;

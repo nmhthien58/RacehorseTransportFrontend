@@ -1,34 +1,33 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export const DEFAULT_USER = {
-  UserID: 5,
-  FullName: 'Kaze Lee',
-  Email: 'customer@test.com',
-  Role: 'Customer',
-  Phone: '+84 901 234 567',
-  MembershipType: 'VIP Equine Member',
-  Avatar: null,
-};
-
 export const useAuthStore = create(
   persist(
     (set, get) => ({
       user: null,
       token: null,
+      refreshToken: null,
       isAuthenticated: false,
 
-      login: (user, token) =>
+      login: (user, token, refreshToken = null) =>
         set({
-          user: user || DEFAULT_USER,
-          token: token || 'mock-token-customer-5',
+          user,
+          token,
+          refreshToken,
           isAuthenticated: true,
         }),
+
+      setTokens: (token, refreshToken = null) =>
+        set((state) => ({
+          token,
+          refreshToken: refreshToken || state.refreshToken,
+        })),
 
       logout: () =>
         set({
           user: null,
           token: null,
+          refreshToken: null,
           isAuthenticated: false,
         }),
 
@@ -36,16 +35,29 @@ export const useAuthStore = create(
 
       hasRole: (roles) => {
         const { user } = get();
-        if (!user) return true;
-        if (Array.isArray(roles)) return roles.includes(user.Role);
-        return user.Role === roles;
+        if (!user) return false;
+        if (Array.isArray(roles)) return roles.includes(user.role);
+        return user.role === roles;
       },
     }),
     {
       name: 'auth-storage',
+      version: 2,
+      migrate: (persistedState, version) => {
+        if (!version || version < 2) {
+          return {
+            user: null,
+            token: null,
+            refreshToken: null,
+            isAuthenticated: false,
+          };
+        }
+        return persistedState;
+      },
       partialize: (state) => ({
         user: state.user,
         token: state.token,
+        refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
     },

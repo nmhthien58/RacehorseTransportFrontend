@@ -1,36 +1,53 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Button,
   Card,
   Checkbox,
   Col,
   Flex,
-  Input,
   InputNumber,
-  Radio,
   Row,
   Select,
-  Space,
   Table,
   Tag,
   Typography,
 } from 'antd';
 import {
-  DollarCircleOutlined,
-  CompassOutlined,
-  CheckCircleFilled,
-  SafetyCertificateOutlined,
-  ArrowRightOutlined,
   CalculatorOutlined,
   ReloadOutlined,
-  InfoCircleOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ROUTES } from '@routes/routes';
 import { useMyHorses } from '@features/customer/hooks/useMyHorses';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
+
+// Destination rates database
+const airRatesByCountry = {
+  France: { zone: 'Europe', baseShared: 8000, customs: 950, quarantine: 1400 },
+  'Hong Kong': { zone: 'East Asia', baseShared: 5500, customs: 850, quarantine: 1100 },
+  Japan: { zone: 'East Asia', baseShared: 5500, customs: 850, quarantine: 1200 },
+  Australia: { zone: 'Oceania', baseShared: 6500, customs: 950, quarantine: 1600 },
+  'United Kingdom': { zone: 'Europe', baseShared: 8000, customs: 950, quarantine: 1500 },
+  'United States': { zone: 'Americas', baseShared: 10000, customs: 950, quarantine: 2000 },
+  Thailand: { zone: 'Southeast Asia', baseShared: 3000, customs: 650, quarantine: 750 },
+  China: { zone: 'East Asia', baseShared: 4500, customs: 800, quarantine: 1100 },
+};
+
+const groundRatesByCountry = {
+  Cambodia: { distanceKm: 250, basePerKm: 1.0, border: 250, quarantine: 0 },
+  Laos: { distanceKm: 650, basePerKm: 1.0, border: 250, quarantine: 0 },
+  Thailand: { distanceKm: 900, basePerKm: 1.0, border: 300, quarantine: 400 },
+  China: { distanceKm: 1400, basePerKm: 1.5, border: 350, quarantine: 800 },
+};
+
+// Multipliers
+const stallMultipliers = {
+  shared: 1.0,
+  comfort: 1.4,
+  private: 2.2,
+};
 
 export default function CustomerPricingPage() {
   const { t } = useTranslation();
@@ -48,8 +65,8 @@ export default function CustomerPricingPage() {
   const initialSelectedHorses = useMemo(() => {
     if (horses && horses.length > 0) {
       return horses.slice(0, 3).map((h, i) => ({
-        id: h.HorseID || h.horseId || i + 1,
-        name: h.HorseName || h.horseName || `Ngựa ${i + 1}`,
+        id: h.horseId || h.HorseID || i + 1,
+        name: h.name || h.Name || `Ngựa ${i + 1}`,
         stallClass: i === 0 ? 'comfort' : 'shared',
       }));
     }
@@ -60,13 +77,9 @@ export default function CustomerPricingPage() {
     ];
   }, [horses]);
 
-  const [calcHorses, setCalcHorses] = useState(initialSelectedHorses);
-
-  useEffect(() => {
-    if (horses && horses.length > 0) {
-      setCalcHorses(initialSelectedHorses);
-    }
-  }, [initialSelectedHorses]);
+  const [customHorses, setCustomHorses] = useState(null);
+  const calcHorses = customHorses ?? initialSelectedHorses;
+  const setCalcHorses = (val) => setCustomHorses(typeof val === 'function' ? val(calcHorses) : val);
 
   // Options State
   const [optClimateControl, setOptClimateControl] = useState(true);
@@ -74,32 +87,6 @@ export default function CustomerPricingPage() {
   const [optInsurance, setOptInsurance] = useState(true);
   const [optOffPeak, setOptOffPeak] = useState(false);
   const [declaredValue, setDeclaredValue] = useState(50000);
-
-  // Destination rates database
-  const airRatesByCountry = {
-    France: { zone: 'Europe', baseShared: 8000, customs: 950, quarantine: 1400 },
-    'Hong Kong': { zone: 'East Asia', baseShared: 5500, customs: 850, quarantine: 1100 },
-    Japan: { zone: 'East Asia', baseShared: 5500, customs: 850, quarantine: 1200 },
-    Australia: { zone: 'Oceania', baseShared: 6500, customs: 950, quarantine: 1600 },
-    'United Kingdom': { zone: 'Europe', baseShared: 8000, customs: 950, quarantine: 1500 },
-    'United States': { zone: 'Americas', baseShared: 10000, customs: 950, quarantine: 2000 },
-    Thailand: { zone: 'Southeast Asia', baseShared: 3000, customs: 650, quarantine: 750 },
-    China: { zone: 'East Asia', baseShared: 4500, customs: 800, quarantine: 1100 },
-  };
-
-  const groundRatesByCountry = {
-    Cambodia: { distanceKm: 250, basePerKm: 1.0, border: 250, quarantine: 0 },
-    Laos: { distanceKm: 650, basePerKm: 1.0, border: 250, quarantine: 0 },
-    Thailand: { distanceKm: 900, basePerKm: 1.0, border: 300, quarantine: 400 },
-    China: { distanceKm: 1400, basePerKm: 1.5, border: 350, quarantine: 800 },
-  };
-
-  // Multipliers
-  const stallMultipliers = {
-    shared: 1.0,
-    comfort: 1.4,
-    private: 2.2,
-  };
 
   // Tính toán bảng giá theo dữ liệu thực
   const quoteCalculation = useMemo(() => {
@@ -146,17 +133,15 @@ export default function CustomerPricingPage() {
     const groomFee = transportMode === 'air' ? 700 : 360;
 
     // Customs & Quarantine
-    let customsFee = 0;
-    let quarantineFee = 0;
-    if (transportMode === 'air') {
-      const countryData = airRatesByCountry[destinationCountry] || airRatesByCountry['France'];
-      customsFee = countryData.customs * (numHorses > 1 ? 1.25 : 1.0);
-      quarantineFee = countryData.quarantine;
-    } else {
-      const countryData = groundRatesByCountry[destinationCountry] || groundRatesByCountry['Cambodia'];
-      customsFee = countryData.border;
-      quarantineFee = countryData.quarantine;
-    }
+    const countryData = transportMode === 'air'
+      ? (airRatesByCountry[destinationCountry] || airRatesByCountry['France'])
+      : (groundRatesByCountry[destinationCountry] || groundRatesByCountry['Cambodia']);
+
+    const customsFee = transportMode === 'air'
+      ? countryData.customs * (numHorses > 1 ? 1.25 : 1.0)
+      : countryData.border;
+
+    const quarantineFee = countryData.quarantine;
 
     // Insurance: 1% of declared value
     const insuranceFee = optInsurance ? (declaredValue * 0.01) : 0;
@@ -220,7 +205,7 @@ export default function CustomerPricingPage() {
   const handleResetCalculator = () => {
     setTransportMode('air');
     setDestinationCountry('France');
-    setCalcHorses(initialSelectedHorses);
+    setCustomHorses(null);
     setOptClimateControl(true);
     setOptExpress(false);
     setOptInsurance(true);
@@ -235,17 +220,17 @@ export default function CustomerPricingPage() {
         <Flex justify="space-between" align="center" wrap="wrap" gap={16} style={{ marginBottom: 12 }}>
           <div>
             <Title level={2} style={{ margin: 0, fontWeight: 900, color: '#0f172a' }}>
-              {activeTab === 'rate-card' ? 'Transport Pricing' : 'Quote Calculator'}
+              {activeTab === 'rate-card' ? t('pricing.transportPricing', 'Transport Pricing') : t('pricing.quoteCalculator', 'Quote Calculator')}
             </Title>
             <Text style={{ color: '#64748b', fontSize: 14 }}>
               {activeTab === 'rate-card'
-                ? 'Published rates for cross-border racehorse transport departing Vietnam • All prices in USD, per horse, one way'
-                : 'Estimate the cost of a horse transport request before you submit it • Uses the published rate card'}
+                ? t('pricing.rateCardDesc', 'Published rates for cross-border racehorse transport departing Vietnam • All prices in USD, per horse, one way')
+                : t('pricing.calculatorDesc', 'Estimate the cost of a horse transport request before you submit it • Uses the published rate card')}
             </Text>
           </div>
 
           <Tag color="success" style={{ fontWeight: 700, padding: '4px 12px', borderRadius: 9999 }}>
-            • EFFECTIVE FROM 01 OCT 2026
+            • {t('pricing.effectiveDate', 'EFFECTIVE FROM 01 OCT 2026')}
           </Tag>
         </Flex>
 
@@ -261,7 +246,7 @@ export default function CustomerPricingPage() {
               height: 38,
             }}
           >
-            Rate Card
+            {t('pricing.rateCard', 'Rate Card')}
           </Button>
           <Button
             type={activeTab === 'calculator' ? 'primary' : 'default'}
@@ -274,7 +259,7 @@ export default function CustomerPricingPage() {
               height: 38,
             }}
           >
-            Quote Calculator
+            {t('pricing.quoteCalculator', 'Quote Calculator')}
           </Button>
         </Flex>
       </div>

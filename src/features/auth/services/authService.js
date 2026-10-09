@@ -2,18 +2,23 @@ import api from '@services/api';
 import { ENDPOINTS } from '@services/endpoints';
 
 /**
+ * @file authService.js
+ * @description Tầng Service xử lý xác thực và tài khoản cá nhân cho feature Auth
+ */
+
+/**
  * Đăng nhập người dùng bằng email và password.
  * @param {{ email: string, password?: string }} credentials
- * @returns {Promise<{ token: string, user: import('@types/database').User }>}
+ * @returns {Promise<{ accessToken: string, refreshToken: string, user: import('@types/database').User }>}
  */
 export const loginApi = async (credentials) => {
   return await api.post(ENDPOINTS.AUTH.LOGIN, credentials);
 };
 
 /**
- * Đăng ký tài khoản người dùng mới (phát sinh mã xác thực OTP).
- * @param {{ FullName: string, Email: string, password?: string, PhoneNumber?: string }} data
- * @returns {Promise<{ success: boolean, message: string, email: string }>}
+ * Đăng ký tài khoản khách hàng mới.
+ * @param {{ fullName: string, email: string, password?: string, phoneNumber?: string }} data
+ * @returns {Promise<any>}
  */
 export const registerApi = async (data) => {
   return await api.post(ENDPOINTS.AUTH.REGISTER, data);
@@ -21,56 +26,29 @@ export const registerApi = async (data) => {
 
 /**
  * Đăng nhập hoặc đăng ký bằng tài khoản Google.
- * @param {{ email: string, FullName: string, avatar?: string, googleToken?: string }} data
- * @returns {Promise<{ token: string, user: import('@types/database').User }>}
+ * @param {{ idToken?: string, email?: string, fullName?: string }} data
+ * @returns {Promise<{ accessToken: string, refreshToken: string, user: import('@types/database').User }>}
  */
 export const googleLoginApi = async (data) => {
   return await api.post(ENDPOINTS.AUTH.GOOGLE_LOGIN, data);
 };
 
 /**
- * Xác thực mã OTP gửi về email khi đăng ký tài khoản mới.
- * @param {{ email: string, code: string }} data
- * @returns {Promise<{ token: string, user: import('@types/database').User }>}
+ * Xin access token mới bằng refreshToken.
+ * @param {{ refreshToken: string }} data
+ * @returns {Promise<{ accessToken: string, refreshToken: string }>}
  */
-export const verifyEmailApi = async (data) => {
-  return await api.post(ENDPOINTS.AUTH.VERIFY_EMAIL, data);
+export const refreshTokenApi = async (data) => {
+  return await api.post(ENDPOINTS.AUTH.REFRESH, data);
 };
 
 /**
- * Gửi lại mã OTP xác minh tài khoản.
- * @param {{ email: string }} data
- * @returns {Promise<{ success: boolean, message: string }>}
+ * Đăng xuất tài khoản khỏi hệ thống.
+ * @param {{ refreshToken?: string }} [data]
+ * @returns {Promise<any>}
  */
-export const resendOtpApi = async (data) => {
-  return await api.post(ENDPOINTS.AUTH.RESEND_OTP, data);
-};
-
-/**
- * Yêu cầu gửi mã OTP đặt lại mật khẩu về email.
- * @param {{ email: string }} data
- * @returns {Promise<{ success: boolean, message: string }>}
- */
-export const forgotPasswordApi = async (data) => {
-  return await api.post(ENDPOINTS.AUTH.FORGOT_PASSWORD, data);
-};
-
-/**
- * Xác thực mã OTP.
- * @param {{ email: string, code: string }} data
- * @returns {Promise<{ success: boolean, verifyToken?: string }>}
- */
-export const verifyCodeApi = async (data) => {
-  return await api.post(ENDPOINTS.AUTH.VERIFY_CODE, data);
-};
-
-/**
- * Đặt lại mật khẩu mới.
- * @param {{ email: string, newPassword: string, code?: string }} data
- * @returns {Promise<{ success: boolean, message: string }>}
- */
-export const resetPasswordApi = async (data) => {
-  return await api.post(ENDPOINTS.AUTH.RESET_PASSWORD, data);
+export const logoutApi = async (data = {}) => {
+  return await api.post(ENDPOINTS.AUTH.LOGOUT, data);
 };
 
 /**
@@ -79,4 +57,69 @@ export const resetPasswordApi = async (data) => {
  */
 export const getCurrentUserApi = async () => {
   return await api.get(ENDPOINTS.AUTH.ME);
+};
+
+/**
+ * Cập nhật thông tin tài khoản hiện tại (họ tên, số điện thoại).
+ * @param {{ fullName?: string, phoneNumber?: string }} data
+ * @returns {Promise<import('@types/database').User>}
+ */
+export const updateProfileApi = async (data) => {
+  return await api.put(ENDPOINTS.AUTH.UPDATE_PROFILE, data);
+};
+
+/**
+ * Đổi mật khẩu tài khoản hiện tại.
+ * @param {{ currentPassword: string, newPassword: string }} data
+ * @returns {Promise<any>}
+ */
+export const changePasswordApi = async (data) => {
+  return await api.put(ENDPOINTS.AUTH.CHANGE_PASSWORD, data);
+};
+
+/**
+ * Yêu cầu gửi link hoặc mã OTP đặt lại mật khẩu về email.
+ * @param {{ email: string }} data
+ * @returns {Promise<any>}
+ */
+export const forgotPasswordApi = async (data) => {
+  return await api.post(ENDPOINTS.AUTH.FORGOT_PASSWORD, data);
+};
+
+/**
+ * Đặt lại mật khẩu mới bằng token hoặc code.
+ * @param {{ token?: string, newPassword: string, code?: string, email?: string }} data
+ * @returns {Promise<any>}
+ */
+export const resetPasswordApi = async (data) => {
+  return await api.post(ENDPOINTS.AUTH.RESET_PASSWORD, data);
+};
+
+// Giữ tương thích ngược cho luồng đăng ký OTP nếu có
+export const verifyEmailApi = async (data) => {
+  return await api.post(ENDPOINTS.AUTH.VERIFY_EMAIL, data);
+};
+
+export const resendOtpApi = async (data) => {
+  return await api.post(ENDPOINTS.AUTH.RESEND_OTP, data);
+};
+
+export const verifyCodeApi = async (data) => {
+  return await api.post(ENDPOINTS.AUTH.VERIFY_CODE, data);
+};
+
+export default {
+  loginApi,
+  registerApi,
+  googleLoginApi,
+  refreshTokenApi,
+  logoutApi,
+  getCurrentUserApi,
+  updateProfileApi,
+  changePasswordApi,
+  forgotPasswordApi,
+  resetPasswordApi,
+  verifyEmailApi,
+  resendOtpApi,
+  verifyCodeApi,
 };

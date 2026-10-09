@@ -8,13 +8,42 @@ import {
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
-import {
-  calculateHorseRisk,
-  HealthStatusTag,
-  RiskBadge,
-} from '@utils/horseHealth';
 
 const { Title, Text } = Typography;
+
+/**
+ * Tính toán mức độ rủi ro sức khỏe / vận chuyển minh họa theo tuổi và yêu cầu chăm sóc
+ * @param {import('@types/database').Horse} horse
+ * @returns {{ label: string, bg: string, color: string, border: string }}
+ */
+const getRiskTag = (horse, t) => {
+  const birthYear = horse.dateOfBirth ? dayjs(horse.dateOfBirth).year() : null;
+  const currentYear = dayjs().year();
+  const age = birthYear ? currentYear - birthYear : 4;
+
+  if (age >= 6 || (horse.specialCareRequirements && horse.specialCareRequirements.toLowerCase().includes('say xe'))) {
+    return {
+      label: t('dashboard.riskLevels.critical') || 'Critical Risk',
+      bg: '#fee2e2',
+      color: '#991b1b',
+      border: '#fca5a5',
+    };
+  }
+  if (horse.gender === 'Stallion' || (horse.specialCareRequirements && horse.specialCareRequirements.length > 30)) {
+    return {
+      label: t('dashboard.riskLevels.high') || 'High Risk',
+      bg: '#fef3c7',
+      color: '#92400e',
+      border: '#fcd34d',
+    };
+  }
+  return {
+    label: t('dashboard.riskLevels.low') || 'Low Risk',
+    bg: '#dcfce7',
+    color: '#166534',
+    border: '#86efac',
+  };
+};
 
 /**
  * Component hiển thị Thẻ hồ sơ ngựa đua (Horse Card)
@@ -29,8 +58,8 @@ const { Title, Text } = Typography;
  */
 export default function HorseCard({ horse, onEdit, onDelete, onView }) {
   const { t } = useTranslation();
-  const risk = calculateHorseRisk(horse);
-  const birthYear = horse.DateOfBirth ? dayjs(horse.DateOfBirth).year() : null;
+  const risk = getRiskTag(horse, t);
+  const birthYear = horse.dateOfBirth ? dayjs(horse.dateOfBirth).year() : null;
 
   return (
     <Card
@@ -58,10 +87,10 @@ export default function HorseCard({ horse, onEdit, onDelete, onView }) {
       {/* Hàng tiêu đề: Tên ngựa + Tag Rủi ro pastel */}
       <Flex justify="space-between" align="flex-start" gap="small" style={{ marginBottom: 12 }}>
         <Flex align="center" gap="middle">
-          {horse.PhotoUrl ? (
+          {horse.photoUrl ? (
             <Image
-              src={horse.PhotoUrl}
-              alt={horse.Name}
+              src={horse.photoUrl}
+              alt={horse.name}
               width={52}
               height={52}
               style={{ objectFit: 'cover', borderRadius: 10 }}
@@ -96,28 +125,38 @@ export default function HorseCard({ horse, onEdit, onDelete, onView }) {
                 lineHeight: 1.2,
               }}
             >
-              {horse.Name}
+              {horse.name}
             </Title>
-            <Flex align="center" gap={6} wrap="wrap" style={{ marginTop: 3 }}>
-              <Text type="secondary" style={{ fontSize: 13 }}>
-                {horse.Breed || 'Thoroughbred'} ·{' '}
-                <span style={{ textTransform: 'uppercase', fontWeight: 600 }}>
-                  {t(`horses.genderOptions.${horse.Gender?.toLowerCase()}`) || horse.Gender}
-                </span>
-                {birthYear ? ` · ${t('horses.bornYear', { year: birthYear })}` : ''}
-              </Text>
-              <HealthStatusTag status={horse.HealthStatus} size="small" />
-            </Flex>
+            <Text type="secondary" style={{ fontSize: 13, display: 'block', marginTop: 2 }}>
+              {horse.breed || 'Thoroughbred'} ·{' '}
+              <span style={{ textTransform: 'uppercase', fontWeight: 600 }}>
+                {t(`horses.genderOptions.${horse.gender?.toLowerCase()}`) || horse.gender}
+              </span>
+              {birthYear ? ` · Born ${birthYear}` : ''}
+            </Text>
           </div>
         </Flex>
 
-        <RiskBadge risk={risk} />
+        <Tag
+          style={{
+            margin: 0,
+            padding: '3px 10px',
+            borderRadius: 9999,
+            fontSize: 12,
+            fontWeight: 700,
+            backgroundColor: risk.bg,
+            color: risk.color,
+            border: `1px solid ${risk.border}`,
+          }}
+        >
+          {risk.label}
+        </Tag>
       </Flex>
 
       {/* Màu sắc & dấu hiệu nhận dạng */}
       <div style={{ marginBottom: 14 }}>
         <Text style={{ fontSize: 13, color: '#475569', lineHeight: 1.5 }}>
-          {horse.Color || t('horses.noColorDesc')}
+          {horse.color || t('horses.noColorDesc')}
         </Text>
       </div>
 
@@ -135,19 +174,19 @@ export default function HorseCard({ horse, onEdit, onDelete, onView }) {
         <Flex justify="space-between" style={{ marginBottom: 4 }}>
           <Text type="secondary">{t('horses.fields.microchip')}:</Text>
           <Text code style={{ fontSize: 11, background: '#ffffff', padding: '1px 6px' }}>
-            {horse.MicrochipNumber || '-'}
+            {horse.microchipNumber || '-'}
           </Text>
         </Flex>
         <Flex justify="space-between">
           <Text type="secondary">{t('horses.fields.passport')}:</Text>
           <Text strong style={{ fontSize: 12 }}>
-            {horse.PassportNumber || '-'}
+            {horse.passportNumber || '-'}
           </Text>
         </Flex>
       </div>
 
       {/* Yêu cầu chăm sóc đặc biệt (nếu có) */}
-      {horse.SpecialCareRequirements && (
+      {horse.specialCareRequirements && (
         <div style={{ marginBottom: 16 }}>
           <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 2 }}>
             {t('horses.fields.specialCare')}:
@@ -162,9 +201,9 @@ export default function HorseCard({ horse, onEdit, onDelete, onView }) {
               display: 'block',
               border: '1px solid #fef3c7',
             }}
-            ellipsis={{ tooltip: horse.SpecialCareRequirements }}
+            ellipsis={{ tooltip: horse.specialCareRequirements }}
           >
-            {horse.SpecialCareRequirements}
+            {horse.specialCareRequirements}
           </Text>
         </div>
       )}
@@ -218,7 +257,7 @@ export default function HorseCard({ horse, onEdit, onDelete, onView }) {
           {onDelete && (
             <Popconfirm
               title={t('horses.deleteConfirm')}
-              onConfirm={() => onDelete(horse.HorseID)}
+              onConfirm={() => onDelete(horse.horseId)}
               okText={t('common.confirm')}
               cancelText={t('common.cancel')}
             >

@@ -23,7 +23,6 @@ import {
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
-import { HealthStatusTag } from '@utils/horseHealth';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -31,14 +30,14 @@ const { TextArea } = Input;
 /**
  * Danh sách các giống ngựa phổ biến trong vận chuyển thi đấu quốc tế
  */
-const BREED_KEYS = [
-  'Thoroughbred',
-  'Quarter Horse',
-  'Arabian',
-  'Warmblood',
-  'Appaloosa',
-  'Standardbred',
-  'Andalusian',
+const BREED_OPTIONS = [
+  { value: 'Thoroughbred', label: 'Thoroughbred (Thuần chủng Anh)' },
+  { value: 'Quarter Horse', label: 'Quarter Horse' },
+  { value: 'Arabian', label: 'Arabian (Ngựa Ả Rập)' },
+  { value: 'Warmblood', label: 'Warmblood' },
+  { value: 'Appaloosa', label: 'Appaloosa' },
+  { value: 'Standardbred', label: 'Standardbred' },
+  { value: 'Andalusian', label: 'Andalusian' },
 ];
 
 /**
@@ -67,21 +66,20 @@ export default function AddHorseForm({
     formState: { isSubmitting },
   } = useForm({
     defaultValues: {
-      Name: initialValues?.Name || '',
-      Breed: initialValues?.Breed || 'Thoroughbred',
-      Gender: initialValues?.Gender || 'Stallion',
-      DateOfBirth: initialValues?.DateOfBirth || null,
-      MicrochipNumber: initialValues?.MicrochipNumber || '',
-      PassportNumber: initialValues?.PassportNumber || '',
-      Color: initialValues?.Color || '',
-      PhotoUrl: initialValues?.PhotoUrl || '',
-      HealthStatus: initialValues?.HealthStatus || 'Good',
-      SpecialCareRequirements: initialValues?.SpecialCareRequirements || '',
+      name: initialValues?.name || '',
+      breed: initialValues?.breed || 'Thoroughbred',
+      gender: initialValues?.gender || 'Stallion',
+      dateOfBirth: initialValues?.dateOfBirth || null,
+      microchipNumber: initialValues?.microchipNumber || '',
+      passportNumber: initialValues?.passportNumber || '',
+      color: initialValues?.color || '',
+      photoUrl: initialValues?.photoUrl || '',
+      specialCareRequirements: initialValues?.specialCareRequirements || '',
     },
     mode: 'onTouched',
   });
 
-  const photoUrlValue = useWatch({ control, name: 'PhotoUrl' });
+  const photoUrlValue = useWatch({ control, name: 'photoUrl' });
 
   /**
    * Xử lý chuyển đổi dữ liệu trước khi gửi lên cha
@@ -90,13 +88,12 @@ export default function AddHorseForm({
   const handleFormSubmit = async (data) => {
     const payload = {
       ...data,
-      Name: data.Name?.trim(),
-      MicrochipNumber: data.MicrochipNumber?.trim(),
-      PassportNumber: data.PassportNumber?.trim(),
-      Color: data.Color?.trim() || '',
-      PhotoUrl: data.PhotoUrl?.trim() || null,
-      HealthStatus: data.HealthStatus || 'Good',
-      SpecialCareRequirements: data.SpecialCareRequirements?.trim() || null,
+      name: data.name?.trim(),
+      microchipNumber: data.microchipNumber?.trim(),
+      passportNumber: data.passportNumber?.trim(),
+      color: data.color?.trim() || '',
+      photoUrl: data.photoUrl?.trim() || null,
+      specialCareRequirements: data.specialCareRequirements?.trim() || null,
     };
     await onSubmit(payload);
   };
@@ -105,7 +102,7 @@ export default function AddHorseForm({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} noValidate>
-      <Space orientation="vertical" size="large" style={{ width: '100%' }}>
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
         {/* KHỐI 1: THÔNG TIN ĐỊNH DANH CƠ BẢN */}
         <Card
           bordered
@@ -130,7 +127,7 @@ export default function AddHorseForm({
             {/* Tên ngựa */}
             <Col xs={24} md={12}>
               <Controller
-                name="Name"
+                name="name"
                 control={control}
                 rules={{
                   required: t('horses.validation.nameRequired'),
@@ -161,7 +158,7 @@ export default function AddHorseForm({
             {/* Giống ngựa */}
             <Col xs={24} md={12}>
               <Controller
-                name="Breed"
+                name="breed"
                 control={control}
                 rules={{
                   required: t('horses.validation.breedRequired'),
@@ -179,10 +176,7 @@ export default function AddHorseForm({
                       size="large"
                       showSearch
                       placeholder={t('horses.placeholders.breed')}
-                      options={BREED_KEYS.map((k) => ({
-                        value: k,
-                        label: t(`horses.breedOptions.${k}`) || k,
-                      }))}
+                      options={BREED_OPTIONS}
                       disabled={isFormLoading}
                     />
                   </Form.Item>
@@ -193,7 +187,7 @@ export default function AddHorseForm({
             {/* Giới tính */}
             <Col xs={24} sm={12} md={8}>
               <Controller
-                name="Gender"
+                name="gender"
                 control={control}
                 rules={{
                   required: t('horses.validation.genderRequired'),
@@ -233,7 +227,7 @@ export default function AddHorseForm({
             {/* Ngày sinh */}
             <Col xs={24} sm={12} md={8}>
               <Controller
-                name="DateOfBirth"
+                name="dateOfBirth"
                 control={control}
                 rules={{
                   required: t('horses.validation.dobRequired'),
@@ -268,7 +262,7 @@ export default function AddHorseForm({
             {/* Màu lông */}
             <Col xs={24} md={8}>
               <Controller
-                name="Color"
+                name="color"
                 control={control}
                 render={({ field, fieldState: { error } }) => (
                   <Form.Item
@@ -291,7 +285,7 @@ export default function AddHorseForm({
             {/* Số vi mạch sinh trắc học */}
             <Col xs={24} md={12}>
               <Controller
-                name="MicrochipNumber"
+                name="microchipNumber"
                 control={control}
                 rules={{
                   required: t('horses.validation.microchipRequired'),
@@ -322,7 +316,7 @@ export default function AddHorseForm({
             {/* Số hộ chiếu FEI */}
             <Col xs={24} md={12}>
               <Controller
-                name="PassportNumber"
+                name="passportNumber"
                 control={control}
                 rules={{
                   required: t('horses.validation.passportRequired'),
@@ -353,7 +347,7 @@ export default function AddHorseForm({
             {/* Ảnh đại diện / nhận diện */}
             <Col xs={24}>
               <Controller
-                name="PhotoUrl"
+                name="photoUrl"
                 control={control}
                 render={({ field, fieldState: { error } }) => (
                   <Form.Item
@@ -435,65 +429,8 @@ export default function AddHorseForm({
             {t('horses.sections.specialCareDesc')}
           </Text>
 
-          {/* Đánh giá tình trạng sức khỏe ban đầu */}
           <Controller
-            name="HealthStatus"
-            control={control}
-            render={({ field }) => (
-              <Form.Item
-                label={
-                  <span style={{ fontWeight: 600 }}>
-                    {t('horses.columns.health') || 'Đánh giá sức khỏe (Health Status)'}
-                  </span>
-                }
-                style={{ marginBottom: 20 }}
-              >
-                <Select
-                  {...field}
-                  size="large"
-                  disabled={isFormLoading}
-                  options={[
-                    {
-                      value: 'Excellent',
-                      label: (
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                          <HealthStatusTag status="Excellent" size="small" />
-                          <span style={{ fontSize: 13, color: '#334155' }}>
-                            {t('horses.healthDescriptions.excellent')}
-                          </span>
-                        </div>
-                      ),
-                    },
-                    {
-                      value: 'Good',
-                      label: (
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                          <HealthStatusTag status="Good" size="small" />
-                          <span style={{ fontSize: 13, color: '#334155' }}>
-                            {t('horses.healthDescriptions.good')}
-                          </span>
-                        </div>
-                      ),
-                    },
-                    {
-                      value: 'Attention',
-                      label: (
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                          <HealthStatusTag status="Attention" size="small" />
-                          <span style={{ fontSize: 13, color: '#334155' }}>
-                            {t('horses.healthDescriptions.attention')}
-                          </span>
-                        </div>
-                      ),
-                    },
-                  ]}
-                />
-              </Form.Item>
-            )}
-          />
-
-          <Controller
-            name="SpecialCareRequirements"
+            name="specialCareRequirements"
             control={control}
             render={({ field, fieldState: { error } }) => (
               <Form.Item

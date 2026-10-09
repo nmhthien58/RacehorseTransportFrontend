@@ -48,19 +48,19 @@ export const useGoogleAuth = () => {
               // Gửi token và thông tin xác thực tới Backend
               const authRes = await googleLoginApi({
                 email: profile.email,
-                FullName: profile.name || profile.given_name || 'Google Customer',
+                fullName: profile.name || profile.given_name || 'Google Customer',
                 avatar: profile.picture,
                 googleToken: tokenResponse.access_token,
               });
 
               const user = authRes.user || {
-                UserID: Date.now(),
-                FullName: profile.name || 'Google Customer',
-                Email: profile.email,
-                Role: 'Customer',
-                IsActive: true,
+                userId: Date.now(),
+                fullName: profile.name || 'Google Customer',
+                email: profile.email,
+                role: 'Customer',
+                isActive: true,
               };
-              const token = authRes.token || `mock-google-token-${user.UserID}`;
+              const token = authRes.token || `mock-google-token-${user.userId}`;
 
               login(user, token);
               message.success(`Đăng nhập thành công với tài khoản Google: ${profile.email}`);
@@ -140,7 +140,7 @@ export const useGoogleAuth = () => {
         try {
           const authRes = await googleLoginApi({
             email: 'customer@test.com',
-            FullName: 'Jane Smith (Google)',
+            fullName: 'Jane Smith (Google)',
           });
           login(authRes.user, authRes.token);
           message.success('Đăng nhập thành công với tài khoản Google test!');

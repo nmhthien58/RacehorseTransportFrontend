@@ -34,6 +34,8 @@ import SettingsPage from '@features/customer/pages/SettingsPage';
 // Manager pages
 import ManagerDashboard from '@features/manager/pages/DashboardPage';
 import ManagerBookings from '@features/manager/pages/BookingsPage';
+import BookingDetailPage from '@features/manager/pages/BookingDetailPage';
+import PendingRequestsPage from '@features/manager/pages/PendingRequestsPage';
 
 // Specialist pages
 import SpecialistDashboard from '@features/specialist/pages/DashboardPage';
@@ -99,11 +101,13 @@ export default function AppRoutes() {
         </Route>
       </Route>
 
-      {/* Manager */}
-      <Route element={<PrivateRoute allowedRoles={[ROLES.MANAGER]} />}>
+      {/* Manager & Admin */}
+      <Route element={<PrivateRoute allowedRoles={[ROLES.MANAGER, ROLES.ADMIN]} />}>
         <Route element={<MainLayout />}>
           <Route path={ROUTES.MANAGER_DASHBOARD} element={<ManagerDashboard />} />
           <Route path={ROUTES.MANAGER_BOOKINGS} element={<ManagerBookings />} />
+          <Route path={ROUTES.MANAGER_BOOKING_DETAIL} element={<BookingDetailPage />} />
+          <Route path={ROUTES.MANAGER_PENDING_REQUESTS} element={<PendingRequestsPage />} />
         </Route>
       </Route>
 

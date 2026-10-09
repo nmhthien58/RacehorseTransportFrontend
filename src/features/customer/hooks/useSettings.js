@@ -1,5 +1,18 @@
 import { useState, useEffect } from 'react';
-import { MOCK_SETTINGS } from '@mocks/data/settings.mock';
+
+const DEFAULT_SETTINGS = {
+  notifications: {
+    emailTripUpdates: true,
+    smsEmergencyAlerts: true,
+    quoteApprovalNotification: true,
+    marketingNewsletter: false,
+  },
+  security: {
+    twoFactorAuth: false,
+    sessionTimeoutMinutes: 30,
+    loginAlerts: true,
+  },
+};
 
 /**
  * Hook lấy và lưu trữ tùy chọn cài đặt thông báo & bảo mật của Customer.
@@ -19,8 +32,9 @@ export function useSettings() {
   useEffect(() => {
     const timer = setTimeout(() => {
       try {
-        setData(MOCK_SETTINGS);
+        setData(DEFAULT_SETTINGS);
       } catch (err) {
+        console.error('Lỗi khi tải cấu hình settings:', err);
         setError(err);
       } finally {
         setLoading(false);

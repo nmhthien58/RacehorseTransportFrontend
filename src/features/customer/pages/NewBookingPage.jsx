@@ -7,7 +7,7 @@ import {
   EnvironmentOutlined,
   CalendarOutlined,
 } from '@ant-design/icons';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import PageHeader from '@components/layout/PageHeader';
@@ -28,11 +28,8 @@ const { Title, Text } = Typography;
 export default function NewBookingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuthStore();
   const { message } = App.useApp();
-
-  const prefillData = location.state || {};
 
   const [submitting, setSubmitting] = useState(false);
   const [createdBooking, setCreatedBooking] = useState(null);
@@ -41,14 +38,14 @@ export default function NewBookingPage() {
 
   /**
    * Xử lý gọi API tạo mới đơn đặt chuyến
-   * @param {Partial<import('@types/database').Booking>} payload
+   * @param {Partial<import('@types/database').BookingRequest>} payload
    */
   const handleCreateBooking = async (payload) => {
     try {
       setSubmitting(true);
       const fullPayload = {
         ...payload,
-        CustomerUserID: user?.UserID || 5,
+        customerUserId: user?.userId || 5,
       };
 
       const res = await bookingService.createBooking(fullPayload);
@@ -101,7 +98,6 @@ export default function NewBookingPage() {
       {/* COMPONENT WIZARD 4 BƯỚC */}
       <BookingWizard
         key={wizardKey}
-        initialValues={prefillData}
         onSubmit={handleCreateBooking}
         onCancel={handleBackToList}
         loading={submitting}
@@ -143,8 +139,8 @@ export default function NewBookingPage() {
           {t('bookings.modalSuccessTitle') || 'Yêu cầu đã được gửi thành công!'}
         </Title>
         <Text type="secondary" style={{ display: 'block', marginTop: 8, fontSize: 14 }}>
-          {t('bookings.modalSuccessSubtitle', { code: createdBooking?.BookingCode }) ||
-            `Đơn vận chuyển #${createdBooking?.BookingCode} đã được gửi tới Ban quản lý Logistics để kiểm tra tuyến và phê duyệt báo giá.`}
+          {t('bookings.modalSuccessSubtitle', { code: createdBooking?.bookingCode }) ||
+            `Đơn vận chuyển #${createdBooking?.bookingCode} đã được gửi tới Ban quản lý Logistics để kiểm tra tuyến và phê duyệt báo giá.`}
         </Text>
 
         {createdBooking && (
@@ -161,7 +157,7 @@ export default function NewBookingPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
               <Text type="secondary">{t('bookings.fields.bookingCode') || 'Mã đơn'}:</Text>
               <Text strong code style={{ fontSize: 13, background: '#ffffff' }}>
-                #{createdBooking.BookingCode}
+                #{createdBooking.bookingCode}
               </Text>
             </div>
 
@@ -169,7 +165,7 @@ export default function NewBookingPage() {
               <Text type="secondary">{t('bookings.fields.pickupAddress') || 'Điểm đón'}:</Text>
               <Text strong style={{ textAlign: 'right', maxWidth: 260 }}>
                 <EnvironmentOutlined style={{ color: '#d97706', marginRight: 4 }} />
-                {createdBooking.PickupAddress} ({createdBooking.PickupCountryCode})
+                {createdBooking.pickupAddress} ({createdBooking.pickupCountryCode})
               </Text>
             </div>
 
@@ -177,7 +173,7 @@ export default function NewBookingPage() {
               <Text type="secondary">{t('bookings.fields.dropoffAddress') || 'Điểm giao'}:</Text>
               <Text strong style={{ textAlign: 'right', maxWidth: 260 }}>
                 <EnvironmentOutlined style={{ color: '#10b981', marginRight: 4 }} />
-                {createdBooking.DropoffAddress} ({createdBooking.DropoffCountryCode})
+                {createdBooking.dropoffAddress} ({createdBooking.dropoffCountryCode})
               </Text>
             </div>
 
@@ -185,14 +181,14 @@ export default function NewBookingPage() {
               <Text type="secondary">{t('bookings.fields.departureDate') || 'Khởi hành'}:</Text>
               <Text strong>
                 <CalendarOutlined style={{ marginRight: 4 }} />
-                {dayjs(createdBooking.DepartureDate).format('DD/MM/YYYY')}
+                {dayjs(createdBooking.departureDate).format('DD/MM/YYYY')}
               </Text>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
               <Text type="secondary">{t('bookings.fields.totalHorses') || 'Số lượng ngựa'}:</Text>
               <Tag color="orange" style={{ margin: 0, fontWeight: 600 }}>
-                🐴 {createdBooking.TotalHorses} {t('bookings.horseUnit') || 'con'}
+                🐴 {createdBooking.totalHorses} {t('bookings.horseUnit') || 'con'}
               </Tag>
             </div>
 
@@ -201,7 +197,7 @@ export default function NewBookingPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Text type="secondary">{t('bookings.fields.estimatedCost') || 'Dự toán cước phí'}:</Text>
               <span style={{ fontSize: 20, fontWeight: 800, color: '#d97706' }}>
-                ${Number(createdBooking.EstimatedCost || 0).toLocaleString()} USD
+                ${Number(createdBooking.estimatedCost || 0).toLocaleString()} USD
               </span>
             </div>
           </div>

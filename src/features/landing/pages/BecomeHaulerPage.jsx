@@ -12,14 +12,13 @@ import {
   Typography,
   message,
 } from 'antd';
+
 import {
   CheckCircleFilled,
-  SafetyCertificateOutlined,
   DollarCircleOutlined,
   CompassOutlined,
   ToolOutlined,
 } from '@ant-design/icons';
-import { useTranslation } from 'react-i18next';
 import LandingHeader from '../components/LandingHeader';
 import LandingFooter from '../components/LandingFooter';
 
@@ -28,16 +27,14 @@ import haulerHero from '@assets/landing/hauler-hero.jpg';
 import hauler1 from '@assets/landing/hauler-1.jpg';
 import hauler2 from '@assets/landing/hauler-2.jpg';
 import hauler3 from '@assets/landing/hauler-3.jpg';
-import typeCommercial from '@assets/landing/ride-commercial.jpg';
 
 const { Title, Text, Paragraph } = Typography;
 
 export default function BecomeHaulerPage() {
-  const { t } = useTranslation();
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (values) => {
+  const handleSubmit = () => {
     setSubmitting(true);
     setTimeout(() => {
       setSubmitting(false);

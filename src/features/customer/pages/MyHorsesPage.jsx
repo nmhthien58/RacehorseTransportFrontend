@@ -29,11 +29,6 @@ import PageHeader from '@components/layout/PageHeader';
 import useMyHorses from '@features/customer/hooks/useMyHorses';
 import horseService from '@services/horseService';
 import { ROUTES } from '@routes/routes';
-import {
-  HealthStatusTag,
-  RiskBadge,
-  calculateHorseRisk,
-} from '@utils/horseHealth';
 
 const { Text } = Typography;
 
@@ -45,7 +40,7 @@ const { Text } = Typography;
  * @returns {JSX.Element}
  */
 export default function MyHorsesPage() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: horses, loading, refetch } = useMyHorses();
 
@@ -54,20 +49,18 @@ export default function MyHorsesPage() {
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [form] = Form.useForm();
 
-  const isEn = (i18n.language || 'vi').toLowerCase().startsWith('en');
-
   const handleOpenEdit = (record) => {
     setEditingHorse(record);
+    const dob = record.dateOfBirth || record.DateOfBirth;
     form.setFieldsValue({
-      Name: record.Name,
-      Breed: record.Breed || 'Thoroughbred',
-      Gender: record.Gender || 'Stallion',
-      DateOfBirth: record.DateOfBirth ? dayjs(record.DateOfBirth) : null,
-      Color: record.Color || '',
-      MicrochipNumber: record.MicrochipNumber || '',
-      PassportNumber: record.PassportNumber || '',
-      HealthStatus: record.HealthStatus || 'Good',
-      SpecialCareRequirements: record.SpecialCareRequirements || '',
+      name: record.name || record.Name,
+      breed: record.breed || record.Breed || 'Thoroughbred',
+      gender: record.gender || record.Gender || 'Stallion',
+      dateOfBirth: dob ? dayjs(dob) : null,
+      color: record.color || record.Color || '',
+      microchipNumber: record.microchipNumber || record.MicrochipNumber || '',
+      passportNumber: record.passportNumber || record.PassportNumber || '',
+      specialCareRequirements: record.specialCareRequirements || record.SpecialCareRequirements || '',
     });
     setEditModalVisible(true);
   };
@@ -77,11 +70,12 @@ export default function MyHorsesPage() {
       setEditSubmitting(true);
       const payload = {
         ...values,
-        DateOfBirth: values.DateOfBirth
-          ? values.DateOfBirth.format('YYYY-MM-DD')
+        dateOfBirth: values.dateOfBirth
+          ? values.dateOfBirth.format('YYYY-MM-DD')
           : null,
       };
-      await horseService.updateHorse(editingHorse.HorseID, payload);
+      const horseId = editingHorse.horseId || editingHorse.HorseID;
+      await horseService.updateHorse(horseId, payload);
       message.success(t('horses.updateHorseSuccess'));
       setEditModalVisible(false);
       refetch?.();
@@ -103,58 +97,68 @@ export default function MyHorsesPage() {
   const columns = [
     {
       title: t('horses.columns.name'),
-      dataIndex: 'Name',
-      key: 'Name',
-      render: (name, record) => (
-        <Space size="middle">
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: '50%',
-              backgroundColor: '#fef3c7',
-              color: '#d97706',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 19,
-              flexShrink: 0,
-            }}
-          >
-            🐴
-          </div>
-          <div>
-            <Text
-              strong
+      dataIndex: 'name',
+      key: 'name',
+      render: (name, record) => {
+        const horseId = record.horseId || record.HorseID;
+        const horseName = name || record.Name;
+        const gender = record.gender || record.Gender;
+        const passport = record.passportNumber || record.PassportNumber;
+        return (
+          <Space size="middle">
+            <div
               style={{
-                fontSize: 15,
-                color: '#0f172a',
-                cursor: 'pointer',
+                width: 38,
+                height: 38,
+                borderRadius: '50%',
+                backgroundColor: '#fef3c7',
+                color: '#d97706',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 19,
+                flexShrink: 0,
               }}
-              onClick={() => handleViewDetail(record.HorseID)}
             >
-              {name}
-            </Text>
-            <div style={{ fontSize: 12, color: '#64748b' }}>
-              {t(`horses.genderOptions.${record.Gender?.toLowerCase()}`) || record.Gender} · {record.PassportNumber || t('horses.noPassport')}
+              🐴
             </div>
-          </div>
-        </Space>
-      ),
+            <div>
+              <Text
+                strong
+                style={{
+                  fontSize: 15,
+                  color: '#0f172a',
+                  cursor: 'pointer',
+                }}
+                onClick={() => handleViewDetail(horseId)}
+              >
+                {horseName}
+              </Text>
+              <div style={{ fontSize: 12, color: '#64748b' }}>
+                {t(`horses.genderOptions.${gender?.toLowerCase()}`) || gender} · {passport || t('horses.noPassport')}
+              </div>
+            </div>
+          </Space>
+        );
+      },
     },
     {
       title: t('horses.columns.breed'),
-      dataIndex: 'Breed',
-      key: 'Breed',
-      render: (breed) => <Tag color="blue">{t(`horses.breedOptions.${breed}`) || breed}</Tag>,
+      dataIndex: 'breed',
+      key: 'breed',
+      render: (breed, record) => {
+        const b = breed || record.Breed;
+        return <Tag color="blue">{t(`horses.breedOptions.${b}`) || b}</Tag>;
+      },
     },
     {
       title: t('horses.columns.age'),
-      dataIndex: 'DateOfBirth',
-      key: 'Age',
-      render: (dob) => {
-        if (!dob) return '-';
-        const age = dayjs().diff(dayjs(dob), 'year');
+      dataIndex: 'dateOfBirth',
+      key: 'dateOfBirth',
+      render: (dob, record) => {
+        const d = dob || record.DateOfBirth;
+        if (!d) return '-';
+        const age = dayjs().diff(dayjs(d), 'year');
         return (
           <Text strong style={{ color: '#334155' }}>
             {age} {t('horses.yearsOld')}
@@ -164,9 +168,9 @@ export default function MyHorsesPage() {
     },
     {
       title: t('horses.columns.microchip'),
-      dataIndex: 'MicrochipNumber',
-      key: 'MicrochipNumber',
-      render: (code) => (
+      dataIndex: 'microchipNumber',
+      key: 'microchipNumber',
+      render: (code, record) => (
         <code
           style={{
             fontSize: 12,
@@ -177,70 +181,78 @@ export default function MyHorsesPage() {
             fontFamily: 'monospace',
           }}
         >
-          {code || '-'}
+          {code || record.MicrochipNumber || '-'}
         </code>
       ),
     },
     {
-      title: t('horses.columns.health'),
-      dataIndex: 'HealthStatus',
-      key: 'HealthStatus',
-      render: (status) => <HealthStatusTag status={status} size="small" />,
+      title: t('horses.gender', 'Giới tính'),
+      dataIndex: 'gender',
+      key: 'gender',
+      render: (gender) => (
+        <Tag color="purple">{gender || '-'}</Tag>
+      ),
     },
     {
-      title: t('horses.columns.risk'),
-      key: 'RiskLevel',
-      render: (_, record) => {
-        const risk = calculateHorseRisk(record, i18n.language);
-        return <RiskBadge risk={risk} size="small" />;
-      },
+      title: t('common.status', 'Trạng thái'),
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (isActive) => (
+        <Tag color={isActive !== false ? 'success' : 'default'}>
+          {isActive !== false ? (t('common.active') || 'Hoạt động') : (t('common.inactive') || 'Tạm dừng')}
+        </Tag>
+      ),
     },
     {
       title: t('horses.columns.action'),
       key: 'action',
       align: 'right',
-      render: (_, record) => (
-        <Space size="small">
-          <Button
-            type="primary"
-            ghost
-            icon={<EyeOutlined />}
-            size="middle"
-            onClick={() => handleViewDetail(record.HorseID)}
-            style={{ borderRadius: 6, fontWeight: 500 }}
-          >
-            {t('horses.viewAction')}
-          </Button>
-          <Button
-            icon={<EditOutlined />}
-            size="middle"
-            onClick={() => handleOpenEdit(record)}
-            style={{ borderRadius: 6, fontWeight: 500 }}
-          >
-            {t('common.edit')}
-          </Button>
-          <Popconfirm
-            title={t('horses.deleteHorse')}
-            description={t('horses.deleteConfirmText', { name: record.Name })}
-            okText={t('common.delete')}
-            cancelText={t('common.cancel')}
-            okButtonProps={{ danger: true }}
-            onConfirm={async () => {
-              await horseService.deleteHorse(record.HorseID);
-              message.success(t('horses.deleteHorseSuccess', { name: record.Name }));
-              refetch();
-            }}
-          >
+      render: (_, record) => {
+        const horseId = record.horseId || record.HorseID;
+        const horseName = record.name || record.Name;
+        return (
+          <Space size="small">
             <Button
-              danger
-              type="text"
-              icon={<DeleteOutlined />}
+              type="primary"
+              ghost
+              icon={<EyeOutlined />}
               size="middle"
-              style={{ borderRadius: 6 }}
-            />
-          </Popconfirm>
-        </Space>
-      ),
+              onClick={() => handleViewDetail(horseId)}
+              style={{ borderRadius: 6, fontWeight: 500 }}
+            >
+              {t('horses.viewAction')}
+            </Button>
+            <Button
+              icon={<EditOutlined />}
+              size="middle"
+              onClick={() => handleOpenEdit(record)}
+              style={{ borderRadius: 6, fontWeight: 500 }}
+            >
+              {t('common.edit')}
+            </Button>
+            <Popconfirm
+              title={t('horses.deleteHorse')}
+              description={t('horses.deleteConfirmText', { name: horseName })}
+              okText={t('common.delete')}
+              cancelText={t('common.cancel')}
+              okButtonProps={{ danger: true }}
+              onConfirm={async () => {
+                await horseService.deleteHorse(horseId);
+                message.success(t('horses.deleteHorseSuccess', { name: horseName }));
+                refetch();
+              }}
+            >
+              <Button
+                danger
+                type="text"
+                icon={<DeleteOutlined />}
+                size="middle"
+                style={{ borderRadius: 6 }}
+              />
+            </Popconfirm>
+          </Space>
+        );
+      },
     },
   ];
 
@@ -321,7 +333,7 @@ export default function MyHorsesPage() {
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item
-                name="Name"
+                name="name"
                 label={<span style={{ fontWeight: 600 }}>{t('horses.fields.name')}</span>}
                 rules={[{ required: true, message: t('horses.validation.nameRequired') }]}
               >
@@ -330,7 +342,7 @@ export default function MyHorsesPage() {
             </Col>
             <Col xs={24} sm={12}>
               <Form.Item
-                name="Breed"
+                name="breed"
                 label={<span style={{ fontWeight: 600 }}>{t('horses.fields.breed')}</span>}
                 rules={[{ required: true, message: t('horses.validation.breedRequired') }]}
               >
@@ -363,7 +375,7 @@ export default function MyHorsesPage() {
 
           <Row gutter={16}>
             <Col xs={24} sm={8}>
-              <Form.Item name="Gender" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.gender')}</span>}>
+              <Form.Item name="gender" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.gender')}</span>}>
                 <Select size="large">
                   <Select.Option value="Stallion">{t('horses.genderOptions.stallion')}</Select.Option>
                   <Select.Option value="Mare">{t('horses.genderOptions.mare')}</Select.Option>
@@ -372,12 +384,12 @@ export default function MyHorsesPage() {
               </Form.Item>
             </Col>
             <Col xs={24} sm={8}>
-              <Form.Item name="DateOfBirth" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.dob')}</span>}>
+              <Form.Item name="dateOfBirth" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.dob')}</span>}>
                 <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" size="large" />
               </Form.Item>
             </Col>
             <Col xs={24} sm={8}>
-              <Form.Item name="Color" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.color')}</span>}>
+              <Form.Item name="color" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.color')}</span>}>
                 <Input placeholder={t('horses.placeholders.color')} size="large" />
               </Form.Item>
             </Col>
@@ -385,67 +397,19 @@ export default function MyHorsesPage() {
 
           <Row gutter={16}>
             <Col xs={24} sm={12}>
-              <Form.Item name="MicrochipNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.microchip')}</span>}>
+              <Form.Item name="microchipNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.microchip')}</span>}>
                 <Input placeholder={t('horses.placeholders.microchip')} size="large" />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
-              <Form.Item name="PassportNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.passport')}</span>}>
+              <Form.Item name="passportNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.passport')}</span>}>
                 <Input placeholder={t('horses.placeholders.passport')} size="large" />
               </Form.Item>
             </Col>
           </Row>
 
-          {/* ĐÁNH GIÁ SỨC KHỎE */}
           <Form.Item
-            name="HealthStatus"
-            label={<span style={{ fontWeight: 600 }}>{t('horses.healthStatusForm')}</span>}
-          >
-            <Select
-              size="large"
-              options={[
-                {
-                  value: 'Excellent',
-                  label: (
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                      <HealthStatusTag status="Excellent" size="small" />
-                      <span style={{ fontSize: 13 }}>{t('horses.healthOptions.excellent')}</span>
-                    </div>
-                  ),
-                },
-                {
-                  value: 'Good',
-                  label: (
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                      <HealthStatusTag status="Good" size="small" />
-                      <span style={{ fontSize: 13 }}>{t('horses.healthOptions.good')}</span>
-                    </div>
-                  ),
-                },
-                {
-                  value: 'Attention',
-                  label: (
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                      <HealthStatusTag status="Attention" size="small" />
-                      <span style={{ fontSize: 13 }}>{t('horses.healthOptions.attention')}</span>
-                    </div>
-                  ),
-                },
-                {
-                  value: 'Critical',
-                  label: (
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                      <HealthStatusTag status="Critical" size="small" />
-                      <span style={{ fontSize: 13, color: '#991B1B', fontWeight: 600 }}>{t('horses.healthOptions.critical')}</span>
-                    </div>
-                  ),
-                },
-              ]}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="SpecialCareRequirements"
+            name="specialCareRequirements"
             label={<span style={{ fontWeight: 600 }}>{t('horses.fields.specialCare')}</span>}
           >
             <Input.TextArea

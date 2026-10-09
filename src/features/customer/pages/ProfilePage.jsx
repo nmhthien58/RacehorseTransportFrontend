@@ -108,7 +108,7 @@ export default function ProfilePage() {
 
           <div>
             <Title level={3} style={{ margin: 0, fontWeight: 800, color: '#0f172a' }}>
-              {profile?.FullName}
+              {profile?.fullName || profile?.FullName}
             </Title>
             <Flex gap={8} align="center" style={{ marginTop: 8 }} wrap="wrap">
               <Tag
@@ -120,7 +120,7 @@ export default function ProfilePage() {
                   margin: 0,
                 }}
               >
-                {profile?.Role}
+                {profile?.role || profile?.Role}
               </Tag>
               <Tag
                 color="purple"
@@ -131,7 +131,7 @@ export default function ProfilePage() {
                   margin: 0,
                 }}
               >
-                {profile?.MembershipTier}
+                {profile?.membershipTier || profile?.MembershipTier}
               </Tag>
               <Tag
                 color="success"
@@ -170,31 +170,31 @@ export default function ProfilePage() {
           }}
         >
           <Descriptions.Item label={t('profile.fullName')}>
-            <strong style={{ color: '#0f172a', fontWeight: 700 }}>{profile?.FullName}</strong>
+            <strong style={{ color: '#0f172a', fontWeight: 700 }}>{profile?.fullName || profile?.FullName}</strong>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('profile.role')}>
             <Tag color="blue" style={{ borderRadius: 6, fontWeight: 600 }}>
-              {profile?.Role}
+              {profile?.role || profile?.Role}
             </Tag>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('profile.email')}>
             <Space size="small">
               <MailOutlined style={{ color: '#64748b' }} />
-              <span style={{ wordBreak: 'break-all' }}>{profile?.Email}</span>
+              <span style={{ wordBreak: 'break-all' }}>{profile?.email || profile?.Email}</span>
             </Space>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('profile.phone')}>
             <Space size="small">
               <PhoneOutlined style={{ color: '#64748b' }} />
-              <span style={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{profile?.PhoneNumber}</span>
+              <span style={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{profile?.phoneNumber || profile?.PhoneNumber}</span>
             </Space>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('profile.club')}>
-            <strong style={{ color: '#0f172a' }}>{profile?.ClubName}</strong>
+            <strong style={{ color: '#0f172a' }}>{profile?.clubName || profile?.ClubName}</strong>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('profile.feiOwnerId')}>
@@ -210,19 +210,19 @@ export default function ProfilePage() {
                 whiteSpace: 'nowrap',
               }}
             >
-              {profile?.FEIOwnerID || 'VN-OWN-2024-0089'}
+              {profile?.feiOwnerId || profile?.FEIOwnerID || 'VN-OWN-2024-0089'}
             </code>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('profile.address')} span={2}>
-            <span>{profile?.Address}</span>
+            <span>{profile?.address || profile?.Address}</span>
           </Descriptions.Item>
 
           <Descriptions.Item label={t('profile.createdAt')}>
             <Space size="small">
               <CalendarOutlined style={{ color: '#64748b' }} />
               <span style={{ whiteSpace: 'nowrap' }}>
-                {dayjs(profile?.CreatedAt).format('DD/MM/YYYY')}
+                {dayjs(profile?.createdAt || profile?.CreatedAt).format('DD/MM/YYYY')}
               </span>
             </Space>
           </Descriptions.Item>

@@ -4,13 +4,42 @@ import usersData from '../data/users.json';
 export const authHandlers = [
   http.post('/api/auth/login', async ({ request }) => {
     const body = await request.json();
-    const user = usersData.find((u) => u.Email === body.email);
+    const user = usersData.find((u) => u.email === body.email);
     if (!user) {
-      return HttpResponse.json({ message: 'Email hoặc mật khẩu không đúng' }, { status: 401 });
+      return HttpResponse.json(
+        { success: false, message: 'Email hoặc mật khẩu không đúng', errors: ['Invalid credentials'] },
+        { status: 401 },
+      );
     }
+    const token = `mock-token-${user.userId}`;
+    const refreshToken = `mock-refresh-token-${user.userId}`;
     return HttpResponse.json({
-      token: `mock-token-${user.UserID}`,
+      success: true,
+      message: 'Đăng nhập thành công',
+      data: {
+        accessToken: token,
+        refreshToken,
+        user,
+      },
+      // Giữ tương thích trực tiếp
+      token,
+      refreshToken,
       user,
+    });
+  }),
+
+  http.post('/api/auth/refresh', async ({ request }) => {
+    const body = await request.json();
+    const refreshedToken = `mock-token-refreshed-${Date.now()}`;
+    const newRefreshToken = body.refreshToken || `mock-refresh-token-${Date.now()}`;
+    return HttpResponse.json({
+      success: true,
+      message: 'Làm mới token thành công',
+      data: {
+        accessToken: refreshedToken,
+        refreshToken: newRefreshToken,
+      },
+      token: refreshedToken,
     });
   }),
 
@@ -18,26 +47,39 @@ export const authHandlers = [
     const body = await request.json();
     return HttpResponse.json({
       success: true,
-      message: `Mã xác minh 6 chữ số đã được gửi tới email ${body.Email || body.email}`,
-      email: body.Email || body.email,
+      message: `Đăng ký thành công. Mã xác minh đã được gửi tới email ${body.email}`,
+      data: {
+        email: body.email,
+      },
+      email: body.email,
     });
   }),
 
   http.post('/api/auth/google', async ({ request }) => {
     const body = await request.json();
-    const email = body.email || body.Email || 'google_user@gmail.com';
-    const fullName = body.FullName || body.fullName || body.name || 'Google User';
+    const email = body.email || 'google_user@gmail.com';
+    const fullName = body.fullName || body.name || 'Google User';
     const user = {
-      UserID: Date.now(),
-      FullName: fullName,
-      Email: email,
-      PhoneNumber: '+84988000999',
-      Role: 'Customer',
-      IsActive: true,
-      CreatedAt: new Date().toISOString(),
+      userId: Date.now(),
+      fullName,
+      email,
+      phoneNumber: '+84988000999',
+      role: 'Customer',
+      isActive: true,
+      createdAt: new Date().toISOString(),
     };
+    const token = `mock-google-token-${user.userId}`;
+    const refreshToken = `mock-google-refresh-${user.userId}`;
     return HttpResponse.json({
-      token: `mock-google-token-${user.UserID}`,
+      success: true,
+      message: 'Đăng nhập Google thành công',
+      data: {
+        accessToken: token,
+        refreshToken,
+        user,
+      },
+      token,
+      refreshToken,
       user,
     });
   }),
@@ -45,16 +87,22 @@ export const authHandlers = [
   http.post('/api/auth/verify-email', async ({ request }) => {
     const body = await request.json();
     const newUser = {
-      UserID: Date.now(),
-      FullName: body.FullName || body.fullName || 'New Customer',
-      Email: body.Email || body.email,
-      PhoneNumber: body.PhoneNumber || '+84988000999',
-      Role: 'Customer',
-      IsActive: true,
-      CreatedAt: new Date().toISOString(),
+      userId: Date.now(),
+      fullName: body.fullName || 'New Customer',
+      email: body.email,
+      phoneNumber: body.phoneNumber || '+84988000999',
+      role: 'Customer',
+      isActive: true,
+      createdAt: new Date().toISOString(),
     };
+    const token = `mock-token-${newUser.userId}`;
     return HttpResponse.json({
-      token: `mock-token-${newUser.UserID}`,
+      success: true,
+      data: {
+        accessToken: token,
+        user: newUser,
+      },
+      token,
       user: newUser,
     });
   }),
@@ -71,13 +119,12 @@ export const authHandlers = [
     const body = await request.json();
     return HttpResponse.json({
       success: true,
-      message: `Mã OTP đã được gửi đến email ${body.email}`,
+      message: `Mã OTP hoặc liên kết đặt lại đã được gửi đến email ${body.email}`,
     });
   }),
 
   http.post('/api/auth/verify-code', async ({ request }) => {
     const body = await request.json();
-    // Chấp nhận mọi mã 6 ký tự hoặc 123456
     return HttpResponse.json({
       success: true,
       verifyToken: `verify-token-${Date.now()}`,
@@ -93,19 +140,38 @@ export const authHandlers = [
   }),
 
   http.post('/api/auth/logout', () => {
-    return HttpResponse.json({ success: true });
+    return HttpResponse.json({ success: true, message: 'Đăng xuất thành công' });
   }),
 
   http.get('/api/auth/me', ({ request }) => {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) {
-      return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
+      return HttpResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
     const userId = authHeader.replace('Bearer mock-token-', '');
-    const user = usersData.find((u) => u.UserID === Number(userId));
-    if (!user) {
-      return HttpResponse.json({ message: 'User not found' }, { status: 404 });
+    const user = usersData.find((u) => u.userId === Number(userId)) || usersData[0];
+    return HttpResponse.json({
+      success: true,
+      data: user,
+    });
+  }),
+
+  // Dropdown nhân sự
+  http.get('/api/users/staff', ({ request }) => {
+    const url = new URL(request.url);
+    const role = url.searchParams.get('role');
+    let list = usersData;
+    if (role) {
+      list = usersData.filter((u) => u.role === role);
     }
-    return HttpResponse.json(user);
+    return HttpResponse.json({
+      success: true,
+      data: list.map((u) => ({
+        userId: u.userId,
+        fullName: u.fullName,
+        email: u.email,
+        role: u.role,
+      })),
+    });
   }),
 ];

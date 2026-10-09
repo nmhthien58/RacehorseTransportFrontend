@@ -31,11 +31,6 @@ import {
   RocketOutlined,
   GlobalOutlined,
   SafetyCertificateOutlined,
-  MedicineBoxOutlined,
-  ThunderboltOutlined,
-  ClockCircleOutlined,
-  CheckCircleFilled,
-  CloseCircleFilled,
   InfoCircleOutlined,
 } from '@ant-design/icons';
 import { useForm, Controller, useWatch } from 'react-hook-form';
@@ -43,12 +38,11 @@ import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import horseService from '@services/horseService';
 import { useAuthStore } from '@features/auth/store/authStore';
-import { calculateHorseRisk, RiskBadge } from '@utils/horseHealth';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { TextArea } = Input;
 
-export const COUNTRY_OPTIONS = [
+const COUNTRY_OPTIONS = [
   { value: 'VN', label: '🇻🇳 Việt Nam (VN)' },
   { value: 'HK', label: '🇭🇰 Hong Kong (HK)' },
   { value: 'JP', label: '🇯🇵 Nhật Bản (JP)' },
@@ -65,7 +59,7 @@ export const COUNTRY_OPTIONS = [
   { value: 'AE', label: '🇦🇪 UAE / Dubai (AE)' },
 ];
 
-export const KNOWN_DESTINATIONS = {
+const KNOWN_DESTINATIONS = {
   'hong kong': {
     countryCode: 'HK',
     address: 'Sha Tin Racecourse, Shatin, New Territories, Hong Kong (HKG International Airport)',
@@ -128,7 +122,7 @@ export const KNOWN_DESTINATIONS = {
   },
 };
 
-export function resolveDestinationInfo(dest) {
+function resolveDestinationInfo(dest) {
   if (!dest) return null;
   const str = String(dest).toLowerCase();
   for (const [key, info] of Object.entries(KNOWN_DESTINATIONS)) {
@@ -151,7 +145,7 @@ export function resolveDestinationInfo(dest) {
 /**
  * Bảng dữ liệu độ khả thi tuyến đường & cước phí công khai tham khảo từ Việt Nam
  */
-export const ROUTE_DATA = {
+const ROUTE_DATA = {
   CN: {
     name: 'Trung Quốc (China)',
     ground: {
@@ -556,7 +550,6 @@ export default function BookingWizard({
   const dropoffCountry = useWatch({ control, name: 'DropoffCountryCode' });
   const transportMode = useWatch({ control, name: 'TransportMode' });
   const insurancePackage = useWatch({ control, name: 'InsurancePackage' });
-  const declaredValue = useWatch({ control, name: 'DeclaredValue' });
   const requiresClimate = useWatch({ control, name: 'RequiresClimateControl' });
   const isExpress = useWatch({ control, name: 'IsExpress' });
   const requiresVetEscort = useWatch({ control, name: 'RequiresVetEscort' });
@@ -575,35 +568,32 @@ export default function BookingWizard({
   // Tải danh sách ngựa của user khi mở wizard
   useEffect(() => {
     let isSubscribed = true;
+    const ownerId = user?.userId || user?.UserID;
     horseService
-      .getHorses({ ownerId: user?.UserID || undefined })
+      .getHorses({ ownerId: ownerId || undefined })
       .then((res) => {
         if (isSubscribed) {
           const horsesList = res.data?.data || res.data || [];
           setAvailableHorses(horsesList);
 
-          // Lọc danh sách ngựa đủ điều kiện di chuyển (loại bỏ Critical Risk)
-          const fitHorses = horsesList.filter(
-            (h) => calculateHorseRisk(h).level !== 'CRITICAL',
-          );
-
-          if (fitHorses.length > 0) {
+          if (horsesList.length > 0) {
             const requestedCount = Number(initialValues?.totalHorses) || 1;
-            const chosenHorses = fitHorses.slice(0, requestedCount);
-            const chosenIds = chosenHorses.map((h) => h.HorseID);
+            const chosenHorses = horsesList.slice(0, requestedCount);
+            const chosenIds = chosenHorses.map((h) => h.horseId || h.HorseID);
 
             setSelectedHorseIds(chosenIds);
 
             const newStallClasses = {};
             chosenHorses.forEach((h, idx) => {
+              const hId = h.horseId || h.HorseID;
               if (initialValues?.calcHorses && initialValues.calcHorses[idx]?.stallClass) {
                 const sc = initialValues.calcHorses[idx].stallClass.toLowerCase();
-                newStallClasses[h.HorseID] = sc === 'private' ? 'Private' : sc === 'comfort' ? 'Comfort' : 'Shared';
+                newStallClasses[hId] = sc === 'private' ? 'Private' : sc === 'comfort' ? 'Comfort' : 'Shared';
               } else if (initialValues?.stallClass) {
                 const sc = initialValues.stallClass.toLowerCase();
-                newStallClasses[h.HorseID] = sc === 'private' ? 'Private' : sc === 'shared' ? 'Shared' : 'Comfort';
+                newStallClasses[hId] = sc === 'private' ? 'Private' : sc === 'shared' ? 'Shared' : 'Comfort';
               } else {
-                newStallClasses[h.HorseID] = 'Comfort';
+                newStallClasses[hId] = 'Comfort';
               }
             });
             setStallClasses(newStallClasses);
@@ -619,15 +609,8 @@ export default function BookingWizard({
     };
   }, [user, initialValues]);
 
-  // Toggle chọn cá thể ngựa (Chặn nghiêm ngặt ngựa Critical Risk)
+  // Toggle chọn cá thể ngựa
   const handleToggleHorse = (horseId) => {
-    const targetHorse = availableHorses.find((h) => h.HorseID === horseId);
-    if (targetHorse) {
-      const risk = calculateHorseRisk(targetHorse);
-      if (risk.level === 'CRITICAL') {
-        return; // CẤM chọn ngựa Critical Risk!
-      }
-    }
     setSelectedHorseIds((prev) => {
       if (prev.includes(horseId)) {
         return prev.filter((id) => id !== horseId);
@@ -643,9 +626,9 @@ export default function BookingWizard({
     const items = [];
 
     // 1. Cước vận chuyển chính theo phương thức & điểm đến
-    let baseFreightRate = 4000;
-    let freightName = 'Cước vận chuyển chính';
-    let freightCode = 'FREIGHT_MAIN';
+    let baseFreightRate;
+    let freightName;
+    let freightCode;
 
     if (transportMode === 'DoorToDoor') {
       baseFreightRate = routeData.doorToDoor?.baseFreight || 7500;
@@ -816,28 +799,34 @@ export default function BookingWizard({
   const handleFinalSubmit = async () => {
     const values = getValues();
     const payload = {
-      PickupAddress: values.PickupAddress?.trim(),
-      PickupCountryCode: values.PickupCountryCode,
-      DropoffAddress: values.DropoffAddress?.trim(),
-      DropoffCountryCode: values.DropoffCountryCode,
-      DepartureDate: values.DepartureDate,
-      DeliveryDate: values.DeliveryDate || values.DepartureDate,
-      TransportMode: values.TransportMode,
-      InsurancePackage: values.InsurancePackage,
-      RequiresClimateControl: Boolean(values.RequiresClimateControl),
-      IsExpress: Boolean(values.IsExpress),
-      RequiresVetEscort: Boolean(values.RequiresVetEscort),
-      FeedingCarePlan: values.FeedingCarePlan?.trim() || null,
-      DeclaredValue: Number(values.DeclaredValue) || null,
-      SpecialInstructions: values.SpecialInstructions?.trim() || null,
-      TotalHorses: selectedHorseIds.length,
-      EstimatedCost: totalCost,
-      CurrencyCode: 'USD',
-      QuoteBreakdown: JSON.stringify(quoteItems),
-      BookingHorses: selectedHorseIds.map((hId) => ({
-        HorseID: hId,
-        StallClass: stallClasses[hId] || 'Shared',
-        Notes: horseNotes[hId]?.trim() || null,
+      pickupAddress: values.PickupAddress?.trim() || values.pickupAddress?.trim(),
+      pickupCountryCode: values.PickupCountryCode || values.pickupCountryCode,
+      dropoffAddress: values.DropoffAddress?.trim() || values.dropoffAddress?.trim(),
+      dropoffCountryCode: values.DropoffCountryCode || values.dropoffCountryCode,
+      departureDate: values.DepartureDate || values.departureDate,
+      deliveryDate: values.DeliveryDate || values.deliveryDate || values.DepartureDate || values.departureDate,
+      transportMode: values.TransportMode || values.transportMode,
+      insurancePackage: values.InsurancePackage || values.insurancePackage,
+      requiresClimateControl: Boolean(values.RequiresClimateControl ?? values.requiresClimateControl),
+      isExpress: Boolean(values.IsExpress ?? values.isExpress),
+      requiresVetEscort: Boolean(values.RequiresVetEscort ?? values.requiresVetEscort),
+      feedingCarePlan: (values.FeedingCarePlan || values.feedingCarePlan)?.trim() || null,
+      declaredValue: Number(values.DeclaredValue || values.declaredValue) || null,
+      specialInstructions: (values.SpecialInstructions || values.specialInstructions)?.trim() || null,
+      totalHorses: selectedHorseIds.length,
+      estimatedCost: totalCost,
+      currencyCode: 'USD',
+      quoteLines: quoteItems,
+      quoteBreakdown: JSON.stringify(quoteItems),
+      horses: selectedHorseIds.map((hId) => ({
+        horseId: Number(hId),
+        stallClass: stallClasses[hId] || 'Shared',
+        notes: horseNotes[hId]?.trim() || null,
+      })),
+      bookingHorses: selectedHorseIds.map((hId) => ({
+        horseId: Number(hId),
+        stallClass: stallClasses[hId] || 'Shared',
+        notes: horseNotes[hId]?.trim() || null,
       })),
     };
 
@@ -1084,51 +1073,48 @@ export default function BookingWizard({
             ) : (
               <Row gutter={[16, 16]}>
                 {availableHorses.map((horse) => {
-                  const isSelected = selectedHorseIds.includes(horse.HorseID);
-                  const risk = calculateHorseRisk(horse);
-                  const isCritical = risk.level === 'CRITICAL';
+                  const horseId = horse.horseId || horse.HorseID;
+                  const isSelected = selectedHorseIds.includes(horseId);
+                  const horseName = horse.name || horse.Name;
+                  const horseBreed = horse.breed || horse.Breed;
+                  const horseGender = horse.gender || horse.Gender;
+                  const horseMicrochip = horse.microchipNumber || horse.MicrochipNumber;
 
                   return (
-                    <Col key={horse.HorseID} xs={24} md={12}>
+                    <Col key={horseId} xs={24} md={12}>
                       <div
                         style={{
                           padding: 18,
                           borderRadius: 16,
-                          border: isCritical
-                            ? '1.5px solid #FCA5A5'
-                            : isSelected
+                          border: isSelected
                             ? '2.5px solid #F59E0B'
                             : '1.5px solid #E2E8F0',
-                          backgroundColor: isCritical
-                            ? '#FEF2F2'
-                            : isSelected
+                          backgroundColor: isSelected
                             ? '#FFFBEB'
                             : '#FFFFFF',
-                          cursor: isCritical ? 'not-allowed' : 'pointer',
+                          cursor: 'pointer',
                           transform: isSelected ? 'scale(1.02)' : 'scale(1)',
                           boxShadow: isSelected
                             ? '0 8px 24px rgba(245, 158, 11, 0.22)'
                             : '0 2px 8px rgba(0, 0, 0, 0.02)',
-                          opacity: isCritical ? 0.9 : 1,
                           transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                         }}
-                        onClick={() => !isCritical && handleToggleHorse(horse.HorseID)}
+                        onClick={() => handleToggleHorse(horseId)}
                       >
                         <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
                           <Checkbox
                             checked={isSelected}
-                            disabled={isCritical}
-                            onChange={() => !isCritical && handleToggleHorse(horse.HorseID)}
+                            onChange={() => handleToggleHorse(horseId)}
                             onClick={(e) => e.stopPropagation()}
                           >
                             <strong
                               style={{
                                 fontSize: 16,
-                                color: isCritical ? '#991B1B' : isSelected ? '#92400E' : '#0F172A',
+                                color: isSelected ? '#92400E' : '#0F172A',
                                 marginLeft: 4,
                               }}
                             >
-                              🐴 {horse.Name}
+                              🐴 {horseName}
                             </strong>
                           </Checkbox>
                           <Space size={6}>
@@ -1137,34 +1123,14 @@ export default function BookingWizard({
                                 ✓ Đã chọn
                               </Tag>
                             )}
-                            <Tag color="blue">{horse.Breed}</Tag>
-                            <RiskBadge risk={risk} size="small" />
+                            <Tag color="blue">{horseBreed}</Tag>
                           </Space>
                         </Flex>
 
                         <div style={{ fontSize: 13, color: '#64748b', marginLeft: 28, marginBottom: 8 }}>
-                          {t(`horses.genderOptions.${horse.Gender?.toLowerCase()}`) || horse.Gender} · {t('horses.fields.microchip')}:{' '}
-                          <code>{horse.MicrochipNumber}</code>
+                          {t(`horses.genderOptions.${horseGender?.toLowerCase()}`) || horseGender} · {t('horses.fields.microchip')}:{' '}
+                          <code>{horseMicrochip || '---'}</code>
                         </div>
-
-                        {/* Cảnh báo cấm vận chuyển đối với Critical Risk */}
-                        {isCritical && (
-                          <div
-                            style={{
-                              marginLeft: 28,
-                              padding: '8px 12px',
-                              backgroundColor: '#FEE2E2',
-                              border: '1px solid #FECACA',
-                              borderRadius: 8,
-                              color: '#991B1B',
-                              fontSize: 12,
-                              fontWeight: 600,
-                              lineHeight: 1.45,
-                            }}
-                          >
-                            {t('bookings.prohibitedBanner', { status: horse.HealthStatus })}
-                          </div>
-                        )}
 
                         {/* Tùy chọn hạng chuồng khi được tick chọn */}
                         {isSelected && (
@@ -1183,9 +1149,9 @@ export default function BookingWizard({
                                   style={{ margin: 0 }}
                                 >
                                   <Select
-                                    value={stallClasses[horse.HorseID] || 'Comfort'}
+                                    value={stallClasses[horseId] || 'Comfort'}
                                     onChange={(val) =>
-                                      setStallClasses((prev) => ({ ...prev, [horse.HorseID]: val }))
+                                      setStallClasses((prev) => ({ ...prev, [horseId]: val }))
                                     }
                                     options={[
                                       { value: 'Shared', label: 'Shared (× 1.0)' },
@@ -1201,11 +1167,11 @@ export default function BookingWizard({
                                   style={{ margin: 0 }}
                                 >
                                   <Input
-                                    value={horseNotes[horse.HorseID] || ''}
+                                    value={horseNotes[horseId] || ''}
                                     onChange={(e) =>
                                       setHorseNotes((prev) => ({
                                         ...prev,
-                                        [horse.HorseID]: e.target.value,
+                                        [horseId]: e.target.value,
                                       }))
                                     }
                                     placeholder={t('bookings.stallClassPlaceholder')}
@@ -2161,27 +2127,30 @@ export default function BookingWizard({
                 </Title>
                 <Space direction="vertical" size="small" style={{ width: '100%' }}>
                   {availableHorses
-                    .filter((h) => selectedHorseIds.includes(h.HorseID))
-                    .map((h) => (
-                      <Flex
-                        key={h.HorseID}
-                        justify="space-between"
-                        align="center"
-                        style={{
-                          background: '#ffffff',
-                          padding: '10px 14px',
-                          borderRadius: 10,
-                          border: '1px solid #e2e8f0',
-                        }}
-                      >
-                        <div>
-                          <strong>{h.Name}</strong> ({h.Breed})
-                        </div>
-                        <Tag color="gold" style={{ fontWeight: 700 }}>
-                          Hạng chuồng: {stallClasses[h.HorseID] || 'Comfort'}
-                        </Tag>
-                      </Flex>
-                    ))}
+                    .filter((h) => selectedHorseIds.includes(h.horseId || h.HorseID))
+                    .map((h) => {
+                      const hId = h.horseId || h.HorseID;
+                      return (
+                        <Flex
+                          key={hId}
+                          justify="space-between"
+                          align="center"
+                          style={{
+                            background: '#ffffff',
+                            padding: '10px 14px',
+                            borderRadius: 10,
+                            border: '1px solid #e2e8f0',
+                          }}
+                        >
+                          <div>
+                            <strong>{h.name || h.Name}</strong> ({h.breed || h.Breed})
+                          </div>
+                          <Tag color="gold" style={{ fontWeight: 700 }}>
+                            Hạng chuồng: {stallClasses[hId] || 'Comfort'}
+                          </Tag>
+                        </Flex>
+                      );
+                    })}
                 </Space>
               </Card>
             </Col>

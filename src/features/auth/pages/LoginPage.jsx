@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Checkbox, Form, Input, message } from 'antd';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@features/auth/store/authStore';
 import { loginApi } from '@features/auth/services/authService';
@@ -25,7 +25,6 @@ const TEST_ACCOUNTS = [
 export default function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const location = useLocation();
   const { login } = useAuthStore();
   const { loginWithGoogle, isGoogleLoading } = useGoogleAuth();
   const [form] = Form.useForm();
@@ -39,20 +38,12 @@ export default function LoginPage() {
         password: values.password,
       });
 
-      const user = res.user;
-      const token = res.token || `mock-token-${user.UserID}`;
-      login(user, token);
+      const user = res.user || res.data?.user;
+      const token = res.token || res.data?.accessToken || `mock-token-${user?.userId}`;
+      const refreshToken = res.refreshToken || res.data?.refreshToken || null;
+      login(user, token, refreshToken);
 
       message.success(t('auth.loginSuccess', 'Đăng nhập thành công!'));
-
-      // Nếu có đường dẫn chờ trước đó (ví dụ đang đặt chuyến)
-      if (location.state?.returnTo && user.Role === ROLES.CUSTOMER) {
-        navigate(location.state.returnTo, {
-          state: location.state.bookingPrefill,
-          replace: true,
-        });
-        return;
-      }
 
       // Chuyển hướng theo role của người dùng
       const dashboardMap = {
@@ -63,7 +54,7 @@ export default function LoginPage() {
         [ROLES.DRIVER]: ROUTES.DRIVER_DASHBOARD,
       };
 
-      const targetRoute = dashboardMap[user.Role] || ROUTES.CUSTOMER_DASHBOARD;
+      const targetRoute = dashboardMap[user.role] || ROUTES.CUSTOMER_DASHBOARD;
       navigate(targetRoute, { replace: true });
     } catch {
       message.error(t('auth.loginFailed', 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'));
@@ -87,7 +78,7 @@ export default function LoginPage() {
     <div>
       {/* Header & Logo */}
       <div className={styles.headerSection}>
-        <div className={styles.logoContainer} style={{ cursor: 'pointer' }} onClick={() => navigate(ROUTES.HOME)}>
+        <div className={styles.logoContainer}>
           <img src={logoImg} alt="International Equine Transport" className={styles.logoImage} />
         </div>
         <h1 className={styles.pageTitle}>{t('auth.signInTitle')}</h1>

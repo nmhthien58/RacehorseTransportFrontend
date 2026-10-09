@@ -91,6 +91,18 @@ export default function AppRoutes() {
           <Route path="/vet-record" element={<Navigate to={ROUTES.CUSTOMER_VET_RECORDS} replace />} />
           <Route path={ROUTES.CUSTOMER_BOOKINGS} element={<CustomerBookings />} />
           <Route path={ROUTES.CUSTOMER_BOOKING_NEW} element={<NewBookingPage />} />
+          <Route path="/customer/booking" element={<Navigate to={ROUTES.CUSTOMER_BOOKINGS} replace />} />
+          <Route path="/customer/booking/new" element={<Navigate to={ROUTES.CUSTOMER_BOOKING_NEW} replace />} />
+          <Route path="/customer/request" element={<Navigate to={ROUTES.CUSTOMER_BOOKINGS} replace />} />
+          <Route path="/customer/requests" element={<Navigate to={ROUTES.CUSTOMER_BOOKINGS} replace />} />
+          <Route path="/customer/transport-request" element={<Navigate to={ROUTES.CUSTOMER_BOOKINGS} replace />} />
+          <Route path="/customer/transport-requests" element={<Navigate to={ROUTES.CUSTOMER_BOOKINGS} replace />} />
+          <Route path="/customer/request-transport" element={<Navigate to={ROUTES.CUSTOMER_BOOKINGS} replace />} />
+          <Route path="/transport-request" element={<Navigate to={ROUTES.CUSTOMER_BOOKINGS} replace />} />
+          <Route path="/transport-requests" element={<Navigate to={ROUTES.CUSTOMER_BOOKINGS} replace />} />
+          <Route path="/request-transport" element={<Navigate to={ROUTES.CUSTOMER_BOOKINGS} replace />} />
+          <Route path="/bookings" element={<Navigate to={ROUTES.CUSTOMER_BOOKINGS} replace />} />
+          <Route path="/booking" element={<Navigate to={ROUTES.CUSTOMER_BOOKINGS} replace />} />
           <Route path={ROUTES.CUSTOMER_PRICING} element={<CustomerPricingPage />} />
           <Route path={ROUTES.CUSTOMER_TRIPS} element={<ActiveTripsPage />} />
           <Route path={ROUTES.CUSTOMER_MESSAGES} element={<MessagesPage />} />
@@ -108,6 +120,7 @@ export default function AppRoutes() {
           <Route path={ROUTES.MANAGER_BOOKINGS} element={<ManagerBookings />} />
           <Route path={ROUTES.MANAGER_BOOKING_DETAIL} element={<BookingDetailPage />} />
           <Route path={ROUTES.MANAGER_PENDING_REQUESTS} element={<PendingRequestsPage />} />
+          <Route path={ROUTES.MANAGER_PROFILE} element={<ProfilePage />} />
         </Route>
       </Route>
 
@@ -129,6 +142,13 @@ export default function AppRoutes() {
       <Route element={<PrivateRoute allowedRoles={[ROLES.DRIVER]} />}>
         <Route element={<MainLayout />}>
           <Route path={ROUTES.DRIVER_DASHBOARD} element={<DriverDashboard />} />
+        </Route>
+      </Route>
+
+      {/* Shared Authenticated Routes - Profile hợp nhất cho toàn bộ các vai trò */}
+      <Route element={<PrivateRoute allowedRoles={[ROLES.CUSTOMER, ROLES.MANAGER, ROLES.ADMIN, ROLES.SPECIALIST, ROLES.COORDINATOR, ROLES.DRIVER]} />}>
+        <Route element={<MainLayout />}>
+          <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
         </Route>
       </Route>
 

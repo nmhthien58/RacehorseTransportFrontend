@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { App, Button, Modal, Space, Typography, Tag, Divider } from 'antd';
+import { Button, Modal, Space, Typography, Tag, Divider, message } from 'antd';
 import {
   CheckCircleFilled,
   ArrowLeftOutlined,
@@ -29,7 +29,6 @@ export default function NewBookingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { message } = App.useApp();
 
   const [submitting, setSubmitting] = useState(false);
   const [createdBooking, setCreatedBooking] = useState(null);
@@ -86,6 +85,7 @@ export default function NewBookingPage() {
       {/* Header trang và thanh điều hướng Breadcrumb */}
       <PageHeader
         title={t('bookings.addNewTitle') || 'Tạo yêu cầu vận chuyển ngựa'}
+        style={{ marginBottom: 16 }}
         breadcrumb={[
           {
             label: t('nav.transportRequests') || 'Yêu cầu vận chuyển',
@@ -157,7 +157,7 @@ export default function NewBookingPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
               <Text type="secondary">{t('bookings.fields.bookingCode') || 'Mã đơn'}:</Text>
               <Text strong code style={{ fontSize: 13, background: '#ffffff' }}>
-                #{createdBooking.bookingCode}
+                #{createdBooking.bookingCode || createdBooking.BookingCode}
               </Text>
             </div>
 
@@ -165,7 +165,7 @@ export default function NewBookingPage() {
               <Text type="secondary">{t('bookings.fields.pickupAddress') || 'Điểm đón'}:</Text>
               <Text strong style={{ textAlign: 'right', maxWidth: 260 }}>
                 <EnvironmentOutlined style={{ color: '#d97706', marginRight: 4 }} />
-                {createdBooking.pickupAddress} ({createdBooking.pickupCountryCode})
+                {createdBooking.pickupAddress || createdBooking.PickupAddress} ({createdBooking.pickupCountryCode || createdBooking.PickupCountryCode || 'VN'})
               </Text>
             </div>
 
@@ -173,7 +173,7 @@ export default function NewBookingPage() {
               <Text type="secondary">{t('bookings.fields.dropoffAddress') || 'Điểm giao'}:</Text>
               <Text strong style={{ textAlign: 'right', maxWidth: 260 }}>
                 <EnvironmentOutlined style={{ color: '#10b981', marginRight: 4 }} />
-                {createdBooking.dropoffAddress} ({createdBooking.dropoffCountryCode})
+                {createdBooking.dropoffAddress || createdBooking.DropoffAddress} ({createdBooking.dropoffCountryCode || createdBooking.DropoffCountryCode || 'CN'})
               </Text>
             </div>
 
@@ -181,14 +181,14 @@ export default function NewBookingPage() {
               <Text type="secondary">{t('bookings.fields.departureDate') || 'Khởi hành'}:</Text>
               <Text strong>
                 <CalendarOutlined style={{ marginRight: 4 }} />
-                {dayjs(createdBooking.departureDate).format('DD/MM/YYYY')}
+                {dayjs(createdBooking.departureDate || createdBooking.DepartureDate).format('DD/MM/YYYY')}
               </Text>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
               <Text type="secondary">{t('bookings.fields.totalHorses') || 'Số lượng ngựa'}:</Text>
               <Tag color="orange" style={{ margin: 0, fontWeight: 600 }}>
-                🐴 {createdBooking.totalHorses} {t('bookings.horseUnit') || 'con'}
+                🐴 {createdBooking.totalHorses || createdBooking.TotalHorses || 1} {t('bookings.horseUnit') || 'con'}
               </Tag>
             </div>
 
@@ -197,7 +197,7 @@ export default function NewBookingPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Text type="secondary">{t('bookings.fields.estimatedCost') || 'Dự toán cước phí'}:</Text>
               <span style={{ fontSize: 20, fontWeight: 800, color: '#d97706' }}>
-                ${Number(createdBooking.estimatedCost || 0).toLocaleString()} USD
+                ${Number(createdBooking.estimatedCost || createdBooking.EstimatedCost || 0).toLocaleString()} USD
               </span>
             </div>
           </div>

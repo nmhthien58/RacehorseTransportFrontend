@@ -29,6 +29,12 @@ import PageHeader from '@components/layout/PageHeader';
 import useMyHorses from '@features/customer/hooks/useMyHorses';
 import horseService from '@services/horseService';
 import { ROUTES } from '@routes/routes';
+import {
+  calculateHorseRisk,
+  HealthStatusTag,
+  RiskBadge,
+  HEALTH_STATUS_OPTIONS,
+} from '@utils/horseHealth';
 
 const { Text } = Typography;
 
@@ -40,7 +46,7 @@ const { Text } = Typography;
  * @returns {JSX.Element}
  */
 export default function MyHorsesPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { data: horses, loading, refetch } = useMyHorses();
 
@@ -60,6 +66,7 @@ export default function MyHorsesPage() {
       color: record.color || record.Color || '',
       microchipNumber: record.microchipNumber || record.MicrochipNumber || '',
       passportNumber: record.passportNumber || record.PassportNumber || '',
+      healthStatus: record.healthStatus || record.HealthStatus || 'Good',
       specialCareRequirements: record.specialCareRequirements || record.SpecialCareRequirements || '',
     });
     setEditModalVisible(true);
@@ -186,22 +193,21 @@ export default function MyHorsesPage() {
       ),
     },
     {
-      title: t('horses.gender', 'Giới tính'),
-      dataIndex: 'gender',
-      key: 'gender',
-      render: (gender) => (
-        <Tag color="purple">{gender || '-'}</Tag>
-      ),
+      title: t('horses.healthStatus', 'Sức khỏe'),
+      dataIndex: 'healthStatus',
+      key: 'healthStatus',
+      render: (_, record) => {
+        const hs = record.healthStatus || record.HealthStatus || 'Good';
+        return <HealthStatusTag status={hs} size="small" />;
+      },
     },
     {
-      title: t('common.status', 'Trạng thái'),
-      dataIndex: 'isActive',
-      key: 'isActive',
-      render: (isActive) => (
-        <Tag color={isActive !== false ? 'success' : 'default'}>
-          {isActive !== false ? (t('common.active') || 'Hoạt động') : (t('common.inactive') || 'Tạm dừng')}
-        </Tag>
-      ),
+      title: t('horses.riskLevel', 'Mức rủi ro'),
+      key: 'riskLevel',
+      render: (_, record) => {
+        const risk = calculateHorseRisk(record, i18n.language);
+        return <RiskBadge risk={risk} size="small" />;
+      },
     },
     {
       title: t('horses.columns.action'),
@@ -404,6 +410,36 @@ export default function MyHorsesPage() {
             <Col xs={24} sm={12}>
               <Form.Item name="passportNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.passport')}</span>}>
                 <Input placeholder={t('horses.placeholders.passport')} size="large" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col xs={24}>
+              <Form.Item
+                name="healthStatus"
+                label={<span style={{ fontWeight: 600 }}>{t('horses.fields.healthStatus', 'Tình trạng sức khỏe')}</span>}
+              >
+                <Select size="large">
+                  {HEALTH_STATUS_OPTIONS.map((opt) => (
+                    <Select.Option key={opt.value} value={opt.value}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            width: 10,
+                            height: 10,
+                            borderRadius: '50%',
+                            backgroundColor: opt.color,
+                          }}
+                        />
+                        <span style={{ color: opt.color, fontWeight: 600 }}>
+                          {i18n.language?.startsWith('en') ? opt.labelEn : opt.labelVi}
+                        </span>
+                      </div>
+                    </Select.Option>
+                  ))}
+                </Select>
               </Form.Item>
             </Col>
           </Row>

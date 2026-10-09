@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useAuthStore } from '@features/auth/store/authStore';
 
-const isMock = import.meta.env.VITE_USE_MOCK === 'true';
+const isMock = import.meta.env.VITE_USE_MOCK !== 'false';
 
 const resolveBaseUrl = () => {
   if (isMock) return '/api';

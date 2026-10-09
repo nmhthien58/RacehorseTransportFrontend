@@ -8,13 +8,15 @@ import { useGoogleAuth } from '@features/auth/hooks/useGoogleAuth';
 import GoogleIcon from '@features/auth/components/GoogleIcon';
 import { ROUTES } from '@routes/routes';
 import { ROLES } from '@utils/constants';
+import usersData from '@/mocks/data/users.json';
 import logoImg from '@/assets/logo.svg';
 import styles from './AuthPages.module.css';
 
 const TEST_ACCOUNTS = [
-  { label: 'Customer', email: 'customer@test.com', role: ROLES.CUSTOMER },
-  { label: 'Manager', email: 'manager@test.com', role: ROLES.MANAGER },
-  { label: 'Specialist', email: 'specialist@test.com', role: ROLES.SPECIALIST },
+  { label: 'Customer (Khách hàng)', email: 'customer@test.com', role: ROLES.CUSTOMER },
+  { label: 'Admin (Quản trị viên)', email: 'admin@test.com', role: ROLES.ADMIN },
+  { label: 'Manager (Điều phối)', email: 'manager@test.com', role: ROLES.MANAGER },
+  { label: 'Specialist (Kiểm dịch)', email: 'specialist@test.com', role: ROLES.SPECIALIST },
   { label: 'Coordinator', email: 'coordinator@test.com', role: ROLES.COORDINATOR },
   { label: 'Driver', email: 'driver@test.com', role: ROLES.DRIVER },
 ];
@@ -33,28 +35,53 @@ export default function LoginPage() {
   const handleLogin = async (values) => {
     try {
       setLoading(true);
-      const res = await loginApi({
-        email: values.email,
-        password: values.password,
-      });
+      let user = null;
+      let token = null;
+      let refreshToken = null;
 
-      const user = res.user || res.data?.user;
-      const token = res.token || res.data?.accessToken || `mock-token-${user?.userId}`;
-      const refreshToken = res.refreshToken || res.data?.refreshToken || null;
+      try {
+        const res = await loginApi({
+          email: values.email,
+          password: values.password,
+        });
+
+        user = res.user || res.data?.user;
+        token = res.token || res.data?.accessToken || `mock-token-${user?.userId}`;
+        refreshToken = res.refreshToken || res.data?.refreshToken || null;
+      } catch (apiErr) {
+        // Fallback tự động tìm trong mock data nếu API mạng lỗi
+        console.warn('API login failed, checking mock users fallback:', apiErr);
+        const localUser = usersData.find(
+          (u) => u.email.toLowerCase() === (values.email || '').toLowerCase(),
+        );
+        if (localUser) {
+          user = localUser;
+          token = `mock-token-${localUser.userId}`;
+          refreshToken = `mock-refresh-token-${localUser.userId}`;
+        } else {
+          throw apiErr;
+        }
+      }
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
       login(user, token, refreshToken);
-
       message.success(t('auth.loginSuccess', 'Đăng nhập thành công!'));
 
-      // Chuyển hướng theo role của người dùng
+      // Chuyển hướng theo role của người dùng (tách biệt rõ ràng quyền hạn)
       const dashboardMap = {
         [ROLES.CUSTOMER]: ROUTES.CUSTOMER_DASHBOARD,
         [ROLES.MANAGER]: ROUTES.MANAGER_DASHBOARD,
+        [ROLES.ADMIN]: ROUTES.MANAGER_DASHBOARD,
         [ROLES.SPECIALIST]: ROUTES.SPECIALIST_DASHBOARD,
         [ROLES.COORDINATOR]: ROUTES.COORDINATOR_DASHBOARD,
         [ROLES.DRIVER]: ROUTES.DRIVER_DASHBOARD,
       };
 
-      const targetRoute = dashboardMap[user.role] || ROUTES.CUSTOMER_DASHBOARD;
+      const userRole = user?.role || user?.Role;
+      const targetRoute = dashboardMap[userRole] || ROUTES.CUSTOMER_DASHBOARD;
       navigate(targetRoute, { replace: true });
     } catch {
       message.error(t('auth.loginFailed', 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'));
@@ -64,7 +91,19 @@ export default function LoginPage() {
   };
 
   /**
-   * Điền nhanh thông tin tài khoản thử nghiệm
+   * Đăng nhập nhanh 1-click cho môi trường thử nghiệm
+   * @param {string} email
+   */
+  const handleQuickLogin = async (email) => {
+    form.setFieldsValue({
+      email,
+      password: 'password123',
+    });
+    await handleLogin({ email, password: 'password123' });
+  };
+
+  /**
+   * Điền nhanh thông tin tài khoản thử nghiệm vào form
    * @param {string} email
    */
   const handleQuickFill = (email) => {
@@ -180,20 +219,52 @@ export default function LoginPage() {
         </span>
       </div>
 
-      {/* Thanh điền nhanh các role phục vụ test quy trình */}
+      {/* Thanh tài khoản thử nghiệm phục vụ kiểm thử nhanh */}
       <div className={styles.testAccountsCard}>
-        <div className={styles.testAccountsTitle}>⚡ {t('auth.testAccounts')}:</div>
-        <div className={styles.testAccountsBadges}>
+        <div className={styles.testAccountsTitle} style={{ fontWeight: 700, color: '#1e293b', marginBottom: 8 }}>
+          ⚡ {t('auth.testAccounts', 'Tài khoản kiểm thử')} (Click để đăng nhập 1-chạm):
+        </div>
+        <div className={styles.testAccountsBadges} style={{ marginBottom: 12 }}>
           {TEST_ACCOUNTS.map((acc) => (
             <button
               key={acc.email}
               type="button"
               className={styles.badgeBtn}
-              onClick={() => handleQuickFill(acc.email)}
+              onClick={() => handleQuickLogin(acc.email)}
+              title={`Đăng nhập trực tiếp với ${acc.label}`}
+              style={{
+                cursor: 'pointer',
+                fontWeight: acc.role === ROLES.CUSTOMER || acc.role === ROLES.ADMIN ? 700 : 500,
+                backgroundColor: acc.role === ROLES.ADMIN ? '#FEF3C7' : acc.role === ROLES.CUSTOMER ? '#EFF6FF' : '#F1F5F9',
+                color: acc.role === ROLES.ADMIN ? '#B45309' : acc.role === ROLES.CUSTOMER ? '#1D4ED8' : '#334155',
+                borderColor: acc.role === ROLES.ADMIN ? '#FDE68A' : acc.role === ROLES.CUSTOMER ? '#BFDBFE' : '#CBD5E1',
+                padding: '4px 10px',
+                borderRadius: 6,
+              }}
             >
               {acc.label}
             </button>
           ))}
+        </div>
+
+        {/* Bảng ghi chú tài khoản cụ thể cho người dùng */}
+        <div
+          style={{
+            fontSize: 12,
+            lineHeight: 1.6,
+            background: '#ffffff',
+            padding: '10px 14px',
+            borderRadius: 8,
+            border: '1px solid #e2e8f0',
+            color: '#475569',
+          }}
+        >
+          <div style={{ marginBottom: 4 }}>
+            👤 <b>Customer (Khách hàng):</b> <code>customer@test.com</code> | Mật khẩu: <code>password123</code>
+          </div>
+          <div>
+            🛡️ <b>Admin (Quản trị viên):</b> <code>admin@test.com</code> | Mật khẩu: <code>password123</code>
+          </div>
         </div>
       </div>
     </div>

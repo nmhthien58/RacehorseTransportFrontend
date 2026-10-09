@@ -39,6 +39,10 @@ import PageHeader from '@components/layout/PageHeader';
 import bookingService from '@services/bookingService';
 import userService from '@services/userService';
 import { BOOKING_STATUS } from '@utils/constants';
+import {
+  getStoredRequestLetters,
+  markLetterAsRead,
+} from '@utils/requestLetterStorage';
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
@@ -53,7 +57,8 @@ const { TextArea } = Input;
  * @returns {JSX.Element}
  */
 export default function PendingRequestsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isEn = (i18n.language || 'vi').toLowerCase().startsWith('en');
   const [searchParams, setSearchParams] = useSearchParams();
 
   // ID đơn được chọn xem chi tiết (nếu null -> hiển thị danh sách)
@@ -154,6 +159,76 @@ export default function PendingRequestsPage() {
     if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }, [activeBooking]);
+
+  // Thư đề nghị vận chuyển chính thức từ khách hàng gửi tới Ban Quản lý
+  const activeLetter = useMemo(() => {
+    if (!activeBooking) return null;
+    const letters = getStoredRequestLetters();
+    const found = letters.find(
+      (l) => Number(l.bookingId) === Number(activeBooking.bookingId) || l.bookingCode === activeBooking.bookingCode,
+    );
+    if (found) return found;
+
+    // Tự động tạo thư tương ứng nếu đơn chưa có bản ghi thư
+    return {
+      id: `LTR-${activeBooking.bookingCode}`,
+      bookingId: activeBooking.bookingId,
+      bookingCode: activeBooking.bookingCode,
+      title: `Thư yêu cầu vận chuyển: ${activeBooking.bookingCode}`,
+      titleEn: `Transport Request Letter: ${activeBooking.bookingCode}`,
+      customerName: activeBooking.customerName || 'Khách hàng',
+      customerEmail: activeBooking.customerEmail || 'customer@test.com',
+      customerPhone: activeBooking.customerPhone || '+84988111222',
+      pickupAddress: activeBooking.pickupAddress || 'Việt Nam',
+      dropoffAddress: activeBooking.dropoffAddress || 'Điểm đến quốc tế',
+      transportMode: activeBooking.transportMode || 'Air',
+      totalHorses: activeBooking.totalHorses || 1,
+      estimatedCost: activeBooking.estimatedCost || 0,
+      departureDate: activeBooking.departureDate,
+      isRead: true,
+      createdAt: activeBooking.createdAt || new Date().toISOString(),
+      contentVi: `Kính gửi Ban Quản Lý & Điều Phối Logistics Racehorse Transport,
+
+Tôi là ${activeBooking.customerName || 'Khách hàng'}. Tôi vừa gửi yêu cầu đặt chuyến vận chuyển mã số #${activeBooking.bookingCode} trên hệ thống.
+
+Thông tin tóm tắt lộ trình:
+- Địa điểm đón: ${activeBooking.pickupAddress || 'Việt Nam'}
+- Địa điểm giao: ${activeBooking.dropoffAddress || 'Điểm đến quốc tế'}
+- Phương thức vận chuyển: ${activeBooking.transportMode || 'Air'}
+- Số lượng: ${activeBooking.totalHorses || 1} cá thể ngựa
+- Dự kiến khởi hành: ${activeBooking.departureDate ? dayjs(activeBooking.departureDate).format('DD/MM/YYYY') : 'Sớm nhất'}
+- Ước tính cước phí dự kiến: $${Number(activeBooking.estimatedCost || 0).toLocaleString()} USD
+${activeBooking.specialInstructions ? `- Yêu cầu chăm sóc đặc biệt: "${activeBooking.specialInstructions}"` : ''}
+
+Kính đề nghị Ban Quản lý kiểm tra hồ sơ, phân bổ chuyên viên kiểm dịch phụ trách và xem xét phê duyệt đơn.
+
+Trân trọng cảm ơn,
+${activeBooking.customerName || 'Khách hàng'}`,
+      contentEn: `Dear Racehorse Transport Logistics & Fleet Management,
+
+I hereby submit this official request for horse transport under reference #${activeBooking.bookingCode}.
+
+Trip summary:
+- Origin: ${activeBooking.pickupAddress || 'Origin'}
+- Destination: ${activeBooking.dropoffAddress || 'Destination'}
+- Transport Method: ${activeBooking.transportMode || 'Air'}
+- Number of horses: ${activeBooking.totalHorses || 1}
+- Target Departure: ${activeBooking.departureDate ? dayjs(activeBooking.departureDate).format('DD/MM/YYYY') : 'Earliest'}
+- Estimated Freight: $${Number(activeBooking.estimatedCost || 0).toLocaleString()} USD
+${activeBooking.specialInstructions ? `- Special Care: "${activeBooking.specialInstructions}"` : ''}
+
+Please review this request and assign specialist staff to process our transport schedule.
+
+Kind regards,
+${activeBooking.customerName || 'Customer'}`,
+    };
+  }, [activeBooking]);
+
+  useEffect(() => {
+    if (activeLetter && !activeLetter.isRead) {
+      markLetterAsRead(activeLetter.id);
+    }
+  }, [activeLetter]);
 
   // Xử lý phê duyệt
   const handleOpenApprove = () => {
@@ -301,7 +376,55 @@ export default function PendingRequestsPage() {
         <Row gutter={[20, 20]}>
           {/* CỘT TRÁI (2/3): THÔNG TIN KHÁCH, LỘ TRÌNH, NGỰA, YÊU CẦU ĐẶC BIỆT, TIMELINE */}
           <Col xs={24} lg={16}>
-            <Space orientation="vertical" orientationMargin={0} size={16} style={{ width: '100%' }}>
+            <Space direction="vertical" size={16} style={{ width: '100%' }}>
+              {/* THƯ ĐỀ NGHỊ VẬN CHUYỂN CHÍNH THỨC TỪ KHÁCH HÀNG (CUSTOMER REQUEST LETTER) */}
+              {activeLetter && (
+                <Card
+                  bordered
+                  style={{
+                    borderRadius: 14,
+                    borderColor: '#fde68a',
+                    backgroundColor: '#fffdf5',
+                    boxShadow: '0 2px 8px rgba(245, 158, 11, 0.08)',
+                  }}
+                  styles={{ body: { padding: '20px 24px' } }}
+                >
+                  <Flex justify="space-between" align="center" style={{ marginBottom: 14 }}>
+                    <Flex align="center" gap={10}>
+                      <span style={{ fontSize: 24 }}>📜</span>
+                      <div>
+                        <strong style={{ fontSize: 16, color: '#92400e' }}>
+                          {isEn ? (activeLetter.titleEn || activeLetter.title) : activeLetter.title}
+                        </strong>
+                        <div style={{ fontSize: 12, color: '#b45309' }}>
+                          {isEn ? 'Official Customer Request Letter' : 'Thư đề nghị vận chuyển chính thức từ khách hàng'} · {dayjs(activeLetter.createdAt).format('HH:mm - DD/MM/YYYY')}
+                        </div>
+                      </div>
+                    </Flex>
+                    <Tag color="gold" style={{ fontWeight: 700, borderRadius: 6 }}>
+                      {isEn ? 'Official Letter' : 'Thư chính thức'}
+                    </Tag>
+                  </Flex>
+
+                  <div
+                    style={{
+                      whiteSpace: 'pre-line',
+                      fontFamily: 'serif',
+                      fontSize: 14,
+                      lineHeight: 1.7,
+                      color: '#1e293b',
+                      backgroundColor: '#ffffff',
+                      padding: '18px 22px',
+                      borderRadius: 10,
+                      border: '1px solid #fef3c7',
+                      boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.02)',
+                    }}
+                  >
+                    {isEn ? (activeLetter.contentEn || activeLetter.contentVi) : activeLetter.contentVi}
+                  </div>
+                </Card>
+              )}
+
               {/* 1. Customer Information Card */}
               <Card
                 bordered
@@ -1012,6 +1135,25 @@ export default function PendingRequestsPage() {
       <PageHeader
         title={t('manager.pendingRequests.title')}
         subtitle={t('manager.pendingRequests.subtitle')}
+      />
+
+      {/* Thông báo hộp thư yêu cầu vận chuyển */}
+      <Alert
+        type="info"
+        showIcon
+        icon={<span style={{ fontSize: 20 }}>📬</span>}
+        message={<strong style={{ fontSize: 14.5 }}>{isEn ? 'Official Transport Request Letters Inbox' : 'Hộp thư yêu cầu vận chuyển chính thức từ khách hàng'}</strong>}
+        description={
+          isEn
+            ? 'Whenever a customer submits a transport booking, their official request letter is delivered here. Click on any booking below to inspect the attached letter and process approval.'
+            : 'Mỗi khi khách hàng gửi đơn đặt chuyến mới, thư đề nghị vận chuyển chính thức sẽ được gửi trực tiếp đến đây. Bấm vào bất kỳ đơn nào bên dưới để xem toàn văn thư và phê duyệt.'
+        }
+        style={{
+          marginBottom: 16,
+          borderRadius: 14,
+          backgroundColor: '#eff6ff',
+          border: '1.5px solid #bfdbfe',
+        }}
       />
 
       {/* Thanh tìm kiếm và bộ lọc nhanh */}

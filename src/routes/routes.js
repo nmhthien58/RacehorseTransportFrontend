@@ -38,6 +38,7 @@ export const ROUTES = {
   MANAGER_PENDING_REQUESTS: '/manager/pending-requests',
   MANAGER_TRIPS: '/manager/trips',
   MANAGER_REPORTS: '/manager/reports',
+  MANAGER_PROFILE: '/manager/profile',
 
   // Specialist
   SPECIALIST_DASHBOARD: '/specialist/dashboard',
@@ -59,5 +60,6 @@ export const ROUTES = {
   DRIVER_WELFARE_LOG: '/driver/trips/:id/welfare-log',
 
   // Shared
+  PROFILE: '/profile',
   NOTIFICATIONS: '/notifications',
 };

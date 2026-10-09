@@ -1,6 +1,21 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+export const DEFAULT_CUSTOMER = {
+  userId: 5,
+  UserID: 5,
+  fullName: 'Jane Smith',
+  FullName: 'Jane Smith',
+  email: 'customer@test.com',
+  Email: 'customer@test.com',
+  role: 'Customer',
+  Role: 'Customer',
+  phoneNumber: '+84988111222',
+  Phone: '+84988111222',
+  MembershipTier: 'VIP Diamond Member',
+  FEIOwnerID: 'VN-OWN-2024-0089',
+};
+
 export const useAuthStore = create(
   persist(
     (set, get) => ({
@@ -12,8 +27,8 @@ export const useAuthStore = create(
       login: (user, token, refreshToken = null) =>
         set({
           user,
-          token,
-          refreshToken,
+          token: token || `mock-token-${user?.userId || Date.now()}`,
+          refreshToken: refreshToken || null,
           isAuthenticated: true,
         }),
 
@@ -36,24 +51,20 @@ export const useAuthStore = create(
       hasRole: (roles) => {
         const { user } = get();
         if (!user) return false;
-        if (Array.isArray(roles)) return roles.includes(user.role);
-        return user.role === roles;
+        const role = user.role || user.Role;
+        if (Array.isArray(roles)) return roles.includes(role);
+        return role === roles;
       },
     }),
     {
       name: 'auth-storage',
-      version: 2,
-      migrate: (persistedState, version) => {
-        if (!version || version < 2) {
-          return {
-            user: null,
-            token: null,
-            refreshToken: null,
-            isAuthenticated: false,
-          };
-        }
-        return persistedState;
-      },
+      version: 4,
+      migrate: () => ({
+        user: null,
+        token: null,
+        refreshToken: null,
+        isAuthenticated: false,
+      }),
       partialize: (state) => ({
         user: state.user,
         token: state.token,
@@ -63,3 +74,4 @@ export const useAuthStore = create(
     },
   ),
 );
+

@@ -73,13 +73,20 @@ export default function CustomerBookings() {
       })
       .then((res) => {
         if (isSubscribed) {
-          const list = res?.data?.data || res?.data || [];
+          const list = Array.isArray(res?.data)
+            ? res.data
+            : Array.isArray(res?.data?.data)
+            ? res.data.data
+            : Array.isArray(res)
+            ? res
+            : [];
           setBookings(list);
         }
       })
       .catch(() => {
         if (isSubscribed) {
-          message.error(t('common.loading'));
+          message.error(t('common.loading') || 'Không thể tải danh sách yêu cầu');
+          setBookings([]);
         }
       })
       .finally(() => {
@@ -125,18 +132,22 @@ export default function CustomerBookings() {
   };
 
   // Thống kê số lượng theo 3 chỉ số chính (Figma Frame 75:5337)
-  const totalCount = bookings.length;
-  const pendingCount = bookings.filter((b) => (b.status || b.Status) === 'Submitted').length;
-  const activeCount = bookings.filter(
-    (b) => {
-      const st = b.status || b.Status;
-      return st === 'Approved' || st === 'Assigned' || st === 'InTransit';
-    },
-  ).length;
+  const totalCount = Array.isArray(bookings) ? bookings.length : 0;
+  const pendingCount = Array.isArray(bookings)
+    ? bookings.filter((b) => (b.status || b.Status) === 'Submitted').length
+    : 0;
+  const activeCount = Array.isArray(bookings)
+    ? bookings.filter((b) => {
+        const st = b.status || b.Status;
+        return st === 'Approved' || st === 'Assigned' || st === 'InTransit';
+      }).length
+    : 0;
 
   // Lọc danh sách theo Tab, Search và Mode
   const filteredBookings = useMemo(() => {
+    if (!Array.isArray(bookings)) return [];
     return bookings.filter((item) => {
+      if (!item) return false;
       const itemStatus = item.status || item.Status;
       const itemMode = item.transportMode || item.TransportMode;
 
@@ -218,14 +229,27 @@ export default function CustomerBookings() {
       <Row gutter={[20, 20]} style={{ marginBottom: 28 }}>
         {/* Tổng số yêu cầu */}
         <Col xs={24} sm={8}>
-          <Card
-            bordered
+          <div
+            onClick={() => setStatusFilter('All')}
             style={{
               borderRadius: 14,
-              borderColor: '#e2e8f0',
+              border: statusFilter === 'All' ? '1.5px solid #F59E0B' : '1.5px solid #e2e8f0',
+              backgroundColor: statusFilter === 'All' ? '#FFFBEB' : '#ffffff',
               boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+              padding: '20px 24px',
+              cursor: 'pointer',
+              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
-            styles={{ body: { padding: '20px 24px' } }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(217, 119, 6, 0.12)';
+              e.currentTarget.style.borderColor = '#F59E0B';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.04)';
+              e.currentTarget.style.borderColor = statusFilter === 'All' ? '#F59E0B' : '#e2e8f0';
+            }}
           >
             <Flex justify="space-between" align="center">
               <div>
@@ -252,19 +276,32 @@ export default function CustomerBookings() {
                 <InboxOutlined />
               </div>
             </Flex>
-          </Card>
+          </div>
         </Col>
 
         {/* Chờ xét duyệt */}
         <Col xs={24} sm={8}>
-          <Card
-            bordered
+          <div
+            onClick={() => setStatusFilter('Submitted')}
             style={{
               borderRadius: 14,
-              borderColor: '#e2e8f0',
+              border: statusFilter === 'Submitted' ? '1.5px solid #f59e0b' : '1.5px solid #e2e8f0',
+              backgroundColor: statusFilter === 'Submitted' ? '#fffbeb' : '#ffffff',
               boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+              padding: '20px 24px',
+              cursor: 'pointer',
+              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
-            styles={{ body: { padding: '20px 24px' } }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(245, 158, 11, 0.15)';
+              e.currentTarget.style.borderColor = '#f59e0b';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.04)';
+              e.currentTarget.style.borderColor = statusFilter === 'Submitted' ? '#f59e0b' : '#e2e8f0';
+            }}
           >
             <Flex justify="space-between" align="center">
               <div>
@@ -291,19 +328,32 @@ export default function CustomerBookings() {
                 <ClockCircleOutlined />
               </div>
             </Flex>
-          </Card>
+          </div>
         </Col>
 
         {/* Đã duyệt & Đang triển khai */}
         <Col xs={24} sm={8}>
-          <Card
-            bordered
+          <div
+            onClick={() => setStatusFilter('Active')}
             style={{
               borderRadius: 14,
-              borderColor: '#e2e8f0',
+              border: statusFilter === 'Active' ? '1.5px solid #10b981' : '1.5px solid #e2e8f0',
+              backgroundColor: statusFilter === 'Active' ? '#ecfdf5' : '#ffffff',
               boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+              padding: '20px 24px',
+              cursor: 'pointer',
+              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
-            styles={{ body: { padding: '20px 24px' } }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(16, 185, 129, 0.15)';
+              e.currentTarget.style.borderColor = '#10b981';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.04)';
+              e.currentTarget.style.borderColor = statusFilter === 'Active' ? '#10b981' : '#e2e8f0';
+            }}
           >
             <Flex justify="space-between" align="center">
               <div>
@@ -330,7 +380,7 @@ export default function CustomerBookings() {
                 <CheckCircleOutlined />
               </div>
             </Flex>
-          </Card>
+          </div>
         </Col>
       </Row>
 
@@ -370,11 +420,12 @@ export default function CustomerBookings() {
               value={modeFilter}
               onChange={setModeFilter}
               size="middle"
-              style={{ width: 160 }}
+              style={{ width: 175 }}
               options={[
                 { value: 'All', label: t('bookings.filterAllModes') || 'Mọi phương thức' },
                 { value: 'Ground', label: '🚛 ' + (t('bookings.modes.ground') || 'Đường bộ') },
                 { value: 'Air', label: '✈ ' + (t('bookings.modes.air') || 'Hàng không') },
+                { value: 'DoorToDoor', label: '🚛✈ ' + (t('bookings.modes.doorToDoor') || 'Door-to-Door') },
               ]}
             />
 

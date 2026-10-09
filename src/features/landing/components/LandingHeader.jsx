@@ -5,6 +5,7 @@ import {
   Dropdown,
   Flex,
   Space,
+  Tag,
   message,
 } from 'antd';
 import {
@@ -16,10 +17,12 @@ import {
   RightOutlined,
   FolderOpenOutlined,
   DollarCircleOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ROUTES } from '@routes/routes';
+import { ROLES } from '@utils/constants';
 import { useAuthStore } from '@features/auth/store/authStore';
 import logoWhite from '@assets/logo-white-web.png';
 
@@ -51,10 +54,31 @@ export default function LandingHeader({ activeKey = 'home' }) {
     navigate(ROUTES.HOME);
   };
 
+  const getProfileRoute = () => {
+    if (isAdminOrManager) return ROUTES.MANAGER_PROFILE;
+    if (currentRole === ROLES.CUSTOMER) return ROUTES.CUSTOMER_PROFILE;
+    return ROUTES.PROFILE;
+  };
+
   const handleAccountClick = () => {
     if (!isAuthenticated) {
       message.warning(t('landing.nav.loginRequired', 'Vui lòng đăng nhập để truy cập tài khoản.'));
-      navigate(ROUTES.LOGIN, { state: { returnTo: ROUTES.CUSTOMER_DASHBOARD } });
+      navigate(ROUTES.LOGIN);
+      return;
+    }
+    navigate(getProfileRoute());
+  };
+
+  const handleDashboardClick = () => {
+    const role = user?.role || user?.Role;
+    if (role === ROLES.ADMIN || role === ROLES.MANAGER) {
+      navigate(ROUTES.MANAGER_DASHBOARD);
+    } else if (role === ROLES.SPECIALIST) {
+      navigate(ROUTES.SPECIALIST_DASHBOARD);
+    } else if (role === ROLES.COORDINATOR) {
+      navigate(ROUTES.COORDINATOR_DASHBOARD);
+    } else if (role === ROLES.DRIVER) {
+      navigate(ROUTES.DRIVER_DASHBOARD);
     } else {
       navigate(ROUTES.CUSTOMER_DASHBOARD);
     }
@@ -103,6 +127,11 @@ export default function LandingHeader({ activeKey = 'home' }) {
     },
   ];
 
+  const currentRole = user?.role || user?.Role || 'Customer';
+  const isAdminOrManager = currentRole === ROLES.ADMIN || currentRole === ROLES.MANAGER;
+  const userFullName = user?.fullName || user?.FullName || (isAdminOrManager ? 'Admin Quản Trị' : 'Jane Smith');
+  const userEmail = user?.email || user?.Email || (isAdminOrManager ? 'admin@test.com' : 'customer@test.com');
+
   // Menu thả xuống cho User Profile (có My Profile, Dashboard, Logout)
   const userProfileMenuItems = [
     {
@@ -111,10 +140,16 @@ export default function LandingHeader({ activeKey = 'home' }) {
       label: (
         <div style={{ padding: '6px 4px 4px 4px' }}>
           <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>
-            {user?.FullName || 'Kaze Lee'}
+            {userFullName}
           </div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>
-            {user?.Email || 'customer@test.com'}
+          <div style={{ fontSize: 12, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+            <span>{userEmail}</span>
+            <Tag
+              color={currentRole === ROLES.ADMIN ? 'gold' : currentRole === ROLES.MANAGER ? 'blue' : 'green'}
+              style={{ margin: 0, fontSize: 10, borderRadius: 4, fontWeight: 700 }}
+            >
+              {currentRole}
+            </Tag>
           </div>
         </div>
       ),
@@ -125,27 +160,53 @@ export default function LandingHeader({ activeKey = 'home' }) {
     {
       key: 'profile',
       icon: <UserOutlined />,
-      label: <span style={{ fontWeight: 600 }}>{t('landing.nav.profile')}</span>,
-      onClick: () => navigate(ROUTES.CUSTOMER_PROFILE),
+      label: <span style={{ fontWeight: 600 }}>{t('landing.nav.profile', 'Hồ sơ cá nhân (My Profile)')}</span>,
+      onClick: () => navigate(getProfileRoute()),
     },
-    {
-      key: 'dashboard',
-      icon: <DashboardOutlined />,
-      label: <span style={{ fontWeight: 600 }}>{t('landing.nav.dashboard')}</span>,
-      onClick: () => navigate(ROUTES.CUSTOMER_DASHBOARD),
-    },
-    {
-      key: 'pricing',
-      icon: <DollarCircleOutlined />,
-      label: <span style={{ fontWeight: 600 }}>{t('nav.pricing', 'Pricing')}</span>,
-      onClick: () => navigate(ROUTES.CUSTOMER_PRICING),
-    },
-    {
-      key: 'horses',
-      icon: <FolderOpenOutlined />,
-      label: <span style={{ fontWeight: 600 }}>{t('landing.nav.myHorses')}</span>,
-      onClick: () => navigate(ROUTES.CUSTOMER_HORSES),
-    },
+    ...(isAdminOrManager
+      ? [
+          {
+            key: 'manager-dashboard',
+            icon: <DashboardOutlined />,
+            label: <span style={{ fontWeight: 600 }}>{t('nav.managerDashboard', 'Bảng quản lý (Manager)')}</span>,
+            onClick: () => navigate(ROUTES.MANAGER_DASHBOARD),
+          },
+          {
+            key: 'pending-requests',
+            icon: <ClockCircleOutlined />,
+            label: <span style={{ fontWeight: 600 }}>{t('nav.pendingRequests', 'Yêu cầu chờ duyệt')}</span>,
+            onClick: () => navigate(ROUTES.MANAGER_PENDING_REQUESTS),
+          },
+        ]
+      : currentRole === ROLES.CUSTOMER
+      ? [
+          {
+            key: 'dashboard',
+            icon: <DashboardOutlined />,
+            label: <span style={{ fontWeight: 600 }}>{t('landing.nav.dashboard', 'Bảng điều khiển')}</span>,
+            onClick: () => navigate(ROUTES.CUSTOMER_DASHBOARD),
+          },
+          {
+            key: 'pricing',
+            icon: <DollarCircleOutlined />,
+            label: <span style={{ fontWeight: 600 }}>{t('nav.pricing', 'Pricing')}</span>,
+            onClick: () => navigate(ROUTES.CUSTOMER_PRICING),
+          },
+          {
+            key: 'horses',
+            icon: <FolderOpenOutlined />,
+            label: <span style={{ fontWeight: 600 }}>{t('landing.nav.myHorses', 'Ngựa của tôi')}</span>,
+            onClick: () => navigate(ROUTES.CUSTOMER_HORSES),
+          },
+        ]
+      : [
+          {
+            key: 'dashboard',
+            icon: <DashboardOutlined />,
+            label: <span style={{ fontWeight: 600 }}>{t('landing.nav.dashboard', 'Bảng điều khiển')}</span>,
+            onClick: handleDashboardClick,
+          },
+        ]),
     {
       type: 'divider',
     },
@@ -391,10 +452,10 @@ export default function LandingHeader({ activeKey = 'home' }) {
                         fontWeight: 800,
                       }}
                     >
-                      {getInitials(user?.FullName)}
+                      {getInitials(userFullName)}
                     </Avatar>
                     <span style={{ color: '#ffffff', fontWeight: 600, fontSize: 14 }}>
-                      {user?.FullName || 'Kaze Lee'}
+                      {userFullName}
                     </span>
                     <DownOutlined style={{ color: '#94a3b8', fontSize: 11 }} />
                   </Flex>
@@ -402,7 +463,7 @@ export default function LandingHeader({ activeKey = 'home' }) {
 
                 <Button
                   type="primary"
-                  onClick={() => navigate(ROUTES.CUSTOMER_DASHBOARD)}
+                  onClick={handleDashboardClick}
                   style={{
                     backgroundColor: '#FBA919',
                     borderColor: '#FBA919',
@@ -413,7 +474,7 @@ export default function LandingHeader({ activeKey = 'home' }) {
                     height: 38,
                   }}
                 >
-                  {t('landing.nav.dashboard')}
+                  {isAdminOrManager ? t('nav.managerPortal', 'Trang Quản lý') : t('landing.nav.dashboard', 'Dashboard')}
                 </Button>
               </>
             )}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { App, Button, Modal, Space, Typography } from 'antd';
+import { Button, Modal, Space, Typography, message } from 'antd';
 import {
   CheckCircleFilled,
   ArrowLeftOutlined,
@@ -25,7 +25,6 @@ export default function AddHorsePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { message } = App.useApp();
 
   const [submitting, setSubmitting] = useState(false);
   const [createdHorse, setCreatedHorse] = useState(null);

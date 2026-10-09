@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
+  Button,
   Col,
   DatePicker,
   Flex,
@@ -30,6 +31,12 @@ import { horseService } from '@services/horseService';
 import { bookingService } from '@services/bookingService';
 import { tripService } from '@services/tripService';
 import { ROUTES } from '@routes/routes';
+import {
+  calculateHorseRisk,
+  HealthStatusTag,
+  RiskBadge,
+  HEALTH_STATUS_OPTIONS,
+} from '@utils/horseHealth';
 
 const { Text, Title } = Typography;
 
@@ -70,6 +77,7 @@ export default function CustomerDashboard() {
       color: horse.color || horse.Color || '',
       microchipNumber: horse.microchipNumber || horse.MicrochipNumber || '',
       passportNumber: horse.passportNumber || horse.PassportNumber || '',
+      healthStatus: horse.healthStatus || horse.HealthStatus || 'Good',
       specialCareRequirements: horse.specialCareRequirements || horse.SpecialCareRequirements || '',
     });
     setEditModalVisible(true);
@@ -86,6 +94,7 @@ export default function CustomerDashboard() {
         color: values.color?.trim() || '',
         microchipNumber: values.microchipNumber?.trim() || '',
         passportNumber: values.passportNumber?.trim() || '',
+        healthStatus: values.healthStatus || 'Good',
         specialCareRequirements: values.specialCareRequirements?.trim() || '',
       };
       const horseId = editingHorse.horseId || editingHorse.HorseID;
@@ -170,29 +179,25 @@ export default function CustomerDashboard() {
         title={t('dashboard.title')}
         subtitle={t('dashboard.subtitle')}
         actions={
-          <button
-            type="button"
+          <Button
+            type="primary"
+            size="large"
+            icon={<PlusOutlined />}
             onClick={() => navigate(ROUTES.CUSTOMER_BOOKING_NEW)}
             style={{
               backgroundColor: '#FBA919',
+              borderColor: '#FBA919',
               color: '#0f172a',
               fontWeight: 700,
-              fontSize: 18,
-              border: 'none',
+              fontSize: 15,
               borderRadius: 9999,
-              height: 48,
-              padding: '0 32px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              cursor: 'pointer',
+              height: 42,
+              padding: '0 24px',
               boxShadow: '0 2px 8px rgba(251, 169, 25, 0.25)',
-              transition: 'all 0.2s',
             }}
           >
-            <span>+</span>
-            <span>{t('dashboard.bookBtn')}</span>
-          </button>
+            {String(t('dashboard.bookBtn') || 'Đặt chuyến').replace(/^\+\s*/, '')}
+          </Button>
         }
       />
 
@@ -216,11 +221,13 @@ export default function CustomerDashboard() {
                 e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
                 e.currentTarget.style.boxShadow = '0 12px 30px rgba(217, 119, 6, 0.15)';
                 e.currentTarget.style.borderColor = '#F59E0B';
+                e.currentTarget.style.backgroundColor = '#FFFBEB';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0) scale(1)';
                 e.currentTarget.style.boxShadow = '0 4px 24px rgba(0, 0, 0, 0.02)';
                 e.currentTarget.style.borderColor = '#F1F5F9';
+                e.currentTarget.style.backgroundColor = '#ffffff';
               }}
             >
               <div
@@ -272,11 +279,13 @@ export default function CustomerDashboard() {
                 e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
                 e.currentTarget.style.boxShadow = '0 12px 30px rgba(37, 99, 235, 0.15)';
                 e.currentTarget.style.borderColor = '#3B82F6';
+                e.currentTarget.style.backgroundColor = '#EFF6FF';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0) scale(1)';
                 e.currentTarget.style.boxShadow = '0 4px 24px rgba(0, 0, 0, 0.02)';
                 e.currentTarget.style.borderColor = '#F1F5F9';
+                e.currentTarget.style.backgroundColor = '#ffffff';
               }}
             >
               <div
@@ -328,11 +337,13 @@ export default function CustomerDashboard() {
                 e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
                 e.currentTarget.style.boxShadow = '0 12px 30px rgba(202, 138, 4, 0.15)';
                 e.currentTarget.style.borderColor = '#EAB308';
+                e.currentTarget.style.backgroundColor = '#FEFCE8';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0) scale(1)';
                 e.currentTarget.style.boxShadow = '0 4px 24px rgba(0, 0, 0, 0.02)';
                 e.currentTarget.style.borderColor = '#F1F5F9';
+                e.currentTarget.style.backgroundColor = '#ffffff';
               }}
             >
               <div
@@ -382,13 +393,15 @@ export default function CustomerDashboard() {
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
-                e.currentTarget.style.boxShadow = '0 12px 30px rgba(37, 99, 235, 0.15)';
-                e.currentTarget.style.borderColor = '#3B82F6';
+                e.currentTarget.style.boxShadow = '0 12px 30px rgba(16, 185, 129, 0.15)';
+                e.currentTarget.style.borderColor = '#10B981';
+                e.currentTarget.style.backgroundColor = '#ECFDF5';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0) scale(1)';
                 e.currentTarget.style.boxShadow = '0 4px 24px rgba(0, 0, 0, 0.02)';
                 e.currentTarget.style.borderColor = '#F1F5F9';
+                e.currentTarget.style.backgroundColor = '#ffffff';
               }}
             >
               <div
@@ -526,9 +539,12 @@ export default function CustomerDashboard() {
                     </div>
                   </Flex>
 
-                  <Tag color={item.isActive ? 'blue' : 'default'} style={{ borderRadius: 6 }}>
-                    {item.gender}
-                  </Tag>
+                  <Flex vertical align="end" gap={4}>
+                    <RiskBadge risk={calculateHorseRisk(item.raw, i18n.language)} size="small" />
+                    <span style={{ fontSize: 12, color: '#64748b' }}>
+                      {item.gender}
+                    </span>
+                  </Flex>
                 </div>
               </Col>
             ))}
@@ -551,180 +567,233 @@ export default function CustomerDashboard() {
           },
         }}
       >
-        {selectedHorse && (
-          <div>
-            {/* Header thông tin con ngựa */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+        {selectedHorse && (() => {
+          const horseRisk = calculateHorseRisk(selectedHorse, i18n.language);
+          const isCritical = horseRisk.level === 'CRITICAL';
+          return (
+            <div>
+              {/* Header thông tin con ngựa */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+                <div
+                  style={{
+                    width: 58,
+                    height: 58,
+                    borderRadius: 16,
+                    backgroundColor: '#FEF3C7',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 30,
+                    flexShrink: 0,
+                    border: '1px solid #FDE68A',
+                  }}
+                >
+                  🐴
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 20, fontWeight: 800, color: '#0F172A' }}>
+                      {selectedHorse.name || selectedHorse.Name}
+                    </span>
+                    <Tag color="gold" style={{ borderRadius: 6, fontWeight: 700, fontSize: 12 }}>
+                      {selectedHorse.breed || selectedHorse.Breed}
+                    </Tag>
+                    <HealthStatusTag
+                      status={selectedHorse.healthStatus || selectedHorse.HealthStatus || 'Good'}
+                      size="small"
+                    />
+                    <RiskBadge risk={horseRisk} size="small" />
+                  </div>
+                  <div style={{ fontSize: 13, color: '#64748B', marginTop: 4 }}>
+                    {t('horses.fields.microchip')}: {selectedHorse.microchipNumber || selectedHorse.MicrochipNumber || '---'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Báo động nếu nguy kịch */}
+              {isCritical && (
+                <div
+                  style={{
+                    backgroundColor: '#FEF2F2',
+                    border: '1.5px solid #FECACA',
+                    borderRadius: 12,
+                    padding: '12px 16px',
+                    marginBottom: 16,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ fontSize: 22 }}>⛔</div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: '#991B1B' }}>
+                      {isEn ? 'TRANSPORT PROHIBITED (NON-FIT-TO-TRAVEL)' : 'CẤM VẬN CHUYỂN (NON-FIT-TO-TRAVEL)'}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#B91C1C', marginTop: 2 }}>
+                      {isEn
+                        ? 'This horse is assessed as Critical Risk and cannot be transported until authorized by a veterinarian.'
+                        : 'Ngựa thuộc nhóm Rủi ro nguy cấp, không đủ điều kiện an toàn vận chuyển theo quy chuẩn FEI.'}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Bảng thuộc tính chi tiết */}
               <div
                 style={{
-                  width: 58,
-                  height: 58,
-                  borderRadius: 16,
-                  backgroundColor: '#FEF3C7',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 30,
-                  flexShrink: 0,
-                  border: '1px solid #FDE68A',
+                  backgroundColor: '#F8FAFC',
+                  border: '1px solid #E2E8F0',
+                  borderRadius: 14,
+                  padding: '16px 20px',
+                  marginBottom: 16,
                 }}
               >
-                🐴
+                <Row gutter={[16, 12]}>
+                  <Col span={12}>
+                    <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, letterSpacing: '0.04em' }}>
+                      {t('horses.fields.microchip').toUpperCase()}
+                    </div>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A', marginTop: 2, fontFamily: 'monospace' }}>
+                      {selectedHorse.microchipNumber || selectedHorse.MicrochipNumber || '---'}
+                    </div>
+                  </Col>
+                  <Col span={12}>
+                    <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, letterSpacing: '0.04em' }}>
+                      {t('horses.fields.passport').toUpperCase()}
+                    </div>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A', marginTop: 2 }}>
+                      {selectedHorse.passportNumber || selectedHorse.PassportNumber || t('horses.notIssued')}
+                    </div>
+                  </Col>
+                  <Col span={12}>
+                    <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, letterSpacing: '0.04em' }}>
+                      {t('horses.fields.color')}
+                    </div>
+                    <div style={{ fontSize: 13, color: '#334155', marginTop: 2 }}>
+                      {selectedHorse.color || selectedHorse.Color || t('horses.noColor')}
+                    </div>
+                  </Col>
+                  <Col span={12}>
+                    <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, letterSpacing: '0.04em' }}>
+                      {t('horses.cabinTemp')}
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#D97706', marginTop: 2 }}>
+                      {formatTempRange(16, 19)}
+                    </div>
+                  </Col>
+                </Row>
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 20, fontWeight: 800, color: '#0F172A' }}>
-                    {selectedHorse.name || selectedHorse.Name}
-                  </span>
-                  <Tag color="gold" style={{ borderRadius: 6, fontWeight: 700, fontSize: 12 }}>
-                    {selectedHorse.breed || selectedHorse.Breed}
-                  </Tag>
-                  <Tag color="blue" style={{ borderRadius: 6 }}>
-                    {selectedHorse.gender || selectedHorse.Gender}
-                  </Tag>
-                </div>
-                <div style={{ fontSize: 13, color: '#64748B', marginTop: 4 }}>
-                  {t('horses.fields.microchip')}: {selectedHorse.microchipNumber || selectedHorse.MicrochipNumber || '---'}
-                </div>
-              </div>
-            </div>
 
-            {/* Bảng thuộc tính chi tiết */}
-            <div
-              style={{
-                backgroundColor: '#F8FAFC',
-                border: '1px solid #E2E8F0',
-                borderRadius: 14,
-                padding: '16px 20px',
-                marginBottom: 16,
-              }}
-            >
-              <Row gutter={[16, 12]}>
-                <Col span={12}>
-                  <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, letterSpacing: '0.04em' }}>
-                    {t('horses.fields.microchip').toUpperCase()}
-                  </div>
-                  <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A', marginTop: 2, fontFamily: 'monospace' }}>
-                    {selectedHorse.microchipNumber || selectedHorse.MicrochipNumber || '---'}
-                  </div>
-                </Col>
-                <Col span={12}>
-                  <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, letterSpacing: '0.04em' }}>
-                    {t('horses.fields.passport').toUpperCase()}
-                  </div>
-                  <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A', marginTop: 2 }}>
-                    {selectedHorse.passportNumber || selectedHorse.PassportNumber || t('horses.notIssued')}
-                  </div>
-                </Col>
-                <Col span={12}>
-                  <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, letterSpacing: '0.04em' }}>
-                    {t('horses.fields.color')}
-                  </div>
-                  <div style={{ fontSize: 13, color: '#334155', marginTop: 2 }}>
-                    {selectedHorse.color || selectedHorse.Color || t('horses.noColor')}
-                  </div>
-                </Col>
-                <Col span={12}>
-                  <div style={{ fontSize: 11, color: '#64748B', fontWeight: 700, letterSpacing: '0.04em' }}>
-                    {t('horses.cabinTemp')}
-                  </div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#D97706', marginTop: 2 }}>
-                    {formatTempRange(16, 19)}
-                  </div>
-                </Col>
-              </Row>
-            </div>
-
-            {/* Yêu cầu chăm sóc đặc biệt */}
-            {(selectedHorse.specialCareRequirements || selectedHorse.SpecialCareRequirements) && (
-              <div
-                style={{
-                  backgroundColor: '#FFFBEB',
-                  border: '1px solid #FDE68A',
-                  borderRadius: 12,
-                  padding: '12px 16px',
-                  marginBottom: 20,
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 10,
-                }}
-              >
-                <span style={{ fontSize: 16 }}>⚠️</span>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#B45309' }}>
-                    {t('horses.specialCareLabel')}
-                  </div>
-                  <div style={{ fontSize: 12.5, color: '#92400E', marginTop: 2, lineHeight: 1.45 }}>
-                    {selectedHorse.specialCareRequirements || selectedHorse.SpecialCareRequirements}
+              {/* Yêu cầu chăm sóc đặc biệt */}
+              {(selectedHorse.specialCareRequirements || selectedHorse.SpecialCareRequirements) && (
+                <div
+                  style={{
+                    backgroundColor: '#FFFBEB',
+                    border: '1px solid #FDE68A',
+                    borderRadius: 12,
+                    padding: '12px 16px',
+                    marginBottom: 20,
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 10,
+                  }}
+                >
+                  <span style={{ fontSize: 16 }}>⚠️</span>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#B45309' }}>
+                      {t('horses.specialCareLabel')}
+                    </div>
+                    <div style={{ fontSize: 12.5, color: '#92400E', marginTop: 2, lineHeight: 1.45 }}>
+                      {selectedHorse.specialCareRequirements || selectedHorse.SpecialCareRequirements}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Các nút tương tác */}
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20, flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                onClick={() => handleOpenEditHorse(selectedHorse)}
-                style={{
-                  backgroundColor: '#EFF6FF',
-                  border: '1px solid #BFDBFE',
-                  color: '#1D4ED8',
-                  fontWeight: 700,
-                  fontSize: 13,
-                  borderRadius: 10,
-                  padding: '9px 18px',
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                }}
-              >
-                <EditOutlined /> {t('horses.editHorse')}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const id = selectedHorse.horseId || selectedHorse.HorseID;
-                  setSelectedHorse(null);
-                  navigate(`/customer/horses/${id}`);
-                }}
-                style={{
-                  backgroundColor: '#F1F5F9',
-                  border: 'none',
-                  color: '#334155',
-                  fontWeight: 700,
-                  fontSize: 13,
-                  borderRadius: 10,
-                  padding: '9px 18px',
-                  cursor: 'pointer',
-                }}
-              >
-                {t('horses.viewFullProfile')}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedHorse(null);
-                  navigate(ROUTES.CUSTOMER_BOOKING_NEW);
-                }}
-                style={{
-                  backgroundColor: '#FBA919',
-                  border: 'none',
-                  color: '#FFFFFF',
-                  fontWeight: 700,
-                  fontSize: 13,
-                  borderRadius: 10,
-                  padding: '9px 20px',
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 8px rgba(251, 169, 25, 0.25)',
-                }}
-              >
-                {t('horses.bookTransport')}
-              </button>
+              {/* Các nút tương tác */}
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20, flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => handleOpenEditHorse(selectedHorse)}
+                  style={{
+                    backgroundColor: '#EFF6FF',
+                    border: '1px solid #BFDBFE',
+                    color: '#1D4ED8',
+                    fontWeight: 700,
+                    fontSize: 13,
+                    borderRadius: 10,
+                    padding: '9px 18px',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <EditOutlined /> {t('horses.editHorse')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const id = selectedHorse.horseId || selectedHorse.HorseID;
+                    setSelectedHorse(null);
+                    navigate(`/customer/horses/${id}`);
+                  }}
+                  style={{
+                    backgroundColor: '#F1F5F9',
+                    border: 'none',
+                    color: '#334155',
+                    fontWeight: 700,
+                    fontSize: 13,
+                    borderRadius: 10,
+                    padding: '9px 18px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {t('horses.viewFullProfile')}
+                </button>
+                {isCritical ? (
+                  <button
+                    type="button"
+                    disabled
+                    style={{
+                      backgroundColor: '#F1F5F9',
+                      border: '1px solid #CBD5E1',
+                      color: '#94A3B8',
+                      fontWeight: 700,
+                      fontSize: 13,
+                      borderRadius: 10,
+                      padding: '9px 20px',
+                      cursor: 'not-allowed',
+                    }}
+                  >
+                    ⛔ {isEn ? 'Non-Fit-to-Travel' : 'Cấm vận chuyển'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedHorse(null);
+                      navigate(ROUTES.CUSTOMER_BOOKING_NEW);
+                    }}
+                    style={{
+                      backgroundColor: '#FBA919',
+                      border: 'none',
+                      color: '#FFFFFF',
+                      fontWeight: 700,
+                      fontSize: 13,
+                      borderRadius: 10,
+                      padding: '9px 20px',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 8px rgba(251, 169, 25, 0.25)',
+                    }}
+                  >
+                    {t('horses.bookTransport')}
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </Modal>
 
       {/* ======================================================== */}
@@ -818,6 +887,36 @@ export default function CustomerDashboard() {
             <Col xs={24} sm={12}>
               <Form.Item name="passportNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.passport')}</span>}>
                 <Input placeholder={t('horses.placeholders.passport')} size="large" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col xs={24}>
+              <Form.Item
+                name="healthStatus"
+                label={<span style={{ fontWeight: 600 }}>{t('horses.fields.healthStatus', 'Tình trạng sức khỏe')}</span>}
+              >
+                <Select size="large">
+                  {HEALTH_STATUS_OPTIONS.map((opt) => (
+                    <Select.Option key={opt.value} value={opt.value}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            width: 10,
+                            height: 10,
+                            borderRadius: '50%',
+                            backgroundColor: opt.color,
+                          }}
+                        />
+                        <span style={{ color: opt.color, fontWeight: 600 }}>
+                          {isEn ? opt.labelEn : opt.labelVi}
+                        </span>
+                      </div>
+                    </Select.Option>
+                  ))}
+                </Select>
               </Form.Item>
             </Col>
           </Row>

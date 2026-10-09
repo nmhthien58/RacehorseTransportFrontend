@@ -82,58 +82,34 @@ export default function AppSidebar({ collapsed, user }) {
           icon: <MessageOutlined style={{ fontSize: 18 }} />,
           label: t('nav.messages'),
         },
-        {
-          type: 'group',
-          label: (
-            <span
-              style={{
-                fontSize: 14,
-                fontWeight: 700,
-                color: '#1e293b',
-                marginTop: 12,
-                display: 'block',
-              }}
-            >
-              {t('nav.accountGroup')}
-            </span>
-          ),
-          children: [
-            {
-              key: ROUTES.CUSTOMER_PROFILE,
-              icon: <UserOutlined style={{ fontSize: 18 }} />,
-              label: t('nav.profile'),
-            },
-            {
-              key: '/customer/billing',
-              icon: <CreditCardOutlined style={{ fontSize: 18 }} />,
-              label: t('nav.billing'),
-            },
-            {
-              key: ROUTES.CUSTOMER_SETTINGS,
-              icon: <SettingOutlined style={{ fontSize: 18 }} />,
-              label: t('nav.settings'),
-            },
-          ],
-        },
       ];
     }
 
-    if (userRole === ROLES.MANAGER) {
+    if (userRole === ROLES.MANAGER || userRole === ROLES.ADMIN) {
       return [
+        {
+          key: ROUTES.HOME,
+          icon: <HomeOutlined style={{ fontSize: 18, color: '#f59e0b' }} />,
+          label: (
+            <span style={{ fontWeight: 700, color: '#0f172a' }}>
+              {t('landing.nav.home', 'Home')}
+            </span>
+          ),
+        },
         {
           key: ROUTES.MANAGER_DASHBOARD,
           icon: <AppstoreOutlined style={{ fontSize: 18 }} />,
-          label: t('nav.dashboard'),
+          label: t('nav.dashboard', 'Bảng điều khiển'),
         },
         {
           key: ROUTES.MANAGER_BOOKINGS,
           icon: <CarOutlined style={{ fontSize: 18 }} />,
-          label: t('nav.transportRequests'),
+          label: t('nav.transportRequests', 'Đơn đặt chuyến'),
         },
         {
-          key: ROUTES.MANAGER_TRIPS,
-          icon: <CompassOutlined style={{ fontSize: 18 }} />,
-          label: t('nav.activeTrips'),
+          key: ROUTES.MANAGER_PENDING_REQUESTS,
+          icon: <ClockCircleOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.pendingRequests', 'Yêu cầu chờ duyệt'),
         },
       ];
     }
@@ -143,6 +119,11 @@ export default function AppSidebar({ collapsed, user }) {
         key: getDashboardRoute(userRole),
         icon: <AppstoreOutlined style={{ fontSize: 18 }} />,
         label: t('nav.dashboard'),
+      },
+      {
+        key: ROUTES.PROFILE,
+        icon: <UserOutlined style={{ fontSize: 18 }} />,
+        label: t('nav.profile', 'Hồ sơ cá nhân'),
       },
     ];
   };
@@ -154,10 +135,16 @@ export default function AppSidebar({ collapsed, user }) {
     if (current.startsWith('/customer/horses')) return ROUTES.CUSTOMER_HORSES;
     if (current.startsWith('/customer/vet-record') || current.startsWith('/customer/vetrecord') || current.startsWith('/vet-record')) return ROUTES.CUSTOMER_VET_RECORDS;
     if (current.startsWith('/customer/bookings')) return ROUTES.CUSTOMER_BOOKINGS;
+    if (current.startsWith('/customer/pricing')) return ROUTES.CUSTOMER_PRICING;
     if (current.startsWith('/customer/trips')) return ROUTES.CUSTOMER_TRIPS;
     if (current.startsWith('/customer/messages')) return ROUTES.CUSTOMER_MESSAGES;
     if (current.startsWith('/customer/profile')) return ROUTES.CUSTOMER_PROFILE;
     if (current.startsWith('/customer/billing') || current.startsWith('/billing')) return ROUTES.CUSTOMER_BILLING;
+    if (current.startsWith('/manager/pending-requests')) return ROUTES.MANAGER_PENDING_REQUESTS;
+    if (current.startsWith('/manager/bookings')) return ROUTES.MANAGER_BOOKINGS;
+    if (current.startsWith('/manager/dashboard')) return ROUTES.MANAGER_DASHBOARD;
+    if (current.startsWith('/manager/profile')) return ROUTES.MANAGER_PROFILE;
+    if (current === '/profile') return ROUTES.PROFILE;
     return current;
   };
 

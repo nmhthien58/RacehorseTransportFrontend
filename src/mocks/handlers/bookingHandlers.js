@@ -1,18 +1,85 @@
 import { http, HttpResponse } from 'msw';
-import initialBookings from '../data/bookings.json';
+import {
+  getStoredBookings,
+  getStoredBookingById,
+  addStoredBooking,
+  updateStoredBooking,
+} from '../../utils/bookingStorage';
 
-// Bộ nhớ đệm tạm thời cho mock API các đơn đặt chuyến trong phiên làm việc
-let bookings = [...initialBookings];
+function normalizeBooking(b) {
+  if (!b) return b;
+  const id = Number(b.BookingID || b.bookingId || 0);
+  const code = b.BookingCode || b.bookingCode || `BKG-2026-${String(id).padStart(4, '0')}`;
+  const status = b.Status || b.status || 'Submitted';
+  const pickup = b.PickupAddress || b.pickupAddress || '';
+  const dropoff = b.DropoffAddress || b.dropoffAddress || '';
+  const mode = b.TransportMode || b.transportMode || 'Ground';
+  const cost = Number(b.EstimatedCost || b.estimatedCost || 0);
+  const horses = b.BookingHorses || b.bookingHorses || b.horses || [];
+  const total = Number(b.TotalHorses || b.totalHorses || horses.length || 1);
+
+  return {
+    ...b,
+    bookingId: id,
+    BookingID: id,
+    bookingCode: code,
+    BookingCode: code,
+    customerUserId: Number(b.CustomerUserID || b.customerUserId || 5),
+    CustomerUserID: Number(b.CustomerUserID || b.customerUserId || 5),
+    pickupAddress: pickup,
+    PickupAddress: pickup,
+    pickupCountryCode: b.PickupCountryCode || b.pickupCountryCode || 'VN',
+    PickupCountryCode: b.PickupCountryCode || b.pickupCountryCode || 'VN',
+    dropoffAddress: dropoff,
+    DropoffAddress: dropoff,
+    dropoffCountryCode: b.DropoffCountryCode || b.dropoffCountryCode || 'CN',
+    DropoffCountryCode: b.DropoffCountryCode || b.dropoffCountryCode || 'CN',
+    departureDate: b.DepartureDate || b.departureDate || new Date().toISOString(),
+    DepartureDate: b.DepartureDate || b.departureDate || new Date().toISOString(),
+    deliveryDate: b.DeliveryDate || b.deliveryDate || b.DepartureDate || b.departureDate || new Date().toISOString(),
+    DeliveryDate: b.DeliveryDate || b.deliveryDate || b.DepartureDate || b.departureDate || new Date().toISOString(),
+    totalHorses: total,
+    TotalHorses: total,
+    specialInstructions: b.SpecialInstructions || b.specialInstructions || null,
+    SpecialInstructions: b.SpecialInstructions || b.specialInstructions || null,
+    estimatedCost: cost,
+    EstimatedCost: cost,
+    currencyCode: b.CurrencyCode || b.currencyCode || 'USD',
+    CurrencyCode: b.CurrencyCode || b.currencyCode || 'USD',
+    status: status,
+    Status: status,
+    transportMode: mode,
+    TransportMode: mode,
+    distanceKm: Number(b.DistanceKm || b.distanceKm || 1200),
+    DistanceKm: Number(b.DistanceKm || b.distanceKm || 1200),
+    isExpress: Boolean(b.IsExpress || b.isExpress),
+    IsExpress: Boolean(b.IsExpress || b.isExpress),
+    requiresClimateControl: Boolean(b.RequiresClimateControl || b.requiresClimateControl),
+    RequiresClimateControl: Boolean(b.RequiresClimateControl || b.requiresClimateControl),
+    declaredValue: Number(b.DeclaredValue || b.declaredValue || 0) || null,
+    DeclaredValue: Number(b.DeclaredValue || b.declaredValue || 0) || null,
+    bookingHorses: horses,
+    BookingHorses: horses,
+    rejectionReason: b.RejectionReason || b.rejectionReason || null,
+    RejectionReason: b.RejectionReason || b.rejectionReason || null,
+    assignedSpecialistId: b.AssignedSpecialistID || b.assignedSpecialistId || null,
+    AssignedSpecialistID: b.AssignedSpecialistID || b.assignedSpecialistId || null,
+    assignedCoordinatorId: b.AssignedCoordinatorID || b.assignedCoordinatorId || null,
+    AssignedCoordinatorID: b.AssignedCoordinatorID || b.assignedCoordinatorId || null,
+    createdAt: b.CreatedAt || b.createdAt || new Date().toISOString(),
+    CreatedAt: b.CreatedAt || b.createdAt || new Date().toISOString(),
+  };
+}
 
 export const bookingHandlers = [
   // POST /api/bookings/quote-preview - Xem trước bảng giá
   http.post('/api/bookings/quote-preview', async ({ request }) => {
     const body = await request.json();
-    const horsesList = body.horses || [];
-    const count = horsesList.length > 0 ? horsesList.length : 1;
-    const isAir = body.transportMode === 'Air';
+    const horsesList = body.horses || body.BookingHorses || [];
+    const count = horsesList.length > 0 ? horsesList.length : Number(body.totalHorses) || 1;
+    const isAir = body.transportMode === 'Air' || body.TransportMode === 'Air';
     const ratePerHorse = isAir ? 4200 : 1800;
-    const climateSurcharge = body.requiresClimateControl ? 350 : 0;
+    const climateSurcharge = body.requiresClimateControl || body.RequiresClimateControl ? 350 : 0;
     const estimatedCost = count * ratePerHorse + climateSurcharge;
 
     return HttpResponse.json({
@@ -51,44 +118,43 @@ export const bookingHandlers = [
     const status = url.searchParams.get('status');
     const customerId = url.searchParams.get('customerId') || url.searchParams.get('customerUserId');
 
-    let filtered = bookings;
+    let list = getStoredBookings().map(normalizeBooking);
 
-    // Lọc theo khách hàng (hỗ trợ hiển thị cả đơn mẫu ID=5 cho tài khoản demo)
     if (customerId) {
       const parsedId = Number(customerId);
-      filtered = filtered.filter(
+      list = list.filter(
         (b) => b.customerUserId === parsedId || b.customerUserId === 5,
       );
     }
 
-    // Lọc theo trạng thái
     if (status && status !== 'All') {
-      filtered = filtered.filter((b) => b.status === status);
+      list = list.filter((b) => b.status === status);
     }
 
     return HttpResponse.json({
       success: true,
-      data: filtered,
-      total: filtered.length,
+      data: list,
+      total: list.length,
       pagination: {
         page: 1,
         pageSize: 10,
-        totalItems: filtered.length,
-        totalPages: Math.ceil(filtered.length / 10) || 1,
+        totalItems: list.length,
+        totalPages: Math.ceil(list.length / 10) || 1,
       },
     });
   }),
 
   // GET /api/bookings/:id - Lấy chi tiết đơn đặt chuyến
   http.get('/api/bookings/:id', ({ params }) => {
-    const booking = bookings.find((b) => b.bookingId === Number(params.id));
+    const booking = getStoredBookingById(params.id);
     if (!booking) {
       return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
     }
+    const normalized = normalizeBooking(booking);
     return HttpResponse.json({
       success: true,
-      data: booking,
-      ...booking,
+      data: normalized,
+      ...normalized,
     });
   }),
 
@@ -96,10 +162,9 @@ export const bookingHandlers = [
   http.post('/api/bookings', async ({ request }) => {
     const body = await request.json();
 
-    // 1. Kiểm tra các trường thông tin bắt buộc
-    const pickup = body.pickupAddress;
-    const dropoff = body.dropoffAddress;
-    const departure = body.departureDate;
+    const pickup = body.pickupAddress || body.PickupAddress;
+    const dropoff = body.dropoffAddress || body.DropoffAddress;
+    const departure = body.departureDate || body.DepartureDate;
 
     if (!pickup || !dropoff) {
       return HttpResponse.json(
@@ -108,178 +173,139 @@ export const bookingHandlers = [
       );
     }
 
-    if (!departure) {
-      return HttpResponse.json(
-        { success: false, message: 'Ngày khởi hành dự kiến là bắt buộc' },
-        { status: 400 },
-      );
-    }
+    const newBooking = addStoredBooking({
+      ...body,
+      PickupAddress: pickup,
+      DropoffAddress: dropoff,
+      DepartureDate: departure || new Date().toISOString(),
+      DeliveryDate: body.deliveryDate || body.DeliveryDate || departure || new Date().toISOString(),
+      TransportMode: body.transportMode || body.TransportMode || 'Ground',
+      CustomerUserID: Number(body.customerUserId || body.CustomerUserID || 5),
+      EstimatedCost: Number(body.estimatedCost || body.EstimatedCost || 0),
+      Status: 'Submitted',
+    });
 
-    const maxId = bookings.reduce(
-      (max, b) => Math.max(max, Number(b.bookingId) || 0),
-      0,
-    );
-    const newId = maxId + 1;
-    const newCode = `BKG-2026-${String(newId).padStart(4, '0')}`;
-
-    const rawHorses = body.bookingHorses || body.horses || [];
-    const totalHorsesCount = Array.isArray(rawHorses)
-      ? rawHorses.length
-      : Number(body.totalHorses) || 1;
-
-    const transportMode = body.transportMode || 'Ground';
-    const estimatedCost =
-      Number(body.estimatedCost) ||
-      (transportMode === 'Air'
-        ? totalHorsesCount * 4200
-        : totalHorsesCount * 1800);
-
-    const newBooking = {
-      bookingId: newId,
-      bookingCode: newCode,
-      customerUserId: Number(body.customerUserId) || 5,
-      pickupAddress: String(pickup).trim(),
-      pickupCountryCode: body.pickupCountryCode || 'VN',
-      dropoffAddress: String(dropoff).trim(),
-      dropoffCountryCode: body.dropoffCountryCode || 'CN',
-      departureDate: departure,
-      deliveryDate: body.deliveryDate || departure,
-      totalHorses: totalHorsesCount,
-      specialInstructions: body.specialInstructions || null,
-      estimatedCost,
-      currencyCode: 'USD',
-      status: 'Submitted',
-      transportMode,
-      distanceKm: Number(body.distanceKm) || 1200,
-      isExpress: Boolean(body.isExpress),
-      requiresClimateControl: Boolean(body.requiresClimateControl),
-      declaredValue: Number(body.declaredValue) || null,
-      quoteBreakdown: null,
-      rejectionReason: null,
-      reviewedByUserId: null,
-      reviewedAt: null,
-      assignedSpecialistId: null,
-      assignedCoordinatorId: null,
-      createdAt: new Date().toISOString(),
-    };
-
-    // Đưa đơn mới lên đầu danh sách để hiển thị ngay lập tức
-    bookings.unshift(newBooking);
+    const normalized = normalizeBooking(newBooking);
     return HttpResponse.json({
       success: true,
       message: 'Tạo đơn đặt chuyến thành công',
-      data: newBooking,
-      ...newBooking,
+      data: normalized,
+      ...normalized,
     }, { status: 201 });
   }),
 
   // POST /api/bookings/:id/approve - Manager duyệt đơn
   http.post('/api/bookings/:id/approve', async ({ params, request }) => {
     const body = await request.json();
-    const index = bookings.findIndex((b) => b.bookingId === Number(params.id));
-    if (index === -1) {
+    const specId = body.specialistUserId || body.specialistId;
+    const updated = updateStoredBooking(params.id, {
+      Status: 'Approved',
+      status: 'Approved',
+      AssignedSpecialistID: specId,
+      assignedSpecialistId: specId,
+      ReviewedAt: new Date().toISOString(),
+    });
+
+    if (!updated) {
       return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
     }
 
-    const specId = body.specialistUserId || body.specialistId;
-    bookings[index] = {
-      ...bookings[index],
-      status: 'Approved',
-      assignedSpecialistId: specId || bookings[index].assignedSpecialistId,
-      reviewedAt: new Date().toISOString(),
-    };
-
+    const normalized = normalizeBooking(updated);
     return HttpResponse.json({
       success: true,
       message: 'Duyệt đơn vận chuyển thành công',
-      data: bookings[index],
-      ...bookings[index],
+      data: normalized,
+      ...normalized,
     });
   }),
 
-  // POST /api/bookings/:id/reassign-specialist & assign
+  // POST /api/bookings/:id/reassign-specialist
   http.post('/api/bookings/:id/reassign-specialist', async ({ params, request }) => {
     const body = await request.json();
-    const index = bookings.findIndex((b) => b.bookingId === Number(params.id));
-    if (index === -1) {
+    const specId = body.specialistUserId || body.specialistId;
+    const updated = updateStoredBooking(params.id, {
+      AssignedSpecialistID: specId,
+      assignedSpecialistId: specId,
+    });
+
+    if (!updated) {
       return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
     }
 
-    bookings[index] = {
-      ...bookings[index],
-      assignedSpecialistId: body.specialistUserId || body.specialistId,
-    };
-
+    const normalized = normalizeBooking(updated);
     return HttpResponse.json({
       success: true,
       message: 'Cập nhật chuyên viên phụ trách thành công',
-      data: bookings[index],
-      ...bookings[index],
+      data: normalized,
+      ...normalized,
     });
   }),
 
   // POST /api/bookings/:id/assign
   http.post('/api/bookings/:id/assign', async ({ params, request }) => {
     const body = await request.json();
-    const index = bookings.findIndex((b) => b.bookingId === Number(params.id));
-    if (index === -1) {
+    const updated = updateStoredBooking(params.id, {
+      Status: 'Assigned',
+      status: 'Assigned',
+      AssignedSpecialistID: body.specialistId || body.specialistUserId,
+      assignedSpecialistId: body.specialistId || body.specialistUserId,
+      AssignedCoordinatorID: body.coordinatorId,
+      assignedCoordinatorId: body.coordinatorId,
+    });
+
+    if (!updated) {
       return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
     }
 
-    bookings[index] = {
-      ...bookings[index],
-      status: 'Assigned',
-      assignedSpecialistId: body.specialistId || body.specialistUserId,
-      assignedCoordinatorId: body.coordinatorId,
-    };
-
+    const normalized = normalizeBooking(updated);
     return HttpResponse.json({
       success: true,
-      data: bookings[index],
-      ...bookings[index],
+      data: normalized,
+      ...normalized,
     });
   }),
 
   // POST /api/bookings/:id/reject - Từ chối đơn
   http.post('/api/bookings/:id/reject', async ({ params, request }) => {
     const body = await request.json();
-    const index = bookings.findIndex((b) => b.bookingId === Number(params.id));
-    if (index === -1) {
+    const updated = updateStoredBooking(params.id, {
+      Status: 'Rejected',
+      status: 'Rejected',
+      RejectionReason: body.reason,
+      rejectionReason: body.reason,
+      ReviewedAt: new Date().toISOString(),
+    });
+
+    if (!updated) {
       return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
     }
 
-    bookings[index] = {
-      ...bookings[index],
-      status: 'Rejected',
-      rejectionReason: body.reason,
-      reviewedAt: new Date().toISOString(),
-    };
-
+    const normalized = normalizeBooking(updated);
     return HttpResponse.json({
       success: true,
       message: 'Từ chối đơn vận chuyển thành công',
-      data: bookings[index],
-      ...bookings[index],
+      data: normalized,
+      ...normalized,
     });
   }),
 
   // POST /api/bookings/:id/cancel - Hủy đơn
   http.post('/api/bookings/:id/cancel', ({ params }) => {
-    const index = bookings.findIndex((b) => b.bookingId === Number(params.id));
-    if (index === -1) {
+    const updated = updateStoredBooking(params.id, {
+      Status: 'Cancelled',
+      status: 'Cancelled',
+    });
+
+    if (!updated) {
       return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
     }
 
-    bookings[index] = {
-      ...bookings[index],
-      status: 'Cancelled',
-    };
-
+    const normalized = normalizeBooking(updated);
     return HttpResponse.json({
       success: true,
       message: 'Hủy đơn thành công',
-      data: bookings[index],
-      ...bookings[index],
+      data: normalized,
+      ...normalized,
     });
   }),
 ];

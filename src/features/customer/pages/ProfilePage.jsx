@@ -46,14 +46,18 @@ export default function ProfilePage() {
     );
   }
 
+  const isCustomer = profile?.role === 'Customer';
+  const isStaff = !isCustomer;
+
   return (
     <div style={{ maxWidth: 1040, margin: '0 auto', paddingBottom: 40 }}>
       {/* Header trang */}
       <PageHeader
         title={t('profile.title') || 'Account Profile'}
         subtitle={
-          t('profile.subtitle') ||
-          'Owner contact details, farm registration, and club memberships'
+          isCustomer
+            ? t('profile.subtitle') || 'Owner contact details, farm registration, and club memberships'
+            : t('profile.staffSubtitle') || 'Thông tin tài khoản vận hành, phân quyền quản lý và điều phối chuyên môn'
         }
         actions={
           <Tooltip title={t('profile.editDisabledHint') || 'Tính năng chỉnh sửa hồ sơ đang được cập nhật'}>
@@ -193,11 +197,11 @@ export default function ProfilePage() {
             </Space>
           </Descriptions.Item>
 
-          <Descriptions.Item label={t('profile.club')}>
-            <strong style={{ color: '#0f172a' }}>{profile?.clubName || profile?.ClubName}</strong>
+          <Descriptions.Item label={isCustomer ? (t('profile.club') || 'Câu lạc bộ / Tổ chức') : (t('profile.department') || 'Bộ phận / Phòng ban')}>
+            <strong style={{ color: '#0f172a' }}>{profile?.department || profile?.clubName || profile?.ClubName}</strong>
           </Descriptions.Item>
 
-          <Descriptions.Item label={t('profile.feiOwnerId')}>
+          <Descriptions.Item label={isCustomer ? (t('profile.feiOwnerId') || 'FEI Owner ID') : (t('profile.staffId') || 'Mã định danh cán bộ (Staff ID)')}>
             <code
               style={{
                 backgroundColor: '#f1f5f9',

@@ -1,8 +1,42 @@
 import { http, HttpResponse } from 'msw';
-import initialHorses from '../data/horses.json';
+import {
+  getStoredHorses,
+  getStoredHorseById,
+  addStoredHorse,
+  updateStoredHorse,
+  deleteStoredHorse,
+} from '../../utils/horseStorage';
 
-// Bộ nhớ đệm tạm thời cho mock API trong phiên làm việc
-let horses = [...initialHorses];
+function normalizeHorse(h) {
+  if (!h) return h;
+  return {
+    ...h,
+    horseId: h.HorseID || h.horseId,
+    HorseID: h.HorseID || h.horseId,
+    ownerUserId: h.OwnerUserID || h.ownerUserId || 5,
+    OwnerUserID: h.OwnerUserID || h.ownerUserId || 5,
+    name: h.Name || h.name,
+    Name: h.Name || h.name,
+    microchipNumber: h.MicrochipNumber || h.microchipNumber,
+    MicrochipNumber: h.MicrochipNumber || h.microchipNumber,
+    passportNumber: h.PassportNumber || h.passportNumber,
+    PassportNumber: h.PassportNumber || h.passportNumber,
+    breed: h.Breed || h.breed,
+    Breed: h.Breed || h.breed,
+    gender: h.Gender || h.gender,
+    Gender: h.Gender || h.gender,
+    dateOfBirth: h.DateOfBirth || h.dateOfBirth,
+    DateOfBirth: h.DateOfBirth || h.dateOfBirth,
+    color: h.Color || h.color,
+    Color: h.Color || h.color,
+    specialCareRequirements: h.SpecialCareRequirements || h.specialCareRequirements,
+    SpecialCareRequirements: h.SpecialCareRequirements || h.specialCareRequirements,
+    healthStatus: h.HealthStatus || h.healthStatus || 'Good',
+    HealthStatus: h.HealthStatus || h.healthStatus || 'Good',
+    isActive: h.IsActive !== undefined ? h.IsActive : (h.isActive !== undefined ? h.isActive : true),
+    IsActive: h.IsActive !== undefined ? h.IsActive : (h.isActive !== undefined ? h.isActive : true),
+  };
+}
 
 export const horseHandlers = [
   // GET /api/horses - Danh sách ngựa
@@ -10,12 +44,11 @@ export const horseHandlers = [
     const url = new URL(request.url);
     const ownerId = url.searchParams.get('ownerId') || url.searchParams.get('ownerUserId');
 
-    let result = horses;
+    let result = getStoredHorses().map(normalizeHorse);
     if (ownerId) {
       const parsedId = Number(ownerId);
-      // Luôn đảm bảo tài khoản Customer thấy cả ngựa mẫu (ID=5) lẫn các cá thể mình tạo mới
-      result = horses.filter(
-        (h) => h.ownerUserId === parsedId || h.ownerUserId === 5,
+      result = result.filter(
+        (h) => h.ownerUserId === parsedId || h.ownerUserId === 5 || !h.ownerUserId,
       );
     }
 
@@ -34,14 +67,15 @@ export const horseHandlers = [
 
   // GET /api/horses/:id - Chi tiết một con ngựa
   http.get('/api/horses/:id', ({ params }) => {
-    const horse = horses.find((h) => h.horseId === Number(params.id));
+    const horse = getStoredHorseById(params.id);
     if (!horse) {
       return HttpResponse.json({ success: false, message: 'Horse not found' }, { status: 404 });
     }
+    const normalized = normalizeHorse(horse);
     return HttpResponse.json({
       success: true,
-      data: horse,
-      ...horse,
+      data: normalized,
+      ...normalized,
     });
   }),
 
@@ -53,131 +87,110 @@ export const horseHandlers = [
     if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData();
       body = {
-        name: formData.get('name'),
-        microchipNumber: formData.get('microchipNumber'),
-        passportNumber: formData.get('passportNumber'),
-        breed: formData.get('breed'),
-        gender: formData.get('gender'),
-        dateOfBirth: formData.get('dateOfBirth'),
-        color: formData.get('color'),
-        specialCareRequirements: formData.get('specialCareRequirements'),
+        name: formData.get('name') || formData.get('Name'),
+        microchipNumber: formData.get('microchipNumber') || formData.get('MicrochipNumber'),
+        passportNumber: formData.get('passportNumber') || formData.get('PassportNumber'),
+        breed: formData.get('breed') || formData.get('Breed'),
+        gender: formData.get('gender') || formData.get('Gender'),
+        dateOfBirth: formData.get('dateOfBirth') || formData.get('DateOfBirth'),
+        color: formData.get('color') || formData.get('Color'),
+        specialCareRequirements: formData.get('specialCareRequirements') || formData.get('SpecialCareRequirements'),
+        healthStatus: formData.get('healthStatus') || formData.get('HealthStatus') || 'Good',
+        ownerUserId: 5,
+        isActive: true,
       };
     } else {
       body = await request.json();
     }
 
-    const horseName = body.name;
-    const microchip = body.microchipNumber;
-
-    // 1. Kiểm tra các trường dữ liệu bắt buộc theo DB schema
-    if (!horseName || !String(horseName).trim()) {
+    const horseName = body.name || body.Name;
+    if (!horseName || !horseName.trim()) {
       return HttpResponse.json(
-        { success: false, message: 'Tên ngựa (Name) là bắt buộc' },
+        { success: false, message: 'Tên ngựa là bắt buộc' },
         { status: 400 },
       );
     }
 
-    if (!microchip || !String(microchip).trim()) {
-      return HttpResponse.json(
-        { success: false, message: 'Mã vi mạch (MicrochipNumber) là bắt buộc' },
-        { status: 400 },
-      );
-    }
+    const newHorse = addStoredHorse({
+      Name: horseName,
+      Breed: body.breed || body.Breed || 'Thoroughbred',
+      Gender: body.gender || body.Gender || 'Stallion',
+      DateOfBirth: body.dateOfBirth || body.DateOfBirth,
+      Color: body.color || body.Color || '',
+      MicrochipNumber: body.microchipNumber || body.MicrochipNumber || '',
+      PassportNumber: body.passportNumber || body.PassportNumber || '',
+      SpecialCareRequirements: body.specialCareRequirements || body.SpecialCareRequirements || '',
+      HealthStatus: body.healthStatus || body.HealthStatus || 'Good',
+      OwnerUserID: 5,
+      IsActive: true,
+    });
 
-    const trimmedMicrochip = String(microchip).trim();
-    const passport = body.passportNumber;
-    const trimmedPassport = passport ? String(passport).trim() : '';
-
-    // 2. Kiểm tra trùng lặp mã vi mạch (Unique constraint)
-    const duplicateChip = horses.find(
-      (h) => h.microchipNumber && h.microchipNumber.toLowerCase() === trimmedMicrochip.toLowerCase(),
-    );
-    if (duplicateChip) {
-      return HttpResponse.json(
-        { success: false, message: 'Mã vi mạch này đã tồn tại trong hệ thống' },
-        { status: 409 },
-      );
-    }
-
-    // 3. Kiểm tra trùng lặp số hộ chiếu (nếu có nhập)
-    if (trimmedPassport) {
-      const duplicatePassport = horses.find(
-        (h) => h.passportNumber && h.passportNumber.toLowerCase() === trimmedPassport.toLowerCase(),
-      );
-      if (duplicatePassport) {
-        return HttpResponse.json(
-          { success: false, message: 'Số hộ chiếu này đã tồn tại trong hệ thống' },
-          { status: 409 },
-        );
-      }
-    }
-
-    // 4. Sinh horseId tuần tự kiểu số nguyên chuẩn DB IDENTITY
-    const maxId = horses.reduce((max, h) => Math.max(max, Number(h.horseId) || 0), 0);
-    const newHorseId = maxId + 1;
-
-    const newHorse = {
-      horseId: newHorseId,
-      ownerUserId: Number(body.ownerUserId) || 5,
-      name: String(horseName).trim(),
-      microchipNumber: trimmedMicrochip,
-      passportNumber: trimmedPassport || `FEI-VN-2026-${String(newHorseId).padStart(2, '0')}`,
-      breed: body.breed || 'Thoroughbred',
-      gender: body.gender || 'Stallion',
-      dateOfBirth: body.dateOfBirth || null,
-      color: body.color ? String(body.color).trim() : '',
-      specialCareRequirements: body.specialCareRequirements
-        ? String(body.specialCareRequirements).trim()
-        : null,
-      photoUrl: body.photoUrl || null,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-    };
-
-    // Đưa ngựa mới lên đầu danh sách để hiển thị ngay lập tức
-    horses.unshift(newHorse);
+    const normalized = normalizeHorse(newHorse);
     return HttpResponse.json({
       success: true,
       message: 'Tạo hồ sơ ngựa thành công',
-      data: newHorse,
-      ...newHorse,
+      data: normalized,
+      ...normalized,
     }, { status: 201 });
   }),
 
   // PUT /api/horses/:id - Cập nhật thông tin ngựa
   http.put('/api/horses/:id', async ({ params, request }) => {
     const horseId = Number(params.id);
-    const body = await request.json();
-    const index = horses.findIndex((h) => h.horseId === horseId);
+    let body;
+    const contentType = request.headers.get('content-type') || '';
 
-    if (index === -1) {
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      body = {
+        name: formData.get('name') || formData.get('Name'),
+        microchipNumber: formData.get('microchipNumber') || formData.get('MicrochipNumber'),
+        passportNumber: formData.get('passportNumber') || formData.get('PassportNumber'),
+        breed: formData.get('breed') || formData.get('Breed'),
+        gender: formData.get('gender') || formData.get('Gender'),
+        dateOfBirth: formData.get('dateOfBirth') || formData.get('DateOfBirth'),
+        color: formData.get('color') || formData.get('Color'),
+        specialCareRequirements: formData.get('specialCareRequirements') || formData.get('SpecialCareRequirements'),
+        healthStatus: formData.get('healthStatus') || formData.get('HealthStatus'),
+      };
+    } else {
+      body = await request.json();
+    }
+
+    const updated = updateStoredHorse(horseId, {
+      Name: body.name || body.Name,
+      Breed: body.breed || body.Breed,
+      Gender: body.gender || body.Gender,
+      DateOfBirth: body.dateOfBirth || body.DateOfBirth,
+      Color: body.color || body.Color,
+      MicrochipNumber: body.microchipNumber || body.MicrochipNumber,
+      PassportNumber: body.passportNumber || body.PassportNumber,
+      SpecialCareRequirements: body.specialCareRequirements || body.SpecialCareRequirements,
+      HealthStatus: body.healthStatus || body.HealthStatus,
+    });
+
+    if (!updated) {
       return HttpResponse.json({ success: false, message: 'Horse not found' }, { status: 404 });
     }
 
-    horses[index] = {
-      ...horses[index],
-      ...body,
-      horseId,
-    };
-
+    const normalized = normalizeHorse(updated);
     return HttpResponse.json({
       success: true,
-      message: 'Cập nhật thông tin ngựa thành công',
-      data: horses[index],
-      ...horses[index],
+      message: 'Cập nhật hồ sơ ngựa thành công',
+      data: normalized,
+      ...normalized,
     });
   }),
 
   // DELETE /api/horses/:id - Xóa hồ sơ ngựa
   http.delete('/api/horses/:id', ({ params }) => {
     const horseId = Number(params.id);
-    const index = horses.findIndex((h) => h.horseId === horseId);
+    const success = deleteStoredHorse(horseId);
 
-    if (index === -1) {
+    if (!success) {
       return HttpResponse.json({ success: false, message: 'Horse not found' }, { status: 404 });
     }
 
-    horses.splice(index, 1);
-    return HttpResponse.json({ success: true, message: 'Horse deleted successfully' });
+    return HttpResponse.json({ success: true, message: 'Xóa hồ sơ ngựa thành công' });
   }),
 ];

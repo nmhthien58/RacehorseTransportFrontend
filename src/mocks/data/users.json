@@ -43,5 +43,23 @@
     "role": "Customer",
     "isActive": true,
     "createdAt": "2026-01-01T00:00:00Z"
+  },
+  {
+    "userId": 6,
+    "fullName": "Lê Văn Hùng",
+    "email": "hung.le@specialist.com",
+    "phoneNumber": "+84912000006",
+    "role": "TransportSpecialist",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00Z"
+  },
+  {
+    "userId": 7,
+    "fullName": "Admin Quản Trị",
+    "email": "admin@test.com",
+    "phoneNumber": "+84912000007",
+    "role": "Admin",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00Z"
   }
 ]

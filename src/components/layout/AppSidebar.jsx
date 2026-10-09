@@ -100,7 +100,7 @@ export default function AppSidebar({ collapsed, user }) {
       ];
     }
 
-    if (user?.role === ROLES.MANAGER) {
+    if (user?.role === ROLES.MANAGER || user?.role === ROLES.ADMIN) {
       return [
         {
           key: ROUTES.MANAGER_DASHBOARD,
@@ -108,9 +108,9 @@ export default function AppSidebar({ collapsed, user }) {
           label: t('nav.dashboard'),
         },
         {
-          key: ROUTES.MANAGER_BOOKINGS,
-          icon: <CarOutlined style={{ fontSize: 18 }} />,
-          label: t('nav.transportRequests'),
+          key: ROUTES.MANAGER_PENDING_REQUESTS,
+          icon: <ClockCircleOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.pendingRequests'),
         },
         {
           key: ROUTES.MANAGER_TRIPS,
@@ -138,6 +138,10 @@ export default function AppSidebar({ collapsed, user }) {
     if (current.startsWith('/customer/trips')) return ROUTES.CUSTOMER_TRIPS;
     if (current.startsWith('/customer/messages')) return ROUTES.CUSTOMER_MESSAGES;
     if (current.startsWith('/customer/profile')) return ROUTES.CUSTOMER_PROFILE;
+    if (current.startsWith('/manager/pending-requests')) return ROUTES.MANAGER_PENDING_REQUESTS;
+    if (current.startsWith('/manager/bookings')) return ROUTES.MANAGER_PENDING_REQUESTS;
+    if (current.startsWith('/manager/trips')) return ROUTES.MANAGER_TRIPS;
+    if (current.startsWith('/manager/dashboard')) return ROUTES.MANAGER_DASHBOARD;
     return current;
   };
 
@@ -214,6 +218,7 @@ function getDashboardRoute(role) {
   const map = {
     [ROLES.CUSTOMER]: ROUTES.CUSTOMER_DASHBOARD,
     [ROLES.MANAGER]: ROUTES.MANAGER_DASHBOARD,
+    [ROLES.ADMIN]: ROUTES.MANAGER_DASHBOARD,
     [ROLES.SPECIALIST]: ROUTES.SPECIALIST_DASHBOARD,
     [ROLES.COORDINATOR]: ROUTES.COORDINATOR_DASHBOARD,
     [ROLES.DRIVER]: ROUTES.DRIVER_DASHBOARD,

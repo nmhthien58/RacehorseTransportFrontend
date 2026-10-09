@@ -25,6 +25,7 @@ export const ROUTES = {
 
   // Manager
   MANAGER_DASHBOARD: '/manager/dashboard',
+  MANAGER_PENDING_REQUESTS: '/manager/pending-requests',
   MANAGER_BOOKINGS: '/manager/bookings',
   MANAGER_BOOKING_DETAIL: '/manager/bookings/:id',
   MANAGER_TRIPS: '/manager/trips',

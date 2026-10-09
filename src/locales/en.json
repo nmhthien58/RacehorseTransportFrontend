@@ -377,5 +377,93 @@
       "twoFactorDesc": "Protect your account with OTP sent via Authenticator app or SMS upon sign in.",
       "saveSettings": "Save Security Settings"
     }
+  },
+  "landing": {
+    "nav": {
+      "home": "Home",
+      "transport": "Transport",
+      "account": "Account",
+      "more": "More",
+      "login": "Log in",
+      "signup": "Sign up"
+    },
+    "hero": {
+      "booking": "BOOKING",
+      "yourTransport": "YOUR TRANSPORT",
+      "subtitle": "Your horses. Our journey. Across every border.",
+      "bookNow": "Book Now",
+      "learnMore": "Learn More",
+      "tagline": "*International racehorse transportation. Specialist care. Global trust."
+    },
+    "howItWorks": {
+      "title": "How IET works",
+      "step1Title": "Book online in minutes",
+      "step1Desc": "Choose your route, compare quotes from verified transporters, and confirm your booking without phone tag.",
+      "step2Title": "Track the journey",
+      "step2Desc": "Get real-time trip status, estimated pickup and delivery times, and updates right on your tracking page.",
+      "step3Title": "Arrive safe and sound",
+      "step3Desc": "From pickup to stall-in, you'll know your horse is in experienced, caring hands every step of the way."
+    },
+    "gallery": {
+      "title": "No matter how you move, there's a ride for you",
+      "shortHaul": "Short haul",
+      "mareAndFoal": "Mare and foal",
+      "commercial": "Commercial hauling",
+      "medical": "Medical transport",
+      "doorToDoor": "Door-to-door"
+    },
+    "features": {
+      "card1Title": "Door-to-door horse transport, simplified.",
+      "card1Desc": "Connect with verified transporters, compare transparent quotes, and track every milestone along the route.",
+      "card2Title": "Vetted & verified transporters",
+      "card2Desc": "Insurance, equipment, and hauling history are checked before any transporter can quote on your trip.",
+      "card3Title": "Compare quotes side-by-side",
+      "card3Desc": "See all your options in one place. No endless phone calls or complicated spreadsheets.",
+      "card4Title": "Digital paperwork in one place",
+      "card4Desc": "Coggins tests, health certificates, and trip documents stored right with your booking."
+    },
+    "cities": {
+      "title": "Where horses ship most",
+      "subtitle": "Compare verified horse transporters in top equestrian hubs, show circuits, and racing capitals.",
+      "topCities": "Top cities",
+      "badge": "6 cities",
+      "viewAll": "View all",
+      "wellington": "Wellington, FL.",
+      "wellingtonDesc": "Find WEF show circuit haulers in under 60 seconds.",
+      "ocala": "Ocala, FL.",
+      "ocalaDesc": "Serving WEC, Thoroughbred farms, and training centers.",
+      "lexington": "Lexington, KY.",
+      "lexingtonDesc": "Book trailers to the Horse Park, Keeneland, and breeding farms.",
+      "aiken": "Aiken, SC.",
+      "aikenDesc": "Vetted haulers for steeplechase, polo, and winter training.",
+      "saratoga": "Saratoga Springs, NY.",
+      "saratogaDesc": "Reliable transport for the summer meet at the Spa.",
+      "scottsdale": "Scottsdale, AZ.",
+      "scottsdaleDesc": "Haulers for Arabian shows, dressage, and desert circuits."
+    },
+    "footer": {
+      "aboutIet": "About IET",
+      "becomeTransporter": "Become a transporter",
+      "contactUs": "Contact us",
+      "termsOfUse": "Terms of use",
+      "privacyPolicy": "Privacy policy",
+      "discover": "Discover",
+      "howItWorksLink": "How it works",
+      "bookTransportLink": "Book transport",
+      "vettedNetwork": "Vetted network",
+      "signIn": "Sign in",
+      "createAccount": "Create an account",
+      "transportTypes": "Transport types",
+      "locations": "Locations",
+      "allLocations": "All locations",
+      "support": "Support",
+      "helpFaqs": "Help & FAQs",
+      "safetyInsurance": "Safety & insurance",
+      "trustSecurity": "Trust & security",
+      "copyright": "© IET 2026",
+      "terms": "Terms",
+      "privacy": "Privacy",
+      "cookies": "Cookies"
+    }
   }
 }

@@ -377,5 +377,93 @@
       "twoFactorDesc": "Bảo vệ tài khoản bằng mã OTP gửi về ứng dụng Authenticator hoặc tin nhắn SMS khi đăng nhập.",
       "saveSettings": "Lưu cài đặt bảo mật"
     }
+  },
+  "landing": {
+    "nav": {
+      "home": "Trang chủ",
+      "transport": "Vận chuyển",
+      "account": "Tài khoản",
+      "more": "Thêm",
+      "login": "Đăng nhập",
+      "signup": "Đăng ký"
+    },
+    "hero": {
+      "booking": "ĐẶT CHUYẾN",
+      "yourTransport": "VẬN CHUYỂN NGỰA",
+      "subtitle": "Ngựa của bạn. Hành trình của chúng tôi. Vượt mọi biên giới.",
+      "bookNow": "Đặt chuyến ngay",
+      "learnMore": "Tìm hiểu thêm",
+      "tagline": "*Vận chuyển ngựa đua quốc tế. Chăm sóc chuyên nghiệp. Tin cậy toàn cầu."
+    },
+    "howItWorks": {
+      "title": "Cách thức hoạt động của IET",
+      "step1Title": "Đặt chuyến trực tuyến nhanh chóng",
+      "step1Desc": "Chọn tuyến đường, so sánh báo giá từ các tài xế được xác minh và chốt chuyến trong tích tắc mà không cần gọi điện thủ công.",
+      "step2Title": "Theo dõi toàn bộ hành trình",
+      "step2Desc": "Cập nhật vị trí thời gian thực, thời gian đón trả và tình trạng từng chặng dừng chân trực tiếp trên trang hành trình.",
+      "step3Title": "Giao nhận ngựa an toàn",
+      "step3Desc": "Từ lúc xe lăn bánh đến khi cá thể ngựa bước vào chuồng mới, bạn luôn nắm rõ tình trạng sức khỏe và phúc lợi của ngựa."
+    },
+    "gallery": {
+      "title": "Mọi nhu cầu di chuyển, chúng tôi đều có phương tiện phù hợp",
+      "shortHaul": "Chặng ngắn (Short Haul)",
+      "mareAndFoal": "Ngựa mẹ & con (Mare and foal)",
+      "commercial": "Xe chuyên dụng lớn (Commercial Hauling)",
+      "medical": "Chăm sóc y tế (Medical Transport)",
+      "doorToDoor": "Tận chuồng (Door-to-door)"
+    },
+    "features": {
+      "card1Title": "Vận chuyển tận chuồng, tinh gọn tối đa.",
+      "card1Desc": "Hợp tác cùng tài xế có chứng chỉ, đánh giá báo giá cạnh tranh và giám sát từng cột mốc vận hành minh bạch tuyệt đối.",
+      "card2Title": "Tài xế được xác minh toàn diện",
+      "card2Desc": "Bảo hiểm, trang thiết bị khoang và lịch sử chuyên chở được kiểm tra nghiêm ngặt trước khi gửi báo giá.",
+      "card3Title": "So sánh báo giá trực quan",
+      "card3Desc": "Xem toàn bộ báo giá minh bạch trên một màn hình duy nhất. Không còn cuộc gọi kéo dài hay bảng tính rườm rà.",
+      "card4Title": "Số hóa hồ sơ vận chuyển tập trung",
+      "card4Desc": "Chứng nhận Coggins, xét nghiệm thú y và hồ sơ bảo hiểm được lưu trữ trực tiếp cùng mã đơn đặt chuyến."
+    },
+    "cities": {
+      "title": "Những trung tâm ngựa đua sôi động nhất",
+      "subtitle": "So sánh các đơn vị vận chuyển chuyên nghiệp trên các tuyến quốc tế, trung tâm huấn luyện và trường đua lớn.",
+      "topCities": "Các điểm đến hàng đầu",
+      "badge": "6 thành phố",
+      "viewAll": "Xem tất cả",
+      "wellington": "Wellington, FL.",
+      "wellingtonDesc": "Tìm đơn vị vận chuyển kết nối trường đua WEF danh tiếng chỉ trong 60 giây.",
+      "ocala": "Ocala, FL.",
+      "ocalaDesc": "Phục vụ các trang trại Thoroughbred và trung tâm huấn luyện cưỡi ngựa WEC.",
+      "lexington": "Lexington, KY.",
+      "lexingtonDesc": "Đặt xe chuyên dụng tới Kentucky Horse Park, sàn đấu giá Keeneland và trang trại giống.",
+      "aiken": "Aiken, SC.",
+      "aikenDesc": "Đơn vị vận chuyển chuyên nghiệp cho các cuộc đua vượt rào và trại huấn luyện mùa đông.",
+      "saratoga": "Saratoga Springs, NY.",
+      "saratogaDesc": "Điều phối xe chở ngựa phục vụ mùa giải đua ngựa mùa hè danh giá tại Saratoga.",
+      "scottsdale": "Scottsdale, AZ.",
+      "scottsdaleDesc": "Chuyên chở dòng ngựa thuần chủng Ả Rập và các giải đấu cưỡi ngựa sa mạc mùa đông."
+    },
+    "footer": {
+      "aboutIet": "Về IET",
+      "becomeTransporter": "Trở thành đối tác vận tải",
+      "contactUs": "Liên hệ chúng tôi",
+      "termsOfUse": "Điều khoản sử dụng",
+      "privacyPolicy": "Chính sách bảo mật",
+      "discover": "Khám phá",
+      "howItWorksLink": "Quy trình vận hành",
+      "bookTransportLink": "Đặt chuyến vận chuyển",
+      "vettedNetwork": "Mạng lưới đối tác",
+      "signIn": "Đăng nhập",
+      "createAccount": "Đăng ký tài khoản",
+      "transportTypes": "Loại hình vận chuyển",
+      "locations": "Điểm đến",
+      "allLocations": "Tất cả địa điểm",
+      "support": "Hỗ trợ",
+      "helpFaqs": "Câu hỏi thường gặp",
+      "safetyInsurance": "An toàn & Bảo hiểm",
+      "trustSecurity": "Tin cậy & Bảo mật",
+      "copyright": "© IET 2026",
+      "terms": "Điều khoản",
+      "privacy": "Bảo mật",
+      "cookies": "Cookies"
+    }
   }
 }

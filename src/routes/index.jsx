@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import PrivateRoute from './PrivateRoute';
 import { ROUTES } from './routes';
 import { ROLES } from '@utils/constants';
@@ -6,6 +6,9 @@ import { ROLES } from '@utils/constants';
 // Layouts
 import MainLayout from '@layouts/MainLayout';
 import AuthLayout from '@layouts/AuthLayout';
+
+// Public pages
+import HomePage from '@features/public/pages/HomePage';
 
 // Auth pages
 import LoginPage from '@features/auth/pages/LoginPage';
@@ -43,8 +46,8 @@ import DriverDashboard from '@features/driver/pages/DashboardPage';
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Public / Auth */}
-      <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.LOGIN} replace />} />
+      {/* Public / Landing */}
+      <Route path={ROUTES.HOME} element={<HomePage />} />
 
       {/* Auth layout chứa carousel ảnh 30s không reload */}
       <Route element={<AuthLayout />}>

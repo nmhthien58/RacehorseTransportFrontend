@@ -913,7 +913,10 @@
       "rejected": "Đã từ chối",
       "missing": "Chưa nộp",
       "rejectionCount": "Số lần từ chối: {{count}}/3",
-      "notes": "Ghi chú điều kiện"
+      "notes": "Ghi chú điều kiện",
+      "returnToAuthorityBtn": "Nộp lại cho cơ quan (Return to Authority)",
+      "returnSuccess": "Đã nộp lại hồ sơ cho cơ quan chức năng sau khi xử lý sự cố",
+      "reportIssueBtn": "Từ chối / Báo vướng mắc kiểm dịch"
     },
     "status": {
       "cleared": "Cleared",
@@ -1017,7 +1020,35 @@
       "step2Title": "Bước 2: Phê duyệt thông quan",
       "step2Badge": "Duyệt thông quan (Cleared)",
       "step2Desc": "Ghi nhận số hiệu giấy phép kiểm dịch sau khi Cơ quan chức năng phê duyệt chính thức.",
-      "submittedWaiting": "Đã nộp cơ quan chức năng • Đang chờ xét duyệt"
+      "submittedWaiting": "Đã nộp cơ quan chức năng • Đang chờ xét duyệt",
+      "resolveIssueTitle": "Xử lý sự cố kiểm dịch",
+      "resolveIssueDesc": "Hồ sơ đang vướng mắc. Sau khi xử lý bổ sung, bấm nộp lại cho cơ quan."
+    },
+    "statusBar": {
+      "title": "Tiến trình thẩm định & thông quan",
+      "hasIssue": "Có vấn đề",
+      "issueAlert": "Hồ sơ đang có sự cố kiểm dịch / vướng mắc thủ tục",
+      "issueDesc": "Hồ sơ tạm dừng tiến trình do chưa đạt tiêu chuẩn hoặc bị cơ quan chức năng yêu cầu giải trình.",
+      "steps": {
+        "draft": "Bản nháp",
+        "awaitingDocs": "Chờ bổ sung giấy tờ",
+        "reviewing": "Đang thẩm định",
+        "submitted": "Đã nộp cơ quan chức năng",
+        "cleared": "Đã thông quan"
+      }
+    },
+    "tooltip": {
+      "mustSubmitFirst": "Phải nộp lên cơ quan trước khi duyệt",
+      "mustBeReviewing": "Hồ sơ phải ở trạng thái Đang thẩm định (Reviewing) trước khi nộp",
+      "notReadyDocs": "Cần phê duyệt đủ các giấy tờ bắt buộc trước khi nộp",
+      "alreadySubmitted": "Hồ sơ đã được nộp lên cơ quan chức năng",
+      "alreadyCleared": "Hồ sơ đã được phê duyệt thông quan",
+      "cannotSubmitIssue": "Hồ sơ đang có sự cố kiểm dịch, không thể nộp",
+      "cannotApproveIssue": "Hồ sơ đang có sự cố kiểm dịch, không thể duyệt thông quan",
+      "alreadyIssue": "Hồ sơ đã ở trạng thái Có vấn đề (Issue)",
+      "clearedCannotReject": "Hồ sơ đã thông quan, không thể từ chối",
+      "cannotRejectEarly": "Chỉ có thể từ chối khi hồ sơ đang thẩm định hoặc đã nộp cơ quan",
+      "onlyForIssue": "Chỉ khả dụng khi hồ sơ đang có vướng mắc (Issue)"
     }
   }
 }

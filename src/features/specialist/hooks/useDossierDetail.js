@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import api from '@services/api';
 import specialistDossierService from '../services/specialistDossierService';
 
 /**
@@ -103,13 +104,25 @@ export function useDossierDetail(dossierId) {
   };
 
   /**
-   * Nộp bộ hồ sơ đã hoàn chỉnh lên Cơ quan chức năng
+   * Nộp bộ hồ sơ đã hoàn chỉnh lên Cơ quan chức năng (Reviewing -> SubmittedToAuthorities)
    */
   const submitToAuthorities = async () => {
     setActionLoading(true);
     try {
-      await specialistDossierService.submitToAuthorities(dossierId);
-      fetchDossier();
+      try {
+        await api.post(`/dossiers/${dossierId}/submit`);
+      } catch {
+        await specialistDossierService.submitToAuthorities(dossierId);
+      }
+      setDossier((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: 'SubmittedToAuthorities',
+              issueReason: null,
+            }
+          : prev
+      );
       return true;
     } catch (err) {
       setError(err?.message || 'Lỗi khi nộp hồ sơ lên cơ quan chức năng');
@@ -120,17 +133,61 @@ export function useDossierDetail(dossierId) {
   };
 
   /**
-   * Xác nhận thông quan thành công (Cleared)
+   * Xác nhận thông quan thành công (SubmittedToAuthorities -> Cleared)
    * @param {string} [clearanceNumber]
    */
   const clearDossier = async (clearanceNumber) => {
     setActionLoading(true);
     try {
-      await specialistDossierService.clearDossier(dossierId, { clearanceNumber });
-      fetchDossier();
+      try {
+        await api.post(`/dossiers/${dossierId}/approve`, { clearanceNumber });
+      } catch {
+        await specialistDossierService.clearDossier(dossierId, { clearanceNumber });
+      }
+      const finalNumber = clearanceNumber || `VET-CERT-${new Date().getFullYear()}-${String(dossierId).padStart(4, '0')}`;
+      setDossier((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: 'Cleared',
+              clearanceNumber: finalNumber,
+              clearedAt: new Date().toISOString(),
+              issueReason: null,
+            }
+          : prev
+      );
       return true;
     } catch (err) {
       setError(err?.message || 'Lỗi khi ghi nhận thông quan hồ sơ');
+      return false;
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  /**
+   * Nộp lại hồ sơ cho Cơ quan chức năng sau khi xử lý vướng mắc (Issue -> SubmittedToAuthorities)
+   */
+  const returnToAuthority = async () => {
+    setActionLoading(true);
+    try {
+      try {
+        await api.post(`/dossiers/${dossierId}/submit`);
+      } catch {
+        await specialistDossierService.submitToAuthorities(dossierId);
+      }
+      setDossier((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: 'SubmittedToAuthorities',
+              issueReason: null,
+            }
+          : prev
+      );
+      return true;
+    } catch (err) {
+      setError(err?.message || 'Lỗi khi nộp lại hồ sơ cho cơ quan chức năng');
       return false;
     } finally {
       setActionLoading(false);
@@ -145,7 +202,15 @@ export function useDossierDetail(dossierId) {
     setActionLoading(true);
     try {
       await specialistDossierService.reportIssue(dossierId, { reason });
-      fetchDossier();
+      setDossier((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: 'Issue',
+              issueReason: reason,
+            }
+          : prev
+      );
       return true;
     } catch (err) {
       setError(err?.message || 'Lỗi khi báo sự cố hồ sơ');
@@ -166,6 +231,7 @@ export function useDossierDetail(dossierId) {
     requestDocuments,
     submitToAuthorities,
     clearDossier,
+    returnToAuthority,
     reportIssue,
   };
 }

@@ -913,7 +913,10 @@
       "rejected": "Rejected",
       "missing": "Missing",
       "rejectionCount": "Rejection count: {{count}}/3",
-      "notes": "Condition Notes"
+      "notes": "Condition Notes",
+      "returnToAuthorityBtn": "Return to Authority",
+      "returnSuccess": "Successfully resubmitted dossier to authorities",
+      "reportIssueBtn": "Reject / Report Issue"
     },
     "status": {
       "cleared": "Cleared",
@@ -1017,7 +1020,35 @@
       "step2Title": "Step 2: Official Clearance Approval",
       "step2Badge": "Clear Dossier (Cleared)",
       "step2Desc": "Record official clearance permit number once authorized by statutory agencies.",
-      "submittedWaiting": "Submitted to Authorities • Awaiting Formal Inspection"
+      "submittedWaiting": "Submitted to Authorities • Awaiting Formal Inspection",
+      "resolveIssueTitle": "Resolve Quarantine Issue",
+      "resolveIssueDesc": "The dossier is currently held on an issue. Once rectified, click return to submit back to authorities."
+    },
+    "statusBar": {
+      "title": "Inspection & Clearance Lifecycle",
+      "hasIssue": "Issue Encountered",
+      "issueAlert": "Dossier has encountered a quarantine issue / statutory complication",
+      "issueDesc": "Progress paused due to non-compliant documents or requirement by regulatory authorities for clarification.",
+      "steps": {
+        "draft": "Draft",
+        "awaitingDocs": "Awaiting Docs",
+        "reviewing": "Reviewing",
+        "submitted": "Submitted to Authority",
+        "cleared": "Cleared"
+      }
+    },
+    "tooltip": {
+      "mustSubmitFirst": "Must submit to authorities before approval",
+      "mustBeReviewing": "Dossier must be in Reviewing status before submission",
+      "notReadyDocs": "All mandatory documents must be approved before submission",
+      "alreadySubmitted": "Dossier has already been submitted to authorities",
+      "alreadyCleared": "Dossier has already been cleared",
+      "cannotSubmitIssue": "Dossier currently has an issue, cannot submit",
+      "cannotApproveIssue": "Dossier currently has an issue, cannot approve clearance",
+      "alreadyIssue": "Dossier is already marked with an issue",
+      "clearedCannotReject": "Cleared dossier cannot be rejected",
+      "cannotRejectEarly": "Can only reject when dossier is in Reviewing or Submitted to Authority status",
+      "onlyForIssue": "Only available when dossier has an issue"
     }
   }
 }

@@ -4,21 +4,65 @@
     "dossierCode": "DOS-2026-0001",
     "bookingHorseId": 1,
     "specialistUserId": 2,
-    "status": "Cleared",
-    "clearanceNumber": "VET-CERT-VN-CN-2026-001",
+    "status": "Reviewing",
+    "clearanceNumber": null,
     "issueReason": null,
-    "clearedAt": "2026-09-30T15:00:00Z",
-    "createdAt": "2026-09-30T10:00:00Z"
+    "clearedAt": null,
+    "createdAt": "2026-10-08T09:30:00Z"
   },
   {
     "dossierId": 2,
     "dossierCode": "DOS-2026-0002",
     "bookingHorseId": 2,
     "specialistUserId": 2,
-    "status": "AwaitingDocs",
+    "status": "SubmittedToAuthorities",
     "clearanceNumber": null,
     "issueReason": null,
     "clearedAt": null,
-    "createdAt": "2026-09-30T10:00:00Z"
+    "createdAt": "2026-10-08T10:00:00Z"
+  },
+  {
+    "dossierId": 3,
+    "dossierCode": "DOS-2026-0003",
+    "bookingHorseId": 3,
+    "specialistUserId": 2,
+    "status": "AwaitingDocs",
+    "clearanceNumber": null,
+    "issueReason": "Cần bổ sung chứng nhận xét nghiệm Coggins EIA bản scan rõ nét",
+    "clearedAt": null,
+    "createdAt": "2026-10-08T11:00:00Z"
+  },
+  {
+    "dossierId": 4,
+    "dossierCode": "DOS-2026-0004",
+    "bookingHorseId": 4,
+    "specialistUserId": 2,
+    "status": "Issue",
+    "clearanceNumber": null,
+    "issueReason": "Giấy chứng nhận tiêm phòng bệnh dại và EVA hết hạn trước ngày xuất phát",
+    "clearedAt": null,
+    "createdAt": "2026-10-08T12:00:00Z"
+  },
+  {
+    "dossierId": 5,
+    "dossierCode": "DOS-2026-0005",
+    "bookingHorseId": 5,
+    "specialistUserId": 2,
+    "status": "Cleared",
+    "clearanceNumber": "VET-CERT-VN-CN-2026-001",
+    "issueReason": null,
+    "clearedAt": "2026-10-10T15:00:00Z",
+    "createdAt": "2026-10-08T08:00:00Z"
+  },
+  {
+    "dossierId": 6,
+    "dossierCode": "DOS-2026-0006",
+    "bookingHorseId": 6,
+    "specialistUserId": 2,
+    "status": "Draft",
+    "clearanceNumber": null,
+    "issueReason": null,
+    "clearedAt": null,
+    "createdAt": "2026-10-10T14:00:00Z"
   }
 ]

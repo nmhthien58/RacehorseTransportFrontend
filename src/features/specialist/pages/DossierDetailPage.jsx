@@ -16,6 +16,7 @@ import {
   message,
   Modal,
   Input,
+  Tooltip,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -27,8 +28,10 @@ import {
   SafetyCertificateOutlined,
   ExclamationCircleOutlined,
   FileTextOutlined,
+  RollbackOutlined,
 } from '@ant-design/icons';
 import { useDossierDetail } from '../hooks/useDossierDetail';
+import DossierStatusBar from '../components/DossierStatusBar';
 import RejectDocumentModal from '../components/RejectDocumentModal';
 import SubmitAuthorityModal from '../components/SubmitAuthorityModal';
 import RequestDocumentsModal from '../components/RequestDocumentsModal';
@@ -58,6 +61,7 @@ export default function DossierDetailPage() {
     requestDocuments,
     submitToAuthorities,
     clearDossier,
+    returnToAuthority,
     reportIssue,
   } = useDossierDetail(id);
 
@@ -176,6 +180,14 @@ export default function DossierDetailPage() {
     }
   };
 
+  // Nộp lại cho cơ quan chức năng khi đang có sự cố Issue
+  const handleReturnToAuthority = async () => {
+    const ok = await returnToAuthority();
+    if (ok) {
+      message.success(t('specialist.detail.returnSuccess', 'Đã nộp lại hồ sơ cho cơ quan chức năng sau khi xử lý sự cố'));
+    }
+  };
+
   // Báo sự cố hồ sơ
   const handleConfirmIssue = async () => {
     if (!issueReasonInput.trim()) {
@@ -270,6 +282,9 @@ export default function DossierDetailPage() {
           closable
         />
       )}
+
+      {/* Thanh trạng thái tiến trình hồ sơ theo State Machine chuẩn */}
+      <DossierStatusBar status={dossier?.status} issueReason={dossier?.issueReason} />
 
       {/* Banner quy chuẩn kiểm dịch quốc tế (Frame 141:10417) */}
       <div
@@ -691,7 +706,7 @@ export default function DossierDetailPage() {
 
               {/* Các nút hành động */}
               <Space direction="vertical" size={12} style={{ width: '100%' }}>
-                {/* KHỐI BƯỚC 1: NỘP THÔNG QUAN */}
+                {/* KHỐI BƯỚC 1: NỘP THÔNG QUAN (Submit to Authority - Chỉ enable khi status = Reviewing) */}
                 <div style={{ padding: '10px 12px', backgroundColor: '#F8FAFC', borderRadius: 6, border: '1px solid #E2E8F0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                     <Text strong style={{ fontSize: 12, color: '#0F172A' }}>
@@ -716,41 +731,50 @@ export default function DossierDetailPage() {
                   ) : dossier?.status === 'Cleared' ? (
                     <div style={{ padding: '6px 10px', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 4, color: '#15803D', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
                       <CheckCircleFilled />
-                      <span>Đã nộp và hoàn tất kiểm dịch</span>
+                      <span>{t('specialist.detail.alreadyCleared', 'Đã nộp và hoàn tất kiểm dịch')}</span>
                     </div>
                   ) : (
-                    <Button
-                      type={!isReady ? 'default' : 'primary'}
-                      block
-                      icon={<SendOutlined style={{ color: !isReady ? '#94A3B8' : '#FFFFFF' }} />}
-                      disabled={!isReady}
-                      style={
-                        !isReady
-                          ? {
-                              backgroundColor: '#F1F5F9',
-                              borderColor: '#E2E8F0',
-                              borderRadius: 4,
-                              fontWeight: 500,
-                              boxShadow: 'none',
-                            }
-                          : {
-                              backgroundColor: '#0F172A',
-                              borderColor: '#0F172A',
-                              color: '#FFFFFF',
-                              borderRadius: 4,
-                              fontWeight: 500,
-                            }
-                      }
-                      onClick={() => setSubmitModalOpen(true)}
-                    >
-                      <span style={{ color: !isReady ? '#94A3B8' : '#FFFFFF' }}>
-                        {t('specialist.detail.submitBtn', 'Nộp cơ quan chức năng')}
+                    <Tooltip title={dossier?.status !== 'Reviewing' || !isReady ? (
+                      dossier?.status === 'Issue'
+                        ? t('specialist.tooltip.cannotSubmitIssue', 'Hồ sơ đang có sự cố kiểm dịch, không thể nộp')
+                        : dossier?.status !== 'Reviewing'
+                        ? t('specialist.tooltip.mustBeReviewing', 'Hồ sơ phải ở trạng thái Đang thẩm định (Reviewing) trước khi nộp')
+                        : t('specialist.tooltip.notReadyDocs', 'Cần phê duyệt đủ các giấy tờ bắt buộc trước khi nộp')
+                    ) : undefined}>
+                      <span style={{ display: 'block', width: '100%' }}>
+                        <Button
+                          type={dossier?.status === 'Reviewing' && isReady ? 'primary' : 'default'}
+                          block
+                          icon={<SendOutlined style={{ color: dossier?.status === 'Reviewing' && isReady ? '#FFFFFF' : '#94A3B8' }} />}
+                          disabled={dossier?.status !== 'Reviewing' || !isReady}
+                          style={
+                            dossier?.status === 'Reviewing' && isReady
+                              ? {
+                                  backgroundColor: '#0F172A',
+                                  borderColor: '#0F172A',
+                                  color: '#FFFFFF',
+                                  borderRadius: 4,
+                                  fontWeight: 500,
+                                }
+                              : {
+                                  backgroundColor: '#F1F5F9',
+                                  borderColor: '#E2E8F0',
+                                  color: '#94A3B8',
+                                  borderRadius: 4,
+                                  fontWeight: 500,
+                                  boxShadow: 'none',
+                                }
+                          }
+                          onClick={() => setSubmitModalOpen(true)}
+                        >
+                          <span>{t('specialist.detail.submitBtn', 'Nộp cơ quan chức năng')}</span>
+                        </Button>
                       </span>
-                    </Button>
+                    </Tooltip>
                   )}
                 </div>
 
-                {/* KHỐI BƯỚC 2: DUYỆT THÔNG QUAN */}
+                {/* KHỐI BƯỚC 2: DUYỆT THÔNG QUAN (Approve / Cleared - Chỉ enable khi status = SubmittedToAuthorities) */}
                 <div style={{ padding: '10px 12px', backgroundColor: '#F8FAFC', borderRadius: 6, border: '1px solid #E2E8F0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                     <Text strong style={{ fontSize: 12, color: '#0F172A' }}>
@@ -773,48 +797,117 @@ export default function DossierDetailPage() {
                       <span>{t('specialist.detail.clearedDone', 'Đã thông quan')}: <strong>{dossier?.clearanceNumber}</strong></span>
                     </div>
                   ) : (
-                    <Button
-                      type="default"
-                      block
-                      icon={<CheckCircleOutlined style={{ color: dossier?.status === 'SubmittedToAuthorities' ? '#166534' : '#64748B' }} />}
-                      disabled={dossier?.status === 'Cleared'}
-                      style={{
-                        backgroundColor: dossier?.status === 'SubmittedToAuthorities' ? '#F0FDF4' : '#FFFFFF',
-                        borderColor: dossier?.status === 'SubmittedToAuthorities' ? '#16A34A' : '#CBD5E1',
-                        color: dossier?.status === 'SubmittedToAuthorities' ? '#166534' : '#475569',
-                        borderRadius: 4,
-                        fontWeight: 500,
-                      }}
-                      onClick={() => setClearModalOpen(true)}
-                    >
-                      <span>{t('specialist.detail.approveBtn', 'Duyệt thông quan (Cleared)')}</span>
-                    </Button>
+                    <Tooltip title={dossier?.status !== 'SubmittedToAuthorities' ? (
+                      dossier?.status === 'Issue'
+                        ? t('specialist.tooltip.cannotApproveIssue', 'Hồ sơ đang có sự cố kiểm dịch, không thể duyệt thông quan')
+                        : t('specialist.tooltip.mustSubmitFirst', 'Phải nộp lên cơ quan trước khi duyệt')
+                    ) : undefined}>
+                      <span style={{ display: 'block', width: '100%' }}>
+                        <Button
+                          type="default"
+                          block
+                          icon={<CheckCircleOutlined style={{ color: dossier?.status === 'SubmittedToAuthorities' ? '#166534' : '#94A3B8' }} />}
+                          disabled={dossier?.status !== 'SubmittedToAuthorities'}
+                          style={{
+                            backgroundColor: dossier?.status === 'SubmittedToAuthorities' ? '#F0FDF4' : '#F1F5F9',
+                            borderColor: dossier?.status === 'SubmittedToAuthorities' ? '#16A34A' : '#E2E8F0',
+                            color: dossier?.status === 'SubmittedToAuthorities' ? '#166534' : '#94A3B8',
+                            borderRadius: 4,
+                            fontWeight: 500,
+                          }}
+                          onClick={() => setClearModalOpen(true)}
+                        >
+                          <span>{t('specialist.detail.approveBtn', 'Duyệt thông quan (Cleared)')}</span>
+                        </Button>
+                      </span>
+                    </Tooltip>
                   )}
                 </div>
 
                 <Divider style={{ margin: '4px 0' }} />
 
-                {/* Nút 3: Yêu cầu bổ sung tài liệu */}
+                {/* KHỐI XỬ LÝ SỰ CỐ / RETURN TO AUTHORITY (Khi status = Issue) */}
+                {dossier?.status === 'Issue' && (
+                  <div style={{ padding: '10px 12px', backgroundColor: '#FEF2F2', borderRadius: 6, border: '1px solid #FCA5A5' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                      <Text strong style={{ fontSize: 12, color: '#991B1B' }}>
+                        {t('specialist.workflow.resolveIssueTitle', 'Xử lý sự cố kiểm dịch')}
+                      </Text>
+                      <Tag color="error" style={{ fontSize: 10, margin: 0 }}>
+                        {t('specialist.statusBar.hasIssue', 'Có vấn đề')}
+                      </Tag>
+                    </div>
+                    <div style={{ fontSize: 11, color: '#7F1D1D', marginBottom: 8, lineHeight: 1.4 }}>
+                      {dossier?.issueReason || t('specialist.workflow.resolveIssueDesc', 'Hồ sơ đang vướng mắc. Sau khi xử lý bổ sung, bấm nộp lại cho cơ quan.')}
+                    </div>
+                    <Button
+                      type="primary"
+                      block
+                      icon={<RollbackOutlined />}
+                      style={{
+                        backgroundColor: '#DC2626',
+                        borderColor: '#DC2626',
+                        color: '#FFFFFF',
+                        borderRadius: 4,
+                        fontWeight: 500,
+                      }}
+                      loading={actionLoading}
+                      onClick={handleReturnToAuthority}
+                    >
+                      <span>{t('specialist.detail.returnToAuthorityBtn', 'Nộp lại cho cơ quan (Return to Authority)')}</span>
+                    </Button>
+                  </div>
+                )}
+
+                {/* NÚT RETURN TO AUTHORITY (Disabled khi status != Issue) */}
+                {dossier?.status !== 'Issue' && (
+                  <Tooltip title={t('specialist.tooltip.onlyForIssue', 'Chỉ khả dụng khi hồ sơ đang có vướng mắc (Issue)')}>
+                    <span style={{ display: 'block', width: '100%' }}>
+                      <Button
+                        type="default"
+                        block
+                        disabled
+                        icon={<RollbackOutlined style={{ color: '#94A3B8' }} />}
+                        style={{ borderRadius: 4, color: '#94A3B8', fontSize: 12 }}
+                      >
+                        <span>{t('specialist.detail.returnToAuthorityBtn', 'Nộp lại cho cơ quan (Return to Authority)')}</span>
+                      </Button>
+                    </span>
+                  </Tooltip>
+                )}
+
+                {/* Nút: Yêu cầu bổ sung tài liệu */}
                 <Button
                   type="default"
                   block
                   disabled={dossier?.status === 'Cleared'}
-                  style={{ borderRadius: 4, color: '#475569', fontSize: 12 }}
+                  style={{ borderRadius: 4, color: dossier?.status === 'Cleared' ? '#94A3B8' : '#475569', fontSize: 12 }}
                   onClick={() => setRequestDocsModalOpen(true)}
                 >
                   {t('specialist.detail.requestDocsBtn', 'Yêu cầu bổ sung tài liệu')}
                 </Button>
 
-                {/* Nút 4: Báo sự cố / Vướng mắc */}
-                <Button
-                  type="text"
-                  danger
-                  block
-                  style={{ borderRadius: 4, fontSize: 12 }}
-                  onClick={() => setIssueModalOpen(true)}
-                >
-                  {t('specialist.detail.reportIssueBtn', 'Báo vướng mắc / Sự cố kiểm dịch')}
-                </Button>
+                {/* Nút: Báo sự cố / Từ chối (Reject - Enable khi Reviewing hoặc SubmittedToAuthorities) */}
+                <Tooltip title={dossier?.status !== 'Reviewing' && dossier?.status !== 'SubmittedToAuthorities' ? (
+                  dossier?.status === 'Cleared'
+                    ? t('specialist.tooltip.clearedCannotReject', 'Hồ sơ đã thông quan, không thể từ chối')
+                    : dossier?.status === 'Issue'
+                    ? t('specialist.tooltip.alreadyIssue', 'Hồ sơ đã ở trạng thái Có vấn đề (Issue)')
+                    : t('specialist.tooltip.cannotRejectEarly', 'Chỉ có thể từ chối khi hồ sơ đang thẩm định hoặc đã nộp cơ quan')
+                ) : undefined}>
+                  <span style={{ display: 'block', width: '100%' }}>
+                    <Button
+                      type="text"
+                      danger
+                      block
+                      disabled={dossier?.status !== 'Reviewing' && dossier?.status !== 'SubmittedToAuthorities'}
+                      style={{ borderRadius: 4, fontSize: 12 }}
+                      onClick={() => setIssueModalOpen(true)}
+                    >
+                      {t('specialist.detail.reportIssueBtn', 'Từ chối / Báo vướng mắc kiểm dịch')}
+                    </Button>
+                  </span>
+                </Tooltip>
               </Space>
             </Card>
           </div>

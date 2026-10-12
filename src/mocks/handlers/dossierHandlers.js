@@ -65,27 +65,100 @@ export const dossierHandlers = [
     });
   }),
 
-  // POST /api/dossiers/:id/submit-to-authorities
-  http.post('/api/dossiers/:id/submit-to-authorities', ({ params }) => {
-    const dossier = dossiers.find((d) => d.dossierId === Number(params.id));
-    if (dossier) {
-      dossier.status = 'SubmittedToAuthorities';
-    }
-    return HttpResponse.json({
-      success: true,
-      message: 'Hồ sơ đã được nộp cho cơ quan chức năng',
-      data: dossier,
-    });
-  }),
-
-  // POST /api/dossiers/:id/clear
-  http.post('/api/dossiers/:id/clear', ({ params }) => {
+  // POST /api/dossiers/:id/submit -> Đổi status Reviewing -> SubmittedToAuthorities
+  http.post('/api/dossiers/:id/submit', ({ params }) => {
     const dossier = dossiers.find((d) => d.dossierId === Number(params.id));
     if (!dossier) {
       return HttpResponse.json({ success: false, message: 'Dossier not found' }, { status: 404 });
     }
+    if (dossier.status !== 'Reviewing') {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: `Chỉ có thể nộp lên cơ quan chức năng khi hồ sơ ở trạng thái Reviewing (trạng thái hiện tại: ${dossier.status})`,
+        },
+        { status: 400 }
+      );
+    }
+    dossier.status = 'SubmittedToAuthorities';
+    return HttpResponse.json({
+      success: true,
+      message: 'Hồ sơ đã được nộp cho cơ quan chức năng',
+      data: dossier,
+      ...dossier,
+    });
+  }),
+
+  // POST /api/dossiers/:id/submit-to-authorities (Bí danh tương thích ngược)
+  http.post('/api/dossiers/:id/submit-to-authorities', ({ params }) => {
+    const dossier = dossiers.find((d) => d.dossierId === Number(params.id));
+    if (!dossier) {
+      return HttpResponse.json({ success: false, message: 'Dossier not found' }, { status: 404 });
+    }
+    if (dossier.status !== 'Reviewing') {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: `Chỉ có thể nộp lên cơ quan chức năng khi hồ sơ ở trạng thái Reviewing (trạng thái hiện tại: ${dossier.status})`,
+        },
+        { status: 400 }
+      );
+    }
+    dossier.status = 'SubmittedToAuthorities';
+    return HttpResponse.json({
+      success: true,
+      message: 'Hồ sơ đã được nộp cho cơ quan chức năng',
+      data: dossier,
+      ...dossier,
+    });
+  }),
+
+  // POST /api/dossiers/:id/approve -> Chỉ thành công nếu status = SubmittedToAuthorities, đổi thành Cleared
+  http.post('/api/dossiers/:id/approve', async ({ params, request }) => {
+    const dossier = dossiers.find((d) => d.dossierId === Number(params.id));
+    if (!dossier) {
+      return HttpResponse.json({ success: false, message: 'Dossier not found' }, { status: 404 });
+    }
+    if (dossier.status !== 'SubmittedToAuthorities') {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: `Only a dossier submitted to the authorities can be cleared (current status: ${dossier.status}).`,
+        },
+        { status: 400 }
+      );
+    }
+    const body = await request.json().catch(() => ({}));
     dossier.status = 'Cleared';
-    dossier.clearanceNumber = `VET-CERT-${Date.now()}`;
+    dossier.clearanceNumber = body.clearanceNumber || `VET-CERT-${new Date().getFullYear()}-${String(dossier.dossierId).padStart(4, '0')}`;
+    dossier.clearedAt = new Date().toISOString();
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Bộ hồ sơ đã được thông quan thành công',
+      data: dossier,
+      ...dossier,
+    });
+  }),
+
+  // POST /api/dossiers/:id/clear (Bí danh tương thích ngược)
+  http.post('/api/dossiers/:id/clear', async ({ params, request }) => {
+    const dossier = dossiers.find((d) => d.dossierId === Number(params.id));
+    if (!dossier) {
+      return HttpResponse.json({ success: false, message: 'Dossier not found' }, { status: 404 });
+    }
+    if (dossier.status !== 'SubmittedToAuthorities') {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: `Only a dossier submitted to the authorities can be cleared (current status: ${dossier.status}).`,
+        },
+        { status: 400 }
+      );
+    }
+    const body = await request.json().catch(() => ({}));
+    dossier.status = 'Cleared';
+    dossier.clearanceNumber = body.clearanceNumber || `VET-CERT-${new Date().getFullYear()}-${String(dossier.dossierId).padStart(4, '0')}`;
     dossier.clearedAt = new Date().toISOString();
 
     return HttpResponse.json({

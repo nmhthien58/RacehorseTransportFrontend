@@ -42,6 +42,7 @@ import { useAuthStore } from '@features/auth/store/authStore';
 import { getStoredHorses } from '@utils/horseStorage';
 import {
   calculateHorseRisk,
+  checkHorseTransportEligibility,
   HealthStatusTag,
   RiskBadge,
 } from '@utils/horseHealth';
@@ -597,10 +598,10 @@ export default function BookingWizard({
       setAvailableHorses(horsesList);
 
       if (horsesList.length > 0) {
-        // Ưu tiên chọn những chú ngựa đủ điều kiện di chuyển (không bị CRITICAL)
+        // Ưu tiên chọn những chú ngựa đủ điều kiện di chuyển (có vet record và không bị Critical/Unfit)
         const eligible = horsesList.filter((h) => {
-          const risk = calculateHorseRisk(h, i18n?.language || 'vi');
-          return risk.level !== 'CRITICAL';
+          const res = checkHorseTransportEligibility(h, i18n?.language || 'vi');
+          return res.eligible;
         });
         const pool = eligible.length > 0 ? eligible : horsesList;
         const requestedCount = Number(initialValues?.totalHorses) || 1;
@@ -634,17 +635,13 @@ export default function BookingWizard({
     };
   }, [user, initialValues, i18n]);
 
-  // Toggle chọn cá thể ngựa (Chặn nếu ngựa ở mức rủi ro nguy cấp Critical/Non-Fit-to-Travel)
+  // Toggle chọn cá thể ngựa (Chặn nếu ngựa thiếu hồ sơ thú y hoặc ở mức nguy cấp Critical/Non-Fit-to-Travel)
   const handleToggleHorse = (horseId) => {
     const targetHorse = availableHorses.find((h) => (h.horseId || h.HorseID) === horseId);
     if (targetHorse) {
-      const risk = calculateHorseRisk(targetHorse, i18n?.language || 'vi');
-      if (risk.level === 'CRITICAL') {
-        message.error(
-          (i18n?.language || 'vi').startsWith('en')
-            ? 'Cannot select this horse: Non-Fit-to-Travel due to critical medical condition.'
-            : 'Không thể chọn chú ngựa này: Rủi ro nguy cấp/chấn thương, cấm vận chuyển (Non-Fit-to-Travel)!'
-        );
+      const eligibility = checkHorseTransportEligibility(targetHorse, i18n?.language || 'vi');
+      if (!eligibility.eligible) {
+        message.error(eligibility.message);
         return;
       }
     }
@@ -903,16 +900,32 @@ export default function BookingWizard({
       currencyCode: 'USD',
       quoteLines: quoteItems,
       quoteBreakdown: JSON.stringify(quoteItems),
-      horses: selectedHorseIds.map((hId) => ({
-        horseId: Number(hId),
-        stallClass: stallClasses[hId] || 'Shared',
-        notes: horseNotes[hId]?.trim() || null,
-      })),
-      bookingHorses: selectedHorseIds.map((hId) => ({
-        horseId: Number(hId),
-        stallClass: stallClasses[hId] || 'Shared',
-        notes: horseNotes[hId]?.trim() || null,
-      })),
+      horses: selectedHorseIds.map((hId) => {
+        const found = availableHorses.find((h) => Number(h.HorseID || h.horseId) === Number(hId));
+        return {
+          horseId: Number(hId),
+          horseName: found?.Name || found?.name || `Ngựa #${hId}`,
+          name: found?.Name || found?.name || `Ngựa #${hId}`,
+          breed: found?.Breed || found?.breed,
+          microchipNumber: found?.MicrochipNumber || found?.microchipNumber,
+          gender: found?.Gender || found?.gender,
+          stallClass: stallClasses[hId] || 'Shared',
+          notes: horseNotes[hId]?.trim() || null,
+        };
+      }),
+      bookingHorses: selectedHorseIds.map((hId) => {
+        const found = availableHorses.find((h) => Number(h.HorseID || h.horseId) === Number(hId));
+        return {
+          horseId: Number(hId),
+          horseName: found?.Name || found?.name || `Ngựa #${hId}`,
+          name: found?.Name || found?.name || `Ngựa #${hId}`,
+          breed: found?.Breed || found?.breed,
+          microchipNumber: found?.MicrochipNumber || found?.microchipNumber,
+          gender: found?.Gender || found?.gender,
+          stallClass: stallClasses[hId] || 'Shared',
+          notes: horseNotes[hId]?.trim() || null,
+        };
+      }),
     };
 
     await onSubmit(payload);
@@ -1183,8 +1196,10 @@ export default function BookingWizard({
                   const horseBreed = horse.breed || horse.Breed;
                   const horseGender = horse.gender || horse.Gender;
                   const horseMicrochip = horse.microchipNumber || horse.MicrochipNumber;
-                  const horseRisk = calculateHorseRisk(horse, i18n?.language || 'vi');
-                  const isCritical = horseRisk.level === 'CRITICAL';
+                  const eligibility = checkHorseTransportEligibility(horse, i18n?.language || 'vi');
+                  const isBlocked = !eligibility.eligible;
+                  const isMissingVet = eligibility.reason === 'MISSING_VET_RECORD';
+                  const isCritical = eligibility.reason === 'CRITICAL_CONDITION';
 
                   return (
                     <Col key={horseId} xs={24} md={12}>
@@ -1194,73 +1209,107 @@ export default function BookingWizard({
                           borderRadius: 16,
                           border: isCritical
                             ? '1.5px solid #FECACA'
+                            : isMissingVet
+                            ? '1.5px solid #FDE68A'
                             : isSelected
                             ? '2.5px solid #F59E0B'
                             : '1.5px solid #E2E8F0',
                           backgroundColor: isCritical
                             ? '#FEF2F2'
+                            : isMissingVet
+                            ? '#FFFBEB'
                             : isSelected
                             ? '#FFFBEB'
                             : '#FFFFFF',
-                          cursor: isCritical ? 'not-allowed' : 'pointer',
-                          opacity: isCritical ? 0.88 : 1,
-                          transform: isSelected && !isCritical ? 'scale(1.02)' : 'scale(1)',
-                          boxShadow: isSelected && !isCritical
+                          cursor: isBlocked ? 'not-allowed' : 'pointer',
+                          opacity: isBlocked ? 0.88 : 1,
+                          transform: isSelected && !isBlocked ? 'scale(1.02)' : 'scale(1)',
+                          boxShadow: isSelected && !isBlocked
                             ? '0 8px 24px rgba(245, 158, 11, 0.22)'
                             : '0 2px 8px rgba(0, 0, 0, 0.02)',
                           transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                         }}
-                        onClick={() => !isCritical && handleToggleHorse(horseId)}
+                        onClick={() => !isBlocked && handleToggleHorse(horseId)}
                       >
                         <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
                           <Checkbox
-                            checked={!isCritical && isSelected}
-                            disabled={isCritical}
-                            onChange={() => !isCritical && handleToggleHorse(horseId)}
+                            checked={!isBlocked && isSelected}
+                            disabled={isBlocked}
+                            onChange={() => !isBlocked && handleToggleHorse(horseId)}
                             onClick={(e) => e.stopPropagation()}
                           >
                             <strong
                               style={{
                                 fontSize: 16,
-                                color: isCritical ? '#991B1B' : isSelected ? '#92400E' : '#0F172A',
+                                color: isCritical
+                                  ? '#991B1B'
+                                  : isMissingVet
+                                  ? '#92400E'
+                                  : isSelected
+                                  ? '#92400E'
+                                  : '#0F172A',
                                 marginLeft: 4,
                               }}
                             >
                               🐴 {horseName}
                             </strong>
                           </Checkbox>
-                          <Space size={6}>
-                            {isSelected && !isCritical && (
+                          <Space size={6} wrap>
+                            {isSelected && !isBlocked && (
                               <Tag color="gold" style={{ fontWeight: 800, borderRadius: 9999 }}>
                                 ✓ Đã chọn
                               </Tag>
                             )}
-                            <RiskBadge risk={horseRisk} size="small" />
+                            <Tag
+                              color={eligibility.tagColor}
+                              style={{ fontWeight: 700, borderRadius: 6, margin: 0 }}
+                            >
+                              {eligibility.tagText}
+                            </Tag>
                             <Tag color="blue">{horseBreed}</Tag>
                           </Space>
                         </Flex>
 
-                        <div style={{ fontSize: 13, color: isCritical ? '#991B1B' : '#64748b', marginLeft: 28, marginBottom: 8 }}>
+                        <div style={{ fontSize: 13, color: isBlocked ? '#92400E' : '#64748b', marginLeft: 28, marginBottom: 8 }}>
                           {t(`horses.genderOptions.${horseGender?.toLowerCase()}`) || horseGender} · {t('horses.fields.microchip')}:{' '}
                           <code>{horseMicrochip || '---'}</code>
                         </div>
 
+                        {/* Banner cảnh báo chặn vận chuyển nếu thiếu hồ sơ thú y */}
+                        {isMissingVet && (
+                          <div
+                            style={{
+                              marginLeft: 28,
+                              marginTop: 6,
+                              padding: '8px 12px',
+                              backgroundColor: '#FEF3C7',
+                              borderRadius: 8,
+                              fontSize: 12,
+                              fontWeight: 700,
+                              color: '#B45309',
+                              border: '1px solid #FDE68A',
+                            }}
+                          >
+                            ⚠️ Thiếu hồ sơ thú y (Vet Record) bắt buộc — Không được phép vận chuyển! Vui lòng cập nhật hồ sơ thú y cho ngựa trước khi đặt chuyến.
+                          </div>
+                        )}
+
+                        {/* Banner cảnh báo chặn vận chuyển nếu chấn thương nguy cấp */}
                         {isCritical && (
                           <div
                             style={{
                               marginLeft: 28,
                               marginTop: 6,
-                              padding: '6px 12px',
+                              padding: '8px 12px',
                               backgroundColor: '#FEE2E2',
                               borderRadius: 8,
                               fontSize: 12,
                               fontWeight: 700,
                               color: '#991B1B',
+                              border: '1px solid #FECACA',
                             }}
                           >
-                            ⛔ {(i18n?.language || 'vi').startsWith('en')
-                              ? 'Non-Fit-to-Travel: Critical medical risk, prohibited from transport.'
-                              : 'Cấm vận chuyển: Rủi ro nguy cấp hoặc chấn thương, không đủ điều kiện an toàn bay.'}
+                            ⛔ Non-Fit-to-Travel: Rủi ro nguy cấp hoặc chấn thương nặng theo kết luận hồ sơ y tế, CẤM VẬN CHUYỂN!
                           </div>
                         )}
 

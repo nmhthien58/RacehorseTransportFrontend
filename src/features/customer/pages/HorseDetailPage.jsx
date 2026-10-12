@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  Alert,
   Button,
   Card,
   Col,
@@ -10,6 +11,7 @@ import {
   Form,
   Input,
   Modal,
+  Popconfirm,
   Row,
   Select,
   Spin,
@@ -27,6 +29,9 @@ import {
   CarOutlined,
   InfoCircleOutlined,
   EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -34,6 +39,7 @@ import dayjs from 'dayjs';
 import horseService from '@services/horseService';
 import PageHeader from '@components/layout/PageHeader';
 import useHorseDetail from '@features/customer/hooks/useHorseDetail';
+import { checkHorseTransportEligibility } from '@utils/horseHealth';
 import { ROUTES } from '@routes/routes';
 
 const { Title, Text } = Typography;
@@ -46,7 +52,7 @@ const { Title, Text } = Typography;
  * @returns {JSX.Element}
  */
 export default function HorseDetailPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const { data: horse, loading, error, refetch } = useHorseDetail(id);
@@ -54,6 +60,86 @@ export default function HorseDetailPage() {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [form] = Form.useForm();
+
+  const [vetModalVisible, setVetModalVisible] = useState(false);
+  const [vetSubmitting, setVetSubmitting] = useState(false);
+  const [editingVetRecord, setEditingVetRecord] = useState(null);
+  const [vetForm] = Form.useForm();
+
+  const handleOpenAddVetRecord = () => {
+    setEditingVetRecord(null);
+    vetForm.resetFields();
+    vetForm.setFieldsValue({
+      recordType: 'GeneralCheckup',
+      status: 'Valid',
+      date: dayjs(),
+      validUntil: dayjs().add(6, 'month'),
+      veterinarian: 'Dr. Sarah Jenkins (FEI Accredited)',
+      clinic: 'Bệnh viện Thú y Quốc tế IET',
+    });
+    setVetModalVisible(true);
+  };
+
+  const handleOpenEditVetRecord = (record) => {
+    setEditingVetRecord(record);
+    const recDate = record.date || record.Date;
+    const recValidUntil = record.validUntil || record.ValidUntil;
+    vetForm.setFieldsValue({
+      title: record.title || record.Title || '',
+      recordType: record.recordType || record.RecordType || 'GeneralCheckup',
+      veterinarian: record.veterinarian || record.Veterinarian || '',
+      clinic: record.clinic || record.Clinic || '',
+      date: recDate ? dayjs(recDate) : null,
+      validUntil: recValidUntil ? dayjs(recValidUntil) : null,
+      status: record.status || record.Status || 'Valid',
+      notes: record.notes || record.Notes || '',
+    });
+    setVetModalVisible(true);
+  };
+
+  const handleSaveVetRecord = async (values) => {
+    try {
+      setVetSubmitting(true);
+      const payload = {
+        title: values.title?.trim(),
+        recordType: values.recordType,
+        veterinarian: values.veterinarian?.trim(),
+        clinic: values.clinic?.trim(),
+        date: values.date ? values.date.format('YYYY-MM-DD') : null,
+        validUntil: values.validUntil ? values.validUntil.format('YYYY-MM-DD') : null,
+        status: values.status,
+        notes: values.notes?.trim() || '',
+      };
+      const horseId = horse.horseId || horse.HorseID;
+      if (editingVetRecord) {
+        const recId = editingVetRecord.recordId || editingVetRecord.RecordID;
+        await horseService.updateVetRecord(horseId, recId, payload);
+        message.success(t('horses.updateSuccess') || 'Cập nhật hồ sơ thú y thành công');
+      } else {
+        await horseService.addVetRecord(horseId, payload);
+        message.success(t('horses.addSuccess') || 'Bổ sung hồ sơ thú y thành công');
+      }
+      setVetModalVisible(false);
+      refetch?.();
+    } catch (err) {
+      console.error(err);
+      message.error('Thao tác hồ sơ thú y thất bại');
+    } finally {
+      setVetSubmitting(false);
+    }
+  };
+
+  const handleDeleteVetRecord = async (recordId) => {
+    try {
+      const horseId = horse.horseId || horse.HorseID;
+      await horseService.deleteVetRecord(horseId, recordId);
+      message.success(t('horses.deleteSuccess') || 'Đã xóa hồ sơ thú y');
+      refetch?.();
+    } catch (err) {
+      console.error(err);
+      message.error('Không thể xóa hồ sơ thú y');
+    }
+  };
 
   const handleOpenEdit = () => {
     if (!horse) return;
@@ -139,6 +225,7 @@ export default function HorseDetailPage() {
 
   const horseDob = horse.dateOfBirth || horse.DateOfBirth;
   const age = horseDob ? dayjs().diff(dayjs(horseDob), 'year') : null;
+  const eligibility = checkHorseTransportEligibility(horse, i18n?.language);
 
   // Cấu hình bảng Hồ sơ thú y
   const vetColumns = [
@@ -200,6 +287,39 @@ export default function HorseDetailPage() {
       dataIndex: 'notes',
       key: 'notes',
       render: (notes, record) => <span style={{ fontSize: 12 }}>{notes || record.Notes || '-'}</span>,
+    },
+    {
+      title: t('horses.columns.action') || 'Thao tác',
+      key: 'actions',
+      width: 140,
+      align: 'right',
+      render: (_, record) => {
+        const recId = record.recordId || record.RecordID;
+        return (
+          <Space size="small">
+            <Button
+              type="link"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => handleOpenEditVetRecord(record)}
+            >
+              {t('common.edit') || 'Sửa'}
+            </Button>
+            <Popconfirm
+              title={t('horses.confirmDeleteVetRecord') || 'Xóa hồ sơ thú y?'}
+              description={t('horses.confirmDeleteVetRecordDesc') || 'Hồ sơ sẽ bị gỡ bỏ khỏi dữ liệu cá thể.'}
+              onConfirm={() => handleDeleteVetRecord(recId)}
+              okText={t('common.delete') || 'Xóa'}
+              cancelText={t('common.cancel') || 'Hủy'}
+              okButtonProps={{ danger: true }}
+            >
+              <Button type="link" danger size="small" icon={<DeleteOutlined />}>
+                {t('common.delete') || 'Xóa'}
+              </Button>
+            </Popconfirm>
+          </Space>
+        );
+      },
     },
   ];
 
@@ -316,7 +436,9 @@ export default function HorseDetailPage() {
               <Tag color="success">{t('horses.vaccineCompleted')}</Tag>
             </Descriptions.Item>
             <Descriptions.Item label={t('horses.fitCertificate')}>
-              <Tag color="cyan">{t('horses.iataStandard')}</Tag>
+              <Tag color={eligibility.tagColor} style={{ fontWeight: 600 }}>
+                {eligibility.tagText}
+              </Tag>
             </Descriptions.Item>
             <Descriptions.Item label={t('horses.registrationDate')}>
               {horseCreated ? dayjs(horseCreated).format('DD/MM/YYYY') : '-'}
@@ -348,7 +470,17 @@ export default function HorseDetailPage() {
                 {t('horses.vetSupervised')}
               </Text>
             </div>
-            <Tag color="blue">{t('horses.totalRecords', { count: (horse.vetRecords || horse.VetRecords || []).length })}</Tag>
+            <Space>
+              <Tag color="blue">{t('horses.totalRecords', { count: (horse.vetRecords || horse.VetRecords || []).length })}</Tag>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                size="small"
+                onClick={handleOpenAddVetRecord}
+              >
+                + Bổ sung hồ sơ thú y
+              </Button>
+            </Space>
           </Flex>
 
           <Table
@@ -458,6 +590,9 @@ export default function HorseDetailPage() {
                 <Tag color={horseActive ? 'success' : 'default'}>
                   {horseActive ? t('horses.activeRacing') : t('horses.resting')}
                 </Tag>
+                <Tag color={eligibility.tagColor} style={{ fontWeight: 600 }}>
+                  {eligibility.tagText}
+                </Tag>
               </Space>
             </div>
           </Space>
@@ -512,6 +647,17 @@ export default function HorseDetailPage() {
             </Tag>
           </Descriptions.Item>
         </Descriptions>
+
+        {!eligibility.eligible && (
+          <div style={{ marginTop: 16 }}>
+            <Alert
+              type={eligibility.reason === 'CRITICAL_CONDITION' ? 'error' : 'warning'}
+              showIcon
+              message={eligibility.tagText}
+              description={eligibility.message}
+            />
+          </div>
+        )}
       </Card>
 
       {/* KHỐI TABS: THÔNG TIN CHUNG / HỒ SƠ THÚ Y / LỊCH SỬ VẬN CHUYỂN */}
@@ -610,6 +756,122 @@ export default function HorseDetailPage() {
             <Input.TextArea
               rows={3}
               placeholder={t('horses.specialCarePlaceholder')}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* MODAL THÊM / CHỈNH SỬA HỒ SƠ THÚ Y */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 17, fontWeight: 700 }}>
+            <span>{editingVetRecord ? '✏️ Chỉnh sửa hồ sơ thú y' : '➕ Bổ sung hồ sơ thú y'}</span>
+            <Tag color="blue">{horseName}</Tag>
+          </div>
+        }
+        open={vetModalVisible}
+        onCancel={() => setVetModalVisible(false)}
+        onOk={() => vetForm.submit()}
+        confirmLoading={vetSubmitting}
+        okText={t('common.save') || 'Lưu hồ sơ'}
+        cancelText={t('common.cancel') || 'Hủy'}
+        destroyOnClose
+        width={640}
+      >
+        <Form
+          form={vetForm}
+          layout="vertical"
+          onFinish={handleSaveVetRecord}
+          style={{ marginTop: 16 }}
+        >
+          <Form.Item
+            name="title"
+            label={<span style={{ fontWeight: 600 }}>Tên tài liệu / Hạng mục kiểm dịch</span>}
+            rules={[{ required: true, message: 'Vui lòng nhập tên tài liệu hoặc hạng mục' }]}
+          >
+            <Input placeholder="Ví dụ: Giấy chứng nhận kiểm dịch CVI, Xét nghiệm Coggins..." size="large" />
+          </Form.Item>
+
+          <Row gutter={16}>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="recordType"
+                label={<span style={{ fontWeight: 600 }}>Loại tài liệu</span>}
+                rules={[{ required: true, message: 'Vui lòng chọn loại tài liệu' }]}
+              >
+                <Select size="large">
+                  <Select.Option value="CVI">Chứng nhận kiểm dịch xuất xứ (CVI)</Select.Option>
+                  <Select.Option value="Passport">Hộ chiếu ngựa quốc tế (FEI Passport)</Select.Option>
+                  <Select.Option value="Vaccination">Hồ sơ tiêm chủng (Vaccination)</Select.Option>
+                  <Select.Option value="BloodTest">Xét nghiệm huyết thanh Coggins / EVA</Select.Option>
+                  <Select.Option value="GeneralCheckup">Khám lâm sàng Fit-to-Travel</Select.Option>
+                  <Select.Option value="Quarantine">Chứng nhận cách ly kiểm dịch</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="status"
+                label={<span style={{ fontWeight: 600 }}>Trạng thái</span>}
+                rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}
+              >
+                <Select size="large">
+                  <Select.Option value="Valid">Còn hiệu lực (Valid)</Select.Option>
+                  <Select.Option value="Pending">Chờ phê duyệt (Pending)</Select.Option>
+                  <Select.Option value="Expired">Hết hiệu lực (Expired)</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="veterinarian"
+                label={<span style={{ fontWeight: 600 }}>Bác sĩ thú y phụ trách</span>}
+                rules={[{ required: true, message: 'Vui lòng nhập tên bác sĩ thú y' }]}
+              >
+                <Input placeholder="Ví dụ: Dr. Sarah Jenkins (FEI)" size="large" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="clinic"
+                label={<span style={{ fontWeight: 600 }}>Cơ sở / Bệnh viện thú y</span>}
+              >
+                <Input placeholder="Ví dụ: Bệnh viện Thú y Quốc tế IET" size="large" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="date"
+                label={<span style={{ fontWeight: 600 }}>Ngày cấp / Ngày kiểm tra</span>}
+                rules={[{ required: true, message: 'Vui lòng chọn ngày cấp' }]}
+              >
+                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" size="large" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="validUntil"
+                label={<span style={{ fontWeight: 600 }}>Hạn hiệu lực</span>}
+                rules={[{ required: true, message: 'Vui lòng chọn hạn hiệu lực' }]}
+              >
+                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" size="large" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item
+            name="notes"
+            label={<span style={{ fontWeight: 600 }}>Ghi chú / Kết luận kiểm dịch</span>}
+          >
+            <Input.TextArea
+              rows={3}
+              placeholder="Ghi chú lâm sàng, chỉ định đặc biệt khi di chuyển..."
             />
           </Form.Item>
         </Form>

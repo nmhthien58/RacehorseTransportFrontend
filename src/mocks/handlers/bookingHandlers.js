@@ -198,11 +198,14 @@ export const bookingHandlers = [
   http.post('/api/bookings/:id/approve', async ({ params, request }) => {
     const body = await request.json();
     const specId = body.specialistUserId || body.specialistId;
+    const coordId = body.coordinatorUserId || body.coordinatorId;
     const updated = updateStoredBooking(params.id, {
       Status: 'Approved',
       status: 'Approved',
       AssignedSpecialistID: specId,
       assignedSpecialistId: specId,
+      AssignedCoordinatorID: coordId,
+      assignedCoordinatorId: coordId,
       ReviewedAt: new Date().toISOString(),
     });
 

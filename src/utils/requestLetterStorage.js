@@ -10,46 +10,46 @@ const INITIAL_LETTERS = [
     id: 'LTR-2026-0001',
     bookingId: 1,
     bookingCode: 'BKG-2026-0001',
-    title: 'Thư đề nghị vận chuyển khẩn cấp: BKG-2026-0001',
+    title: 'Thư đề nghị vận chuyển: BKG-2026-0001',
     titleEn: 'Transport Request Letter: BKG-2026-0001',
-    customerName: 'Sheikh Mohammed Al-Maktoum',
-    customerEmail: 'sheikh.maktoum@godolphin.ae',
-    customerPhone: '+971 50 123 4567',
-    pickupAddress: 'Trang trại Godolphin Meydan, Dubai, UAE',
-    dropoffAddress: 'Sha Tin Racecourse, Shatin, Hong Kong (CAN / HKG)',
-    transportMode: 'Air',
+    customerName: 'Jane Smith',
+    customerEmail: 'customer@test.com',
+    customerPhone: '+84988111222',
+    pickupAddress: 'Trang trại Yên Bài, Ba Vì, Hà Nội',
+    dropoffAddress: 'Trường đua Tùng Hóa, TP. Quảng Châu',
+    transportMode: 'Ground',
     totalHorses: 2,
-    horsesDescription: 'Thunder Star, Desert Crown (Hạng Stallion)',
-    estimatedCost: 11400,
-    departureDate: '2026-10-15T06:00:00Z',
+    horsesDescription: 'Midnight Gunner, Royal Duchess (Hạng Shared Stall)',
+    estimatedCost: 7500,
+    departureDate: '2026-10-01T06:00:00Z',
     isRead: false,
-    createdAt: '2026-10-09T08:30:00Z',
+    createdAt: '2026-09-29T08:30:00Z',
     contentVi: `Kính gửi Ban Điều Phối & Quản Lý Racehorse Transport,
 
-Tôi trân trọng gửi thư này đề nghị sắp xếp vận chuyển chuyên cơ khẩn cấp cho 02 cá thể ngựa đua giống thuần chủng Thoroughbred của chuồng Godolphin từ Dubai tới Trường đua Sha Tin (Hong Kong). 
+Tôi là Jane Smith, chủ sở hữu trang trại Ba Vì. Tôi trân trọng gửi thư này đề nghị sắp xếp vận chuyển chuyên dụng cho 02 cá thể ngựa Midnight Gunner và Royal Duchess từ Ba Vì tới Trường đua Tùng Hóa, Quảng Châu.
 
-Yêu cầu áp tải:
-- Chuồng bay IATA LAR chống rung chấn, kiểm soát cabin 16-19°C.
-- Có Bác sĩ Thú y FEI áp tải kiểm tra sinh hiệu định kỳ mỗi 2 giờ.
-- Hỗ trợ thủ tục thông quan & kiểm dịch thú y MAFF/AFCD tại sân bay đến.
+Yêu cầu chăm sóc:
+- Xe chuyên dụng có điều hòa nhiệt độ cabin 18-20°C.
+- Có Bác sĩ thú y áp tải kiểm tra sinh hiệu định kỳ và bù nước.
+- Hỗ trợ thủ tục thông quan cửa khẩu Hữu Nghị.
 
-Kính đề nghị Ban Quản lý xem xét hồ sơ và phê duyệt kế hoạch bay sớm nhất.
+Kính đề nghị Ban Quản lý xem xét hồ sơ và phê duyệt kế hoạch sớm nhất.
 
 Trân trọng,
-Sheikh Mohammed Al-Maktoum`,
+Jane Smith`,
     contentEn: `Dear Racehorse Transport Operations & Dispatch Team,
 
-I hereby submit this official request for chartered air freight transport of 2 purebred Thoroughbred racehorses from Meydan, Dubai to Sha Tin Racecourse, Hong Kong.
+I am Jane Smith. I hereby submit this official request for transport of 2 Thoroughbred racehorses (Midnight Gunner & Royal Duchess) from Ba Vi to Conghua Racecourse, Guangzhou.
 
-Key handling requirements:
-- IATA LAR certified shock-absorbing flight stall with 16-19°C cabin climate control.
-- In-flight FEI Vet Specialist for bi-hourly vital monitoring.
-- Accelerated customs clearance and AFCD quarantine coordination upon landing.
+Key requirements:
+- Climate-controlled trailer maintaining 18-20°C.
+- Onboard vet escort for vital signs and hydration checks.
+- Border customs clearance assistance at Huu Nghi port.
 
 Please review and confirm dispatch schedule at your earliest convenience.
 
 Sincerely,
-Sheikh Mohammed Al-Maktoum`,
+Jane Smith`,
   },
   {
     id: 'LTR-2026-0002',
@@ -102,6 +102,11 @@ export function getStoredRequestLetters() {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
+      const hasOldFakeData = parsed.some((l) => l.customerName === 'Sheikh Mohammed Al-Maktoum');
+      if (hasOldFakeData) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_LETTERS));
+        return [...INITIAL_LETTERS];
+      }
       return parsed;
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_LETTERS));

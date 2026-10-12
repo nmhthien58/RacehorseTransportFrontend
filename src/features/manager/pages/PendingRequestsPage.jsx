@@ -67,6 +67,7 @@ export default function PendingRequestsPage() {
 
   const [bookings, setBookings] = useState([]);
   const [specialists, setSpecialists] = useState([]);
+  const [coordinators, setCoordinators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -98,9 +99,10 @@ export default function PendingRequestsPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [bookingsRes, staffRes] = await Promise.all([
+        const [bookingsRes, staffRes, coordRes] = await Promise.all([
           bookingService.getBookings(),
           userService.getStaff('TransportSpecialist').catch(() => null),
+          userService.getStaff('FleetCoordinator').catch(() => null),
         ]);
 
         if (active) {
@@ -109,6 +111,9 @@ export default function PendingRequestsPage() {
 
           const staffList = staffRes?.data?.data || staffRes?.data || [];
           setSpecialists(Array.isArray(staffList) ? staffList : []);
+
+          const coordList = coordRes?.data?.data || coordRes?.data || [];
+          setCoordinators(Array.isArray(coordList) ? coordList : []);
         }
       } catch {
         if (active) {
@@ -236,6 +241,9 @@ ${activeBooking.customerName || 'Customer'}`,
     if (specialists.length > 0) {
       approveForm.setFieldsValue({ specialistUserId: specialists[0].userId });
     }
+    if (coordinators.length > 0) {
+      approveForm.setFieldsValue({ coordinatorUserId: coordinators[0].userId });
+    }
     setApproveModalOpen(true);
   };
 
@@ -245,6 +253,7 @@ ${activeBooking.customerName || 'Customer'}`,
       setActionLoading(true);
       await bookingService.approveBooking(activeBooking.bookingId, {
         specialistUserId: values.specialistUserId,
+        coordinatorUserId: values.coordinatorUserId,
       });
       message.success(t('manager.bookings.messages.approveSuccess'));
       setApproveModalOpen(false);
@@ -1039,19 +1048,38 @@ ${activeBooking.customerName || 'Customer'}`,
             <Form form={approveForm} layout="vertical">
               <Form.Item
                 name="specialistUserId"
-                label={t('manager.bookings.modals.selectSpecialist')}
+                label="Chuyên viên kiểm dịch & hồ sơ thú y (Transport Specialist)"
                 rules={[
                   {
                     required: true,
-                    message: t('manager.bookings.modals.selectSpecialistRequired'),
+                    message: 'Vui lòng chỉ định Chuyên viên kiểm dịch phụ trách đơn!',
                   },
                 ]}
               >
                 <Select
-                  placeholder={t('manager.bookings.modals.selectSpecialistPlaceholder')}
+                  placeholder="Chọn Chuyên viên kiểm dịch..."
                   options={specialists.map((s) => ({
                     value: s.userId,
-                    label: `${s.fullName} (${s.email})`,
+                    label: `🩺 ${s.fullName} (${s.email})`,
+                  }))}
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="coordinatorUserId"
+                label="Điều phối viên đội xe & lộ trình (Fleet & Route Coordinator)"
+                rules={[
+                  {
+                    required: true,
+                    message: 'Vui lòng chỉ định Điều phối viên đội xe & lộ trình!',
+                  },
+                ]}
+              >
+                <Select
+                  placeholder="Chọn Điều phối viên lộ trình..."
+                  options={coordinators.map((c) => ({
+                    value: c.userId,
+                    label: `🚚 ${c.fullName} (${c.email})`,
                   }))}
                 />
               </Form.Item>

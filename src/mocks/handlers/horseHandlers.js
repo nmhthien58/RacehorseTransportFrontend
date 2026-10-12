@@ -5,10 +5,48 @@ import {
   addStoredHorse,
   updateStoredHorse,
   deleteStoredHorse,
+  addHorseVetRecord,
+  updateHorseVetRecord,
+  deleteHorseVetRecord,
 } from '../../utils/horseStorage';
 
 function normalizeHorse(h) {
   if (!h) return h;
+  const hasVet = Boolean(
+    h.HasVetRecord !== false &&
+    h.hasVetRecord !== false &&
+    ((h.VetRecords && h.VetRecords.length > 0) ||
+      (h.vetRecords && h.vetRecords.length > 0) ||
+      h.hasVetRecord ||
+      h.HasVetRecord)
+  );
+  const isCritical = (h.HealthStatus || h.healthStatus) === 'Critical';
+  const isEligible = hasVet && !isCritical;
+  const rawRecords = h.VetRecords || h.vetRecords || [];
+  const records = rawRecords.map((r, idx) => ({
+    ...r,
+    recordId: r.RecordID || r.recordId || idx + 1,
+    RecordID: r.RecordID || r.recordId || idx + 1,
+    title: r.Title || r.title || 'Hồ sơ Thú y',
+    Title: r.Title || r.title || 'Hồ sơ Thú y',
+    recordType: r.RecordType || r.recordType || 'GeneralCheckup',
+    RecordType: r.RecordType || r.recordType || 'GeneralCheckup',
+    veterinarian: r.Veterinarian || r.veterinarian || 'Dr. Sarah Jenkins',
+    Veterinarian: r.Veterinarian || r.veterinarian || 'Dr. Sarah Jenkins',
+    clinic: r.Clinic || r.clinic || 'IET Equine Clinic',
+    Clinic: r.Clinic || r.clinic || 'IET Equine Clinic',
+    date: r.Date || r.date || '',
+    Date: r.Date || r.date || '',
+    validUntil: r.ValidUntil || r.validUntil || '',
+    ValidUntil: r.ValidUntil || r.validUntil || '',
+    status: r.Status || r.status || 'Valid',
+    Status: r.Status || r.status || 'Valid',
+    notes: r.Notes || r.notes || '',
+    Notes: r.Notes || r.notes || '',
+    fileName: r.FileName || r.fileName || 'Vet_Record.pdf',
+    FileName: r.FileName || r.fileName || 'Vet_Record.pdf',
+  }));
+
   return {
     ...h,
     horseId: h.HorseID || h.horseId,
@@ -33,6 +71,12 @@ function normalizeHorse(h) {
     SpecialCareRequirements: h.SpecialCareRequirements || h.specialCareRequirements,
     healthStatus: h.HealthStatus || h.healthStatus || 'Good',
     HealthStatus: h.HealthStatus || h.healthStatus || 'Good',
+    hasVetRecord: hasVet,
+    HasVetRecord: hasVet,
+    isEligibleForTransport: isEligible,
+    IsEligibleForTransport: isEligible,
+    vetRecords: records,
+    VetRecords: records,
     isActive: h.IsActive !== undefined ? h.IsActive : (h.isActive !== undefined ? h.isActive : true),
     IsActive: h.IsActive !== undefined ? h.IsActive : (h.isActive !== undefined ? h.isActive : true),
   };
@@ -121,6 +165,17 @@ export const horseHandlers = [
       PassportNumber: body.passportNumber || body.PassportNumber || '',
       SpecialCareRequirements: body.specialCareRequirements || body.SpecialCareRequirements || '',
       HealthStatus: body.healthStatus || body.HealthStatus || 'Good',
+      vetRecordTitle: body.vetRecordTitle,
+      vetRecordType: body.vetRecordType,
+      vetRecordFileName: body.vetRecordFileName,
+      veterinarian: body.veterinarian,
+      clinic: body.clinic,
+      issueDate: body.issueDate,
+      validUntil: body.validUntil,
+      vetNotes: body.vetNotes,
+      vetRecord: body.vetRecord,
+      VetRecords: body.VetRecords || body.vetRecords,
+      hasVetRecord: body.hasVetRecord,
       OwnerUserID: 5,
       IsActive: true,
     });
@@ -192,5 +247,59 @@ export const horseHandlers = [
     }
 
     return HttpResponse.json({ success: true, message: 'Xóa hồ sơ ngựa thành công' });
+  }),
+
+  // POST /api/horses/:id/vet-records - Thêm hồ sơ thú y
+  http.post('/api/horses/:id/vet-records', async ({ params, request }) => {
+    const horseId = Number(params.id);
+    const body = await request.json();
+    const newRecord = addHorseVetRecord(horseId, body);
+    if (!newRecord) {
+      return HttpResponse.json({ success: false, message: 'Horse not found' }, { status: 404 });
+    }
+    const updatedHorse = getStoredHorseById(horseId);
+    return HttpResponse.json(
+      {
+        success: true,
+        message: 'Bổ sung hồ sơ thú y thành công',
+        data: newRecord,
+        horse: normalizeHorse(updatedHorse),
+      },
+      { status: 201 },
+    );
+  }),
+
+  // PUT /api/horses/:id/vet-records/:recordId - Chỉnh sửa hồ sơ thú y
+  http.put('/api/horses/:id/vet-records/:recordId', async ({ params, request }) => {
+    const horseId = Number(params.id);
+    const recordId = Number(params.recordId);
+    const body = await request.json();
+    const updated = updateHorseVetRecord(horseId, recordId, body);
+    if (!updated) {
+      return HttpResponse.json({ success: false, message: 'Record not found' }, { status: 404 });
+    }
+    const updatedHorse = getStoredHorseById(horseId);
+    return HttpResponse.json({
+      success: true,
+      message: 'Cập nhật hồ sơ thú y thành công',
+      data: updated,
+      horse: normalizeHorse(updatedHorse),
+    });
+  }),
+
+  // DELETE /api/horses/:id/vet-records/:recordId - Xóa hồ sơ thú y
+  http.delete('/api/horses/:id/vet-records/:recordId', ({ params }) => {
+    const horseId = Number(params.id);
+    const recordId = Number(params.recordId);
+    const success = deleteHorseVetRecord(horseId, recordId);
+    if (!success) {
+      return HttpResponse.json({ success: false, message: 'Record not found' }, { status: 404 });
+    }
+    const updatedHorse = getStoredHorseById(horseId);
+    return HttpResponse.json({
+      success: true,
+      message: 'Xóa hồ sơ thú y thành công',
+      horse: normalizeHorse(updatedHorse),
+    });
   }),
 ];

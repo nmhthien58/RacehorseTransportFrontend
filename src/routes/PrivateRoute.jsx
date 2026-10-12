@@ -16,10 +16,20 @@ export default function PrivateRoute({ allowedRoles }) {
     return <Navigate to={ROUTES.LOGIN} replace />;
   }
 
-  // Nếu có giới hạn role, kiểm tra chính xác vai trò được cấp phép (không đụng quyền nhau)
+  // Nếu có giới hạn role, kiểm tra chính xác vai trò được cấp phép (Logistic Manager & Admin là 1)
   if (allowedRoles && allowedRoles.length > 0) {
-    const userRole = user?.role || user?.Role;
-    if (!userRole || !allowedRoles.includes(userRole)) {
+    const rawRole = user?.role || user?.Role;
+    const normalizedRole = (rawRole === 'Admin' || rawRole === 'LogisticsManager')
+      ? 'LogisticsManager'
+      : (rawRole === 'DriverEscort')
+      ? 'Driver'
+      : rawRole;
+
+    const normalizedAllowed = allowedRoles.map((r) =>
+      (r === 'Admin' || r === 'LogisticsManager') ? 'LogisticsManager' : r
+    );
+
+    if (!normalizedRole || !normalizedAllowed.includes(normalizedRole)) {
       return <Navigate to={ROUTES.FORBIDDEN} replace />;
     }
   }

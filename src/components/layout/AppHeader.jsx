@@ -21,17 +21,23 @@ import {
   UserOutlined,
   LogoutOutlined,
   BellOutlined,
-  HomeOutlined,
   AppstoreOutlined,
   ClockCircleOutlined,
   MailOutlined,
   CreditCardOutlined,
   SettingOutlined,
+  AuditOutlined,
+  SwapOutlined,
+  DownOutlined,
+  SendOutlined,
+  CompassOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@routes/routes';
 import { ROLES } from '@utils/constants';
+import { useAuthStore } from '@features/auth/store/authStore';
+import usersData from '@mocks/data/users.json';
 import {
   getStoredRequestLetters,
   markLetterAsRead,
@@ -57,6 +63,7 @@ export default function AppHeader({
 }) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { login } = useAuthStore();
 
   const userFullName = user?.fullName || user?.FullName || 'Jane Smith';
   const userRole = user?.role || user?.Role;
@@ -95,13 +102,79 @@ export default function AppHeader({
     return ROUTES.PROFILE;
   };
 
-  const userMenuItems = [
+  // Danh sách các vai trò chuẩn hệ thống (Logistic Manager & Admin là 1)
+  const roleOptions = [
     {
-      key: 'home',
-      icon: <HomeOutlined />,
-      label: t('landing.nav.home', 'Trang chủ (Home)'),
-      onClick: () => navigate(ROUTES.HOME),
+      key: 'Customer',
+      title: 'Customer (Khách hàng)',
+      subtitle: 'Jane Smith • Tạo yêu cầu vận chuyển ngựa',
+      role: ROLES.CUSTOMER,
+      route: ROUTES.CUSTOMER_DASHBOARD,
+      user: usersData.find((u) => u.role === ROLES.CUSTOMER),
     },
+    {
+      key: 'LogisticsManager',
+      title: 'Logistics Manager (Quản lý & Admin)',
+      subtitle: 'Trần Quốc Bảo • Duyệt đơn khách & Duyệt kế hoạch lộ trình',
+      role: ROLES.MANAGER,
+      route: ROUTES.MANAGER_DASHBOARD,
+      user: usersData.find((u) => u.role === ROLES.MANAGER),
+    },
+    {
+      key: 'FleetCoordinator',
+      title: 'Fleet & Route Coordinator (Điều phối)',
+      subtitle: 'Lê Hoàng Nam • Lập kế hoạch lộ trình, chọn xe, driver & escort',
+      role: ROLES.COORDINATOR,
+      route: ROUTES.COORDINATOR_DASHBOARD,
+      user: usersData.find((u) => u.role === ROLES.COORDINATOR),
+    },
+    {
+      key: 'Driver',
+      title: 'Driver (Tài xế)',
+      subtitle: 'Phạm Văn Đức • Bắt đầu chuyến & Chạy lộ trình',
+      role: ROLES.DRIVER,
+      route: ROUTES.DRIVER_DASHBOARD,
+      user: usersData.find((u) => u.role === ROLES.DRIVER),
+    },
+    {
+      key: 'Escort',
+      title: 'Escort (Bác sĩ áp tải)',
+      subtitle: 'Dr. Elena Rostova • Giám sát & Ghi log phúc lợi thú y',
+      role: ROLES.ESCORT,
+      route: ROUTES.DRIVER_DASHBOARD,
+      user: usersData.find((u) => u.role === ROLES.ESCORT),
+    },
+    {
+      key: 'Specialist',
+      title: 'Transport Specialist (Kiểm dịch)',
+      subtitle: 'Nguyễn Thị Mai • Kiểm dịch & Hồ sơ xuất nhập cảnh',
+      role: ROLES.SPECIALIST,
+      route: ROUTES.SPECIALIST_DASHBOARD,
+      user: usersData.find((u) => u.role === ROLES.SPECIALIST),
+    },
+  ];
+
+  const handleRoleSwitch = (opt) => {
+    if (!opt.user) return;
+    login(opt.user, `mock-token-${opt.user.userId}`);
+    message.success({
+      content: `Đã chuyển sang vai trò: ${opt.user.fullName} (${opt.title})`,
+      duration: 3,
+    });
+    navigate(opt.route);
+  };
+
+  const getRoleDisplayName = (role) => {
+    if (role === ROLES.MANAGER || role === 'Admin' || role === 'LogisticsManager') return 'Logistics Manager / Admin';
+    if (role === ROLES.COORDINATOR || role === 'FleetCoordinator') return 'Fleet & Route';
+    if (role === ROLES.DRIVER || role === 'Driver') return 'Driver';
+    if (role === ROLES.ESCORT || role === 'Escort') return 'Escort';
+    if (role === ROLES.CUSTOMER || role === 'Customer') return 'Customer';
+    if (role === ROLES.SPECIALIST || role === 'TransportSpecialist') return 'Specialist';
+    return role || 'Người dùng';
+  };
+
+  const userMenuItems = [
     ...(isAdminOrManager
       ? [
           {
@@ -115,6 +188,38 @@ export default function AppHeader({
             icon: <ClockCircleOutlined />,
             label: t('nav.pendingRequests', 'Yêu cầu chờ duyệt'),
             onClick: () => navigate(ROUTES.MANAGER_PENDING_REQUESTS),
+          },
+          {
+            key: 'route-approvals',
+            icon: <AuditOutlined />,
+            label: t('nav.routeApprovals', 'Phê duyệt kế hoạch lộ trình'),
+            onClick: () => navigate(ROUTES.MANAGER_ROUTE_APPROVALS),
+          },
+        ]
+      : []),
+    ...(userRole === ROLES.COORDINATOR
+      ? [
+          {
+            key: 'coord-dash',
+            icon: <AppstoreOutlined />,
+            label: t('nav.coordinatorOperations', 'Điều phối & Vận hành'),
+            onClick: () => navigate(ROUTES.COORDINATOR_DASHBOARD),
+          },
+          {
+            key: 'coord-plan',
+            icon: <CompassOutlined />,
+            label: t('nav.routePlanning', 'Lập kế hoạch lộ trình (Studio)'),
+            onClick: () => navigate(ROUTES.COORDINATOR_ROUTE_PLANNING),
+          },
+        ]
+      : []),
+    ...(userRole === ROLES.DRIVER || userRole === 'Driver' || userRole === ROLES.ESCORT || userRole === 'Escort'
+      ? [
+          {
+            key: 'driver-mission',
+            icon: <SendOutlined />,
+            label: userRole === ROLES.ESCORT || userRole === 'Escort' ? 'Giám sát thú y & Áp tải (Mission Control)' : t('nav.driverMission', 'Nhiệm vụ vận chuyển (Mission Control)'),
+            onClick: () => navigate(ROUTES.DRIVER_DASHBOARD),
           },
         ]
       : []),
@@ -281,26 +386,54 @@ export default function AppHeader({
         />
       </Flex>
 
-      {/* Cụm bên phải: Về Trang chủ, Ngôn ngữ, Chuông thông báo & Thông tin người dùng */}
+      {/* Cụm bên phải: Ngôn ngữ, Chuông thông báo & Thông tin người dùng */}
       <Space size="middle" align="center">
-        {/* Nút về Trang chủ Home cho khách hàng dễ truy cập */}
-        <Button
-          type="default"
-          icon={<HomeOutlined style={{ color: '#F59E0B' }} />}
-          onClick={() => navigate(ROUTES.HOME)}
-          style={{
-            fontWeight: 700,
-            borderRadius: 9999,
-            borderColor: '#e2e8f0',
-            color: '#0f172a',
-            backgroundColor: '#ffffff',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
-            height: 38,
-            padding: '0 18px',
+        {/* Nút chuyển đổi nhanh vai trò hệ thống (Role Switcher) để test liền mạch */}
+        <Dropdown
+          menu={{
+            items: roleOptions.map((opt) => ({
+              key: opt.key,
+              label: (
+                <div style={{ padding: '4px 0' }}>
+                  <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 13 }}>
+                    {opt.title}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>
+                    {opt.subtitle}
+                  </div>
+                </div>
+              ),
+              onClick: () => handleRoleSwitch(opt),
+            })),
           }}
+          placement="bottomRight"
+          trigger={['click']}
         >
-          {t('landing.nav.home', 'Trang chủ')}
-        </Button>
+          <Button
+            style={{
+              height: 38,
+              borderRadius: 20,
+              background: '#ffffff',
+              border: '1.5px solid #FBA919',
+              color: '#92400e',
+              fontWeight: 600,
+              fontSize: 13,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              boxShadow: '0 2px 4px rgba(251, 169, 25, 0.12)',
+            }}
+          >
+            <SwapOutlined style={{ color: '#d97706' }} />
+            <span>
+              Vai trò:{' '}
+              <strong style={{ color: '#0f172a' }}>
+                {getRoleDisplayName(userRole)}
+              </strong>
+            </span>
+            <DownOutlined style={{ fontSize: 10, color: '#94a3b8' }} />
+          </Button>
+        </Dropdown>
 
         {/* Nút chuyển đổi ngôn ngữ */}
         <Button

@@ -14,11 +14,11 @@ import styles from './AuthPages.module.css';
 
 const TEST_ACCOUNTS = [
   { label: 'Customer (Khách hàng)', email: 'customer@test.com', role: ROLES.CUSTOMER },
-  { label: 'Admin (Quản trị viên)', email: 'admin@test.com', role: ROLES.ADMIN },
-  { label: 'Manager (Điều phối)', email: 'manager@test.com', role: ROLES.MANAGER },
-  { label: 'Specialist (Kiểm dịch)', email: 'specialist@test.com', role: ROLES.SPECIALIST },
-  { label: 'Coordinator', email: 'coordinator@test.com', role: ROLES.COORDINATOR },
-  { label: 'Driver', email: 'driver@test.com', role: ROLES.DRIVER },
+  { label: 'Logistics Manager (Quản lý Logistics)', email: 'manager@test.com', role: ROLES.MANAGER },
+  { label: 'Fleet & Route Coordinator (Điều phối viên)', email: 'coordinator@test.com', role: ROLES.COORDINATOR },
+  { label: 'Driver (Tài xế)', email: 'driver@test.com', role: ROLES.DRIVER },
+  { label: 'Escort (Áp tải thú y)', email: 'escort@test.com', role: ROLES.ESCORT },
+  { label: 'Specialist (Chuyên viên kiểm dịch)', email: 'specialist@test.com', role: ROLES.SPECIALIST },
 ];
 
 /**
@@ -78,6 +78,7 @@ export default function LoginPage() {
         [ROLES.SPECIALIST]: ROUTES.SPECIALIST_DASHBOARD,
         [ROLES.COORDINATOR]: ROUTES.COORDINATOR_DASHBOARD,
         [ROLES.DRIVER]: ROUTES.DRIVER_DASHBOARD,
+        [ROLES.ESCORT]: ROUTES.DRIVER_DASHBOARD,
       };
 
       const userRole = user?.role || user?.Role;

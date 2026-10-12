@@ -1,10 +1,11 @@
 export const ROLES = {
   CUSTOMER: 'Customer',
   MANAGER: 'LogisticsManager',
-  SPECIALIST: 'TransportSpecialist',
   COORDINATOR: 'FleetCoordinator',
-  DRIVER: 'DriverEscort',
-  ADMIN: 'Admin',
+  DRIVER: 'Driver',
+  ESCORT: 'Escort',
+  SPECIALIST: 'TransportSpecialist',
+  ADMIN: 'LogisticsManager', // Logistics Manager và Admin là 1
 };
 
 // Vòng đời đơn đặt chuyến (st1_booking.png & Script 04)

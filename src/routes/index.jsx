@@ -36,12 +36,15 @@ import ManagerDashboard from '@features/manager/pages/DashboardPage';
 import ManagerBookings from '@features/manager/pages/BookingsPage';
 import BookingDetailPage from '@features/manager/pages/BookingDetailPage';
 import PendingRequestsPage from '@features/manager/pages/PendingRequestsPage';
+import RouteApprovalsPage from '@features/manager/pages/RouteApprovalsPage';
 
 // Specialist pages
 import SpecialistDashboard from '@features/specialist/pages/DashboardPage';
 
 // Coordinator pages
 import CoordinatorDashboard from '@features/coordinator/pages/DashboardPage';
+import RoutePlanningPage from '@features/coordinator/pages/RoutePlanningPage';
+import FleetRosterPage from '@features/coordinator/pages/FleetRosterPage';
 
 // Driver pages
 import DriverDashboard from '@features/driver/pages/DashboardPage';
@@ -120,6 +123,8 @@ export default function AppRoutes() {
           <Route path={ROUTES.MANAGER_BOOKINGS} element={<ManagerBookings />} />
           <Route path={ROUTES.MANAGER_BOOKING_DETAIL} element={<BookingDetailPage />} />
           <Route path={ROUTES.MANAGER_PENDING_REQUESTS} element={<PendingRequestsPage />} />
+          <Route path={ROUTES.MANAGER_ROUTE_APPROVALS} element={<RouteApprovalsPage />} />
+          <Route path="/manager/route-approvals" element={<RouteApprovalsPage />} />
           <Route path={ROUTES.MANAGER_PROFILE} element={<ProfilePage />} />
         </Route>
       </Route>
@@ -135,18 +140,29 @@ export default function AppRoutes() {
       <Route element={<PrivateRoute allowedRoles={[ROLES.COORDINATOR]} />}>
         <Route element={<MainLayout />}>
           <Route path={ROUTES.COORDINATOR_DASHBOARD} element={<CoordinatorDashboard />} />
+          <Route path={ROUTES.COORDINATOR_OPERATIONS_HUB} element={<CoordinatorDashboard />} />
+          <Route path={ROUTES.COORDINATOR_ROUTE_PLANNING} element={<RoutePlanningPage />} />
+          <Route path="/coordinator/route-planning" element={<RoutePlanningPage />} />
+          <Route path={ROUTES.COORDINATOR_FLEET_ROSTER} element={<FleetRosterPage />} />
+          <Route path="/coordinator/fleet-roster" element={<FleetRosterPage />} />
+          <Route path={ROUTES.COORDINATOR_DRIVER_SCHEDULES} element={<FleetRosterPage />} />
+          <Route path="/coordinator/driver-schedules" element={<FleetRosterPage />} />
+          <Route path={ROUTES.COORDINATOR_TRACKING} element={<CoordinatorDashboard />} />
+          <Route path="/coordinator/tracking" element={<CoordinatorDashboard />} />
         </Route>
       </Route>
 
-      {/* Driver */}
-      <Route element={<PrivateRoute allowedRoles={[ROLES.DRIVER]} />}>
+      {/* Driver & Escort */}
+      <Route element={<PrivateRoute allowedRoles={[ROLES.DRIVER, ROLES.ESCORT, 'Driver', 'Escort']} />}>
         <Route element={<MainLayout />}>
           <Route path={ROUTES.DRIVER_DASHBOARD} element={<DriverDashboard />} />
+          <Route path={ROUTES.DRIVER_TRIPS} element={<DriverDashboard />} />
+          <Route path="/driver/trips" element={<DriverDashboard />} />
         </Route>
       </Route>
 
       {/* Shared Authenticated Routes - Profile hợp nhất cho toàn bộ các vai trò */}
-      <Route element={<PrivateRoute allowedRoles={[ROLES.CUSTOMER, ROLES.MANAGER, ROLES.ADMIN, ROLES.SPECIALIST, ROLES.COORDINATOR, ROLES.DRIVER]} />}>
+      <Route element={<PrivateRoute allowedRoles={[ROLES.CUSTOMER, ROLES.MANAGER, ROLES.ADMIN, ROLES.SPECIALIST, ROLES.COORDINATOR, ROLES.DRIVER, ROLES.ESCORT, 'Driver', 'Escort']} />}>
         <Route element={<MainLayout />}>
           <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
         </Route>

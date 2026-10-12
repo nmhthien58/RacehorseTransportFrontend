@@ -75,6 +75,10 @@ export function addStoredBooking(bookingData) {
   const departureDate = bookingData.DepartureDate || bookingData.departureDate || new Date().toISOString();
   const deliveryDate = bookingData.DeliveryDate || bookingData.deliveryDate || departureDate;
 
+  const customerName = (bookingData.customerName || bookingData.CustomerName || 'Jane Smith').trim();
+  const customerEmail = (bookingData.customerEmail || bookingData.CustomerEmail || 'customer@test.com').trim();
+  const customerPhone = (bookingData.customerPhone || bookingData.CustomerPhone || '+84988111222').trim();
+
   const newBooking = {
     BookingID: newId,
     bookingId: newId,
@@ -82,6 +86,12 @@ export function addStoredBooking(bookingData) {
     bookingCode: newCode,
     CustomerUserID: Number(bookingData.CustomerUserID || bookingData.customerUserId) || 5,
     customerUserId: Number(bookingData.CustomerUserID || bookingData.customerUserId) || 5,
+    CustomerName: customerName,
+    customerName: customerName,
+    CustomerEmail: customerEmail,
+    customerEmail: customerEmail,
+    CustomerPhone: customerPhone,
+    customerPhone: customerPhone,
     PickupAddress: pickup,
     pickupAddress: pickup,
     PickupCountryCode: pickupCountry,

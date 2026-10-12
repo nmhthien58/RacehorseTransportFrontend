@@ -10,7 +10,10 @@ import {
   CreditCardOutlined,
   SettingOutlined,
   DollarCircleOutlined,
-  HomeOutlined,
+  CheckSquareOutlined,
+  SendOutlined,
+  TeamOutlined,
+  AuditOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -39,63 +42,45 @@ export default function AppSidebar({ collapsed, user }) {
     if (userRole === ROLES.CUSTOMER) {
       return [
         {
-          key: ROUTES.HOME,
-          icon: <HomeOutlined style={{ fontSize: 18, color: '#f59e0b' }} />,
-          label: (
-            <span style={{ fontWeight: 700, color: '#0f172a' }}>
-              {t('landing.nav.home', 'Home')}
-            </span>
-          ),
-        },
-        {
           key: ROUTES.CUSTOMER_DASHBOARD,
           icon: <AppstoreOutlined style={{ fontSize: 18 }} />,
-          label: t('nav.dashboard'),
+          label: t('nav.dashboard', 'Bảng điều khiển'),
         },
         {
           key: ROUTES.CUSTOMER_HORSES,
           icon: <ClockCircleOutlined style={{ fontSize: 18 }} />,
-          label: t('nav.horses'),
+          label: t('nav.horses', 'Ngựa của tôi'),
         },
         {
           key: ROUTES.CUSTOMER_VET_RECORDS,
           icon: <MedicineBoxOutlined style={{ fontSize: 18 }} />,
-          label: t('nav.vetRecords'),
+          label: t('nav.vetRecords', 'Hồ sơ thú y'),
         },
         {
           key: ROUTES.CUSTOMER_BOOKINGS,
           icon: <CarOutlined style={{ fontSize: 18 }} />,
-          label: t('nav.transportRequests'),
+          label: t('nav.transportRequests', 'Yêu cầu vận chuyển'),
         },
         {
           key: ROUTES.CUSTOMER_PRICING,
           icon: <DollarCircleOutlined style={{ fontSize: 18 }} />,
-          label: t('nav.pricing', 'Pricing'),
+          label: t('nav.pricing', 'Bảng giá cước'),
         },
         {
           key: ROUTES.CUSTOMER_TRIPS,
           icon: <CompassOutlined style={{ fontSize: 18 }} />,
-          label: t('nav.activeTrips'),
+          label: t('nav.activeTrips', 'Theo dõi chuyến đi'),
         },
         {
           key: ROUTES.CUSTOMER_MESSAGES,
           icon: <MessageOutlined style={{ fontSize: 18 }} />,
-          label: t('nav.messages'),
+          label: t('nav.messages', 'Tin nhắn'),
         },
       ];
     }
 
-    if (userRole === ROLES.MANAGER || userRole === ROLES.ADMIN) {
+    if (userRole === ROLES.MANAGER || userRole === ROLES.ADMIN || userRole === 'Admin' || userRole === 'LogisticsManager') {
       return [
-        {
-          key: ROUTES.HOME,
-          icon: <HomeOutlined style={{ fontSize: 18, color: '#f59e0b' }} />,
-          label: (
-            <span style={{ fontWeight: 700, color: '#0f172a' }}>
-              {t('landing.nav.home', 'Home')}
-            </span>
-          ),
-        },
         {
           key: ROUTES.MANAGER_DASHBOARD,
           icon: <AppstoreOutlined style={{ fontSize: 18 }} />,
@@ -111,6 +96,86 @@ export default function AppSidebar({ collapsed, user }) {
           icon: <ClockCircleOutlined style={{ fontSize: 18 }} />,
           label: t('nav.pendingRequests', 'Yêu cầu chờ duyệt'),
         },
+        {
+          key: ROUTES.MANAGER_ROUTE_APPROVALS,
+          icon: <AuditOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.routeApprovals', 'Phê duyệt lộ trình'),
+        },
+        {
+          key: ROUTES.PROFILE,
+          icon: <UserOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.profile', 'Hồ sơ cá nhân'),
+        },
+      ];
+    }
+
+    if (userRole === ROLES.COORDINATOR || userRole === 'FleetCoordinator') {
+      return [
+        {
+          key: ROUTES.COORDINATOR_DASHBOARD,
+          icon: <AppstoreOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.coordinatorOperations', 'Điều phối & Vận hành'),
+        },
+        {
+          key: ROUTES.COORDINATOR_ROUTE_PLANNING,
+          icon: <CompassOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.routePlanning', 'Lập kế hoạch lộ trình'),
+        },
+        {
+          key: ROUTES.COORDINATOR_FLEET_ROSTER,
+          icon: <CarOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.fleetRoster', 'Đội xe & Nhân sự'),
+        },
+        {
+          key: ROUTES.PROFILE,
+          icon: <UserOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.profile', 'Hồ sơ cá nhân'),
+        },
+      ];
+    }
+
+    if (userRole === ROLES.DRIVER || userRole === 'Driver' || userRole === 'DriverEscort') {
+      return [
+        {
+          key: ROUTES.DRIVER_DASHBOARD,
+          icon: <SendOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.driverMission', 'Nhiệm vụ vận chuyển'),
+        },
+        {
+          key: ROUTES.PROFILE,
+          icon: <UserOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.profile', 'Hồ sơ cá nhân'),
+        },
+      ];
+    }
+
+    if (userRole === ROLES.ESCORT || userRole === 'Escort') {
+      return [
+        {
+          key: ROUTES.DRIVER_DASHBOARD,
+          icon: <MedicineBoxOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.escortMission', 'Giám sát thú y & Áp tải'),
+        },
+        {
+          key: ROUTES.PROFILE,
+          icon: <UserOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.profile', 'Hồ sơ cá nhân'),
+        },
+      ];
+    }
+
+    if (userRole === ROLES.SPECIALIST || userRole === 'TransportSpecialist') {
+      return [
+        {
+          key: ROUTES.SPECIALIST_DASHBOARD,
+          icon: <MedicineBoxOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.specialistDashboard', 'Hồ sơ kiểm dịch'),
+        },
+        {
+          key: ROUTES.PROFILE,
+          icon: <UserOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.profile', 'Hồ sơ cá nhân'),
+        },
       ];
     }
 
@@ -118,7 +183,7 @@ export default function AppSidebar({ collapsed, user }) {
       {
         key: getDashboardRoute(userRole),
         icon: <AppstoreOutlined style={{ fontSize: 18 }} />,
-        label: t('nav.dashboard'),
+        label: t('nav.dashboard', 'Bảng điều khiển'),
       },
       {
         key: ROUTES.PROFILE,
@@ -134,16 +199,22 @@ export default function AppSidebar({ collapsed, user }) {
     const current = location.pathname;
     if (current.startsWith('/customer/horses')) return ROUTES.CUSTOMER_HORSES;
     if (current.startsWith('/customer/vet-record') || current.startsWith('/customer/vetrecord') || current.startsWith('/vet-record')) return ROUTES.CUSTOMER_VET_RECORDS;
-    if (current.startsWith('/customer/bookings')) return ROUTES.CUSTOMER_BOOKINGS;
+    if (current.startsWith('/customer/bookings') || current.startsWith('/customer/booking')) return ROUTES.CUSTOMER_BOOKINGS;
     if (current.startsWith('/customer/pricing')) return ROUTES.CUSTOMER_PRICING;
     if (current.startsWith('/customer/trips')) return ROUTES.CUSTOMER_TRIPS;
     if (current.startsWith('/customer/messages')) return ROUTES.CUSTOMER_MESSAGES;
     if (current.startsWith('/customer/profile')) return ROUTES.CUSTOMER_PROFILE;
     if (current.startsWith('/customer/billing') || current.startsWith('/billing')) return ROUTES.CUSTOMER_BILLING;
+    if (current.startsWith('/manager/route-approvals')) return ROUTES.MANAGER_ROUTE_APPROVALS;
     if (current.startsWith('/manager/pending-requests')) return ROUTES.MANAGER_PENDING_REQUESTS;
     if (current.startsWith('/manager/bookings')) return ROUTES.MANAGER_BOOKINGS;
     if (current.startsWith('/manager/dashboard')) return ROUTES.MANAGER_DASHBOARD;
-    if (current.startsWith('/manager/profile')) return ROUTES.MANAGER_PROFILE;
+    if (current.startsWith('/manager/profile')) return ROUTES.PROFILE;
+    if (current.startsWith('/coordinator/route-planning')) return ROUTES.COORDINATOR_ROUTE_PLANNING;
+    if (current.startsWith('/coordinator/fleet-roster') || current.startsWith('/coordinator/driver-schedules')) return ROUTES.COORDINATOR_FLEET_ROSTER;
+    if (current.startsWith('/coordinator/dashboard') || current.startsWith('/coordinator')) return ROUTES.COORDINATOR_DASHBOARD;
+    if (current.startsWith('/driver/dashboard') || current.startsWith('/driver')) return ROUTES.DRIVER_DASHBOARD;
+    if (current.startsWith('/specialist/dashboard') || current.startsWith('/specialist')) return ROUTES.SPECIALIST_DASHBOARD;
     if (current === '/profile') return ROUTES.PROFILE;
     return current;
   };
@@ -165,9 +236,9 @@ export default function AppSidebar({ collapsed, user }) {
         background: '#ffffff',
       }}
     >
-      {/* Khối Logo chuẩn theo Figma - Click để về trang chủ Home */}
+      {/* Khối Logo chuẩn theo Figma - Click để về Dashboard */}
       <div
-        onClick={() => navigate(ROUTES.HOME)}
+        onClick={() => navigate(getDashboardRoute(userRole))}
         style={{
           height: 84,
           display: 'flex',
@@ -178,7 +249,7 @@ export default function AppSidebar({ collapsed, user }) {
           cursor: 'pointer',
           transition: 'opacity 0.2s ease',
         }}
-        title="Về Trang chủ (Home)"
+        title="Dashboard"
         onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.85')}
         onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
       >
@@ -224,12 +295,10 @@ export default function AppSidebar({ collapsed, user }) {
  * @returns {string}
  */
 function getDashboardRoute(role) {
-  const map = {
-    [ROLES.CUSTOMER]: ROUTES.CUSTOMER_DASHBOARD,
-    [ROLES.MANAGER]: ROUTES.MANAGER_DASHBOARD,
-    [ROLES.SPECIALIST]: ROUTES.SPECIALIST_DASHBOARD,
-    [ROLES.COORDINATOR]: ROUTES.COORDINATOR_DASHBOARD,
-    [ROLES.DRIVER]: ROUTES.DRIVER_DASHBOARD,
-  };
-  return map[role] || '/';
+  if (role === ROLES.CUSTOMER || role === 'Customer') return ROUTES.CUSTOMER_DASHBOARD;
+  if (role === ROLES.MANAGER || role === ROLES.ADMIN || role === 'LogisticsManager' || role === 'Admin') return ROUTES.MANAGER_DASHBOARD;
+  if (role === ROLES.COORDINATOR || role === 'FleetCoordinator') return ROUTES.COORDINATOR_DASHBOARD;
+  if (role === ROLES.DRIVER || role === 'Driver' || role === ROLES.ESCORT || role === 'Escort' || role === 'DriverEscort') return ROUTES.DRIVER_DASHBOARD;
+  if (role === ROLES.SPECIALIST || role === 'TransportSpecialist') return ROUTES.SPECIALIST_DASHBOARD;
+  return '/';
 }

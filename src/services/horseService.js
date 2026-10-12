@@ -58,6 +58,27 @@ export const horseService = {
   async deleteHorse(id) {
     return api.delete(ENDPOINTS.HORSES.DELETE(id));
   },
+
+  /**
+   * Bổ sung hồ sơ thú y cho ngựa
+   */
+  async addVetRecord(horseId, recordData) {
+    return api.post(`/horses/${horseId}/vet-records`, recordData);
+  },
+
+  /**
+   * Chỉnh sửa hồ sơ thú y của ngựa
+   */
+  async updateVetRecord(horseId, recordId, recordData) {
+    return api.put(`/horses/${horseId}/vet-records/${recordId}`, recordData);
+  },
+
+  /**
+   * Xóa hồ sơ thú y của ngựa
+   */
+  async deleteVetRecord(horseId, recordId) {
+    return api.delete(`/horses/${horseId}/vet-records/${recordId}`);
+  },
 };
 
 export default horseService;

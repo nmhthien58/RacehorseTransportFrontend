@@ -36,6 +36,7 @@ export const ROUTES = {
   MANAGER_BOOKINGS: '/manager/bookings',
   MANAGER_BOOKING_DETAIL: '/manager/bookings/:id',
   MANAGER_PENDING_REQUESTS: '/manager/pending-requests',
+  MANAGER_ROUTE_APPROVALS: '/manager/route-approvals',
   MANAGER_TRIPS: '/manager/trips',
   MANAGER_REPORTS: '/manager/reports',
   MANAGER_PROFILE: '/manager/profile',
@@ -48,6 +49,11 @@ export const ROUTES = {
 
   // Coordinator
   COORDINATOR_DASHBOARD: '/coordinator/dashboard',
+  COORDINATOR_OPERATIONS_HUB: '/coordinator/dashboard',
+  COORDINATOR_ROUTE_PLANNING: '/coordinator/route-planning',
+  COORDINATOR_FLEET_ROSTER: '/coordinator/fleet-roster',
+  COORDINATOR_DRIVER_SCHEDULES: '/coordinator/driver-schedules',
+  COORDINATOR_TRACKING: '/coordinator/tracking',
   COORDINATOR_FLEET: '/coordinator/fleet',
   COORDINATOR_TRIPS: '/coordinator/trips',
   COORDINATOR_TRIP_DETAIL: '/coordinator/trips/:id',

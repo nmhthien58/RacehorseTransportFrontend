@@ -51,6 +51,7 @@ export default function BookingDetailPage() {
 
   const [booking, setBooking] = useState(null);
   const [specialists, setSpecialists] = useState([]);
+  const [coordinators, setCoordinators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -74,9 +75,10 @@ export default function BookingDetailPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [bookingRes, staffRes] = await Promise.all([
+        const [bookingRes, staffRes, coordRes] = await Promise.all([
           bookingService.getBookingById(id),
           userService.getStaff('TransportSpecialist').catch(() => null),
+          userService.getStaff('FleetCoordinator').catch(() => null),
         ]);
         if (active) {
           const bookingData = bookingRes?.data || bookingRes;
@@ -84,6 +86,9 @@ export default function BookingDetailPage() {
 
           const staffList = staffRes?.data?.data || staffRes?.data || [];
           setSpecialists(Array.isArray(staffList) ? staffList : []);
+
+          const coordList = coordRes?.data?.data || coordRes?.data || [];
+          setCoordinators(Array.isArray(coordList) ? coordList : []);
         }
       } catch {
         if (active) {
@@ -109,6 +114,13 @@ export default function BookingDetailPage() {
     const found = specialists.find((s) => s.userId === Number(booking.assignedSpecialistId));
     return found ? found.fullName : `Specialist #${booking.assignedSpecialistId}`;
   }, [booking, specialists]);
+
+  // Tìm tên điều phối viên từ coordinator ID
+  const coordinatorName = useMemo(() => {
+    if (!booking?.assignedCoordinatorId) return null;
+    const found = coordinators.find((c) => c.userId === Number(booking.assignedCoordinatorId));
+    return found ? found.fullName : `Coordinator #${booking.assignedCoordinatorId}`;
+  }, [booking, coordinators]);
 
   // Parse bảng chiết tính chi phí
   const quoteLines = useMemo(() => {
@@ -138,6 +150,9 @@ export default function BookingDetailPage() {
     if (specialists.length > 0) {
       approveForm.setFieldsValue({ specialistUserId: specialists[0].userId });
     }
+    if (coordinators.length > 0) {
+      approveForm.setFieldsValue({ coordinatorUserId: coordinators[0].userId });
+    }
     setApproveModalOpen(true);
   };
 
@@ -148,6 +163,7 @@ export default function BookingDetailPage() {
       setActionLoading(true);
       await bookingService.approveBooking(booking.bookingId, {
         specialistUserId: values.specialistUserId,
+        coordinatorUserId: values.coordinatorUserId,
       });
       message.success(t('manager.bookings.messages.approveSuccess'));
       setApproveModalOpen(false);
@@ -625,7 +641,7 @@ export default function BookingDetailPage() {
             <Card
               title={
                 <span style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>
-                  {t('manager.bookings.columns.specialist')}
+                  Nhân sự phụ trách chuyến
                 </span>
               }
               bordered
@@ -634,17 +650,26 @@ export default function BookingDetailPage() {
             >
               <div style={{ marginBottom: 12 }}>
                 <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
-                  Transport Specialist:
+                  🩺 Transport Specialist (Kiểm dịch & hồ sơ):
                 </Text>
                 <Text strong style={{ fontSize: 14, color: '#0f172a' }}>
                   {specialistName || t('manager.bookings.unassigned')}
                 </Text>
               </div>
 
+              <div style={{ marginBottom: 12 }}>
+                <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
+                  🚚 Fleet & Route Coordinator (Điều phối lộ trình):
+                </Text>
+                <Text strong style={{ fontSize: 14, color: '#0f172a' }}>
+                  {coordinatorName || t('manager.bookings.unassigned')}
+                </Text>
+              </div>
+
               {booking.reviewedAt && (
                 <div>
                   <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
-                    {t('manager.bookings.columns.status')}:
+                    Thời gian duyệt:
                   </Text>
                   <Text style={{ fontSize: 13, color: '#475569' }}>
                     {dayjs(booking.reviewedAt).format('DD/MM/YYYY HH:mm')}
@@ -735,19 +760,38 @@ export default function BookingDetailPage() {
           <Form form={approveForm} layout="vertical">
             <Form.Item
               name="specialistUserId"
-              label={t('manager.bookings.modals.selectSpecialist')}
+              label="Chuyên viên kiểm dịch & hồ sơ (Transport Specialist)"
               rules={[
                 {
                   required: true,
-                  message: t('manager.bookings.modals.selectSpecialistRequired'),
+                  message: 'Vui lòng chỉ định Chuyên viên kiểm dịch phụ trách đơn!',
                 },
               ]}
             >
               <Select
-                placeholder={t('manager.bookings.modals.selectSpecialistPlaceholder')}
+                placeholder="Chọn Chuyên viên kiểm dịch..."
                 options={specialists.map((s) => ({
                   value: s.userId,
-                  label: `${s.fullName} (${s.email})`,
+                  label: `🩺 ${s.fullName} (${s.email})`,
+                }))}
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="coordinatorUserId"
+              label="Điều phối viên đội xe & lộ trình (Fleet & Route Coordinator)"
+              rules={[
+                {
+                  required: true,
+                  message: 'Vui lòng chỉ định Điều phối viên đội xe & lộ trình!',
+                },
+              ]}
+            >
+              <Select
+                placeholder="Chọn Điều phối viên lộ trình..."
+                options={coordinators.map((c) => ({
+                  value: c.userId,
+                  label: `🚚 ${c.fullName} (${c.email})`,
                 }))}
               />
             </Form.Item>

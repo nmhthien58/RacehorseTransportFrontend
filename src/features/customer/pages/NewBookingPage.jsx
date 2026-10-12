@@ -45,6 +45,9 @@ export default function NewBookingPage() {
       const fullPayload = {
         ...payload,
         customerUserId: user?.userId || 5,
+        customerName: user?.fullName || user?.FullName || 'Jane Smith',
+        customerEmail: user?.email || user?.Email || 'customer@test.com',
+        customerPhone: user?.phoneNumber || user?.Phone || '+84988111222',
       };
 
       const res = await bookingService.createBooking(fullPayload);

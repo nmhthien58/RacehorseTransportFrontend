@@ -370,3 +370,72 @@ export const HEALTH_STATUS_OPTIONS = [
     bg: '#FEF2F2',
   },
 ];
+
+/**
+ * Đánh giá điều kiện vận chuyển của ngựa (Transport Eligibility Assessment)
+ * Dựa trên:
+ * 1. Bắt buộc có hồ sơ thú y (Vet Records) hợp lệ -> Không có hồ sơ thì KHÔNG ĐƯỢC PHÉP vận chuyển
+ * 2. Tình trạng sức khỏe (HealthStatus) -> Critical/chấn thương là CẤM vận chuyển
+ * 3. Đánh giá y tế đưa ra mức độ: Fit-to-Travel, Giám sát y tế, hoặc Cấm vận chuyển
+ */
+export function checkHorseTransportEligibility(horse, lang = 'vi') {
+  const isEn = String(lang).toLowerCase().startsWith('en');
+  if (!horse) {
+    return {
+      eligible: false,
+      reason: 'INVALID',
+      tagText: isEn ? 'INVALID DATA' : 'THÔNG TIN KHÔNG HỢP LỆ',
+      tagColor: 'default',
+      message: isEn ? 'Invalid horse profile' : 'Thông tin hồ sơ không hợp lệ',
+    };
+  }
+
+  const hasVet = Boolean(
+    horse.hasVetRecord !== false &&
+    horse.HasVetRecord !== false &&
+    ((horse.VetRecords && horse.VetRecords.length > 0) ||
+      (horse.vetRecords && horse.vetRecords.length > 0) ||
+      horse.hasVetRecord === true ||
+      horse.HasVetRecord === true)
+  );
+
+  const status = (horse.HealthStatus || horse.healthStatus || '').trim().toLowerCase();
+  const isCritical = status === 'critical' || status === 'poor';
+  const isExplicitlyIneligible = horse.isEligibleForTransport === false || horse.IsEligibleForTransport === false;
+
+  if (!hasVet) {
+    return {
+      eligible: false,
+      reason: 'MISSING_VET_RECORD',
+      tagText: isEn ? 'NO VET RECORD • INELIGIBLE' : 'THIẾU HỒ SƠ THÚ Y • CẤM VẬN CHUYỂN',
+      tagColor: 'warning',
+      message: isEn
+        ? 'Cannot transport this horse: Missing mandatory veterinary record (Vet Record)!'
+        : 'Chú ngựa này chưa có hồ sơ thú y hợp lệ. Bắt buộc phải bổ sung hồ sơ thú y để được phép vận chuyển!',
+    };
+  }
+
+  if (isCritical || isExplicitlyIneligible) {
+    return {
+      eligible: false,
+      reason: 'CRITICAL_CONDITION',
+      tagText: isEn ? 'NON-FIT-TO-TRAVEL • PROHIBITED' : 'CẤM VẬN CHUYỂN (NON-FIT-TO-TRAVEL)',
+      tagColor: 'error',
+      message: isEn
+        ? 'Cannot transport this horse: Non-Fit-to-Travel due to critical medical condition/injury!'
+        : 'Không thể chọn chú ngựa này: Rủi ro nguy cấp/chấn thương, cấm vận chuyển (Non-Fit-to-Travel)!',
+    };
+  }
+
+  const isAttention = status === 'attention';
+
+  return {
+    eligible: true,
+    reason: isAttention ? 'CONDITIONAL' : 'FIT_TO_TRAVEL',
+    tagText: isAttention
+      ? (isEn ? 'CONDITIONAL TRANSIT' : 'VẬN CHUYỂN KÈM GIÁM SÁT Y TẾ')
+      : (isEn ? 'FIT TO TRAVEL' : 'ĐỦ ĐIỀU KIỆN VẬN CHUYỂN'),
+    tagColor: isAttention ? 'gold' : 'success',
+    message: isEn ? 'Cleared for transport' : 'Đủ điều kiện vận chuyển',
+  };
+}

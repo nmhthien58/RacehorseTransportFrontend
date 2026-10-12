@@ -7,13 +7,10 @@ import {
   CompassOutlined,
   MessageOutlined,
   UserOutlined,
-  CreditCardOutlined,
-  SettingOutlined,
   DollarCircleOutlined,
-  CheckSquareOutlined,
   SendOutlined,
-  TeamOutlined,
   AuditOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -168,8 +165,23 @@ export default function AppSidebar({ collapsed, user }) {
       return [
         {
           key: ROUTES.SPECIALIST_DASHBOARD,
+          icon: <AppstoreOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.specialistDashboard', 'Bảng điều khiển'),
+        },
+        {
+          key: ROUTES.SPECIALIST_DOSSIERS,
+          icon: <AuditOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.specialistDossiers', 'Hồ sơ pháp lý'),
+        },
+        {
+          key: ROUTES.SPECIALIST_DOCUMENTS,
+          icon: <FileTextOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.specialistDocuments', 'Biểu mẫu hồ sơ'),
+        },
+        {
+          key: ROUTES.SPECIALIST_QUARANTINE_RULES,
           icon: <MedicineBoxOutlined style={{ fontSize: 18 }} />,
-          label: t('nav.specialistDashboard', 'Hồ sơ kiểm dịch'),
+          label: t('nav.specialistQuarantineRules', 'Quy định kiểm dịch'),
         },
         {
           key: ROUTES.PROFILE,
@@ -214,6 +226,9 @@ export default function AppSidebar({ collapsed, user }) {
     if (current.startsWith('/coordinator/fleet-roster') || current.startsWith('/coordinator/driver-schedules')) return ROUTES.COORDINATOR_FLEET_ROSTER;
     if (current.startsWith('/coordinator/dashboard') || current.startsWith('/coordinator')) return ROUTES.COORDINATOR_DASHBOARD;
     if (current.startsWith('/driver/dashboard') || current.startsWith('/driver')) return ROUTES.DRIVER_DASHBOARD;
+    if (current.startsWith('/specialist/documents')) return ROUTES.SPECIALIST_DOCUMENTS;
+    if (current.startsWith('/specialist/quarantine-rules')) return ROUTES.SPECIALIST_QUARANTINE_RULES;
+    if (current.startsWith('/specialist/dossiers')) return ROUTES.SPECIALIST_DOSSIERS;
     if (current.startsWith('/specialist/dashboard') || current.startsWith('/specialist')) return ROUTES.SPECIALIST_DASHBOARD;
     if (current === '/profile') return ROUTES.PROFILE;
     return current;

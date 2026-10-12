@@ -46,6 +46,7 @@ export const ROUTES = {
   SPECIALIST_DOSSIERS: '/specialist/dossiers',
   SPECIALIST_DOSSIER_DETAIL: '/specialist/dossiers/:id',
   SPECIALIST_DOCUMENTS: '/specialist/documents',
+  SPECIALIST_QUARANTINE_RULES: '/specialist/quarantine-rules',
 
   // Coordinator
   COORDINATOR_DASHBOARD: '/coordinator/dashboard',

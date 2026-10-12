@@ -40,6 +40,10 @@ import RouteApprovalsPage from '@features/manager/pages/RouteApprovalsPage';
 
 // Specialist pages
 import SpecialistDashboard from '@features/specialist/pages/DashboardPage';
+import DossiersPage from '@features/specialist/pages/DossiersPage';
+import DossierDetailPage from '@features/specialist/pages/DossierDetailPage';
+import QuarantineRulesPage from '@features/specialist/pages/QuarantineRulesPage';
+import DocumentsPage from '@features/specialist/pages/DocumentsPage';
 
 // Coordinator pages
 import CoordinatorDashboard from '@features/coordinator/pages/DashboardPage';
@@ -130,9 +134,17 @@ export default function AppRoutes() {
       </Route>
 
       {/* Specialist */}
-      <Route element={<PrivateRoute allowedRoles={[ROLES.SPECIALIST]} />}>
+      <Route element={<PrivateRoute allowedRoles={[ROLES.SPECIALIST, 'Specialist', 'TransportSpecialist']} />}>
         <Route element={<MainLayout />}>
           <Route path={ROUTES.SPECIALIST_DASHBOARD} element={<SpecialistDashboard />} />
+          <Route path={ROUTES.SPECIALIST_DOSSIERS} element={<DossiersPage />} />
+          <Route path="/specialist/dossiers" element={<DossiersPage />} />
+          <Route path={ROUTES.SPECIALIST_DOSSIER_DETAIL} element={<DossierDetailPage />} />
+          <Route path="/specialist/dossiers/:id" element={<DossierDetailPage />} />
+          <Route path={ROUTES.SPECIALIST_QUARANTINE_RULES} element={<QuarantineRulesPage />} />
+          <Route path="/specialist/quarantine-rules" element={<QuarantineRulesPage />} />
+          <Route path={ROUTES.SPECIALIST_DOCUMENTS} element={<DocumentsPage />} />
+          <Route path="/specialist/documents" element={<DocumentsPage />} />
         </Route>
       </Route>
 

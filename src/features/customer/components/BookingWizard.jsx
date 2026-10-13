@@ -28,9 +28,6 @@ import {
   SendOutlined,
   CalendarOutlined,
   DollarOutlined,
-  CarOutlined,
-  RocketOutlined,
-  GlobalOutlined,
   SafetyCertificateOutlined,
   InfoCircleOutlined,
 } from '@ant-design/icons';
@@ -40,6 +37,7 @@ import dayjs from 'dayjs';
 import horseService from '@services/horseService';
 import { useAuthStore } from '@features/auth/store/authStore';
 import { getStoredHorses } from '@utils/horseStorage';
+import { checkHorseBookingConflict } from '@utils/bookingStorage';
 import {
   checkHorseTransportEligibility,
 } from '@utils/horseHealth';
@@ -632,19 +630,22 @@ export default function BookingWizard({
     };
   }, [user, initialValues, i18n]);
 
-  // Toggle chọn cá thể ngựa (Chặn nếu ngựa thiếu hồ sơ thú y hoặc ở mức nguy cấp Critical/Non-Fit-to-Travel)
+  // Toggle chọn cá thể ngựa (Chặn nếu ngựa thiếu hồ sơ thú y hoặc nguy cấp)
   const handleToggleHorse = (horseId) => {
-    const targetHorse = availableHorses.find((h) => (h.horseId || h.HorseID) === horseId);
+    const targetHorse = availableHorses.find(
+      (h) => String(h.horseId || h.HorseID) === String(horseId),
+    );
     if (targetHorse) {
       const eligibility = checkHorseTransportEligibility(targetHorse, i18n?.language || 'vi');
       if (!eligibility.eligible) {
-        message.error(eligibility.message);
+        message.warning(eligibility.message);
         return;
       }
     }
     setSelectedHorseIds((prev) => {
-      if (prev.includes(horseId)) {
-        return prev.filter((id) => id !== horseId);
+      const exists = prev.some((id) => String(id) === String(horseId));
+      if (exists) {
+        return prev.filter((id) => String(id) !== String(horseId));
       }
       setStallClasses((s) => ({ ...s, [horseId]: s[horseId] || 'Comfort' }));
       return [...prev, horseId];
@@ -864,6 +865,19 @@ export default function BookingWizard({
       if (!isValid) {
         message.warning('Vui lòng chọn ngày khởi hành hợp lệ.');
         return;
+      }
+      // Kiểm tra trùng lịch của các ngựa đã chọn với ngày thực tế khách hàng chọn
+      const depDate = getValues('DepartureDate');
+      const delDate = getValues('DeliveryDate');
+      for (const hId of selectedHorseIds) {
+        const conflict = checkHorseBookingConflict(hId, depDate, delDate);
+        if (conflict.hasConflict) {
+          const horse = availableHorses.find((h) => String(h.horseId || h.HorseID) === String(hId));
+          message.error(
+            `Ngựa "${horse?.name || horse?.Name || hId}" bị trùng lịch: ${conflict.reason}`,
+          );
+          return;
+        }
       }
     }
 
@@ -1188,12 +1202,14 @@ export default function BookingWizard({
               <Row gutter={[16, 16]}>
                 {availableHorses.map((horse) => {
                   const horseId = horse.horseId || horse.HorseID;
-                  const isSelected = selectedHorseIds.includes(horseId);
+                  const isSelected = selectedHorseIds.some((id) => String(id) === String(horseId));
                   const horseName = horse.name || horse.Name;
                   const horseBreed = horse.breed || horse.Breed;
                   const horseGender = horse.gender || horse.Gender;
                   const horseMicrochip = horse.microchipNumber || horse.MicrochipNumber;
                   const eligibility = checkHorseTransportEligibility(horse, i18n?.language || 'vi');
+                  const conflict = checkHorseBookingConflict(horseId, getValues('DepartureDate'), getValues('DeliveryDate'));
+                  const isConflict = conflict.hasConflict;
                   const isBlocked = !eligibility.eligible;
                   const isMissingVet = eligibility.reason === 'MISSING_VET_RECORD';
                   const isCritical = eligibility.reason === 'CRITICAL_CONDITION';
@@ -1206,7 +1222,7 @@ export default function BookingWizard({
                         aria-disabled={isBlocked}
                         onClick={(e) => {
                           if (isBlocked) return;
-                          if (e.target.closest?.('.stall-select-container') || e.target.closest?.('.ant-select') || e.target.closest?.('.ant-checkbox-wrapper')) return;
+                          if (e.target.closest?.('.stall-select-container') || e.target.closest?.('.ant-select')) return;
                           handleToggleHorse(horseId);
                         }}
                         onKeyDown={(e) => {
@@ -1234,7 +1250,7 @@ export default function BookingWizard({
                             ? '#FFFBEB'
                             : '#FFFFFF',
                           cursor: isBlocked ? 'not-allowed' : 'pointer',
-                          opacity: isBlocked ? 0.88 : 1,
+                          opacity: isBlocked ? 0.75 : 1,
                           transform: isSelected && !isBlocked ? 'scale(1.02)' : 'scale(1)',
                           boxShadow: isSelected && !isBlocked
                             ? '0 8px 24px rgba(245, 158, 11, 0.22)'
@@ -1247,7 +1263,6 @@ export default function BookingWizard({
                             checked={!isBlocked && isSelected}
                             disabled={isBlocked}
                             onChange={() => !isBlocked && handleToggleHorse(horseId)}
-                            onClick={(e) => e.stopPropagation()}
                           >
                             <strong
                               style={{
@@ -1285,6 +1300,26 @@ export default function BookingWizard({
                           {t(`horses.genderOptions.${horseGender?.toLowerCase()}`) || horseGender} · {t('horses.fields.microchip')}:{' '}
                           <code>{horseMicrochip || '---'}</code>
                         </div>
+
+                        {/* Banner thông báo lưu ý nếu có chuyến đi khác xung quanh ngày dự kiến ban đầu */}
+                        {isConflict && !isBlocked && (
+                          <div
+                            style={{
+                              marginLeft: 28,
+                              marginTop: 6,
+                              marginBottom: 8,
+                              padding: '6px 12px',
+                              backgroundColor: '#FEF3C7',
+                              borderRadius: 8,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: '#92400E',
+                              border: '1px solid #FDE68A',
+                            }}
+                          >
+                            ℹ️ Ngựa có chuyến đi khác xung quanh ngày dự kiến ban đầu. Bạn sẽ chọn ngày khởi hành chính xác ở Bước 3 (When).
+                          </div>
+                        )}
 
                         {/* Banner cảnh báo chặn vận chuyển nếu thiếu hồ sơ thú y */}
                         {isMissingVet && (
@@ -1381,282 +1416,66 @@ export default function BookingWizard({
             )}
           </div>
 
-          <Divider style={{ margin: '20px 0 16px' }} />
+          <Divider style={{ margin: '24px 0 20px' }} />
 
-          {/* PHẦN 2: HOW WILL YOUR HORSE TRAVEL? (3 HÌNH THỨC + KIỂM TRA ĐỘ KHẢ THI + CÔNG KHAI GIÁ) */}
-          <div>
-            <Title level={5} style={{ margin: '0 0 4px', fontWeight: 800, color: '#0f172a' }}>
-              How will your horse travel?
-            </Title>
-            <Text style={{ color: '#64748b', fontSize: 12.5, display: 'block', marginBottom: 14 }}>
-              Phương thức vận chuyển phù hợp cho tuyến tới: <strong>{routeData.name}</strong>
-            </Text>
+          {/* TÓM TẮT PHƯƠNG THỨC VẬN CHUYỂN ĐÃ CHỌN Ở BƯỚC 1 (TRÁNH TRÙNG LẶP THEO ITEM 2) */}
+          <div
+            style={{
+              backgroundColor: '#F8FAFC',
+              border: '1.5px solid #E2E8F0',
+              borderRadius: 14,
+              padding: '16px 20px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 12,
+            }}
+          >
+            <Flex align="center" gap={14}>
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  backgroundColor:
+                    transportMode === 'Air'
+                      ? '#EFF6FF'
+                      : transportMode === 'DoorToDoor'
+                      ? '#F5F3FF'
+                      : '#FEF3C7',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 22,
+                }}
+              >
+                {transportMode === 'Air' ? '✈️' : transportMode === 'DoorToDoor' ? '🌐' : '🚛'}
+              </div>
+              <div>
+                <Text style={{ fontSize: 12, color: '#64748B', display: 'block', marginBottom: 2 }}>
+                  Hình thức vận chuyển đã thiết lập ở Bước 1 (Where):
+                </Text>
+                <strong style={{ fontSize: 15, color: '#0F172A' }}>
+                  {transportMode === 'Air'
+                    ? '✈️ Chuyên cơ Hàng không Quốc tế (Air Freight - IATA LAR)'
+                    : transportMode === 'DoorToDoor'
+                    ? '🌐 Trọn gói Door-to-Door (Chuồng - Chuồng đa phương thức)'
+                    : '🚛 Vận chuyển Mặt đất (Ground Transport - Trailer Chuyên dụng)'}
+                </strong>
+                <Text style={{ fontSize: 12, color: '#475569', display: 'block', marginTop: 2 }}>
+                  Tuyến: <strong>{routeData.name}</strong> • Cước cơ bản: <strong>${(transportMode === 'DoorToDoor' ? routeData.doorToDoor?.baseFreight : transportMode === 'Air' ? routeData.air?.baseFreight : routeData.ground?.baseFreight || 2800)?.toLocaleString()}</strong> / ngựa
+                </Text>
+              </div>
+            </Flex>
 
-            <Controller
-              name="TransportMode"
-              control={control}
-              render={({ field }) => {
-                const isGround = field.value === 'Ground';
-                const isAir = field.value === 'Air';
-                const isDoor = field.value === 'DoorToDoor';
-
-                return (
-                  <Row gutter={[14, 14]}>
-                    {/* OPTION 1: GROUND TRANSPORT */}
-                    <Col xs={24} md={8}>
-                      <div
-                        role="button"
-                        tabIndex={isGroundAvailable ? 0 : -1}
-                        aria-disabled={!isGroundAvailable}
-                        onClick={() => {
-                          if (isGroundAvailable) field.onChange('Ground');
-                        }}
-                        onKeyDown={(e) => {
-                          if (!isGroundAvailable) return;
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange('Ground');
-                          }
-                        }}
-                        style={{
-                          backgroundColor: !isGroundAvailable
-                            ? '#f8fafc'
-                            : isGround
-                            ? '#FFFBEB'
-                            : '#FFFFFF',
-                          border: !isGroundAvailable
-                            ? '1.5px dashed #cbd5e1'
-                            : isGround
-                            ? '2px solid #F59E0B'
-                            : '1.5px solid #E2E8F0',
-                          borderRadius: 14,
-                          padding: '16px 16px',
-                          cursor: isGroundAvailable ? 'pointer' : 'not-allowed',
-                          opacity: isGroundAvailable ? 1 : 0.65,
-                          height: '100%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          boxShadow: isGround && isGroundAvailable
-                            ? '0 6px 18px rgba(245, 158, 11, 0.18)'
-                            : '0 1px 3px rgba(0, 0, 0, 0.02)',
-                          transition: 'all 0.2s ease',
-                        }}
-                      >
-                        <div>
-                          <Flex justify="space-between" align="center" style={{ marginBottom: 10 }}>
-                            <div
-                              style={{
-                                width: 40,
-                                height: 40,
-                                borderRadius: 10,
-                                backgroundColor: isGround ? '#FEF3C7' : '#F1F5F9',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: 20,
-                                color: isGround ? '#D97706' : '#64748B',
-                              }}
-                            >
-                              <CarOutlined />
-                            </div>
-                            <Space size={4}>
-                              {isGround && isGroundAvailable && (
-                                <Tag color="gold" style={{ fontWeight: 800, margin: 0, borderRadius: 9999 }}>
-                                  ✓ Đã chọn
-                                </Tag>
-                              )}
-                              {isGroundAvailable ? (
-                                <Tag color="blue" style={{ fontWeight: 700, margin: 0 }}>Phổ biến</Tag>
-                              ) : (
-                                <Tag color="error" style={{ fontWeight: 700, margin: 0 }}>Không hỗ trợ</Tag>
-                              )}
-                            </Space>
-                          </Flex>
-
-                          <strong style={{ fontSize: 15, color: isGround ? '#92400E' : '#0F172A', display: 'block' }}>
-                            Ground Transport
-                          </strong>
-                          <span style={{ fontSize: 12, color: '#64748b', display: 'block', marginBottom: 6 }}>
-                            Xe thùng chuyên dụng
-                          </span>
-                          <Text style={{ fontSize: 12, color: '#475569', display: 'block', lineHeight: 1.4 }}>
-                            {isGroundAvailable
-                              ? 'Đón và giao tận chuồng, thùng xe đệm êm, kiểm soát camera & GPS lộ trình.'
-                              : 'Không khả dụng do ngăn cách biển/đại dương hoặc cự ly vượt giới hạn.'}
-                          </Text>
-                        </div>
-
-                        <div style={{ marginTop: 14, paddingTop: 10, borderTop: '1px dashed #e2e8f0' }}>
-                          <Flex justify="space-between" align="baseline">
-                            <span style={{ fontSize: 12, color: '#64748b' }}>{isGroundAvailable ? routeData.ground?.duration : 'N/A'}</span>
-                            {isGroundAvailable && (
-                              <strong style={{ fontSize: 15, color: '#d97706' }}>
-                                ${routeData.ground?.priceMin?.toLocaleString()} - ${routeData.ground?.priceMax?.toLocaleString()}
-                              </strong>
-                            )}
-                          </Flex>
-                        </div>
-                      </div>
-                    </Col>
-
-                    {/* OPTION 2: AIR FREIGHT */}
-                    <Col xs={24} md={8}>
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => field.onChange('Air')}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange('Air');
-                          }
-                        }}
-                        style={{
-                          backgroundColor: isAir ? '#FFFBEB' : '#FFFFFF',
-                          border: isAir ? '2px solid #F59E0B' : '1.5px solid #E2E8F0',
-                          borderRadius: 14,
-                          padding: '16px 16px',
-                          cursor: 'pointer',
-                          height: '100%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          boxShadow: isAir
-                            ? '0 6px 18px rgba(245, 158, 11, 0.18)'
-                            : '0 1px 3px rgba(0, 0, 0, 0.02)',
-                          transition: 'all 0.2s ease',
-                        }}
-                      >
-                        <div>
-                          <Flex justify="space-between" align="center" style={{ marginBottom: 10 }}>
-                            <div
-                              style={{
-                                width: 40,
-                                height: 40,
-                                borderRadius: 10,
-                                backgroundColor: isAir ? '#FEF3C7' : '#F1F5F9',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: 20,
-                                color: isAir ? '#D97706' : '#64748B',
-                              }}
-                            >
-                              <RocketOutlined />
-                            </div>
-                            <Space size={4}>
-                              {isAir && (
-                                <Tag color="gold" style={{ fontWeight: 800, margin: 0, borderRadius: 9999 }}>
-                                  ✓ Đã chọn
-                                </Tag>
-                              )}
-                              <Tag color="cyan" style={{ fontWeight: 700, margin: 0 }}>Nhanh nhất</Tag>
-                            </Space>
-                          </Flex>
-
-                          <strong style={{ fontSize: 15, color: isAir ? '#92400E' : '#0F172A', display: 'block' }}>
-                            Air Freight
-                          </strong>
-                          <span style={{ fontSize: 12, color: '#64748b', display: 'block', marginBottom: 6 }}>
-                            Chuyên cơ hàng không quốc tế
-                          </span>
-                          <Text style={{ fontSize: 12, color: '#475569', display: 'block', lineHeight: 1.4 }}>
-                            Chuyên cơ chuẩn IATA LAR, buồng ổn định áp suất & nhiệt độ, nhân viên chăm sóc bay cùng.
-                          </Text>
-                        </div>
-
-                        <div style={{ marginTop: 14, paddingTop: 10, borderTop: '1px dashed #e2e8f0' }}>
-                          <Flex justify="space-between" align="baseline">
-                            <span style={{ fontSize: 12, color: '#64748b' }}>{routeData.air?.duration || '1 - 2 ngày'}</span>
-                            <strong style={{ fontSize: 15, color: '#2563eb' }}>
-                              ${routeData.air?.priceMin?.toLocaleString()} - ${routeData.air?.priceMax?.toLocaleString()}
-                            </strong>
-                          </Flex>
-                        </div>
-                      </div>
-                    </Col>
-
-                    {/* OPTION 3: DOOR-TO-DOOR */}
-                    <Col xs={24} md={8}>
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => field.onChange('DoorToDoor')}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange('DoorToDoor');
-                          }
-                        }}
-                        style={{
-                          backgroundColor: isDoor ? '#FFFBEB' : '#FFFFFF',
-                          border: isDoor ? '2px solid #F59E0B' : '1.5px solid #E2E8F0',
-                          borderRadius: 14,
-                          padding: '16px 16px',
-                          cursor: 'pointer',
-                          height: '100%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          boxShadow: isDoor
-                            ? '0 6px 18px rgba(245, 158, 11, 0.18)'
-                            : '0 1px 3px rgba(0, 0, 0, 0.02)',
-                          transition: 'all 0.2s ease',
-                        }}
-                      >
-                        <div>
-                          <Flex justify="space-between" align="center" style={{ marginBottom: 10 }}>
-                            <div
-                              style={{
-                                width: 40,
-                                height: 40,
-                                borderRadius: 10,
-                                backgroundColor: isDoor ? '#FEF3C7' : '#F1F5F9',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: 20,
-                                color: isDoor ? '#D97706' : '#64748B',
-                              }}
-                            >
-                              <GlobalOutlined />
-                            </div>
-                            <Space size={4}>
-                              {isDoor && (
-                                <Tag color="gold" style={{ fontWeight: 800, margin: 0, borderRadius: 9999 }}>
-                                  ✓ Đã chọn
-                                </Tag>
-                              )}
-                              <Tag color="purple" style={{ fontWeight: 800, margin: 0 }}>Trọn gói</Tag>
-                            </Space>
-                          </Flex>
-
-                          <strong style={{ fontSize: 15, color: isDoor ? '#92400E' : '#0F172A', display: 'block' }}>
-                            Door-to-Door
-                          </strong>
-                          <span style={{ fontSize: 12, color: '#64748b', display: 'block', marginBottom: 6 }}>
-                            Đa phương thức Chuồng ➔ Chuồng
-                          </span>
-                          <Text style={{ fontSize: 12, color: '#475569', display: 'block', lineHeight: 1.4 }}>
-                            Xe đón tận trang trại ➔ Chuyên cơ ➔ Xe giao tận chuồng đích. Bao trọn thủ tục hải quan & CVI.
-                          </Text>
-                        </div>
-
-                        <div style={{ marginTop: 14, paddingTop: 10, borderTop: '1px dashed #e2e8f0' }}>
-                          <Flex justify="space-between" align="baseline">
-                            <span style={{ fontSize: 12, color: '#64748b' }}>{routeData.doorToDoor?.duration || '3 - 14 ngày'}</span>
-                            <strong style={{ fontSize: 15, color: '#7c3aed' }}>
-                              ${routeData.doorToDoor?.priceMin?.toLocaleString()} - ${routeData.doorToDoor?.priceMax?.toLocaleString()}
-                            </strong>
-                          </Flex>
-                        </div>
-                      </div>
-                    </Col>
-                  </Row>
-                );
-              }}
-            />
+            <Button
+              size="middle"
+              onClick={() => setCurrentStep(0)}
+              style={{ borderRadius: 8, fontSize: 12.5, fontWeight: 700 }}
+            >
+              ← Thay đổi hình thức ở Bước 1
+            </Button>
           </div>
         </div>
       )}

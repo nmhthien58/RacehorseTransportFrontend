@@ -47,7 +47,6 @@ export default function ProfilePage() {
   }
 
   const isCustomer = profile?.role === 'Customer';
-  const isStaff = !isCustomer;
 
   return (
     <div style={{ maxWidth: 1040, margin: '0 auto', paddingBottom: 40 }}>

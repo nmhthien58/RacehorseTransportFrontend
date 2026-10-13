@@ -40,6 +40,7 @@ import PageHeader from '@components/layout/PageHeader';
 import useHorseDetail from '@features/customer/hooks/useHorseDetail';
 import { checkHorseTransportEligibility } from '@utils/horseHealth';
 import { ROUTES } from '@routes/routes';
+import EditHorseModal from '@features/customer/components/EditHorseModal';
 
 const { Title, Text } = Typography;
 
@@ -58,7 +59,6 @@ export default function HorseDetailPage() {
 
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
-  const [form] = Form.useForm();
 
   const [vetModalVisible, setVetModalVisible] = useState(false);
   const [vetSubmitting, setVetSubmitting] = useState(false);
@@ -141,38 +141,14 @@ export default function HorseDetailPage() {
   };
 
   const handleOpenEdit = () => {
-    if (!horse) return;
-    const dob = horse.dateOfBirth || horse.DateOfBirth;
-    form.setFieldsValue({
-      name: horse.name || horse.Name,
-      breed: horse.breed || horse.Breed || 'Thoroughbred',
-      gender: horse.gender || horse.Gender || 'Stallion',
-      dateOfBirth: dob ? dayjs(dob) : null,
-      color: horse.color || horse.Color || '',
-      microchipNumber: horse.microchipNumber || horse.MicrochipNumber || '',
-      passportNumber: horse.passportNumber || horse.PassportNumber || '',
-      specialCareRequirements: horse.specialCareRequirements || horse.SpecialCareRequirements || '',
-    });
     setEditModalVisible(true);
   };
 
   const handleSaveEdit = async (values) => {
     try {
       setEditSubmitting(true);
-      const payload = {
-        name: values.name?.trim(),
-        breed: values.breed,
-        gender: values.gender,
-        dateOfBirth: values.dateOfBirth
-          ? values.dateOfBirth.format('YYYY-MM-DD')
-          : null,
-        color: values.color?.trim() || '',
-        microchipNumber: values.microchipNumber?.trim() || '',
-        passportNumber: values.passportNumber?.trim() || '',
-        specialCareRequirements: values.specialCareRequirements?.trim() || '',
-      };
       const horseId = horse.horseId || horse.HorseID;
-      await horseService.updateHorse(horseId, payload);
+      await horseService.updateHorse(horseId, values);
       message.success(t('horses.updateHorseSuccess'));
       setEditModalVisible(false);
       refetch?.();
@@ -662,103 +638,14 @@ export default function HorseDetailPage() {
       {/* KHỐI TABS: THÔNG TIN CHUNG / HỒ SƠ THÚ Y / LỊCH SỬ VẬN CHUYỂN */}
       <Tabs defaultActiveKey="general" items={tabItems} size="large" />
 
-      {/* MODAL CHỈNH SỬA THÔNG TIN NGỰA */}
-      <Modal
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 17, fontWeight: 700 }}>
-            <span>✏️ {t('horses.editModalTitle')}</span>
-            <Tag color="gold">{horseName}</Tag>
-          </div>
-        }
+      {/* MODAL CHỈNH SỬA THÔNG TIN NGỰA (Dùng chung) */}
+      <EditHorseModal
         open={editModalVisible}
         onCancel={() => setEditModalVisible(false)}
-        onOk={() => form.submit()}
+        onSave={handleSaveEdit}
+        horse={horse}
         confirmLoading={editSubmitting}
-        okText={t('horses.saveChanges')}
-        cancelText={t('horses.cancel')}
-        destroyOnClose
-        width={680}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSaveEdit}
-          style={{ marginTop: 16 }}
-        >
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="name"
-                label={<span style={{ fontWeight: 600 }}>{t('horses.fields.name')}</span>}
-                rules={[{ required: true, message: t('horses.validation.nameRequired') }]}
-              >
-                <Input placeholder={t('horses.placeholders.name')} size="large" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="breed"
-                label={<span style={{ fontWeight: 600 }}>{t('horses.fields.breed')}</span>}
-                rules={[{ required: true, message: t('horses.validation.breedRequired') }]}
-              >
-                <Select size="large">
-                  <Select.Option value="Thoroughbred">Thoroughbred (Thuần chủng Anh)</Select.Option>
-                  <Select.Option value="Quarter Horse">Quarter Horse</Select.Option>
-                  <Select.Option value="Arabian">Arabian (Ngựa Ả Rập)</Select.Option>
-                  <Select.Option value="Warmblood">Warmblood</Select.Option>
-                  <Select.Option value="Appaloosa">Appaloosa</Select.Option>
-                  <Select.Option value="Standardbred">Standardbred</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col xs={24} sm={8}>
-              <Form.Item name="gender" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.gender')}</span>}>
-                <Select size="large">
-                  <Select.Option value="Stallion">{t('horses.genderOptions.stallion')}</Select.Option>
-                  <Select.Option value="Mare">{t('horses.genderOptions.mare')}</Select.Option>
-                  <Select.Option value="Gelding">{t('horses.genderOptions.gelding')}</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Form.Item name="dateOfBirth" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.dob')}</span>}>
-                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" size="large" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Form.Item name="color" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.color')}</span>}>
-                <Input placeholder={t('horses.placeholders.color')} size="large" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item name="microchipNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.microchip')}</span>}>
-                <Input placeholder={t('horses.placeholders.microchip')} size="large" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item name="passportNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.passport')}</span>}>
-                <Input placeholder={t('horses.placeholders.passport')} size="large" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item
-            name="specialCareRequirements"
-            label={<span style={{ fontWeight: 600 }}>{t('horses.fields.specialCare')}</span>}
-          >
-            <Input.TextArea
-              rows={3}
-              placeholder={t('horses.specialCarePlaceholder')}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
+      />
 
       {/* MODAL THÊM / CHỈNH SỬA HỒ SƠ THÚ Y */}
       <Modal

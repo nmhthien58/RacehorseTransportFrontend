@@ -424,146 +424,78 @@ export default function MainPage() {
           </div>
 
           <Row gutter={[32, 32]}>
-            {/* Bước 1 */}
-            <Col xs={24} md={8}>
-              <Card
-                className="landing-card-hover"
-                style={{
-                  height: '100%',
-                  borderRadius: 20,
-                  overflow: 'hidden',
-                  border: '1px solid #e2e8f0',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
-                }}
-                cover={
-                  <div style={{ height: 210, overflow: 'hidden' }}>
-                    <img
-                      src={how1}
-                      alt="Hassle-free online booking"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  </div>
-                }
-              >
-                <div
+            {[
+              {
+                step: 1,
+                image: how1,
+                color: 'blue',
+                title: 'Hassle-free online booking',
+                description:
+                  'Tell us your route, compare quotes from vetted drivers, and book the service you want. No phone tag, no spreadsheets, no guesswork.',
+              },
+              {
+                step: 2,
+                image: how2,
+                color: 'cyan',
+                title: 'Follow along the journey',
+                description:
+                  'From pickup, stopover, and delivery, updates keep you in the loop each step of the way. All driver communication happens inside the platform.',
+              },
+              {
+                step: 3,
+                image: how3,
+                color: 'green',
+                title: 'Get your horse delivered',
+                description:
+                  'Receive real-time notifications right to the moment your horse walks off the van. Care from people who truly care.',
+              },
+            ].map((stepItem) => (
+              <Col xs={24} md={8} key={stepItem.step}>
+                <Card
+                  className="landing-card-hover"
                   style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    backgroundColor: '#0f172a',
-                    color: '#ffffff',
-                    fontWeight: 800,
-                    fontSize: 14,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: 16,
+                    height: '100%',
+                    borderRadius: 20,
+                    overflow: 'hidden',
+                    border: '1px solid #e2e8f0',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
                   }}
+                  cover={
+                    <div style={{ height: 210, overflow: 'hidden' }}>
+                      <img
+                        src={stepItem.image}
+                        alt={stepItem.title}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    </div>
+                  }
                 >
-                  1
-                </div>
-                <Tag color="blue" style={{ borderRadius: 6, fontWeight: 700, marginBottom: 12, fontSize: 12 }}>
-                  Hassle-free online booking
-                </Tag>
-                <Paragraph style={{ color: '#64748b', fontSize: 14, lineHeight: 1.7, marginTop: 8 }}>
-                  Tell us your route, compare quotes from vetted drivers, and book the service you want. No phone tag, no spreadsheets, no guesswork.
-                </Paragraph>
-              </Card>
-            </Col>
-
-            {/* Bước 2 */}
-            <Col xs={24} md={8}>
-              <Card
-                className="landing-card-hover"
-                style={{
-                  height: '100%',
-                  borderRadius: 20,
-                  overflow: 'hidden',
-                  border: '1px solid #e2e8f0',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
-                }}
-                cover={
-                  <div style={{ height: 210, overflow: 'hidden' }}>
-                    <img
-                      src={how2}
-                      alt="Follow along the journey"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
+                  <div
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: '50%',
+                      backgroundColor: '#0f172a',
+                      color: '#ffffff',
+                      fontWeight: 800,
+                      fontSize: 14,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: 16,
+                    }}
+                  >
+                    {stepItem.step}
                   </div>
-                }
-              >
-                <div
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    backgroundColor: '#0f172a',
-                    color: '#ffffff',
-                    fontWeight: 800,
-                    fontSize: 14,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: 16,
-                  }}
-                >
-                  2
-                </div>
-                <Tag color="cyan" style={{ borderRadius: 6, fontWeight: 700, marginBottom: 12, fontSize: 12 }}>
-                  Follow along the journey
-                </Tag>
-                <Paragraph style={{ color: '#64748b', fontSize: 14, lineHeight: 1.7, marginTop: 8 }}>
-                  From pickup, stopover, and delivery, updates keep you in the loop each step of the way. All driver communication happens inside the platform.
-                </Paragraph>
-              </Card>
-            </Col>
-
-            {/* Bước 3 */}
-            <Col xs={24} md={8}>
-              <Card
-                className="landing-card-hover"
-                style={{
-                  height: '100%',
-                  borderRadius: 20,
-                  overflow: 'hidden',
-                  border: '1px solid #e2e8f0',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
-                }}
-                cover={
-                  <div style={{ height: 210, overflow: 'hidden' }}>
-                    <img
-                      src={how3}
-                      alt="Get your horse delivered"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  </div>
-                }
-              >
-                <div
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    backgroundColor: '#0f172a',
-                    color: '#ffffff',
-                    fontWeight: 800,
-                    fontSize: 14,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: 16,
-                  }}
-                >
-                  3
-                </div>
-                <Tag color="green" style={{ borderRadius: 6, fontWeight: 700, marginBottom: 12, fontSize: 12 }}>
-                  Get your horse delivered
-                </Tag>
-                <Paragraph style={{ color: '#64748b', fontSize: 14, lineHeight: 1.7, marginTop: 8 }}>
-                  Receive real-time notifications right to the moment your horse walks off the van. Care from people who truly care.
-                </Paragraph>
-              </Card>
-            </Col>
+                  <Tag color={stepItem.color} style={{ borderRadius: 6, fontWeight: 700, marginBottom: 12, fontSize: 12 }}>
+                    {stepItem.title}
+                  </Tag>
+                  <Paragraph style={{ color: '#64748b', fontSize: 14, lineHeight: 1.7, marginTop: 8 }}>
+                    {stepItem.description}
+                  </Paragraph>
+                </Card>
+              </Col>
+            ))}
           </Row>
         </div>
       </section>
@@ -713,125 +645,68 @@ export default function MainPage() {
               </Card>
             </Col>
 
-            {/* Card 2: Fully Vetted Drivers */}
-            <Col xs={24} sm={12} lg={6}>
-              <Card
-                className="landing-card-hover"
-                style={{
-                  height: '100%',
-                  borderRadius: 20,
-                  backgroundColor: '#1e293b',
-                  border: 'none',
-                  color: '#ffffff',
-                  padding: 8,
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
-                }}
-              >
-                <div
+            {[
+              {
+                key: 'drivers',
+                icon: <SafetyCertificateOutlined />,
+                title: 'Fully Vetted Drivers',
+                description:
+                  'Insurance, equipment, and operating history verified before a single quote hits your inbox.',
+              },
+              {
+                key: 'quotes',
+                icon: <CheckCircleFilled />,
+                title: 'Side-by-Side Quote Comparison',
+                description:
+                  'Unlock vetted quotes in real-time. See item breakdown, and transparent estimates.',
+              },
+              {
+                key: 'docs',
+                icon: <InfoCircleOutlined />,
+                title: 'Centralized Trip Documentation',
+                description:
+                  'Digital coggins, health certificates, and inspection records — accessible at any moment.',
+              },
+            ].map((feat) => (
+              <Col xs={24} sm={12} lg={6} key={feat.key}>
+                <Card
+                  className="landing-card-hover"
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 10,
-                    backgroundColor: '#FBA919',
-                    color: '#0f172a',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 800,
-                    fontSize: 16,
-                    marginBottom: 16,
+                    height: '100%',
+                    borderRadius: 20,
+                    backgroundColor: '#1e293b',
+                    border: 'none',
+                    color: '#ffffff',
+                    padding: 8,
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
                   }}
                 >
-                  <SafetyCertificateOutlined />
-                </div>
-                <Title level={4} style={{ color: '#ffffff', fontWeight: 800, marginBottom: 12 }}>
-                  Fully Vetted Drivers
-                </Title>
-                <Paragraph style={{ color: '#cbd5e1', fontSize: 14, lineHeight: 1.7 }}>
-                  Insurance, equipment, and operating history verified before a single quote hits your inbox.
-                </Paragraph>
-              </Card>
-            </Col>
-
-            {/* Card 3: Side-by-Side Quote Comparison */}
-            <Col xs={24} sm={12} lg={6}>
-              <Card
-                className="landing-card-hover"
-                style={{
-                  height: '100%',
-                  borderRadius: 20,
-                  backgroundColor: '#1e293b',
-                  border: 'none',
-                  color: '#ffffff',
-                  padding: 8,
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
-                }}
-              >
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 10,
-                    backgroundColor: '#FBA919',
-                    color: '#0f172a',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 800,
-                    fontSize: 16,
-                    marginBottom: 16,
-                  }}
-                >
-                  <CheckCircleFilled />
-                </div>
-                <Title level={4} style={{ color: '#ffffff', fontWeight: 800, marginBottom: 12 }}>
-                  Side-by-Side Quote Comparison
-                </Title>
-                <Paragraph style={{ color: '#cbd5e1', fontSize: 14, lineHeight: 1.7 }}>
-                  Unlock vetted quotes in real-time. See item breakdown, and transparent estimates.
-                </Paragraph>
-              </Card>
-            </Col>
-
-            {/* Card 4: Centralized Trip Documentation */}
-            <Col xs={24} sm={12} lg={6}>
-              <Card
-                className="landing-card-hover"
-                style={{
-                  height: '100%',
-                  borderRadius: 20,
-                  backgroundColor: '#1e293b',
-                  border: 'none',
-                  color: '#ffffff',
-                  padding: 8,
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
-                }}
-              >
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 10,
-                    backgroundColor: '#FBA919',
-                    color: '#0f172a',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 800,
-                    fontSize: 16,
-                    marginBottom: 16,
-                  }}
-                >
-                  <InfoCircleOutlined />
-                </div>
-                <Title level={4} style={{ color: '#ffffff', fontWeight: 800, marginBottom: 12 }}>
-                  Centralized Trip Documentation
-                </Title>
-                <Paragraph style={{ color: '#cbd5e1', fontSize: 14, lineHeight: 1.7 }}>
-                  Digital coggins, health certificates, and inspection records — accessible at any moment.
-                </Paragraph>
-              </Card>
-            </Col>
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 10,
+                      backgroundColor: '#FBA919',
+                      color: '#0f172a',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 800,
+                      fontSize: 16,
+                      marginBottom: 16,
+                    }}
+                  >
+                    {feat.icon}
+                  </div>
+                  <Title level={4} style={{ color: '#ffffff', fontWeight: 800, marginBottom: 12 }}>
+                    {feat.title}
+                  </Title>
+                  <Paragraph style={{ color: '#cbd5e1', fontSize: 14, lineHeight: 1.7 }}>
+                    {feat.description}
+                  </Paragraph>
+                </Card>
+              </Col>
+            ))}
           </Row>
         </div>
       </section>

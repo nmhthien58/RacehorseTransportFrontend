@@ -407,53 +407,38 @@ export default function RouteApprovalsPage() {
               </Text>
 
               <Space direction="vertical" size={12} style={{ width: '100%' }}>
-                {/* Driver */}
-                <div
-                  style={{
-                    backgroundColor: '#F8FAFC',
-                    border: '1px solid #E2E8F0',
-                    borderRadius: 12,
-                    padding: '12px 14px',
-                  }}
-                >
-                  <Flex justify="space-between" align="center">
-                    <div>
-                      <strong style={{ fontSize: 14, color: '#0F172A' }}>
-                        Driver: {activePlan.driverName || 'Le Hoang Nam'}
-                      </strong>
-                      <div style={{ fontSize: 12, color: '#64748B' }}>
-                        Duty: Solo-Driver & Airport Handover
+                {[
+                  {
+                    key: 'driver',
+                    title: `Driver: ${activePlan.driverName || 'Le Hoang Nam'}`,
+                    duty: 'Duty: Solo-Driver & Airport Handover',
+                  },
+                  {
+                    key: 'vet',
+                    title: `Vet Escort: ${activePlan.vetEscortName || 'Dr. Elena Rostova'}`,
+                    duty: 'Duty: In-Flight Care & DXB Layover',
+                  },
+                ].map((item) => (
+                  <div
+                    key={item.key}
+                    style={{
+                      backgroundColor: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: 12,
+                      padding: '12px 14px',
+                    }}
+                  >
+                    <Flex justify="space-between" align="center">
+                      <div>
+                        <strong style={{ fontSize: 14, color: '#0F172A' }}>{item.title}</strong>
+                        <div style={{ fontSize: 12, color: '#64748B' }}>{item.duty}</div>
                       </div>
-                    </div>
-                    <Tag color="green" style={{ fontWeight: 800, borderRadius: 6 }}>
-                      AVAILABLE
-                    </Tag>
-                  </Flex>
-                </div>
-
-                {/* Vet Escort */}
-                <div
-                  style={{
-                    backgroundColor: '#F8FAFC',
-                    border: '1px solid #E2E8F0',
-                    borderRadius: 12,
-                    padding: '12px 14px',
-                  }}
-                >
-                  <Flex justify="space-between" align="center">
-                    <div>
-                      <strong style={{ fontSize: 14, color: '#0F172A' }}>
-                        Vet Escort: {activePlan.vetEscortName || 'Dr. Elena Rostova'}
-                      </strong>
-                      <div style={{ fontSize: 12, color: '#64748B' }}>
-                        Duty: In-Flight Care & DXB Layover
-                      </div>
-                    </div>
-                    <Tag color="green" style={{ fontWeight: 800, borderRadius: 6 }}>
-                      AVAILABLE
-                    </Tag>
-                  </Flex>
-                </div>
+                      <Tag color="green" style={{ fontWeight: 800, borderRadius: 6 }}>
+                        AVAILABLE
+                      </Tag>
+                    </Flex>
+                  </div>
+                ))}
               </Space>
 
               <div

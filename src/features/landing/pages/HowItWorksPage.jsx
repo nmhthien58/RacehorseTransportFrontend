@@ -135,92 +135,54 @@ export default function HowItWorksPage() {
           </div>
 
           <Row gutter={[32, 40]}>
-            {/* Bước 01 */}
-            <Col xs={24} md={8}>
-              <Card
-                className="landing-card-hover"
-                style={{
-                  height: '100%',
-                  borderRadius: 20,
-                  overflow: 'hidden',
-                  border: '1px solid #e2e8f0',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
-                }}
-                cover={
-                  <img
-                    src={how1}
-                    alt="Hassle-free online booking"
-                    style={{ height: 220, objectFit: 'cover' }}
-                  />
-                }
-              >
-                <div style={{ color: '#FBA919', fontWeight: 900, fontSize: 28, marginBottom: 8 }}>01</div>
-                <Title level={4} style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginBottom: 12 }}>
-                  Hassle-free online booking
-                </Title>
-                <Paragraph style={{ color: '#64748b', fontSize: 14, lineHeight: 1.7 }}>
-                  Tell us your route, compare quotes from vetted drivers, and book the service you want. No phone tag, no spreadsheets, no guesswork.
-                </Paragraph>
-              </Card>
-            </Col>
-
-            {/* Bước 02 */}
-            <Col xs={24} md={8}>
-              <Card
-                className="landing-card-hover"
-                style={{
-                  height: '100%',
-                  borderRadius: 20,
-                  overflow: 'hidden',
-                  border: '1px solid #e2e8f0',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
-                }}
-                cover={
-                  <img
-                    src={how2}
-                    alt="Follow along the journey"
-                    style={{ height: 220, objectFit: 'cover' }}
-                  />
-                }
-              >
-                <div style={{ color: '#FBA919', fontWeight: 900, fontSize: 28, marginBottom: 8 }}>02</div>
-                <Title level={4} style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginBottom: 12 }}>
-                  Follow along the journey
-                </Title>
-                <Paragraph style={{ color: '#64748b', fontSize: 14, lineHeight: 1.7 }}>
-                  From pickup, stopover, and delivery, updates keep you in the loop each step of the way. All driver communication happens inside the platform.
-                </Paragraph>
-              </Card>
-            </Col>
-
-            {/* Bước 03 */}
-            <Col xs={24} md={8}>
-              <Card
-                className="landing-card-hover"
-                style={{
-                  height: '100%',
-                  borderRadius: 20,
-                  overflow: 'hidden',
-                  border: '1px solid #e2e8f0',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
-                }}
-                cover={
-                  <img
-                    src={how3}
-                    alt="Get your horse delivered"
-                    style={{ height: 220, objectFit: 'cover' }}
-                  />
-                }
-              >
-                <div style={{ color: '#FBA919', fontWeight: 900, fontSize: 28, marginBottom: 8 }}>03</div>
-                <Title level={4} style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginBottom: 12 }}>
-                  Get your horse delivered
-                </Title>
-                <Paragraph style={{ color: '#64748b', fontSize: 14, lineHeight: 1.7 }}>
-                  Receive real-time notifications right to the moment your horse walks off the van. Care from people who truly care.
-                </Paragraph>
-              </Card>
-            </Col>
+            {[
+              {
+                step: '01',
+                img: how1,
+                title: 'Hassle-free online booking',
+                desc: 'Tell us your route, compare quotes from vetted drivers, and book the service you want. No phone tag, no spreadsheets, no guesswork.',
+              },
+              {
+                step: '02',
+                img: how2,
+                title: 'Follow along the journey',
+                desc: 'From pickup, stopover, and delivery, updates keep you in the loop each step of the way. All driver communication happens inside the platform.',
+              },
+              {
+                step: '03',
+                img: how3,
+                title: 'Get your horse delivered',
+                desc: 'Receive real-time notifications right to the moment your horse walks off the van. Care from people who truly care.',
+              },
+            ].map((item) => (
+              <Col key={item.step} xs={24} md={8}>
+                <Card
+                  className="landing-card-hover"
+                  style={{
+                    height: '100%',
+                    borderRadius: 20,
+                    overflow: 'hidden',
+                    border: '1px solid #e2e8f0',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
+                  }}
+                  cover={
+                    <img
+                      src={item.img}
+                      alt={item.title}
+                      style={{ height: 220, objectFit: 'cover' }}
+                    />
+                  }
+                >
+                  <div style={{ color: '#FBA919', fontWeight: 900, fontSize: 28, marginBottom: 8 }}>{item.step}</div>
+                  <Title level={4} style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginBottom: 12 }}>
+                    {item.title}
+                  </Title>
+                  <Paragraph style={{ color: '#64748b', fontSize: 14, lineHeight: 1.7 }}>
+                    {item.desc}
+                  </Paragraph>
+                </Card>
+              </Col>
+            ))}
           </Row>
         </div>
       </section>
@@ -320,30 +282,19 @@ export default function HowItWorksPage() {
           </Paragraph>
 
           <Row gutter={[24, 24]}>
-            <Col xs={12} sm={6}>
-              <div style={{ background: 'rgba(255, 255, 255, 0.08)', borderRadius: 16, padding: '24px 16px' }}>
-                <div style={{ color: '#FBA919', fontWeight: 900, fontSize: 36 }}>99.8%</div>
-                <div style={{ color: '#94a3b8', fontSize: 13, marginTop: 4 }}>Đúng giờ hẹn</div>
-              </div>
-            </Col>
-            <Col xs={12} sm={6}>
-              <div style={{ background: 'rgba(255, 255, 255, 0.08)', borderRadius: 16, padding: '24px 16px' }}>
-                <div style={{ color: '#FBA919', fontWeight: 900, fontSize: 36 }}>40,000+</div>
-                <div style={{ color: '#94a3b8', fontSize: 13, marginTop: 4 }}>Ngựa vận chuyển</div>
-              </div>
-            </Col>
-            <Col xs={12} sm={6}>
-              <div style={{ background: 'rgba(255, 255, 255, 0.08)', borderRadius: 16, padding: '24px 16px' }}>
-                <div style={{ color: '#FBA919', fontWeight: 900, fontSize: 36 }}>4.9 ★</div>
-                <div style={{ color: '#94a3b8', fontSize: 13, marginTop: 4 }}>Đánh giá trung bình</div>
-              </div>
-            </Col>
-            <Col xs={12} sm={6}>
-              <div style={{ background: 'rgba(255, 255, 255, 0.08)', borderRadius: 16, padding: '24px 16px' }}>
-                <div style={{ color: '#FBA919', fontWeight: 900, fontSize: 36 }}>100%</div>
-                <div style={{ color: '#94a3b8', fontSize: 13, marginTop: 4 }}>An toàn sinh học</div>
-              </div>
-            </Col>
+            {[
+              { val: '99.8%', label: 'Đúng giờ hẹn' },
+              { val: '40,000+', label: 'Ngựa vận chuyển' },
+              { val: '4.9 ★', label: 'Đánh giá trung bình' },
+              { val: '100%', label: 'An toàn sinh học' },
+            ].map((stat) => (
+              <Col key={stat.label} xs={12} sm={6}>
+                <div style={{ background: 'rgba(255, 255, 255, 0.08)', borderRadius: 16, padding: '24px 16px' }}>
+                  <div style={{ color: '#FBA919', fontWeight: 900, fontSize: 36 }}>{stat.val}</div>
+                  <div style={{ color: '#94a3b8', fontSize: 13, marginTop: 4 }}>{stat.label}</div>
+                </div>
+              </Col>
+            ))}
           </Row>
         </div>
       </section>

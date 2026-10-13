@@ -1,7 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '@features/auth/store/authStore';
 import { ROUTES } from '@routes/routes';
-import { ROLES } from '@utils/constants';
 
 /**
  * Route bảo vệ: Bắt buộc đăng nhập và kiểm tra quyền hạn vai trò (Role-based access control)

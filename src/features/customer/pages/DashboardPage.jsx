@@ -2,13 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Button,
   Col,
-  DatePicker,
   Flex,
-  Form,
-  Input,
   Modal,
   Row,
-  Select,
   Spin,
   Tag,
   Typography,
@@ -22,7 +18,6 @@ import {
   PlusOutlined,
   EditOutlined,
 } from '@ant-design/icons';
-import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '@components/layout/PageHeader';
@@ -35,8 +30,8 @@ import {
   calculateHorseRisk,
   HealthStatusTag,
   RiskBadge,
-  HEALTH_STATUS_OPTIONS,
 } from '@utils/horseHealth';
+import EditHorseModal from '@features/customer/components/EditHorseModal';
 
 const { Text, Title } = Typography;
 
@@ -64,43 +59,19 @@ export default function CustomerDashboard() {
   const [editingHorse, setEditingHorse] = useState(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
-  const [editForm] = Form.useForm();
 
   const handleOpenEditHorse = (horse) => {
     setEditingHorse(horse);
-    const dob = horse.dateOfBirth || horse.DateOfBirth;
-    editForm.setFieldsValue({
-      name: horse.name || horse.Name,
-      breed: horse.breed || horse.Breed || 'Thoroughbred',
-      gender: horse.gender || horse.Gender || 'Stallion',
-      dateOfBirth: dob ? dayjs(dob) : null,
-      color: horse.color || horse.Color || '',
-      microchipNumber: horse.microchipNumber || horse.MicrochipNumber || '',
-      passportNumber: horse.passportNumber || horse.PassportNumber || '',
-      healthStatus: horse.healthStatus || horse.HealthStatus || 'Good',
-      specialCareRequirements: horse.specialCareRequirements || horse.SpecialCareRequirements || '',
-    });
     setEditModalVisible(true);
   };
 
   const handleSaveHorseEdit = async (values) => {
     try {
       setEditSubmitting(true);
-      const payload = {
-        name: values.name?.trim(),
-        breed: values.breed,
-        gender: values.gender,
-        dateOfBirth: values.dateOfBirth ? values.dateOfBirth.format('YYYY-MM-DD') : null,
-        color: values.color?.trim() || '',
-        microchipNumber: values.microchipNumber?.trim() || '',
-        passportNumber: values.passportNumber?.trim() || '',
-        healthStatus: values.healthStatus || 'Good',
-        specialCareRequirements: values.specialCareRequirements?.trim() || '',
-      };
       const horseId = editingHorse.horseId || editingHorse.HorseID;
-      const updated = await horseService.updateHorse(horseId, payload);
+      const updated = await horseService.updateHorse(horseId, values);
       message.success(t('horses.updateHorseSuccess'));
-      const updatedData = updated?.data || updated || { ...editingHorse, ...payload };
+      const updatedData = updated?.data || updated || { ...editingHorse, ...values };
       setEditingHorse(null);
       setEditModalVisible(false);
       setSelectedHorse(updatedData);
@@ -204,269 +175,121 @@ export default function CustomerDashboard() {
       <Spin spinning={loading}>
         {/* Hàng 4 thẻ Metric bo tròn 24px có icon tròn phía trên */}
         <Row gutter={[20, 20]} style={{ marginBottom: 36 }}>
-          {/* Card 1: Active Trips */}
-          <Col xs={12} sm={12} md={6}>
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => navigate(ROUTES.CUSTOMER_TRIPS)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  navigate(ROUTES.CUSTOMER_TRIPS);
-                }
-              }}
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: 24,
-                padding: '24px 28px',
-                boxShadow: '0 4px 24px rgba(0, 0, 0, 0.02)',
-                border: '1.5px solid #F1F5F9',
-                cursor: 'pointer',
-                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
-                e.currentTarget.style.boxShadow = '0 12px 30px rgba(217, 119, 6, 0.15)';
-                e.currentTarget.style.borderColor = '#F59E0B';
-                e.currentTarget.style.backgroundColor = '#FFFBEB';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                e.currentTarget.style.boxShadow = '0 4px 24px rgba(0, 0, 0, 0.02)';
-                e.currentTarget.style.borderColor = '#F1F5F9';
-                e.currentTarget.style.backgroundColor = '#ffffff';
-              }}
-            >
+          {[
+            {
+              key: 'activeTrips',
+              route: ROUTES.CUSTOMER_TRIPS,
+              count: activeTripsCount,
+              label: `${t('dashboard.metrics.activeTrips')} →`,
+              icon: <AppstoreOutlined />,
+              iconBg: '#FEF3C7',
+              iconColor: '#D97706',
+              hoverBorder: '#F59E0B',
+              hoverBg: '#FFFBEB',
+              hoverShadow: 'rgba(217, 119, 6, 0.15)',
+            },
+            {
+              key: 'openRequests',
+              route: ROUTES.CUSTOMER_BOOKINGS,
+              count: openBookingsCount,
+              label: `${t('dashboard.metrics.openRequests')} →`,
+              icon: <ClockCircleOutlined />,
+              iconBg: '#EFF6FF',
+              iconColor: '#2563EB',
+              hoverBorder: '#3B82F6',
+              hoverBg: '#EFF6FF',
+              hoverShadow: 'rgba(37, 99, 235, 0.15)',
+            },
+            {
+              key: 'bidsReceived',
+              route: ROUTES.CUSTOMER_BOOKINGS,
+              count: 0,
+              label: `${t('dashboard.metrics.bidsReceived')} →`,
+              icon: <StarOutlined />,
+              iconBg: '#FEF9C3',
+              iconColor: '#CA8A04',
+              hoverBorder: '#EAB308',
+              hoverBg: '#FEFCE8',
+              hoverShadow: 'rgba(202, 138, 4, 0.15)',
+            },
+            {
+              key: 'myHorses',
+              route: ROUTES.CUSTOMER_HORSES,
+              count: horses.length,
+              label: `${t('dashboard.metrics.myHorses')} →`,
+              icon: <FieldTimeOutlined />,
+              iconBg: '#EFF6FF',
+              iconColor: '#2563EB',
+              hoverBorder: '#10B981',
+              hoverBg: '#ECFDF5',
+              hoverShadow: 'rgba(16, 185, 129, 0.15)',
+            },
+          ].map((item) => (
+            <Col xs={12} sm={12} md={6} key={item.key}>
               <div
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate(item.route)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    navigate(item.route);
+                  }
+                }}
                 style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: '50%',
-                  backgroundColor: '#FEF3C7',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#D97706',
-                  fontSize: 18,
+                  backgroundColor: '#ffffff',
+                  borderRadius: 24,
+                  padding: '24px 28px',
+                  boxShadow: '0 4px 24px rgba(0, 0, 0, 0.02)',
+                  border: '1.5px solid #F1F5F9',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
+                  e.currentTarget.style.boxShadow = `0 12px 30px ${item.hoverShadow}`;
+                  e.currentTarget.style.borderColor = item.hoverBorder;
+                  e.currentTarget.style.backgroundColor = item.hoverBg;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 24px rgba(0, 0, 0, 0.02)';
+                  e.currentTarget.style.borderColor = '#F1F5F9';
+                  e.currentTarget.style.backgroundColor = '#ffffff';
                 }}
               >
-                <AppstoreOutlined />
+                <div
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: '50%',
+                    backgroundColor: item.iconBg,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: item.iconColor,
+                    fontSize: 18,
+                  }}
+                >
+                  {item.icon}
+                </div>
+                <div
+                  style={{
+                    fontSize: 40,
+                    fontWeight: 800,
+                    color: '#0f172a',
+                    lineHeight: 1,
+                    margin: '18px 0 6px 0',
+                  }}
+                >
+                  {item.count}
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 500, color: '#475569' }}>
+                  {item.label}
+                </div>
               </div>
-              <div
-                style={{
-                  fontSize: 40,
-                  fontWeight: 800,
-                  color: '#0f172a',
-                  lineHeight: 1,
-                  margin: '18px 0 6px 0',
-                }}
-              >
-                {activeTripsCount}
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 500, color: '#475569' }}>
-                {t('dashboard.metrics.activeTrips')} →
-              </div>
-            </div>
-          </Col>
-
-          {/* Card 2: Open Requests */}
-          <Col xs={12} sm={12} md={6}>
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => navigate(ROUTES.CUSTOMER_BOOKINGS)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  navigate(ROUTES.CUSTOMER_BOOKINGS);
-                }
-              }}
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: 24,
-                padding: '24px 28px',
-                boxShadow: '0 4px 24px rgba(0, 0, 0, 0.02)',
-                border: '1.5px solid #F1F5F9',
-                cursor: 'pointer',
-                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
-                e.currentTarget.style.boxShadow = '0 12px 30px rgba(37, 99, 235, 0.15)';
-                e.currentTarget.style.borderColor = '#3B82F6';
-                e.currentTarget.style.backgroundColor = '#EFF6FF';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                e.currentTarget.style.boxShadow = '0 4px 24px rgba(0, 0, 0, 0.02)';
-                e.currentTarget.style.borderColor = '#F1F5F9';
-                e.currentTarget.style.backgroundColor = '#ffffff';
-              }}
-            >
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: '50%',
-                  backgroundColor: '#EFF6FF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#2563EB',
-                  fontSize: 18,
-                }}
-              >
-                <ClockCircleOutlined />
-              </div>
-              <div
-                style={{
-                  fontSize: 40,
-                  fontWeight: 800,
-                  color: '#0f172a',
-                  lineHeight: 1,
-                  margin: '18px 0 6px 0',
-                }}
-              >
-                {openBookingsCount}
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 500, color: '#475569' }}>
-                {t('dashboard.metrics.openRequests')} →
-              </div>
-            </div>
-          </Col>
-
-          {/* Card 3: Bids Received */}
-          <Col xs={12} sm={12} md={6}>
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => navigate(ROUTES.CUSTOMER_BOOKINGS)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  navigate(ROUTES.CUSTOMER_BOOKINGS);
-                }
-              }}
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: 24,
-                padding: '24px 28px',
-                boxShadow: '0 4px 24px rgba(0, 0, 0, 0.02)',
-                border: '1.5px solid #F1F5F9',
-                cursor: 'pointer',
-                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
-                e.currentTarget.style.boxShadow = '0 12px 30px rgba(202, 138, 4, 0.15)';
-                e.currentTarget.style.borderColor = '#EAB308';
-                e.currentTarget.style.backgroundColor = '#FEFCE8';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                e.currentTarget.style.boxShadow = '0 4px 24px rgba(0, 0, 0, 0.02)';
-                e.currentTarget.style.borderColor = '#F1F5F9';
-                e.currentTarget.style.backgroundColor = '#ffffff';
-              }}
-            >
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: '50%',
-                  backgroundColor: '#FEF9C3',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#CA8A04',
-                  fontSize: 18,
-                }}
-              >
-                <StarOutlined />
-              </div>
-              <div
-                style={{
-                  fontSize: 40,
-                  fontWeight: 800,
-                  color: '#0f172a',
-                  lineHeight: 1,
-                  margin: '18px 0 6px 0',
-                }}
-              >
-                0
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 500, color: '#475569' }}>
-                {t('dashboard.metrics.bidsReceived')} →
-              </div>
-            </div>
-          </Col>
-
-          {/* Card 4: My Horses */}
-          <Col xs={12} sm={12} md={6}>
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => navigate(ROUTES.CUSTOMER_HORSES)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  navigate(ROUTES.CUSTOMER_HORSES);
-                }
-              }}
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: 24,
-                padding: '24px 28px',
-                boxShadow: '0 4px 24px rgba(0, 0, 0, 0.02)',
-                border: '1.5px solid #F1F5F9',
-                cursor: 'pointer',
-                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
-                e.currentTarget.style.boxShadow = '0 12px 30px rgba(16, 185, 129, 0.15)';
-                e.currentTarget.style.borderColor = '#10B981';
-                e.currentTarget.style.backgroundColor = '#ECFDF5';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                e.currentTarget.style.boxShadow = '0 4px 24px rgba(0, 0, 0, 0.02)';
-                e.currentTarget.style.borderColor = '#F1F5F9';
-                e.currentTarget.style.backgroundColor = '#ffffff';
-              }}
-            >
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: '50%',
-                  backgroundColor: '#EFF6FF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#2563EB',
-                  fontSize: 18,
-                }}
-              >
-                <FieldTimeOutlined />
-              </div>
-              <div
-                style={{
-                  fontSize: 40,
-                  fontWeight: 800,
-                  color: '#0f172a',
-                  lineHeight: 1,
-                  margin: '18px 0 6px 0',
-                }}
-              >
-                {horses.length}
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 500, color: '#475569' }}>
-                {t('dashboard.metrics.myHorses')} →
-              </div>
-            </div>
-          </Col>
+            </Col>
+          ))}
         </Row>
 
         {/* Khối My Horses */}
@@ -828,142 +651,17 @@ export default function CustomerDashboard() {
         })()}
       </Modal>
 
-      {/* ======================================================== */}
-      {/* MODAL CHỈNH SỬA THÔNG TIN NGỰA TRỰC TIẾP TỪ DASHBOARD */}
-      {/* ======================================================== */}
-      <Modal
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 17, fontWeight: 700 }}>
-            <span>✏️ {t('horses.editModalTitle')}</span>
-            {editingHorse && <Tag color="gold">{editingHorse.name || editingHorse.Name}</Tag>}
-          </div>
-        }
+      {/* MODAL CHỈNH SỬA THÔNG TIN NGỰA (Dùng chung) */}
+      <EditHorseModal
         open={editModalVisible}
         onCancel={() => {
           setEditModalVisible(false);
           setEditingHorse(null);
         }}
-        onOk={() => editForm.submit()}
+        onSave={handleSaveHorseEdit}
+        horse={editingHorse}
         confirmLoading={editSubmitting}
-        okText={t('horses.saveChanges')}
-        cancelText={t('horses.cancel')}
-        destroyOnClose
-        width={680}
-      >
-        <Form
-          form={editForm}
-          layout="vertical"
-          onFinish={handleSaveHorseEdit}
-          style={{ marginTop: 16 }}
-        >
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="name"
-                label={<span style={{ fontWeight: 600 }}>{t('horses.fields.name')}</span>}
-                rules={[{ required: true, message: t('horses.validation.nameRequired') }]}
-              >
-                <Input placeholder={t('horses.placeholders.name')} size="large" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="breed"
-                label={<span style={{ fontWeight: 600 }}>{t('horses.fields.breed')}</span>}
-                rules={[{ required: true, message: t('horses.validation.breedRequired') }]}
-              >
-                <Select size="large">
-                  <Select.Option value="Thoroughbred">
-                    {isEn ? 'Thoroughbred' : 'Thoroughbred (Thuần chủng Anh)'}
-                  </Select.Option>
-                  <Select.Option value="Quarter Horse">Quarter Horse</Select.Option>
-                  <Select.Option value="Arabian">
-                    {isEn ? 'Arabian' : 'Arabian (Ngựa Ả Rập)'}
-                  </Select.Option>
-                  <Select.Option value="Warmblood">Warmblood</Select.Option>
-                  <Select.Option value="Appaloosa">Appaloosa</Select.Option>
-                  <Select.Option value="Standardbred">Standardbred</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col xs={24} sm={8}>
-              <Form.Item name="gender" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.gender')}</span>}>
-                <Select size="large">
-                  <Select.Option value="Stallion">{t('horses.genderOptions.stallion')}</Select.Option>
-                  <Select.Option value="Mare">{t('horses.genderOptions.mare')}</Select.Option>
-                  <Select.Option value="Gelding">{t('horses.genderOptions.gelding')}</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Form.Item name="dateOfBirth" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.dob')}</span>}>
-                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" size="large" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Form.Item name="color" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.color')}</span>}>
-                <Input placeholder={t('horses.placeholders.color')} size="large" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item name="microchipNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.microchip')}</span>}>
-                <Input placeholder={t('horses.placeholders.microchip')} size="large" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item name="passportNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.passport')}</span>}>
-                <Input placeholder={t('horses.placeholders.passport')} size="large" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col xs={24}>
-              <Form.Item
-                name="healthStatus"
-                label={<span style={{ fontWeight: 600 }}>{t('horses.fields.healthStatus', 'Tình trạng sức khỏe')}</span>}
-              >
-                <Select size="large">
-                  {HEALTH_STATUS_OPTIONS.map((opt) => (
-                    <Select.Option key={opt.value} value={opt.value}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span
-                          style={{
-                            display: 'inline-block',
-                            width: 10,
-                            height: 10,
-                            borderRadius: '50%',
-                            backgroundColor: opt.color,
-                          }}
-                        />
-                        <span style={{ color: opt.color, fontWeight: 600 }}>
-                          {isEn ? opt.labelEn : opt.labelVi}
-                        </span>
-                      </div>
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item
-            name="specialCareRequirements"
-            label={<span style={{ fontWeight: 600 }}>{t('horses.fields.specialCare')}</span>}
-          >
-            <Input.TextArea
-              rows={3}
-              placeholder={t('horses.specialCarePlaceholder')}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
+      />
     </div>
   );
 }

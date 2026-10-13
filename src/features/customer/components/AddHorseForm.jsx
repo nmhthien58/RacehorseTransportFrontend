@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  Alert,
   Button,
   Card,
   Col,
@@ -25,11 +24,12 @@ import {
   SafetyCertificateOutlined,
   FilePdfOutlined,
   UploadOutlined,
-  CheckCircleFilled,
 } from '@ant-design/icons';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+
+const getUniqueRecordId = () => Date.now();
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -141,7 +141,7 @@ export default function AddHorseForm({
       validUntil: data.validUntil,
       vetNotes: data.vetNotes,
       vetRecord: {
-        recordId: Date.now(),
+        recordId: getUniqueRecordId(),
         recordType: data.vetRecordType,
         title: data.vetRecordTitle,
         veterinarian: data.veterinarian,

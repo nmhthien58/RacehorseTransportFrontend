@@ -82,6 +82,27 @@ function normalizeHorse(h) {
   };
 }
 
+async function parseHorseRequestBody(request) {
+  const contentType = request.headers.get('content-type') || '';
+  if (contentType.includes('multipart/form-data')) {
+    const formData = await request.formData();
+    return {
+      name: formData.get('name') || formData.get('Name'),
+      microchipNumber: formData.get('microchipNumber') || formData.get('MicrochipNumber'),
+      passportNumber: formData.get('passportNumber') || formData.get('PassportNumber'),
+      breed: formData.get('breed') || formData.get('Breed'),
+      gender: formData.get('gender') || formData.get('Gender'),
+      dateOfBirth: formData.get('dateOfBirth') || formData.get('DateOfBirth'),
+      color: formData.get('color') || formData.get('Color'),
+      specialCareRequirements: formData.get('specialCareRequirements') || formData.get('SpecialCareRequirements'),
+      healthStatus: formData.get('healthStatus') || formData.get('HealthStatus'),
+      ownerUserId: 5,
+      isActive: true,
+    };
+  }
+  return await request.json();
+}
+
 export const horseHandlers = [
   // GET /api/horses - Danh sách ngựa
   http.get('/api/horses', ({ request }) => {
@@ -125,27 +146,7 @@ export const horseHandlers = [
 
   // POST /api/horses - Tạo mới hồ sơ ngựa
   http.post('/api/horses', async ({ request }) => {
-    let body;
-    const contentType = request.headers.get('content-type') || '';
-
-    if (contentType.includes('multipart/form-data')) {
-      const formData = await request.formData();
-      body = {
-        name: formData.get('name') || formData.get('Name'),
-        microchipNumber: formData.get('microchipNumber') || formData.get('MicrochipNumber'),
-        passportNumber: formData.get('passportNumber') || formData.get('PassportNumber'),
-        breed: formData.get('breed') || formData.get('Breed'),
-        gender: formData.get('gender') || formData.get('Gender'),
-        dateOfBirth: formData.get('dateOfBirth') || formData.get('DateOfBirth'),
-        color: formData.get('color') || formData.get('Color'),
-        specialCareRequirements: formData.get('specialCareRequirements') || formData.get('SpecialCareRequirements'),
-        healthStatus: formData.get('healthStatus') || formData.get('HealthStatus') || 'Good',
-        ownerUserId: 5,
-        isActive: true,
-      };
-    } else {
-      body = await request.json();
-    }
+    const body = await parseHorseRequestBody(request);
 
     const horseName = body.name || body.Name;
     if (!horseName || !horseName.trim()) {
@@ -192,25 +193,7 @@ export const horseHandlers = [
   // PUT /api/horses/:id - Cập nhật thông tin ngựa
   http.put('/api/horses/:id', async ({ params, request }) => {
     const horseId = Number(params.id);
-    let body;
-    const contentType = request.headers.get('content-type') || '';
-
-    if (contentType.includes('multipart/form-data')) {
-      const formData = await request.formData();
-      body = {
-        name: formData.get('name') || formData.get('Name'),
-        microchipNumber: formData.get('microchipNumber') || formData.get('MicrochipNumber'),
-        passportNumber: formData.get('passportNumber') || formData.get('PassportNumber'),
-        breed: formData.get('breed') || formData.get('Breed'),
-        gender: formData.get('gender') || formData.get('Gender'),
-        dateOfBirth: formData.get('dateOfBirth') || formData.get('DateOfBirth'),
-        color: formData.get('color') || formData.get('Color'),
-        specialCareRequirements: formData.get('specialCareRequirements') || formData.get('SpecialCareRequirements'),
-        healthStatus: formData.get('healthStatus') || formData.get('HealthStatus'),
-      };
-    } else {
-      body = await request.json();
-    }
+    const body = await parseHorseRequestBody(request);
 
     const updated = updateStoredHorse(horseId, {
       Name: body.name || body.Name,

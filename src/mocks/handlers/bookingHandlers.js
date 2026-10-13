@@ -71,6 +71,19 @@ function normalizeBooking(b) {
   };
 }
 
+function sendBookingResponse(updated, message = 'Thành công') {
+  if (!updated) {
+    return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
+  }
+  const normalized = normalizeBooking(updated);
+  return HttpResponse.json({
+    success: true,
+    message,
+    data: normalized,
+    ...normalized,
+  });
+}
+
 export const bookingHandlers = [
   // POST /api/bookings/quote-preview - Xem trước bảng giá
   http.post('/api/bookings/quote-preview', async ({ request }) => {
@@ -209,17 +222,7 @@ export const bookingHandlers = [
       ReviewedAt: new Date().toISOString(),
     });
 
-    if (!updated) {
-      return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
-    }
-
-    const normalized = normalizeBooking(updated);
-    return HttpResponse.json({
-      success: true,
-      message: 'Duyệt đơn vận chuyển thành công',
-      data: normalized,
-      ...normalized,
-    });
+    return sendBookingResponse(updated, 'Duyệt đơn vận chuyển thành công');
   }),
 
   // POST /api/bookings/:id/reassign-specialist
@@ -231,17 +234,7 @@ export const bookingHandlers = [
       assignedSpecialistId: specId,
     });
 
-    if (!updated) {
-      return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
-    }
-
-    const normalized = normalizeBooking(updated);
-    return HttpResponse.json({
-      success: true,
-      message: 'Cập nhật chuyên viên phụ trách thành công',
-      data: normalized,
-      ...normalized,
-    });
+    return sendBookingResponse(updated, 'Cập nhật chuyên viên phụ trách thành công');
   }),
 
   // POST /api/bookings/:id/assign
@@ -256,16 +249,7 @@ export const bookingHandlers = [
       assignedCoordinatorId: body.coordinatorId,
     });
 
-    if (!updated) {
-      return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
-    }
-
-    const normalized = normalizeBooking(updated);
-    return HttpResponse.json({
-      success: true,
-      data: normalized,
-      ...normalized,
-    });
+    return sendBookingResponse(updated, 'Phân công thành công');
   }),
 
   // POST /api/bookings/:id/reject - Từ chối đơn
@@ -279,17 +263,7 @@ export const bookingHandlers = [
       ReviewedAt: new Date().toISOString(),
     });
 
-    if (!updated) {
-      return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
-    }
-
-    const normalized = normalizeBooking(updated);
-    return HttpResponse.json({
-      success: true,
-      message: 'Từ chối đơn vận chuyển thành công',
-      data: normalized,
-      ...normalized,
-    });
+    return sendBookingResponse(updated, 'Từ chối đơn vận chuyển thành công');
   }),
 
   // POST /api/bookings/:id/cancel - Hủy đơn
@@ -299,16 +273,6 @@ export const bookingHandlers = [
       status: 'Cancelled',
     });
 
-    if (!updated) {
-      return HttpResponse.json({ success: false, message: 'Booking not found' }, { status: 404 });
-    }
-
-    const normalized = normalizeBooking(updated);
-    return HttpResponse.json({
-      success: true,
-      message: 'Hủy đơn thành công',
-      data: normalized,
-      ...normalized,
-    });
+    return sendBookingResponse(updated, 'Hủy đơn thành công');
   }),
 ];

@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import initialBookings from '@mocks/data/bookings.json';
 import { addRequestLetterFromBooking } from './requestLetterStorage';
 
@@ -214,3 +215,57 @@ export function deleteStoredBooking(id) {
 
   return true;
 }
+
+/**
+ * Kiểm tra xem một cá thể ngựa có bị trùng lịch trình hoặc đang trong thời gian hạ nhiệt/phục hồi 7 ngày sau chuyến bay không
+ * @param {number|string} horseId
+ * @param {string|Date} departureDate
+ * @param {string|Date} deliveryDate
+ * @param {number|string} [currentBookingId]
+ * @returns {{ hasConflict: boolean, reason?: string, conflictBooking?: Object }}
+ */
+export function checkHorseBookingConflict(horseId, departureDate, deliveryDate, currentBookingId = null) {
+  if (!horseId || !departureDate) return { hasConflict: false };
+  const hId = Number(horseId);
+  const newStart = dayjs(departureDate).startOf('day');
+  const newEnd = dayjs(deliveryDate || departureDate).endOf('day');
+
+  if (!newStart.isValid() || !newEnd.isValid()) return { hasConflict: false };
+
+  const bookings = getStoredBookings();
+  for (const b of bookings) {
+    const bId = Number(b.BookingID || b.bookingId);
+    if (currentBookingId && bId === Number(currentBookingId)) continue;
+
+    const bStatus = String(b.Status || b.status || '').toLowerCase();
+    if (['cancelled', 'rejected'].includes(bStatus)) continue;
+
+    const bHorses = b.BookingHorses || b.bookingHorses || b.horses || [];
+    const hasHorse = bHorses.some((h) => Number(h.HorseID || h.horseId || h) === hId);
+    if (!hasHorse) continue;
+
+    const existStart = dayjs(b.DepartureDate || b.departureDate).startOf('day');
+    const existArrival = dayjs(b.DeliveryDate || b.deliveryDate || b.DepartureDate || b.departureDate).endOf('day');
+    if (!existStart.isValid() || !existArrival.isValid()) continue;
+
+    // Khoảng thời gian bận của ngựa = chuyến đi + 7 ngày phục hồi (cooldown) sau khi đáp
+    const existCooldownEnd = existArrival.add(7, 'day').endOf('day');
+
+    // Giao thoa khoảng ngày: newStart <= existCooldownEnd && newEnd >= existStart
+    const isOverlapping = (newStart.isBefore(existCooldownEnd) || newStart.isSame(existCooldownEnd)) &&
+                          (newEnd.isAfter(existStart) || newEnd.isSame(existStart));
+
+    if (isOverlapping) {
+      const code = b.BookingCode || b.bookingCode || `BKG-${bId}`;
+      const reason = `Ngựa đang thuộc đơn #${code} (${existStart.format('DD/MM/YYYY')} - ${existArrival.format('DD/MM/YYYY')}) và phải cách nhau 1 tuần (7 ngày) kể từ ngày đáp để hồi phục (đến hết ${existCooldownEnd.format('DD/MM/YYYY')}).`;
+      return {
+        hasConflict: true,
+        reason,
+        conflictBooking: b,
+      };
+    }
+  }
+
+  return { hasConflict: false };
+}
+

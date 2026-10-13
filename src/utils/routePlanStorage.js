@@ -6,6 +6,7 @@
  */
 
 import initialBookings from '@mocks/data/bookings.json';
+import dayjs from 'dayjs';
 
 const STORAGE_KEY_PLANS = 'racehorse_route_plans_storage';
 const STORAGE_KEY_FLEET = 'racehorse_fleet_storage';
@@ -761,17 +762,142 @@ export function getStoredPersonnel() {
 }
 
 /**
- * Lấy danh sách chuyến đi đã giao cho Driver (assigned trips)
- * @param {number|string} [driverId]
+ * Lấy danh sách chuyến đi đã giao cho Driver/Escort (assigned trips)
+ * @param {number|string} [crewId]
  * @returns {Array<any>}
  */
-export function getDriverDispatchedTrips(driverId) {
+export function getDriverDispatchedTrips(crewId) {
   const plans = getStoredRoutePlans();
-  return plans.filter(
-    (p) =>
-      (!driverId || p.driverId === driverId || p.assignedDriverId === driverId) &&
-      (p.status === 'ASSIGNED' ||
-        p.status === 'InTransit' ||
-        p.status === 'Scheduled'),
-  );
+  return plans.filter((p) => {
+    const isAssigned =
+      p.status === 'ASSIGNED' ||
+      p.status === 'InTransit' ||
+      p.status === 'Scheduled' ||
+      p.status === 'Approved' ||
+      p.status === 'SPECIALIST_APPROVED';
+
+    // Item 12: Đơn đã được Specialist thông qua hoặc mặc định cleared
+    const isQuarantineCleared =
+      !p.specialistStatus ||
+      p.specialistStatus === 'CLEARED' ||
+      p.specialistStatus === 'QUARANTINE_CLEARED' ||
+      p.quarantineStatus === 'Passed';
+
+    const matchesCrew =
+      !crewId ||
+      p.driverId === crewId ||
+      p.assignedDriverId === crewId ||
+      p.escortId === crewId ||
+      p.assignedEscortId === crewId ||
+      String(p.driverId) === String(crewId) ||
+      String(p.escortId) === String(crewId);
+
+    return isAssigned && isQuarantineCleared && matchesCrew;
+  });
+}
+
+const STORAGE_KEY_CREW_OFFDAYS = 'racehorse_crew_offdays_storage';
+
+const INITIAL_CREW_OFFDAYS = {
+  3: ['2026-10-16'], // Lê Hoàng Nam (Driver) - 1 ngày
+  4: ['2026-10-21', '2026-10-28'], // Phạm Văn Đức (Driver) - 2 ngày
+  2: ['2026-10-19'], // Dr. Elena Rostova (Escort) - 1 ngày
+  9: [], // Dr. Sarah Jenkins (Escort) - 0 ngày
+};
+
+/**
+ * Lấy lịch ngày nghỉ của toàn bộ Driver và Escort
+ * @returns {Record<string|number, string[]>}
+ */
+export function getStoredCrewOffDays() {
+  if (typeof window === 'undefined') return { ...INITIAL_CREW_OFFDAYS };
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_CREW_OFFDAYS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEY_CREW_OFFDAYS, JSON.stringify(INITIAL_CREW_OFFDAYS));
+      return { ...INITIAL_CREW_OFFDAYS };
+    }
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : { ...INITIAL_CREW_OFFDAYS };
+  } catch {
+    return { ...INITIAL_CREW_OFFDAYS };
+  }
+}
+
+/**
+ * Đăng ký / cập nhật ngày nghỉ cho một nhân sự Driver hoặc Escort
+ * Quy định Item 5:
+ * - Tối đa 2 ngày trong 1 tháng
+ * - Không được chọn Thứ Bảy hoặc Chủ Nhật (chỉ chọn Thứ 2 - Thứ 6)
+ * @param {number|string} crewId
+ * @param {string[]} dates - Mảng các ngày định dạng 'YYYY-MM-DD'
+ * @returns {{ success: boolean, message?: string, offDays?: string[] }}
+ */
+export function setCrewOffDays(crewId, dates) {
+  const currentMap = getStoredCrewOffDays();
+  const cId = String(crewId);
+
+  // Lọc sạch trùng lặp và sắp xếp
+  const uniqueDates = Array.from(new Set(dates || [])).filter(Boolean);
+
+  // Kiểm tra không được chọn Thứ Bảy hoặc Chủ Nhật
+  for (const d of uniqueDates) {
+    const dayOfWeek = dayjs(d).day();
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      return {
+        success: false,
+        message: `Ngày ${dayjs(d).format('DD/MM/YYYY')} rơi vào cuối tuần (${dayOfWeek === 6 ? 'Thứ Bảy' : 'Chủ Nhật'}). Quy định chỉ được đăng ký ngày nghỉ từ Thứ Hai đến Thứ Sáu.`,
+      };
+    }
+  }
+
+  // Nhóm theo tháng và kiểm tra tối đa 2 ngày trong cùng 1 tháng
+  const monthCounts = {};
+  for (const d of uniqueDates) {
+    const monthKey = dayjs(d).format('YYYY-MM');
+    monthCounts[monthKey] = (monthCounts[monthKey] || 0) + 1;
+    if (monthCounts[monthKey] > 2) {
+      return {
+        success: false,
+        message: `Tháng ${dayjs(d).format('MM/YYYY')} đã vượt quá giới hạn: Mỗi nhân sự chỉ được đăng ký tối đa 2 ngày nghỉ trong 1 tháng.`,
+      };
+    }
+  }
+
+  currentMap[cId] = uniqueDates;
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(STORAGE_KEY_CREW_OFFDAYS, JSON.stringify(currentMap));
+      window.dispatchEvent(new CustomEvent('crew_offdays_updated', { detail: { crewId: cId, offDays: uniqueDates } }));
+    } catch (err) {
+      console.error('Lỗi khi lưu ngày nghỉ crew:', err);
+    }
+  }
+
+  return { success: true, offDays: uniqueDates };
+}
+
+/**
+ * Kiểm tra xem nhân sự có lịch nghỉ vào ngày cụ thể không
+ * @param {number|string} crewId
+ * @param {string|Date} date
+ * @returns {{ available: boolean, reason?: string }}
+ */
+export function checkCrewAvailability(crewId, date) {
+  if (!crewId || !date) return { available: true };
+  const cId = String(crewId);
+  const targetDateStr = dayjs(date).format('YYYY-MM-DD');
+
+  const offDaysMap = getStoredCrewOffDays();
+  const crewOffDays = offDaysMap[cId] || [];
+
+  if (crewOffDays.includes(targetDateStr)) {
+    return {
+      available: false,
+      reason: `Nhân sự đã đăng ký nghỉ phép vào ngày ${dayjs(date).format('DD/MM/YYYY')} (Off-Day).`,
+    };
+  }
+
+  return { available: true };
 }

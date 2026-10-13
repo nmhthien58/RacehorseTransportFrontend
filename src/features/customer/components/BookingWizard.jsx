@@ -41,7 +41,10 @@ import horseService from '@services/horseService';
 import { useAuthStore } from '@features/auth/store/authStore';
 import { getStoredHorses } from '@utils/horseStorage';
 import {
+  calculateHorseRisk,
   checkHorseTransportEligibility,
+  HealthStatusTag,
+  RiskBadge,
 } from '@utils/horseHealth';
 
 const { Title, Text } = Typography;
@@ -577,7 +580,7 @@ export default function BookingWizard({
 
     const loadHorsesData = async () => {
       setLoadingHorses(true);
-      let horsesList;
+      let horsesList = [];
       try {
         const res = await horseService.getHorses({ ownerId: ownerId || undefined });
         const fetched = res?.data?.data || res?.data;
@@ -625,7 +628,7 @@ export default function BookingWizard({
       setLoadingHorses(false);
     };
 
-    void loadHorsesData().catch(console.error);
+    loadHorsesData();
 
     return () => {
       isSubscribed = false;
@@ -1201,21 +1204,6 @@ export default function BookingWizard({
                   return (
                     <Col key={horseId} xs={24} md={12}>
                       <div
-                        role="button"
-                        tabIndex={isBlocked ? -1 : 0}
-                        aria-disabled={isBlocked}
-                        onClick={(e) => {
-                          if (isBlocked) return;
-                          if (e.target.closest?.('.stall-select-container') || e.target.closest?.('.ant-select') || e.target.closest?.('.ant-checkbox-wrapper')) return;
-                          handleToggleHorse(horseId);
-                        }}
-                        onKeyDown={(e) => {
-                          if (isBlocked) return;
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            handleToggleHorse(horseId);
-                          }
-                        }}
                         style={{
                           padding: 18,
                           borderRadius: 16,
@@ -1241,6 +1229,7 @@ export default function BookingWizard({
                             : '0 2px 8px rgba(0, 0, 0, 0.02)',
                           transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                         }}
+                        onClick={() => !isBlocked && handleToggleHorse(horseId)}
                       >
                         <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
                           <Checkbox
@@ -1327,12 +1316,12 @@ export default function BookingWizard({
                         {/* Tùy chọn hạng chuồng khi được tick chọn */}
                         {isSelected && (
                           <div
-                            className="stall-select-container"
                             style={{
                               marginTop: 12,
                               paddingTop: 12,
                               borderTop: '1px dashed #e2e8f0',
                             }}
+                            onClick={(e) => e.stopPropagation()}
                           >
                             <Row gutter={12}>
                               <Col span={12}>
@@ -1405,18 +1394,8 @@ export default function BookingWizard({
                     {/* OPTION 1: GROUND TRANSPORT */}
                     <Col xs={24} md={8}>
                       <div
-                        role="button"
-                        tabIndex={isGroundAvailable ? 0 : -1}
-                        aria-disabled={!isGroundAvailable}
                         onClick={() => {
                           if (isGroundAvailable) field.onChange('Ground');
-                        }}
-                        onKeyDown={(e) => {
-                          if (!isGroundAvailable) return;
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange('Ground');
-                          }
                         }}
                         style={{
                           backgroundColor: !isGroundAvailable
@@ -1503,15 +1482,7 @@ export default function BookingWizard({
                     {/* OPTION 2: AIR FREIGHT */}
                     <Col xs={24} md={8}>
                       <div
-                        role="button"
-                        tabIndex={0}
                         onClick={() => field.onChange('Air')}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange('Air');
-                          }
-                        }}
                         style={{
                           backgroundColor: isAir ? '#FFFBEB' : '#FFFFFF',
                           border: isAir ? '2px solid #F59E0B' : '1.5px solid #E2E8F0',
@@ -1580,15 +1551,7 @@ export default function BookingWizard({
                     {/* OPTION 3: DOOR-TO-DOOR */}
                     <Col xs={24} md={8}>
                       <div
-                        role="button"
-                        tabIndex={0}
                         onClick={() => field.onChange('DoorToDoor')}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange('DoorToDoor');
-                          }
-                        }}
                         style={{
                           backgroundColor: isDoor ? '#FFFBEB' : '#FFFFFF',
                           border: isDoor ? '2px solid #F59E0B' : '1.5px solid #E2E8F0',
@@ -1766,15 +1729,7 @@ export default function BookingWizard({
                     {/* Gói 1: Trip Protection */}
                     <Col xs={24} sm={12}>
                       <div
-                        role="button"
-                        tabIndex={0}
                         onClick={() => field.onChange('trip')}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange('trip');
-                          }
-                        }}
                         style={{
                           backgroundColor: currentPackage === 'trip' ? '#FFFBEB' : '#FFFFFF',
                           border: currentPackage === 'trip' ? '2px solid #F59E0B' : '1.5px solid #E2E8F0',
@@ -1804,15 +1759,7 @@ export default function BookingWizard({
                     {/* Gói 2: Cargo Coverage */}
                     <Col xs={24} sm={12}>
                       <div
-                        role="button"
-                        tabIndex={0}
                         onClick={() => field.onChange('cargo')}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange('cargo');
-                          }
-                        }}
                         style={{
                           backgroundColor: currentPackage === 'cargo' ? '#FFFBEB' : '#FFFFFF',
                           border: currentPackage === 'cargo' ? '2px solid #F59E0B' : '1.5px solid #E2E8F0',
@@ -1842,15 +1789,7 @@ export default function BookingWizard({
                     {/* Gói 3: Mortality Coverage */}
                     <Col xs={24} sm={12}>
                       <div
-                        role="button"
-                        tabIndex={0}
                         onClick={() => field.onChange('mortality')}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange('mortality');
-                          }
-                        }}
                         style={{
                           backgroundColor: currentPackage === 'mortality' ? '#FFFBEB' : '#FFFFFF',
                           border: currentPackage === 'mortality' ? '2px solid #F59E0B' : '1.5px solid #E2E8F0',
@@ -1880,15 +1819,7 @@ export default function BookingWizard({
                     {/* Gói 4: Comprehensive (TỔNG HỢP TIẾT KIỆM 10%) */}
                     <Col xs={24} sm={12}>
                       <div
-                        role="button"
-                        tabIndex={0}
                         onClick={() => field.onChange('comprehensive')}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange('comprehensive');
-                          }
-                        }}
                         style={{
                           backgroundColor: currentPackage === 'comprehensive' ? '#FFFBEB' : '#FFFFFF',
                           border: currentPackage === 'comprehensive' ? '2px solid #F59E0B' : '1.5px solid #E2E8F0',
@@ -1949,8 +1880,8 @@ export default function BookingWizard({
                         min={5000}
                         max={2000000}
                         step={5000}
-                        formatter={(val) => (val ? `$ ${Number(val).toLocaleString('en-US')}` : '')}
-                        parser={(val) => (val ? String(val).replace(/[^\d.]/g, '') : '')}
+                        formatter={(val) => `$ ${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        parser={(val) => val.replace(/\$\s?|(,*)/g, '')}
                       />
                     </Form.Item>
                   )}
@@ -2095,15 +2026,7 @@ export default function BookingWizard({
                     const isChecked = Boolean(field.value);
                     return (
                       <div
-                        role="button"
-                        tabIndex={0}
                         onClick={() => field.onChange(!isChecked)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange(!isChecked);
-                          }
-                        }}
                         style={{
                           backgroundColor: isChecked ? '#FFFBEB' : '#FFFFFF',
                           border: isChecked ? '2px solid #F59E0B' : '1.5px solid #E2E8F0',
@@ -2142,15 +2065,7 @@ export default function BookingWizard({
                     const isChecked = Boolean(field.value);
                     return (
                       <div
-                        role="button"
-                        tabIndex={0}
                         onClick={() => field.onChange(!isChecked)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange(!isChecked);
-                          }
-                        }}
                         style={{
                           backgroundColor: isChecked ? '#FFFBEB' : '#FFFFFF',
                           border: isChecked ? '2px solid #F59E0B' : '1.5px solid #E2E8F0',
@@ -2189,15 +2104,7 @@ export default function BookingWizard({
                     const isChecked = Boolean(field.value);
                     return (
                       <div
-                        role="button"
-                        tabIndex={0}
                         onClick={() => field.onChange(!isChecked)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange(!isChecked);
-                          }
-                        }}
                         style={{
                           backgroundColor: isChecked ? '#FFFBEB' : '#FFFFFF',
                           border: isChecked ? '2px solid #F59E0B' : '1.5px solid #E2E8F0',
@@ -2231,7 +2138,7 @@ export default function BookingWizard({
 
           {/* Ghi chú hướng dẫn cho tài xế & nhân viên chăm sóc */}
           <div style={{ marginTop: 14 }}>
-            <label htmlFor="special-instructions-input" style={{ fontSize: 12.5, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 6 }}>
+            <label style={{ fontSize: 12.5, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 6 }}>
               Special Instructions for Driver & Handlers (Hướng dẫn đặc biệt)
             </label>
             <Controller
@@ -2240,7 +2147,6 @@ export default function BookingWizard({
               render={({ field }) => (
                 <TextArea
                   {...field}
-                  id="special-instructions-input"
                   rows={2}
                   placeholder="Ví dụ: Dừng nghỉ tưới nước mỗi 4 tiếng, kiểm tra móng trước khi bốc dỡ..."
                   style={{ borderRadius: 10, padding: '8px 12px' }}

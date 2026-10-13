@@ -329,15 +329,7 @@ export default function CustomerPricingPage() {
             <Row gutter={[20, 20]}>
               <Col xs={24} md={8}>
                 <div
-                  role="button"
-                  tabIndex={0}
                   onClick={() => setSelectedStallCard('shared')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setSelectedStallCard('shared');
-                    }
-                  }}
                   style={{
                     borderRadius: 16,
                     border: selectedStallCard === 'shared' ? '2.5px solid #F59E0B' : '1.5px solid #e2e8f0',
@@ -371,15 +363,7 @@ export default function CustomerPricingPage() {
               </Col>
               <Col xs={24} md={8}>
                 <div
-                  role="button"
-                  tabIndex={0}
                   onClick={() => setSelectedStallCard('comfort')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setSelectedStallCard('comfort');
-                    }
-                  }}
                   style={{
                     borderRadius: 16,
                     border: selectedStallCard === 'comfort' ? '2.5px solid #F59E0B' : '1.5px solid #e2e8f0',
@@ -414,15 +398,7 @@ export default function CustomerPricingPage() {
               </Col>
               <Col xs={24} md={8}>
                 <div
-                  role="button"
-                  tabIndex={0}
                   onClick={() => setSelectedStallCard('private')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setSelectedStallCard('private');
-                    }
-                  }}
                   style={{
                     borderRadius: 16,
                     border: selectedStallCard === 'private' ? '2.5px solid #F59E0B' : '1.5px solid #e2e8f0',
@@ -654,15 +630,7 @@ export default function CustomerPricingPage() {
                 <Row gutter={[12, 12]}>
                   <Col xs={12}>
                     <div
-                      role="button"
-                      tabIndex={0}
                       onClick={() => setTransportMode('air')}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          setTransportMode('air');
-                        }
-                      }}
                       style={{
                         backgroundColor: transportMode === 'air' ? '#FFFBEB' : '#FFFFFF',
                         border: transportMode === 'air' ? '2.5px solid #F59E0B' : '1.5px solid #E2E8F0',
@@ -687,15 +655,7 @@ export default function CustomerPricingPage() {
                   </Col>
                   <Col xs={12}>
                     <div
-                      role="button"
-                      tabIndex={0}
                       onClick={() => setTransportMode('ground')}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          setTransportMode('ground');
-                        }
-                      }}
                       style={{
                         backgroundColor: transportMode === 'ground' ? '#FFFBEB' : '#FFFFFF',
                         border: transportMode === 'ground' ? '2.5px solid #F59E0B' : '1.5px solid #E2E8F0',
@@ -824,15 +784,7 @@ export default function CustomerPricingPage() {
               </Title>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div
-                  role="button"
-                  tabIndex={0}
                   onClick={() => setOptClimateControl(!optClimateControl)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setOptClimateControl(!optClimateControl);
-                    }
-                  }}
                   style={{
                     padding: '14px 18px',
                     borderRadius: 14,
@@ -859,15 +811,7 @@ export default function CustomerPricingPage() {
                 </div>
 
                 <div
-                  role="button"
-                  tabIndex={0}
                   onClick={() => setOptExpress(!optExpress)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setOptExpress(!optExpress);
-                    }
-                  }}
                   style={{
                     padding: '14px 18px',
                     borderRadius: 14,
@@ -894,18 +838,7 @@ export default function CustomerPricingPage() {
                 </div>
 
                 <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={(e) => {
-                    if (e.target.tagName === 'INPUT' || e.target.closest?.('.ant-input-number')) return;
-                    setOptInsurance(!optInsurance);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setOptInsurance(!optInsurance);
-                    }
-                  }}
+                  onClick={() => setOptInsurance(!optInsurance)}
                   style={{
                     padding: '14px 18px',
                     borderRadius: 14,
@@ -930,7 +863,7 @@ export default function CustomerPricingPage() {
                     Covers illness/injury, transit up to full sum, 1% of the declared value.
                   </Text>
                   {optInsurance && (
-                    <div style={{ marginLeft: 24, marginTop: 10 }}>
+                    <div style={{ marginLeft: 24, marginTop: 10 }} onClick={(e) => e.stopPropagation()}>
                       <Text style={{ fontSize: 12.5, color: '#475569', marginRight: 8, fontWeight: 600 }}>
                         Declared value (USD):
                       </Text>
@@ -940,8 +873,8 @@ export default function CustomerPricingPage() {
                         min={5000}
                         max={1000000}
                         step={5000}
-                        formatter={(value) => (value ? `$ ${Number(value).toLocaleString('en-US')}` : '')}
-                        parser={(value) => (value ? String(value).replace(/[^\d.]/g, '') : '')}
+                        formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
                         style={{ width: 170, borderRadius: 8 }}
                       />
                     </div>
@@ -949,15 +882,7 @@ export default function CustomerPricingPage() {
                 </div>
 
                 <div
-                  role="button"
-                  tabIndex={0}
                   onClick={() => setOptOffPeak(!optOffPeak)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setOptOffPeak(!optOffPeak);
-                    }
-                  }}
                   style={{
                     padding: '14px 18px',
                     borderRadius: 14,

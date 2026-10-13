@@ -1,13 +1,15 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Button,
   Card,
   Checkbox,
   Col,
+  DatePicker,
   Divider,
   Flex,
   Form,
   Input,
+  InputNumber,
   Modal,
   Row,
   Select,
@@ -17,16 +19,24 @@ import {
   message,
 } from 'antd';
 import {
+  EnvironmentOutlined,
+  CarOutlined,
+  RocketOutlined,
+  UserOutlined,
+  SafetyCertificateOutlined,
   CheckCircleFilled,
   PlusOutlined,
+  ArrowRightOutlined,
   InfoCircleOutlined,
   ArrowLeftOutlined,
   DeleteOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { ROUTES } from '@routes/routes';
 import {
+  getStoredRoutePlans,
   getOrdersToPlan,
   getStoredFleet,
   getStoredPersonnel,
@@ -35,132 +45,36 @@ import {
   getStoredRoutePlanById,
 } from '@utils/routePlanStorage';
 
-const { Title, Text } = Typography;
-
-const buildCheckpointsForOrder = (order) => {
-  if (!order || !order.orderCode) return [];
-  const origin = order.origin || 'Trang trại Yên Bài, Ba Vì, Hà Nội';
-  const destination = order.destination || 'Điểm đến theo đơn';
-  const isAir = order.transportMode === 'Air';
-
-  return [
-    {
-      step: 1,
-      name: `${origin} — Điểm khởi hành`,
-      location: origin,
-      coordinates: '21.0560° N, 105.3411° E',
-      eta: order.departureDate
-        ? dayjs(order.departureDate).format('MMM DD, YYYY • 06:00 AM')
-        : 'Oct 01, 2026 • 06:00 AM',
-      type: 'ORIGIN',
-      description: 'Tập kết ngựa, kiểm tra vi mạch & cấp phát khẩu phần ăn',
-    },
-    {
-      step: 2,
-      name: isAir
-        ? 'Trạm kiểm dịch sân bay — Vetting & Layover'
-        : 'Trạm dừng chân kiểm dịch trung gian — Nghỉ chân & Bù nước',
-      location: isAir ? 'Kho hàng hóa quốc tế SGN/HAN' : 'Trạm dừng kiểm soát lộ trình',
-      coordinates: '16.0544° N, 108.2022° E',
-      eta: 'Dự kiến sau 6-8 tiếng',
-      type: 'REST_STOP',
-      description: 'Dừng nghỉ, kiểm tra sức khỏe ngựa & đo thân nhiệt, bù điện giải',
-    },
-    {
-      step: 3,
-      name: `${destination} — Điểm đến giao nhận`,
-      location: destination,
-      coordinates: '10.8231° N, 106.6297° E',
-      eta: order.deliveryDate
-        ? dayjs(order.deliveryDate).format('MMM DD, YYYY • 18:00 PM')
-        : 'Oct 02, 2026 • 18:00 PM',
-      type: 'ARRIVAL',
-      description: 'Bàn giao ngựa tại chuồng đích, ký nghiệm thu phúc lợi thú y',
-    },
-  ];
-};
-
-const calculateInitialCosts = (order) => {
-  if (!order || !order.orderCode) {
-    return { charter: 0, stall: 3600, vet: 1600, quarantine: 1000 };
-  }
-  const cap = order.customerFeeCap || 5000;
-  const isAir = order.transportMode === 'Air';
-  const est = Math.round(cap * 0.82);
-
-  if (isAir) {
-    return {
-      charter: Math.round(est * 0.72),
-      stall: Math.round(est * 0.14),
-      vet: Math.round(est * 0.09),
-      quarantine: Math.round(est * 0.05),
-    };
-  }
-  return {
-    charter: 0,
-    stall: Math.round(est * 0.58),
-    vet: Math.round(est * 0.26),
-    quarantine: Math.round(est * 0.16),
-  };
-};
+const { Title, Text, Paragraph } = Typography;
 
 /**
  * Trang Route Planning & Resource Allocation Studio khớp 100% Figma Image 2 & 3
  * Thiết lập thứ tự lộ trình, phân bổ phương tiện & nhân sự, dự toán ngân sách và gửi cho Manager
  */
 export default function RoutePlanningPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editingPlanId = searchParams.get('planId');
 
-  const [orders] = useState(() => getOrdersToPlan());
-  const [fleetList] = useState(() => getStoredFleet());
-  const [personnelList] = useState(() => getStoredPersonnel());
+  const [orders, setOrders] = useState([]);
+  const [fleetList, setFleetList] = useState([]);
+  const [personnelList, setPersonnelList] = useState([]);
 
-  const existingPlan = useMemo(() => {
-    return editingPlanId ? getStoredRoutePlanById(editingPlanId) : null;
-  }, [editingPlanId]);
+  // Form states
+  const [selectedOrderCode, setSelectedOrderCode] = useState('');
+  const [selectedFleetId, setSelectedFleetId] = useState('51D-8921');
+  const [selectedDriverId, setSelectedDriverId] = useState(4);
+  const [selectedVetId, setSelectedVetId] = useState(2);
 
-  const [selectedOrderCode, setSelectedOrderCode] = useState(() => {
-    if (existingPlan) return existingPlan.orderCode;
-    const initialOrders = getOrdersToPlan();
-    return initialOrders[0]?.orderCode || '';
-  });
+  // Checkpoints
+  const [checkpoints, setCheckpoints] = useState([]);
 
-  const [selectedFleetId, setSelectedFleetId] = useState(() => {
-    if (existingPlan) return existingPlan.vehicleId || existingPlan.stallId || '51D-8921';
-    return '51D-8921';
-  });
-
-  const [selectedDriverId, setSelectedDriverId] = useState(() => existingPlan?.driverId || 4);
-  const [selectedVetId, setSelectedVetId] = useState(() => existingPlan?.vetEscortId || 2);
-
-  const [checkpoints, setCheckpoints] = useState(() => {
-    if (existingPlan?.checkpoints?.length) return existingPlan.checkpoints;
-    const initialOrders = getOrdersToPlan();
-    return buildCheckpointsForOrder(initialOrders[0]);
-  });
-
-  const [charterCost, setCharterCost] = useState(() => {
-    if (existingPlan?.costBreakdown?.airCharter !== undefined) return existingPlan.costBreakdown.airCharter;
-    const initialOrders = getOrdersToPlan();
-    return calculateInitialCosts(initialOrders[0]).charter;
-  });
-  const [stallRent, setStallRent] = useState(() => {
-    if (existingPlan?.costBreakdown?.stallRent !== undefined) return existingPlan.costBreakdown.stallRent;
-    const initialOrders = getOrdersToPlan();
-    return calculateInitialCosts(initialOrders[0]).stall;
-  });
-  const [vetEscortFees, setVetEscortFees] = useState(() => {
-    if (existingPlan?.costBreakdown?.vetEscort !== undefined) return existingPlan.costBreakdown.vetEscort;
-    const initialOrders = getOrdersToPlan();
-    return calculateInitialCosts(initialOrders[0]).vet;
-  });
-  const [quarantineFees, setQuarantineFees] = useState(() => {
-    if (existingPlan?.costBreakdown?.quarantine !== undefined) return existingPlan.costBreakdown.quarantine;
-    const initialOrders = getOrdersToPlan();
-    return calculateInitialCosts(initialOrders[0]).quarantine;
-  });
+  // Expenses
+  const [charterCost, setCharterCost] = useState(0);
+  const [stallRent, setStallRent] = useState(3600);
+  const [vetEscortFees, setVetEscortFees] = useState(1600);
+  const [quarantineFees, setQuarantineFees] = useState(1000);
 
   // Modal checkpoint state
   const [addStopModalOpen, setAddStopModalOpen] = useState(false);
@@ -170,22 +84,92 @@ export default function RoutePlanningPage() {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [confirmedChecklist, setConfirmedChecklist] = useState(true);
 
-  const handleSelectOrder = (newCode) => {
-    setSelectedOrderCode(newCode);
-    const ord = orders.find((o) => o.orderCode === newCode);
-    if (ord) {
-      setCheckpoints(buildCheckpointsForOrder(ord));
-      const costs = calculateInitialCosts(ord);
-      setCharterCost(costs.charter);
-      setStallRent(costs.stall);
-      setVetEscortFees(costs.vet);
-      setQuarantineFees(costs.quarantine);
+  useEffect(() => {
+    const loadedOrders = getOrdersToPlan();
+    setOrders(loadedOrders);
+    setFleetList(getStoredFleet());
+    setPersonnelList(getStoredPersonnel());
+
+    if (editingPlanId) {
+      const existing = getStoredRoutePlanById(editingPlanId);
+      if (existing) {
+        setSelectedOrderCode(existing.orderCode);
+        setSelectedFleetId(existing.vehicleId || existing.stallId || '51D-8921');
+        setSelectedDriverId(existing.driverId || 4);
+        setSelectedVetId(existing.vetEscortId || 2);
+        if (existing.checkpoints?.length > 0) {
+          setCheckpoints(existing.checkpoints);
+        }
+        if (existing.costBreakdown) {
+          setCharterCost(existing.costBreakdown.airCharter || 0);
+          setStallRent(existing.costBreakdown.stallRent || 3600);
+          setVetEscortFees(existing.costBreakdown.vetEscort || 1600);
+          setQuarantineFees(existing.costBreakdown.quarantine || 1000);
+        }
+      }
+    } else if (loadedOrders.length > 0) {
+      setSelectedOrderCode(loadedOrders[0].orderCode);
     }
-  };
+  }, [editingPlanId]);
 
   const currentOrder = useMemo(() => {
     return orders.find((o) => o.orderCode === selectedOrderCode) || orders[0] || {};
   }, [orders, selectedOrderCode]);
+
+  // Đồng bộ lộ trình checkpoints & ước tính chi phí theo đúng thông tin khách yêu cầu
+  useEffect(() => {
+    if (!currentOrder || !currentOrder.orderCode) return;
+    if (editingPlanId) return;
+
+    const origin = currentOrder.origin || 'Trang trại Yên Bài, Ba Vì, Hà Nội';
+    const destination = currentOrder.destination || 'Điểm đến theo đơn';
+    const cap = currentOrder.customerFeeCap || 5000;
+    const isAir = currentOrder.transportMode === 'Air';
+
+    setCheckpoints([
+      {
+        step: 1,
+        name: `${origin} — Điểm khởi hành`,
+        location: origin,
+        coordinates: '21.0560° N, 105.3411° E',
+        eta: currentOrder.departureDate ? dayjs(currentOrder.departureDate).format('MMM DD, YYYY • 06:00 AM') : 'Oct 01, 2026 • 06:00 AM',
+        type: 'ORIGIN',
+        description: 'Tập kết ngựa, kiểm tra vi mạch & cấp phát khẩu phần ăn',
+      },
+      {
+        step: 2,
+        name: isAir ? 'Trạm kiểm dịch sân bay — Vetting & Layover' : 'Trạm dừng chân kiểm dịch trung gian — Nghỉ chân & Bù nước',
+        location: isAir ? 'Kho hàng hóa quốc tế SGN/HAN' : 'Trạm dừng kiểm soát lộ trình',
+        coordinates: '16.0544° N, 108.2022° E',
+        eta: 'Dự kiến sau 6-8 tiếng',
+        type: 'REST_STOP',
+        description: 'Dừng nghỉ, kiểm tra sức khỏe ngựa & đo thân nhiệt, bù điện giải',
+      },
+      {
+        step: 3,
+        name: `${destination} — Điểm đến giao nhận`,
+        location: destination,
+        coordinates: '10.8231° N, 106.6297° E',
+        eta: currentOrder.deliveryDate ? dayjs(currentOrder.deliveryDate).format('MMM DD, YYYY • 18:00 PM') : 'Oct 02, 2026 • 18:00 PM',
+        type: 'ARRIVAL',
+        description: 'Bàn giao ngựa tại chuồng đích, ký nghiệm thu phúc lợi thú y',
+      },
+    ]);
+
+    // Phân bổ dự toán phù hợp ngân sách tối đa của khách
+    const est = Math.round(cap * 0.82); // margin ~18%
+    if (isAir) {
+      setCharterCost(Math.round(est * 0.72));
+      setStallRent(Math.round(est * 0.14));
+      setVetEscortFees(Math.round(est * 0.09));
+      setQuarantineFees(Math.round(est * 0.05));
+    } else {
+      setCharterCost(0);
+      setStallRent(Math.round(est * 0.58));
+      setVetEscortFees(Math.round(est * 0.26));
+      setQuarantineFees(Math.round(est * 0.16));
+    }
+  }, [currentOrder?.orderCode, editingPlanId]);
 
   const currentFleet = useMemo(() => {
     return fleetList.find((f) => f.id === selectedFleetId) || fleetList[0] || {};
@@ -374,13 +358,12 @@ export default function RoutePlanningPage() {
 
               <Row gutter={16}>
                 <Col xs={24} md={12}>
-                  <label htmlFor="order-plan-select" style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 6 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 6 }}>
                     APPROVED ORDER TO PLAN *
                   </label>
                   <Select
-                    id="order-plan-select"
                     value={selectedOrderCode}
-                    onChange={handleSelectOrder}
+                    onChange={setSelectedOrderCode}
                     size="large"
                     style={{ width: '100%' }}
                     options={orders.map((o) => ({
@@ -394,11 +377,10 @@ export default function RoutePlanningPage() {
                 </Col>
 
                 <Col xs={24} md={12}>
-                  <label htmlFor="fleet-allocate-select" style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 6 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 6 }}>
                     ALLOCATE FLEET / AIR STALL (AVAILABLE) *
                   </label>
                   <Select
-                    id="fleet-allocate-select"
                     value={selectedFleetId}
                     onChange={setSelectedFleetId}
                     size="large"
@@ -561,11 +543,10 @@ export default function RoutePlanningPage() {
               </Text>
 
               <div style={{ marginBottom: 14 }}>
-                <label htmlFor="driver-assign-select" style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 6 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 6 }}>
                   ASSIGNED DRIVER / HANDLER *
                 </label>
                 <Select
-                  id="driver-assign-select"
                   value={selectedDriverId}
                   onChange={setSelectedDriverId}
                   size="large"
@@ -583,11 +564,10 @@ export default function RoutePlanningPage() {
               </div>
 
               <div>
-                <label htmlFor="vet-escort-select" style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 6 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 6 }}>
                   VETERINARY ESCORT (IN-FLIGHT / GROUND) *
                 </label>
                 <Select
-                  id="vet-escort-select"
                   value={selectedVetId}
                   onChange={setSelectedVetId}
                   size="large"

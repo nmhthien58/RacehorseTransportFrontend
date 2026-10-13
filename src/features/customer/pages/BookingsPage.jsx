@@ -230,15 +230,7 @@ export default function CustomerBookings() {
         {/* Tổng số yêu cầu */}
         <Col xs={24} sm={8}>
           <div
-            role="button"
-            tabIndex={0}
             onClick={() => setStatusFilter('All')}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setStatusFilter('All');
-              }
-            }}
             style={{
               borderRadius: 14,
               border: statusFilter === 'All' ? '1.5px solid #F59E0B' : '1.5px solid #e2e8f0',
@@ -290,15 +282,7 @@ export default function CustomerBookings() {
         {/* Chờ xét duyệt */}
         <Col xs={24} sm={8}>
           <div
-            role="button"
-            tabIndex={0}
             onClick={() => setStatusFilter('Submitted')}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setStatusFilter('Submitted');
-              }
-            }}
             style={{
               borderRadius: 14,
               border: statusFilter === 'Submitted' ? '1.5px solid #f59e0b' : '1.5px solid #e2e8f0',
@@ -350,15 +334,7 @@ export default function CustomerBookings() {
         {/* Đã duyệt & Đang triển khai */}
         <Col xs={24} sm={8}>
           <div
-            role="button"
-            tabIndex={0}
             onClick={() => setStatusFilter('Active')}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setStatusFilter('Active');
-              }
-            }}
             style={{
               borderRadius: 14,
               border: statusFilter === 'Active' ? '1.5px solid #10b981' : '1.5px solid #e2e8f0',
@@ -630,7 +606,7 @@ export default function CustomerBookings() {
                 </Title>
                 <Table
                   dataSource={parsedQuote}
-                  rowKey={(r, idx) => r.code || r.name || `quote-item-${idx}`}
+                  rowKey={(r) => r.code || r.name || Math.random()}
                   pagination={false}
                   size="small"
                   columns={[

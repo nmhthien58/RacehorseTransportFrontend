@@ -20,23 +20,16 @@ import {
   ClockCircleOutlined,
   CompassOutlined,
   PlusOutlined,
-  ExclamationCircleOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ArrowRightOutlined,
   UserOutlined,
   SafetyCertificateOutlined,
   SwapOutlined,
   FileDoneOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { ROUTES } from '@routes/routes';
 import {
   getStoredRoutePlans,
   getOrdersToPlan,
-  getStoredFleet,
-  getStoredPersonnel,
   updateStoredRoutePlan,
 } from '@utils/routePlanStorage';
 
@@ -47,11 +40,10 @@ const { Title, Text, Paragraph } = Typography;
  * Tái hiện 100% giao diện theo Figma Frame (Fleet & Route Coordinator Hub)
  */
 export default function CoordinatorDashboard() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const [plans, setPlans] = useState([]);
-  const [ordersToPlan, setOrdersToPlan] = useState([]);
+  const [plans, setPlans] = useState(() => getStoredRoutePlans());
+  const [ordersToPlan, setOrdersToPlan] = useState(() => getOrdersToPlan());
   const [activeTab, setActiveTab] = useState('All');
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -64,9 +56,6 @@ export default function CoordinatorDashboard() {
   const [selectedReplacementDriver, setSelectedReplacementDriver] = useState('Le Hoang Nam');
 
   useEffect(() => {
-    setPlans(getStoredRoutePlans());
-    setOrdersToPlan(getOrdersToPlan());
-
     const handleUpdate = () => {
       setPlans(getStoredRoutePlans());
       setOrdersToPlan(getOrdersToPlan());
@@ -676,10 +665,11 @@ export default function CoordinatorDashboard() {
             Vì không có xe chuyên dụng nội bộ sẵn sàng trong vòng 72 giờ, bạn có thể đề xuất hợp đồng thuê xe / chuyên cơ từ đối tác ngoài hãng.
           </Paragraph>
           <div style={{ marginBottom: 16 }}>
-            <label style={{ fontWeight: 700, display: 'block', marginBottom: 6 }}>
+            <label htmlFor="charter-cost-input" style={{ fontWeight: 700, display: 'block', marginBottom: 6 }}>
               Dự toán phụ phí thuê ngoài (USD):
             </label>
             <Input
+              id="charter-cost-input"
               type="number"
               value={charterCost}
               onChange={(e) => setCharterCost(Number(e.target.value))}
@@ -708,10 +698,11 @@ export default function CoordinatorDashboard() {
             Tài xế <strong>Nguyễn Văn Bình</strong> đang bị trùng lịch chạy xe trên chuyến #TRP-401 vào ngày 24/09/2026. Hãy chọn tài xế thay thế đủ điều kiện:
           </Paragraph>
           <div style={{ marginBottom: 16 }}>
-            <label style={{ fontWeight: 700, display: 'block', marginBottom: 6 }}>
+            <label htmlFor="replacement-driver-select" style={{ fontWeight: 700, display: 'block', marginBottom: 6 }}>
               Chọn tài xế khả dụng:
             </label>
             <Select
+              id="replacement-driver-select"
               value={selectedReplacementDriver}
               onChange={setSelectedReplacementDriver}
               size="large"

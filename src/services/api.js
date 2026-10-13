@@ -9,7 +9,10 @@ const resolveBaseUrl = () => {
     import.meta.env.VITE_API_URL ||
     import.meta.env.VITE_API_BASE_URL ||
     'https://racehorsetransportbackend-production.up.railway.app';
-  const clean = envUrl.replace(/\/+$/, '');
+  let clean = envUrl;
+  while (clean.endsWith('/')) {
+    clean = clean.slice(0, -1);
+  }
   return clean.endsWith('/api') ? clean : `${clean}/api`;
 };
 

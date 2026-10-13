@@ -253,7 +253,15 @@ export default function AppSidebar({ collapsed, user }) {
     >
       {/* Khối Logo chuẩn theo Figma - Click để về Dashboard */}
       <div
+        role="button"
+        tabIndex={0}
         onClick={() => navigate(getDashboardRoute(userRole))}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            navigate(getDashboardRoute(userRole));
+          }
+        }}
         style={{
           height: 84,
           display: 'flex',

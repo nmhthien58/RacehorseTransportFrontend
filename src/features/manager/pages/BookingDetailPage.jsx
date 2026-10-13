@@ -8,7 +8,6 @@ import {
   Empty,
   Flex,
   Form,
-  Input,
   Modal,
   Row,
   Select,
@@ -33,9 +32,11 @@ import bookingService from '@services/bookingService';
 import userService from '@services/userService';
 import { ROUTES } from '@routes/routes';
 import { BOOKING_STATUS } from '@utils/constants';
+import RejectBookingModal from '@features/manager/components/RejectBookingModal';
+import ApproveBookingModal from '@features/manager/components/ApproveBookingModal';
+import BookingDecisionButtons from '@features/manager/components/BookingDecisionButtons';
 
 const { Text, Title } = Typography;
-const { TextArea } = Input;
 
 /**
  * Trang chi tiết yêu cầu vận chuyển (Manager & Admin)
@@ -61,8 +62,6 @@ export default function BookingDetailPage() {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [reassignModalOpen, setReassignModalOpen] = useState(false);
 
-  const [approveForm] = Form.useForm();
-  const [rejectForm] = Form.useForm();
   const [reassignForm] = Form.useForm();
 
   const handleRefresh = useCallback(() => {
@@ -101,7 +100,7 @@ export default function BookingDetailPage() {
       }
     };
 
-    fetchData();
+    void fetchData().catch(console.error);
 
     return () => {
       active = false;
@@ -146,20 +145,12 @@ export default function BookingDetailPage() {
 
   // Mở modal Phê duyệt
   const handleOpenApprove = () => {
-    approveForm.resetFields();
-    if (specialists.length > 0) {
-      approveForm.setFieldsValue({ specialistUserId: specialists[0].userId });
-    }
-    if (coordinators.length > 0) {
-      approveForm.setFieldsValue({ coordinatorUserId: coordinators[0].userId });
-    }
     setApproveModalOpen(true);
   };
 
   // Xác nhận Phê duyệt
-  const handleConfirmApprove = async () => {
+  const handleConfirmApprove = async (values) => {
     try {
-      const values = await approveForm.validateFields();
       setActionLoading(true);
       await bookingService.approveBooking(booking.bookingId, {
         specialistUserId: values.specialistUserId,
@@ -168,8 +159,7 @@ export default function BookingDetailPage() {
       message.success(t('manager.bookings.messages.approveSuccess'));
       setApproveModalOpen(false);
       handleRefresh();
-    } catch (err) {
-      if (err?.errorFields) return;
+    } catch {
       message.error(t('manager.bookings.messages.actionFailed'));
     } finally {
       setActionLoading(false);
@@ -178,23 +168,20 @@ export default function BookingDetailPage() {
 
   // Mở modal Từ chối
   const handleOpenReject = () => {
-    rejectForm.resetFields();
     setRejectModalOpen(true);
   };
 
   // Xác nhận Từ chối
-  const handleConfirmReject = async () => {
+  const handleConfirmReject = async (reason) => {
     try {
-      const values = await rejectForm.validateFields();
       setActionLoading(true);
       await bookingService.rejectBooking(booking.bookingId, {
-        reason: values.reason,
+        reason,
       });
       message.success(t('manager.bookings.messages.rejectSuccess'));
       setRejectModalOpen(false);
       handleRefresh();
-    } catch (err) {
-      if (err?.errorFields) return;
+    } catch {
       message.error(t('manager.bookings.messages.actionFailed'));
     } finally {
       setActionLoading(false);
@@ -526,45 +513,10 @@ export default function BookingDetailPage() {
                   {t('manager.pendingRequests.managerReview')}
                 </Text>
 
-                <Space orientation="vertical" size={12} style={{ width: '100%' }}>
-                  <Button
-                    type="primary"
-                    block
-                    size="large"
-                    icon={<CheckOutlined style={{ fontWeight: 700 }} />}
-                    style={{
-                      height: 46,
-                      backgroundColor: '#F59E0B',
-                      borderColor: '#F59E0B',
-                      color: '#0f172a',
-                      fontWeight: 700,
-                      fontSize: 15,
-                      borderRadius: 10,
-                      boxShadow: '0 2px 4px rgba(245, 158, 11, 0.25)',
-                    }}
-                    onClick={handleOpenApprove}
-                  >
-                    {t('manager.pendingRequests.approveBtn')}
-                  </Button>
-
-                  <Button
-                    block
-                    size="large"
-                    icon={<CloseOutlined style={{ fontWeight: 700 }} />}
-                    style={{
-                      height: 46,
-                      backgroundColor: '#FEF2F2',
-                      borderColor: '#FECACA',
-                      color: '#DC2626',
-                      fontWeight: 700,
-                      fontSize: 15,
-                      borderRadius: 10,
-                    }}
-                    onClick={handleOpenReject}
-                  >
-                    {t('manager.pendingRequests.rejectBtn')}
-                  </Button>
-                </Space>
+                <BookingDecisionButtons
+                  onApprove={handleOpenApprove}
+                  onReject={handleOpenReject}
+                />
               </Card>
             )}
 
@@ -735,134 +687,24 @@ export default function BookingDetailPage() {
         </Card>
       )}
 
-      {/* MODAL 1: PHÊ DUYỆT ĐƠN & GÁN CHUYÊN VIÊN */}
-      <Modal
-        title={t('manager.bookings.modals.approveTitle')}
+      {/* MODAL 1: PHÊ DUYỆT ĐƠN & GÁN CHUYÊN VIÊN (Dùng chung) */}
+      <ApproveBookingModal
         open={approveModalOpen}
-        onCancel={() => setApproveModalOpen(false)}
-        onOk={handleConfirmApprove}
+        bookingCode={booking.bookingCode}
+        specialists={specialists}
+        coordinators={coordinators}
         confirmLoading={actionLoading}
-        okText={t('manager.bookings.actions.approve')}
-        okButtonProps={{ style: { backgroundColor: '#F59E0B', borderColor: '#F59E0B' } }}
-        destroyOnClose
-      >
-        <div style={{ marginTop: 12 }}>
-          <Alert
-            type="info"
-            showIcon
-            message={t('manager.bookings.modals.approveConfirmText', {
-              code: `#${booking.bookingCode}`,
-            })}
-            description={t('manager.bookings.modals.approveConfirmNote')}
-            style={{ marginBottom: 16, borderRadius: 8 }}
-          />
+        onConfirm={handleConfirmApprove}
+        onCancel={() => setApproveModalOpen(false)}
+      />
 
-          <Form form={approveForm} layout="vertical">
-            <Form.Item
-              name="specialistUserId"
-              label="Chuyên viên kiểm dịch & hồ sơ (Transport Specialist)"
-              rules={[
-                {
-                  required: true,
-                  message: 'Vui lòng chỉ định Chuyên viên kiểm dịch phụ trách đơn!',
-                },
-              ]}
-            >
-              <Select
-                placeholder="Chọn Chuyên viên kiểm dịch..."
-                options={specialists.map((s) => ({
-                  value: s.userId,
-                  label: `🩺 ${s.fullName} (${s.email})`,
-                }))}
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="coordinatorUserId"
-              label="Điều phối viên đội xe & lộ trình (Fleet & Route Coordinator)"
-              rules={[
-                {
-                  required: true,
-                  message: 'Vui lòng chỉ định Điều phối viên đội xe & lộ trình!',
-                },
-              ]}
-            >
-              <Select
-                placeholder="Chọn Điều phối viên lộ trình..."
-                options={coordinators.map((c) => ({
-                  value: c.userId,
-                  label: `🚚 ${c.fullName} (${c.email})`,
-                }))}
-              />
-            </Form.Item>
-          </Form>
-        </div>
-      </Modal>
-
-      {/* MODAL 2: TỪ CHỐI ĐƠN KÈM GỢI Ý LÝ DO NHANH */}
-      <Modal
-        title={t('manager.bookings.modals.rejectTitle')}
+      {/* MODAL 2: TỪ CHỐI ĐƠN (Dùng chung) */}
+      <RejectBookingModal
         open={rejectModalOpen}
         onCancel={() => setRejectModalOpen(false)}
-        onOk={handleConfirmReject}
+        onConfirm={handleConfirmReject}
         confirmLoading={actionLoading}
-        okText={t('manager.bookings.actions.reject')}
-        okButtonProps={{ danger: true }}
-        destroyOnClose
-      >
-        <div style={{ marginTop: 12 }}>
-          <div style={{ marginBottom: 14 }}>
-            <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 6 }}>
-              {t('manager.bookings.modals.quickReasons')}:
-            </Text>
-            <Space wrap size={[6, 6]}>
-              {[
-                t('manager.bookings.modals.quickReason1'),
-                t('manager.bookings.modals.quickReason2'),
-                t('manager.bookings.modals.quickReason3'),
-                t('manager.bookings.modals.quickReason4'),
-              ].map((reasonText) => (
-                <Tag
-                  key={reasonText}
-                  style={{
-                    cursor: 'pointer',
-                    borderRadius: 6,
-                    fontSize: 11,
-                    padding: '2px 8px',
-                  }}
-                  onClick={() => rejectForm.setFieldsValue({ reason: reasonText })}
-                >
-                  + {reasonText}
-                </Tag>
-              ))}
-            </Space>
-          </div>
-
-          <Form form={rejectForm} layout="vertical">
-            <Form.Item
-              name="reason"
-              label={t('manager.bookings.modals.rejectReasonLabel')}
-              rules={[
-                {
-                  required: true,
-                  message: t('manager.bookings.modals.rejectReasonRequired'),
-                },
-                {
-                  min: 10,
-                  message: t('manager.bookings.modals.rejectReasonMin'),
-                },
-              ]}
-            >
-              <TextArea
-                rows={4}
-                maxLength={500}
-                showCount
-                placeholder={t('manager.bookings.modals.rejectReasonPlaceholder')}
-              />
-            </Form.Item>
-          </Form>
-        </div>
-      </Modal>
+      />
 
       {/* MODAL 3: PHÂN CÔNG LẠI CHUYÊN VIÊN PHỤ TRÁCH */}
       <Modal

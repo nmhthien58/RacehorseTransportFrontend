@@ -103,17 +103,6 @@ export default function LoginPage() {
     await handleLogin({ email, password: 'password123' });
   };
 
-  /**
-   * Điền nhanh thông tin tài khoản thử nghiệm vào form
-   * @param {string} email
-   */
-  const handleQuickFill = (email) => {
-    form.setFieldsValue({
-      email,
-      password: 'password123',
-    });
-  };
-
   return (
     <div>
       {/* Header & Logo */}

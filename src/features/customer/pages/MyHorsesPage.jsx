@@ -2,14 +2,7 @@ import { useState } from 'react';
 import {
   Button,
   Card,
-  Col,
-  DatePicker,
-  Form,
-  Input,
-  Modal,
   Popconfirm,
-  Row,
-  Select,
   Space,
   Table,
   Tag,
@@ -33,8 +26,8 @@ import {
   calculateHorseRisk,
   HealthStatusTag,
   RiskBadge,
-  HEALTH_STATUS_OPTIONS,
 } from '@utils/horseHealth';
+import EditHorseModal from '@features/customer/components/EditHorseModal';
 
 const { Text } = Typography;
 
@@ -53,36 +46,17 @@ export default function MyHorsesPage() {
   const [editingHorse, setEditingHorse] = useState(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
-  const [form] = Form.useForm();
 
   const handleOpenEdit = (record) => {
     setEditingHorse(record);
-    const dob = record.dateOfBirth || record.DateOfBirth;
-    form.setFieldsValue({
-      name: record.name || record.Name,
-      breed: record.breed || record.Breed || 'Thoroughbred',
-      gender: record.gender || record.Gender || 'Stallion',
-      dateOfBirth: dob ? dayjs(dob) : null,
-      color: record.color || record.Color || '',
-      microchipNumber: record.microchipNumber || record.MicrochipNumber || '',
-      passportNumber: record.passportNumber || record.PassportNumber || '',
-      healthStatus: record.healthStatus || record.HealthStatus || 'Good',
-      specialCareRequirements: record.specialCareRequirements || record.SpecialCareRequirements || '',
-    });
     setEditModalVisible(true);
   };
 
   const handleSaveEdit = async (values) => {
     try {
       setEditSubmitting(true);
-      const payload = {
-        ...values,
-        dateOfBirth: values.dateOfBirth
-          ? values.dateOfBirth.format('YYYY-MM-DD')
-          : null,
-      };
       const horseId = editingHorse.horseId || editingHorse.HorseID;
-      await horseService.updateHorse(horseId, payload);
+      await horseService.updateHorse(horseId, values);
       message.success(t('horses.updateHorseSuccess'));
       setEditModalVisible(false);
       refetch?.();
@@ -310,151 +284,17 @@ export default function MyHorsesPage() {
         />
       </Card>
 
-      {/* MODAL CHỈNH SỬA THÔNG TIN NGỰA */}
-      <Modal
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 17, fontWeight: 700 }}>
-            <span>✏️ {t('horses.editModalTitle')}</span>
-            {editingHorse && <Tag color="gold">{editingHorse.Name}</Tag>}
-          </div>
-        }
+      {/* MODAL CHỈNH SỬA THÔNG TIN NGỰA (Dùng chung) */}
+      <EditHorseModal
         open={editModalVisible}
         onCancel={() => {
           setEditModalVisible(false);
           setEditingHorse(null);
         }}
-        onOk={() => form.submit()}
+        onSave={handleSaveEdit}
+        horse={editingHorse}
         confirmLoading={editSubmitting}
-        okText={t('horses.saveChanges')}
-        cancelText={t('horses.cancel')}
-        destroyOnClose
-        width={680}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSaveEdit}
-          style={{ marginTop: 16 }}
-        >
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="name"
-                label={<span style={{ fontWeight: 600 }}>{t('horses.fields.name')}</span>}
-                rules={[{ required: true, message: t('horses.validation.nameRequired') }]}
-              >
-                <Input placeholder={t('horses.placeholders.name')} size="large" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="breed"
-                label={<span style={{ fontWeight: 600 }}>{t('horses.fields.breed')}</span>}
-                rules={[{ required: true, message: t('horses.validation.breedRequired') }]}
-              >
-                <Select size="large">
-                  <Select.Option value="Thoroughbred">
-                    {t('horses.breedOptions.Thoroughbred')}
-                  </Select.Option>
-                  <Select.Option value="Quarter Horse">
-                    {t('horses.breedOptions.Quarter Horse')}
-                  </Select.Option>
-                  <Select.Option value="Arabian">
-                    {t('horses.breedOptions.Arabian')}
-                  </Select.Option>
-                  <Select.Option value="Warmblood">
-                    {t('horses.breedOptions.Warmblood')}
-                  </Select.Option>
-                  <Select.Option value="Appaloosa">
-                    {t('horses.breedOptions.Appaloosa')}
-                  </Select.Option>
-                  <Select.Option value="Standardbred">
-                    {t('horses.breedOptions.Standardbred')}
-                  </Select.Option>
-                  <Select.Option value="Andalusian">
-                    {t('horses.breedOptions.Andalusian')}
-                  </Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col xs={24} sm={8}>
-              <Form.Item name="gender" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.gender')}</span>}>
-                <Select size="large">
-                  <Select.Option value="Stallion">{t('horses.genderOptions.stallion')}</Select.Option>
-                  <Select.Option value="Mare">{t('horses.genderOptions.mare')}</Select.Option>
-                  <Select.Option value="Gelding">{t('horses.genderOptions.gelding')}</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Form.Item name="dateOfBirth" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.dob')}</span>}>
-                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" size="large" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Form.Item name="color" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.color')}</span>}>
-                <Input placeholder={t('horses.placeholders.color')} size="large" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item name="microchipNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.microchip')}</span>}>
-                <Input placeholder={t('horses.placeholders.microchip')} size="large" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item name="passportNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.passport')}</span>}>
-                <Input placeholder={t('horses.placeholders.passport')} size="large" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col xs={24}>
-              <Form.Item
-                name="healthStatus"
-                label={<span style={{ fontWeight: 600 }}>{t('horses.fields.healthStatus', 'Tình trạng sức khỏe')}</span>}
-              >
-                <Select size="large">
-                  {HEALTH_STATUS_OPTIONS.map((opt) => (
-                    <Select.Option key={opt.value} value={opt.value}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span
-                          style={{
-                            display: 'inline-block',
-                            width: 10,
-                            height: 10,
-                            borderRadius: '50%',
-                            backgroundColor: opt.color,
-                          }}
-                        />
-                        <span style={{ color: opt.color, fontWeight: 600 }}>
-                          {i18n.language?.startsWith('en') ? opt.labelEn : opt.labelVi}
-                        </span>
-                      </div>
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item
-            name="specialCareRequirements"
-            label={<span style={{ fontWeight: 600 }}>{t('horses.fields.specialCare')}</span>}
-          >
-            <Input.TextArea
-              rows={3}
-              placeholder={t('horses.specialCarePlaceholder')}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
+      />
     </div>
   );
 }

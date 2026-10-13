@@ -1,11 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Button,
   Card,
-  Col,
   Flex,
   Modal,
-  Row,
   Space,
   Table,
   Tag,
@@ -14,12 +12,6 @@ import {
   Select,
 } from 'antd';
 import {
-  CarOutlined,
-  RocketOutlined,
-  UserOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  WarningOutlined,
   ArrowLeftOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -27,7 +19,6 @@ import { ROUTES } from '@routes/routes';
 import {
   getStoredFleet,
   getStoredPersonnel,
-  getStoredRoutePlans,
   updateStoredRoutePlan,
 } from '@utils/routePlanStorage';
 
@@ -38,16 +29,11 @@ const { Title, Text } = Typography;
  */
 export default function FleetRosterPage() {
   const navigate = useNavigate();
-  const [fleet, setFleet] = useState([]);
-  const [personnel, setPersonnel] = useState([]);
+  const [fleet] = useState(() => getStoredFleet());
+  const [personnel] = useState(() => getStoredPersonnel());
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [selectedPlanForAssign, setSelectedPlanForAssign] = useState('PLN-8821');
   const [selectedVehicleForAssign, setSelectedVehicleForAssign] = useState('ST-04');
-
-  useEffect(() => {
-    setFleet(getStoredFleet());
-    setPersonnel(getStoredPersonnel());
-  }, []);
 
   const handleConfirmAssignVehicle = () => {
     updateStoredRoutePlan(selectedPlanForAssign, {
@@ -95,7 +81,7 @@ export default function FleetRosterPage() {
       title: 'STATUS',
       dataIndex: 'status',
       key: 'status',
-      render: (status, record) => (
+      render: (status) => (
         <Tag
           color={
             status === 'AVAILABLE'
@@ -286,10 +272,11 @@ export default function FleetRosterPage() {
       >
         <div style={{ padding: '12px 0' }}>
           <div style={{ marginBottom: 14 }}>
-            <label style={{ fontWeight: 700, display: 'block', marginBottom: 6 }}>
+            <label htmlFor="target-plan-select" style={{ fontWeight: 700, display: 'block', marginBottom: 6 }}>
               Select Target Plan:
             </label>
             <Select
+              id="target-plan-select"
               value={selectedPlanForAssign}
               onChange={setSelectedPlanForAssign}
               style={{ width: '100%' }}

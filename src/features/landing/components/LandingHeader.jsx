@@ -240,7 +240,15 @@ export default function LandingHeader({ activeKey = 'home' }) {
         <Flex justify="space-between" align="center">
           {/* Cụm góc trái: Logo LogoWhite.png */}
           <div
+            role="button"
+            tabIndex={0}
             onClick={handleHomeClick}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleHomeClick();
+              }
+            }}
             style={{
               display: 'flex',
               alignItems: 'center',

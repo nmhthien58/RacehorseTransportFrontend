@@ -16,23 +16,27 @@ async function enableMocking() {
   });
 }
 
-enableMocking().then(() => {
-  ReactDOM.createRoot(document.getElementById('root')).render(
-    <React.StrictMode>
-      <BrowserRouter>
-        <ConfigProvider
-          theme={{
-            token: {
-              colorPrimary: '#F59E0B',
-              borderRadius: 8,
-            },
-          }}
-        >
-          <AntApp>
-            <App />
-          </AntApp>
-        </ConfigProvider>
-      </BrowserRouter>
-    </React.StrictMode>,
-  );
-});
+void enableMocking()
+  .then(() => {
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      <React.StrictMode>
+        <BrowserRouter>
+          <ConfigProvider
+            theme={{
+              token: {
+                colorPrimary: '#F59E0B',
+                borderRadius: 8,
+              },
+            }}
+          >
+            <AntApp>
+              <App />
+            </AntApp>
+          </ConfigProvider>
+        </BrowserRouter>
+      </React.StrictMode>,
+    );
+  })
+  .catch((err) => {
+    console.error('Failed to start application:', err);
+  });

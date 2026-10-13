@@ -23,7 +23,6 @@ import {
   BellOutlined,
   AppstoreOutlined,
   ClockCircleOutlined,
-  MailOutlined,
   CreditCardOutlined,
   SettingOutlined,
   AuditOutlined,
@@ -282,10 +281,21 @@ export default function AppHeader({
           {letters.slice(0, 5).map((item) => (
             <div
               key={item.id}
+              role="button"
+              tabIndex={0}
               onClick={() => {
                 markLetterAsRead(item.id);
                 if (isAdminOrManager) {
                   navigate(`/manager/pending-requests?id=${item.bookingId}`);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  markLetterAsRead(item.id);
+                  if (isAdminOrManager) {
+                    navigate(`/manager/pending-requests?id=${item.bookingId}`);
+                  }
                 }
               }}
               style={{

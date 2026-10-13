@@ -114,7 +114,7 @@ export default function ManagerBookings({ isDashboardView = false }) {
       }
     };
 
-    fetchData();
+    void fetchData().catch(console.error);
 
     return () => {
       active = false;
@@ -368,65 +368,27 @@ export default function ManagerBookings({ isDashboardView = false }) {
 
       {/* 2. BỐN THẺ THỐNG KÊ ĐỒNG NHẤT, SẠCH SẼ THEO FIGMA */}
       <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
-        <Col xs={12} sm={6}>
-          <Card
-            bordered
-            style={{ borderRadius: 12, borderColor: '#e2e8f0' }}
-            styles={{ body: { padding: '16px 20px' } }}
-          >
-            <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>
-              {t('manager.bookings.stats.total')}
-            </Text>
-            <Title level={3} style={{ margin: '6px 0 0', fontWeight: 700, color: '#0f172a' }}>
-              {stats.total}
-            </Title>
-          </Card>
-        </Col>
-
-        <Col xs={12} sm={6}>
-          <Card
-            bordered
-            style={{ borderRadius: 12, borderColor: '#e2e8f0' }}
-            styles={{ body: { padding: '16px 20px' } }}
-          >
-            <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>
-              {t('manager.bookings.stats.pending')}
-            </Text>
-            <Title level={3} style={{ margin: '6px 0 0', fontWeight: 700, color: '#d97706' }}>
-              {stats.pending}
-            </Title>
-          </Card>
-        </Col>
-
-        <Col xs={12} sm={6}>
-          <Card
-            bordered
-            style={{ borderRadius: 12, borderColor: '#e2e8f0' }}
-            styles={{ body: { padding: '16px 20px' } }}
-          >
-            <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>
-              {t('manager.bookings.stats.approved')}
-            </Text>
-            <Title level={3} style={{ margin: '6px 0 0', fontWeight: 700, color: '#0f172a' }}>
-              {stats.approved}
-            </Title>
-          </Card>
-        </Col>
-
-        <Col xs={12} sm={6}>
-          <Card
-            bordered
-            style={{ borderRadius: 12, borderColor: '#e2e8f0' }}
-            styles={{ body: { padding: '16px 20px' } }}
-          >
-            <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>
-              {t('manager.bookings.stats.rejected')}
-            </Text>
-            <Title level={3} style={{ margin: '6px 0 0', fontWeight: 700, color: '#0f172a' }}>
-              {stats.rejected}
-            </Title>
-          </Card>
-        </Col>
+        {[
+          { key: 'total', label: t('manager.bookings.stats.total'), val: stats.total, color: '#0f172a' },
+          { key: 'pending', label: t('manager.bookings.stats.pending'), val: stats.pending, color: '#d97706' },
+          { key: 'approved', label: t('manager.bookings.stats.approved'), val: stats.approved, color: '#0f172a' },
+          { key: 'rejected', label: t('manager.bookings.stats.rejected'), val: stats.rejected, color: '#0f172a' },
+        ].map((item) => (
+          <Col key={item.key} xs={12} sm={6}>
+            <Card
+              bordered
+              style={{ borderRadius: 12, borderColor: '#e2e8f0' }}
+              styles={{ body: { padding: '16px 20px' } }}
+            >
+              <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>
+                {item.label}
+              </Text>
+              <Title level={3} style={{ margin: '6px 0 0', fontWeight: 700, color: item.color }}>
+                {item.val}
+              </Title>
+            </Card>
+          </Col>
+        ))}
       </Row>
 
       {/* 3. KHỐI BỘ LỌC TỔNG HỢP GỌN GÀNG, KHÔNG ICON THỪA */}

@@ -4,7 +4,6 @@ import {
   Card,
   Checkbox,
   Col,
-  Divider,
   Flex,
   Input,
   Modal,
@@ -17,28 +16,18 @@ import {
 } from 'antd';
 import {
   CheckCircleFilled,
-  ClockCircleOutlined,
-  CloseCircleFilled,
-  ExclamationCircleOutlined,
-  EnvironmentOutlined,
   RocketOutlined,
   CarOutlined,
-  UserOutlined,
-  SafetyCertificateOutlined,
-  ArrowRightOutlined,
-  WarningFilled,
 } from '@ant-design/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { ROUTES } from '@routes/routes';
 import {
   getStoredRoutePlans,
   approveRoutePlan,
   rejectRoutePlan,
-  getStoredRoutePlanById,
 } from '@utils/routePlanStorage';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 /**
@@ -46,13 +35,17 @@ const { TextArea } = Input;
  * Tái hiện 100% Figma Image 5 (Logistic Manager_Route manager)
  */
 export default function RouteApprovalsPage() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [plans, setPlans] = useState([]);
-  const [selectedPlanCode, setSelectedPlanCode] = useState('');
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [plans, setPlans] = useState(() => getStoredRoutePlans());
+  const paramCode = searchParams.get('planCode');
+  const [selectedPlanCodeState, setSelectedPlanCodeState] = useState(() => {
+    const loadedPlans = getStoredRoutePlans();
+    return loadedPlans.find((p) => p.status === 'PENDING_APPROVAL')?.planCode || loadedPlans[0]?.planCode || '';
+  });
+  const selectedPlanCode = paramCode || selectedPlanCodeState;
+  const [, setRefreshKey] = useState(0);
 
   // State cho Modal từ chối (Reject Plan Modal)
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
@@ -63,25 +56,12 @@ export default function RouteApprovalsPage() {
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
-    const loadedPlans = getStoredRoutePlans();
-    setPlans(loadedPlans);
-
-    const paramCode = searchParams.get('planCode');
-    if (paramCode) {
-      setSelectedPlanCode(paramCode);
-    } else if (loadedPlans.length > 0) {
-      // Ưu tiên chọn plan PENDING_APPROVAL
-      const pending = loadedPlans.find((p) => p.status === 'PENDING_APPROVAL');
-      if (pending) setSelectedPlanCode(pending.planCode);
-      else setSelectedPlanCode(loadedPlans[0].planCode);
-    }
-
     const handleUpdate = () => {
       setPlans(getStoredRoutePlans());
     };
     window.addEventListener('plans_updated', handleUpdate);
     return () => window.removeEventListener('plans_updated', handleUpdate);
-  }, [searchParams, refreshKey]);
+  }, []);
 
   const activePlan = useMemo(() => {
     return (
@@ -98,7 +78,7 @@ export default function RouteApprovalsPage() {
   const handleApprovePlan = () => {
     setActionLoading(true);
     setTimeout(() => {
-      const updated = approveRoutePlan(activePlan.planId || activePlan.planCode, {
+      approveRoutePlan(activePlan.planId || activePlan.planCode, {
         reviewerName: 'Trần Quốc Bảo (Logistics Manager)',
         managerNotes: 'Approved by Log. Manager • Dispatched to Driver App',
       });
@@ -153,7 +133,7 @@ export default function RouteApprovalsPage() {
           <Select
             value={activePlan.planCode}
             onChange={(val) => {
-              setSelectedPlanCode(val);
+              setSelectedPlanCodeState(val);
               setSearchParams({ planCode: val });
             }}
             style={{ width: 280 }}
@@ -427,53 +407,38 @@ export default function RouteApprovalsPage() {
               </Text>
 
               <Space direction="vertical" size={12} style={{ width: '100%' }}>
-                {/* Driver */}
-                <div
-                  style={{
-                    backgroundColor: '#F8FAFC',
-                    border: '1px solid #E2E8F0',
-                    borderRadius: 12,
-                    padding: '12px 14px',
-                  }}
-                >
-                  <Flex justify="space-between" align="center">
-                    <div>
-                      <strong style={{ fontSize: 14, color: '#0F172A' }}>
-                        Driver: {activePlan.driverName || 'Le Hoang Nam'}
-                      </strong>
-                      <div style={{ fontSize: 12, color: '#64748B' }}>
-                        Duty: Solo-Driver & Airport Handover
+                {[
+                  {
+                    key: 'driver',
+                    title: `Driver: ${activePlan.driverName || 'Le Hoang Nam'}`,
+                    duty: 'Duty: Solo-Driver & Airport Handover',
+                  },
+                  {
+                    key: 'vet',
+                    title: `Vet Escort: ${activePlan.vetEscortName || 'Dr. Elena Rostova'}`,
+                    duty: 'Duty: In-Flight Care & DXB Layover',
+                  },
+                ].map((item) => (
+                  <div
+                    key={item.key}
+                    style={{
+                      backgroundColor: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: 12,
+                      padding: '12px 14px',
+                    }}
+                  >
+                    <Flex justify="space-between" align="center">
+                      <div>
+                        <strong style={{ fontSize: 14, color: '#0F172A' }}>{item.title}</strong>
+                        <div style={{ fontSize: 12, color: '#64748B' }}>{item.duty}</div>
                       </div>
-                    </div>
-                    <Tag color="green" style={{ fontWeight: 800, borderRadius: 6 }}>
-                      AVAILABLE
-                    </Tag>
-                  </Flex>
-                </div>
-
-                {/* Vet Escort */}
-                <div
-                  style={{
-                    backgroundColor: '#F8FAFC',
-                    border: '1px solid #E2E8F0',
-                    borderRadius: 12,
-                    padding: '12px 14px',
-                  }}
-                >
-                  <Flex justify="space-between" align="center">
-                    <div>
-                      <strong style={{ fontSize: 14, color: '#0F172A' }}>
-                        Vet Escort: {activePlan.vetEscortName || 'Dr. Elena Rostova'}
-                      </strong>
-                      <div style={{ fontSize: 12, color: '#64748B' }}>
-                        Duty: In-Flight Care & DXB Layover
-                      </div>
-                    </div>
-                    <Tag color="green" style={{ fontWeight: 800, borderRadius: 6 }}>
-                      AVAILABLE
-                    </Tag>
-                  </Flex>
-                </div>
+                      <Tag color="green" style={{ fontWeight: 800, borderRadius: 6 }}>
+                        AVAILABLE
+                      </Tag>
+                    </Flex>
+                  </div>
+                ))}
               </Space>
 
               <div
@@ -656,11 +621,23 @@ export default function RouteApprovalsPage() {
               return (
                 <div
                   key={reason}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => {
                     if (isChecked) {
                       setSelectedReasons(selectedReasons.filter((r) => r !== reason));
                     } else {
                       setSelectedReasons([...selectedReasons, reason]);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      if (isChecked) {
+                        setSelectedReasons(selectedReasons.filter((r) => r !== reason));
+                      } else {
+                        setSelectedReasons([...selectedReasons, reason]);
+                      }
                     }
                   }}
                   style={{
@@ -686,10 +663,11 @@ export default function RouteApprovalsPage() {
 
         {/* DETAILED REMARKS TEXTAREA */}
         <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 12.5, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 6 }}>
+          <label htmlFor="reject-remarks-input" style={{ fontSize: 12.5, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 6 }}>
             Detailed Remarks *
           </label>
           <TextArea
+            id="reject-remarks-input"
             rows={3}
             value={rejectRemarks}
             onChange={(e) => setRejectRemarks(e.target.value)}

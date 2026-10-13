@@ -1,4 +1,4 @@
-import React from 'react';
+/* eslint-disable react-refresh/only-export-components */
 import { Tooltip } from 'antd';
 import {
   CheckCircleFilled,
@@ -101,24 +101,69 @@ export function getHealthStatusConfig(status) {
  * @param {string} [lang='vi']
  * @returns {{ level: 'LOW'|'HIGH'|'CRITICAL', label: string, labelVi: string, labelEn: string, bg: string, color: string, border: string, description: string, descriptionVi: string, descriptionEn: string }}
  */
+const RISK_CONFIGS = {
+  DEFAULT: {
+    level: 'LOW',
+    labelVi: 'RỦI RO THẤP',
+    labelEn: 'LOW RISK',
+    bg: '#DCFCE7',
+    color: '#15803D',
+    border: '#86EFAC',
+    descVi: 'Thể trạng tốt, mức độ an toàn vận chuyển tối ưu.',
+    descEn: 'Optimal physical condition, highest transit safety.',
+  },
+  CRITICAL: {
+    level: 'CRITICAL',
+    labelVi: 'RỦI RO NGUY CẤP',
+    labelEn: 'CRITICAL RISK',
+    bg: '#FEE2E2',      // Red 100
+    color: '#991B1B',   // Red 800
+    border: '#FCA5A5',  // Red 300
+    descVi: 'Cảnh báo nguy cơ cao! Yêu cầu bác sĩ thú y theo dõi liên tục 24/7.',
+    descEn: 'Critical alert! Requires continuous 24/7 veterinary supervision.',
+  },
+  HIGH: {
+    level: 'HIGH',
+    labelVi: 'RỦI RO CAO',
+    labelEn: 'HIGH RISK',
+    bg: '#FEF3C7',      // Amber 100
+    color: '#B45309',   // Amber 800
+    border: '#FDE68A',  // Amber 300
+    descVi: 'Cần chú ý chăm sóc, bổ sung khoáng/điện giải và theo dõi nhịp tim/nhiệt độ.',
+    descEn: 'Special care required: electrolyte supplements and vital sign monitoring.',
+  },
+  LOW: {
+    level: 'LOW',
+    labelVi: 'RỦI RO THẤP',
+    labelEn: 'LOW RISK',
+    bg: '#DCFCE7',      // Emerald 100
+    color: '#15803D',   // Emerald 800
+    border: '#86EFAC',  // Emerald 300
+    descVi: 'Thể trạng ổn định, đạt chứng chỉ Fit-to-Travel an toàn tuyệt đối.',
+    descEn: 'Stable condition, certified Fit-to-Travel with maximum safety.',
+  },
+};
+
+function formatRiskResult(cfg, isEn) {
+  return {
+    level: cfg.level,
+    label: isEn ? cfg.labelEn : cfg.labelVi,
+    labelVi: cfg.labelVi,
+    labelEn: cfg.labelEn,
+    bg: cfg.bg,
+    color: cfg.color,
+    border: cfg.border,
+    description: isEn ? cfg.descEn : cfg.descVi,
+    descriptionVi: cfg.descVi,
+    descriptionEn: cfg.descEn,
+  };
+}
+
 export function calculateHorseRisk(horse, lang = 'vi') {
   const isEn = String(lang).toLowerCase().startsWith('en');
 
   if (!horse) {
-    const descVi = 'Thể trạng tốt, mức độ an toàn vận chuyển tối ưu.';
-    const descEn = 'Optimal physical condition, highest transit safety.';
-    return {
-      level: 'LOW',
-      label: isEn ? 'LOW RISK' : 'RỦI RO THẤP',
-      labelVi: 'RỦI RO THẤP',
-      labelEn: 'LOW RISK',
-      bg: '#DCFCE7',
-      color: '#15803D',
-      border: '#86EFAC',
-      description: isEn ? descEn : descVi,
-      descriptionVi: descVi,
-      descriptionEn: descEn,
-    };
+    return formatRiskResult(RISK_CONFIGS.DEFAULT, isEn);
   }
 
   const status = (horse.HealthStatus || horse.healthStatus || '').trim().toLowerCase();
@@ -137,20 +182,7 @@ export function calculateHorseRisk(horse, lang = 'vi') {
     care.includes('critical');
 
   if (isCritical) {
-    const descVi = 'Cảnh báo nguy cơ cao! Yêu cầu bác sĩ thú y theo dõi liên tục 24/7.';
-    const descEn = 'Critical alert! Requires continuous 24/7 veterinary supervision.';
-    return {
-      level: 'CRITICAL',
-      label: isEn ? 'CRITICAL RISK' : 'RỦI RO NGUY CẤP',
-      labelVi: 'RỦI RO NGUY CẤP',
-      labelEn: 'CRITICAL RISK',
-      bg: '#FEE2E2',      // Red 100
-      color: '#991B1B',   // Red 800
-      border: '#FCA5A5',  // Red 300
-      description: isEn ? descEn : descVi,
-      descriptionVi: descVi,
-      descriptionEn: descEn,
-    };
+    return formatRiskResult(RISK_CONFIGS.CRITICAL, isEn);
   }
 
   // 2. HIGH risk: Cần theo dõi y tế đặc biệt (Attention) hoặc đang hồi phục
@@ -163,37 +195,11 @@ export function calculateHorseRisk(horse, lang = 'vi') {
     care.includes('motion sickness');
 
   if (isHigh) {
-    const descVi = 'Cần chú ý chăm sóc, bổ sung khoáng/điện giải và theo dõi nhịp tim/nhiệt độ.';
-    const descEn = 'Special care required: electrolyte supplements and vital sign monitoring.';
-    return {
-      level: 'HIGH',
-      label: isEn ? 'HIGH RISK' : 'RỦI RO CAO',
-      labelVi: 'RỦI RO CAO',
-      labelEn: 'HIGH RISK',
-      bg: '#FEF3C7',      // Amber 100
-      color: '#B45309',   // Amber 800
-      border: '#FDE68A',  // Amber 300
-      description: isEn ? descEn : descVi,
-      descriptionVi: descVi,
-      descriptionEn: descEn,
-    };
+    return formatRiskResult(RISK_CONFIGS.HIGH, isEn);
   }
 
   // 3. LOW risk: Thể trạng Khỏe mạnh (Good) hoặc Xuất sắc (Excellent)
-  const descVi = 'Thể trạng ổn định, đạt chứng chỉ Fit-to-Travel an toàn tuyệt đối.';
-  const descEn = 'Stable condition, certified Fit-to-Travel with maximum safety.';
-  return {
-    level: 'LOW',
-    label: isEn ? 'LOW RISK' : 'RỦI RO THẤP',
-    labelVi: 'RỦI RO THẤP',
-    labelEn: 'LOW RISK',
-    bg: '#DCFCE7',      // Emerald 100
-    color: '#15803D',   // Emerald 800
-    border: '#86EFAC',  // Emerald 300
-    description: isEn ? descEn : descVi,
-    descriptionVi: descVi,
-    descriptionEn: descEn,
-  };
+  return formatRiskResult(RISK_CONFIGS.LOW, isEn);
 }
 
 /**

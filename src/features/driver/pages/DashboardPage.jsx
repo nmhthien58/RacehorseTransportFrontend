@@ -6,7 +6,6 @@ import {
   Divider,
   Flex,
   Modal,
-  Progress,
   Row,
   Space,
   Tag,
@@ -15,44 +14,30 @@ import {
   Input,
 } from 'antd';
 import {
-  CarOutlined,
-  CompassOutlined,
-  CheckCircleOutlined,
   ClockCircleOutlined,
-  EnvironmentOutlined,
-  SafetyCertificateOutlined,
-  UserOutlined,
   PlayCircleOutlined,
   FileTextOutlined,
-  AlertOutlined,
 } from '@ant-design/icons';
-import { useTranslation } from 'react-i18next';
 import { getDriverDispatchedTrips, updateStoredRoutePlan } from '@utils/routePlanStorage';
-import { useAuthStore } from '@features/auth/store/authStore';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 /**
  * Trang Driver & Escort Dashboard
  * Hiển thị các nhiệm vụ chuyến đi chính thức được Manager phê duyệt và bàn giao
  */
 export default function DriverDashboard() {
-  const { t } = useTranslation();
-  const { user } = useAuthStore();
-  const [trips, setTrips] = useState([]);
-  const [selectedTrip, setSelectedTrip] = useState(null);
+  const [trips, setTrips] = useState(() => getDriverDispatchedTrips());
+  const [selectedTrip, setSelectedTrip] = useState(() => {
+    const list = getDriverDispatchedTrips();
+    return list[0] || null;
+  });
   const [welfareModalOpen, setWelfareModalOpen] = useState(false);
   const [bodyTemp, setBodyTemp] = useState('38.1');
   const [waterIntake, setWaterIntake] = useState('15');
   const [welfareNotes, setWelfareNotes] = useState('Ngựa tỉnh táo, ăn cỏ tốt, nhịp thở đều đặn.');
 
   useEffect(() => {
-    const list = getDriverDispatchedTrips();
-    setTrips(list);
-    if (list.length > 0 && !selectedTrip) {
-      setSelectedTrip(list[0]);
-    }
-
     const handleUpdate = () => {
       const refreshed = getDriverDispatchedTrips();
       setTrips(refreshed);
@@ -131,7 +116,15 @@ export default function DriverDashboard() {
                 return (
                   <div
                     key={trip.planId}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setSelectedTrip(trip)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedTrip(trip);
+                      }
+                    }}
                     style={{
                       border: isSelected ? '2px solid #16A34A' : '1px solid #E2E8F0',
                       backgroundColor: isSelected ? '#F0FDF4' : '#FFFFFF',
@@ -345,16 +338,16 @@ export default function DriverDashboard() {
       >
         <div style={{ padding: '12px 0' }}>
           <div style={{ marginBottom: 14 }}>
-            <label style={{ fontWeight: 700, display: 'block', marginBottom: 4 }}>Thân nhiệt ngựa (°C):</label>
-            <Input value={bodyTemp} onChange={(e) => setBodyTemp(e.target.value)} size="large" />
+            <label htmlFor="body-temp-input" style={{ fontWeight: 700, display: 'block', marginBottom: 4 }}>Thân nhiệt ngựa (°C):</label>
+            <Input id="body-temp-input" value={bodyTemp} onChange={(e) => setBodyTemp(e.target.value)} size="large" />
           </div>
           <div style={{ marginBottom: 14 }}>
-            <label style={{ fontWeight: 700, display: 'block', marginBottom: 4 }}>Lượng nước uống (Lít):</label>
-            <Input value={waterIntake} onChange={(e) => setWaterIntake(e.target.value)} size="large" />
+            <label htmlFor="water-intake-input" style={{ fontWeight: 700, display: 'block', marginBottom: 4 }}>Lượng nước uống (Lít):</label>
+            <Input id="water-intake-input" value={waterIntake} onChange={(e) => setWaterIntake(e.target.value)} size="large" />
           </div>
           <div style={{ marginBottom: 14 }}>
-            <label style={{ fontWeight: 700, display: 'block', marginBottom: 4 }}>Đánh giá hành vi & hô hấp:</label>
-            <Input.TextArea rows={3} value={welfareNotes} onChange={(e) => setWelfareNotes(e.target.value)} />
+            <label htmlFor="welfare-notes-input" style={{ fontWeight: 700, display: 'block', marginBottom: 4 }}>Đánh giá hành vi & hô hấp:</label>
+            <Input.TextArea id="welfare-notes-input" rows={3} value={welfareNotes} onChange={(e) => setWelfareNotes(e.target.value)} />
           </div>
         </div>
       </Modal>

@@ -28,7 +28,15 @@ export default function LandingFooter() {
           {/* Cột 1: Thông tin thương hiệu IET */}
           <Col xs={24} sm={12} md={6}>
             <div
+              role="button"
+              tabIndex={0}
               onClick={scrollToTop}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  scrollToTop();
+                }
+              }}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -105,7 +113,11 @@ export default function LandingFooter() {
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
               <li>
                 <a
-                  onClick={() => navigate(ROUTES.HOW_IT_WORKS)}
+                  href={ROUTES.HOW_IT_WORKS}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(ROUTES.HOW_IT_WORKS);
+                  }}
                   style={{ color: '#94a3b8', fontSize: 14, cursor: 'pointer', transition: 'color 0.2s' }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = '#FBA919')}
                   onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}
@@ -115,7 +127,11 @@ export default function LandingFooter() {
               </li>
               <li>
                 <a
-                  onClick={() => navigate(ROUTES.BECOME_HAULER)}
+                  href={ROUTES.BECOME_HAULER}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(ROUTES.BECOME_HAULER);
+                  }}
                   style={{ color: '#94a3b8', fontSize: 14, cursor: 'pointer', transition: 'color 0.2s' }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = '#FBA919')}
                   onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}
@@ -125,7 +141,11 @@ export default function LandingFooter() {
               </li>
               <li>
                 <a
-                  onClick={() => navigate(ROUTES.TRANSPORT_TYPES)}
+                  href={ROUTES.TRANSPORT_TYPES}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(ROUTES.TRANSPORT_TYPES);
+                  }}
                   style={{ color: '#94a3b8', fontSize: 14, cursor: 'pointer', transition: 'color 0.2s' }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = '#FBA919')}
                   onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}
@@ -144,7 +164,11 @@ export default function LandingFooter() {
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
               <li>
                 <a
-                  onClick={() => navigate(ROUTES.TRANSPORT_TYPES)}
+                  href={ROUTES.TRANSPORT_TYPES}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(ROUTES.TRANSPORT_TYPES);
+                  }}
                   style={{ color: '#94a3b8', fontSize: 14, cursor: 'pointer', transition: 'color 0.2s' }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = '#FBA919')}
                   onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}
@@ -154,7 +178,11 @@ export default function LandingFooter() {
               </li>
               <li>
                 <a
-                  onClick={() => navigate(ROUTES.TRANSPORT_TYPES)}
+                  href={ROUTES.TRANSPORT_TYPES}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(ROUTES.TRANSPORT_TYPES);
+                  }}
                   style={{ color: '#94a3b8', fontSize: 14, cursor: 'pointer', transition: 'color 0.2s' }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = '#FBA919')}
                   onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}
@@ -164,7 +192,11 @@ export default function LandingFooter() {
               </li>
               <li>
                 <a
-                  onClick={() => navigate(ROUTES.TRANSPORT_TYPES)}
+                  href={ROUTES.TRANSPORT_TYPES}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(ROUTES.TRANSPORT_TYPES);
+                  }}
                   style={{ color: '#94a3b8', fontSize: 14, cursor: 'pointer', transition: 'color 0.2s' }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = '#FBA919')}
                   onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}
@@ -174,7 +206,11 @@ export default function LandingFooter() {
               </li>
               <li>
                 <a
-                  onClick={() => navigate(ROUTES.TRANSPORT_TYPES)}
+                  href={ROUTES.TRANSPORT_TYPES}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(ROUTES.TRANSPORT_TYPES);
+                  }}
                   style={{ color: '#94a3b8', fontSize: 14, cursor: 'pointer', transition: 'color 0.2s' }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = '#FBA919')}
                   onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}
@@ -184,7 +220,11 @@ export default function LandingFooter() {
               </li>
               <li>
                 <a
-                  onClick={() => navigate(ROUTES.TRANSPORT_TYPES)}
+                  href={ROUTES.TRANSPORT_TYPES}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(ROUTES.TRANSPORT_TYPES);
+                  }}
                   style={{ color: '#94a3b8', fontSize: 14, cursor: 'pointer', transition: 'color 0.2s' }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = '#FBA919')}
                   onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}

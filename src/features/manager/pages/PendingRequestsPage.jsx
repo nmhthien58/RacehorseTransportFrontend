@@ -126,7 +126,7 @@ export default function PendingRequestsPage() {
       }
     };
 
-    fetchData();
+    void fetchData().catch(console.error);
 
     return () => {
       active = false;

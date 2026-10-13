@@ -101,7 +101,7 @@ export default function BookingDetailPage() {
       }
     };
 
-    fetchData();
+    void fetchData().catch(console.error);
 
     return () => {
       active = false;

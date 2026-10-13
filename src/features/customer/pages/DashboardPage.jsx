@@ -207,7 +207,15 @@ export default function CustomerDashboard() {
           {/* Card 1: Active Trips */}
           <Col xs={12} sm={12} md={6}>
             <div
+              role="button"
+              tabIndex={0}
               onClick={() => navigate(ROUTES.CUSTOMER_TRIPS)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  navigate(ROUTES.CUSTOMER_TRIPS);
+                }
+              }}
               style={{
                 backgroundColor: '#ffffff',
                 borderRadius: 24,
@@ -265,7 +273,15 @@ export default function CustomerDashboard() {
           {/* Card 2: Open Requests */}
           <Col xs={12} sm={12} md={6}>
             <div
+              role="button"
+              tabIndex={0}
               onClick={() => navigate(ROUTES.CUSTOMER_BOOKINGS)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  navigate(ROUTES.CUSTOMER_BOOKINGS);
+                }
+              }}
               style={{
                 backgroundColor: '#ffffff',
                 borderRadius: 24,
@@ -323,7 +339,15 @@ export default function CustomerDashboard() {
           {/* Card 3: Bids Received */}
           <Col xs={12} sm={12} md={6}>
             <div
+              role="button"
+              tabIndex={0}
               onClick={() => navigate(ROUTES.CUSTOMER_BOOKINGS)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  navigate(ROUTES.CUSTOMER_BOOKINGS);
+                }
+              }}
               style={{
                 backgroundColor: '#ffffff',
                 borderRadius: 24,
@@ -381,7 +405,15 @@ export default function CustomerDashboard() {
           {/* Card 4: My Horses */}
           <Col xs={12} sm={12} md={6}>
             <div
+              role="button"
+              tabIndex={0}
               onClick={() => navigate(ROUTES.CUSTOMER_HORSES)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  navigate(ROUTES.CUSTOMER_HORSES);
+                }
+              }}
               style={{
                 backgroundColor: '#ffffff',
                 borderRadius: 24,

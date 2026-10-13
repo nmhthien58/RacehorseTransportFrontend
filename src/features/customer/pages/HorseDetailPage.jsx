@@ -31,7 +31,6 @@ import {
   EditOutlined,
   DeleteOutlined,
   PlusOutlined,
-  SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -486,7 +485,7 @@ export default function HorseDetailPage() {
           <Table
             columns={vetColumns}
             dataSource={horse.vetRecords || horse.VetRecords || []}
-            rowKey={(r) => r.recordId || r.RecordID || r.title || r.Title || Math.random()}
+            rowKey={(r, idx) => r.recordId || r.RecordID || r.title || r.Title || `vet-${idx}`}
             pagination={false}
           />
         </Card>
@@ -516,7 +515,7 @@ export default function HorseDetailPage() {
           <Table
             columns={tripColumns}
             dataSource={horse.transportHistory || horse.TransportHistory || []}
-            rowKey={(r) => r.tripId || r.TripID || r.bookingCode || r.BookingCode || Math.random()}
+            rowKey={(r, idx) => r.tripId || r.TripID || r.bookingCode || r.BookingCode || `trip-${idx}`}
             pagination={false}
           />
         </Card>

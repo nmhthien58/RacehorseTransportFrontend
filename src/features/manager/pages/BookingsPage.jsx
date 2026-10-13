@@ -114,7 +114,7 @@ export default function ManagerBookings({ isDashboardView = false }) {
       }
     };
 
-    fetchData();
+    void fetchData().catch(console.error);
 
     return () => {
       active = false;

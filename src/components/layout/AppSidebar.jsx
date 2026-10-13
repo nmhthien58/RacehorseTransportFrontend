@@ -7,12 +7,8 @@ import {
   CompassOutlined,
   MessageOutlined,
   UserOutlined,
-  CreditCardOutlined,
-  SettingOutlined,
   DollarCircleOutlined,
-  CheckSquareOutlined,
   SendOutlined,
-  TeamOutlined,
   AuditOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -238,7 +234,15 @@ export default function AppSidebar({ collapsed, user }) {
     >
       {/* Khối Logo chuẩn theo Figma - Click để về Dashboard */}
       <div
+        role="button"
+        tabIndex={0}
         onClick={() => navigate(getDashboardRoute(userRole))}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            navigate(getDashboardRoute(userRole));
+          }
+        }}
         style={{
           height: 84,
           display: 'flex',

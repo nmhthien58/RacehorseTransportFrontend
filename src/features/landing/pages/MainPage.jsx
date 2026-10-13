@@ -585,7 +585,15 @@ export default function MainPage() {
             {mainRideCards.map((item, idx) => (
               <Col xs={24} sm={12} md={idx === 4 ? 24 : 12} lg={idx === 4 ? 24 : 6} xl={idx === 4 ? 4 : 5} key={idx}>
                 <div
+                  role="button"
+                  tabIndex={0}
                   onClick={() => navigate(ROUTES.TRANSPORT_TYPES)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigate(ROUTES.TRANSPORT_TYPES);
+                    }
+                  }}
                   className="landing-card-hover"
                   style={{
                     cursor: 'pointer',

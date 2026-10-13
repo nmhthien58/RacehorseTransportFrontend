@@ -52,6 +52,11 @@ import FleetRosterPage from '@features/coordinator/pages/FleetRosterPage';
 
 // Driver pages
 import DriverDashboard from '@features/driver/pages/DashboardPage';
+import MissionBriefingPage from '@features/driver/pages/MissionBriefingPage';
+import PreDepartureChecklistPage from '@features/driver/pages/PreDepartureChecklistPage';
+import TripExecutionPage from '@features/driver/pages/TripExecutionPage';
+import HorseWelfareLogPage from '@features/driver/pages/HorseWelfareLogPage';
+import ArrivalHandoverPage from '@features/driver/pages/ArrivalHandoverPage';
 
 // Landing pages
 import MainPage from '@features/landing/pages/MainPage';
@@ -168,6 +173,16 @@ export default function AppRoutes() {
       <Route element={<PrivateRoute allowedRoles={[ROLES.DRIVER, ROLES.ESCORT, 'Driver', 'Escort']} />}>
         <Route element={<MainLayout />}>
           <Route path={ROUTES.DRIVER_DASHBOARD} element={<DriverDashboard />} />
+          <Route path={ROUTES.DRIVER_MISSIONS} element={<MissionBriefingPage />} />
+          <Route path="/driver/missions" element={<MissionBriefingPage />} />
+          <Route path={ROUTES.DRIVER_CHECKLIST} element={<PreDepartureChecklistPage />} />
+          <Route path="/driver/missions/:tripId/checklist" element={<PreDepartureChecklistPage />} />
+          <Route path={ROUTES.DRIVER_EXECUTION} element={<TripExecutionPage />} />
+          <Route path="/driver/missions/:tripId/execution" element={<TripExecutionPage />} />
+          <Route path={ROUTES.DRIVER_WELFARE} element={<HorseWelfareLogPage />} />
+          <Route path="/driver/missions/:tripId/welfare-log" element={<HorseWelfareLogPage />} />
+          <Route path={ROUTES.DRIVER_ARRIVAL} element={<ArrivalHandoverPage />} />
+          <Route path="/driver/missions/:tripId/arrival" element={<ArrivalHandoverPage />} />
           <Route path={ROUTES.DRIVER_TRIPS} element={<DriverDashboard />} />
           <Route path="/driver/trips" element={<DriverDashboard />} />
         </Route>

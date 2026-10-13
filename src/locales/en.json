@@ -1050,5 +1050,64 @@
       "cannotRejectEarly": "Can only reject when dossier is in Reviewing or Submitted to Authority status",
       "onlyForIssue": "Only available when dossier has an issue"
     }
+  },
+  "driver": {
+    "missions": {
+      "title": "My Transport Missions",
+      "subtitle": "Operations Hub for Drivers & Escort Personnel",
+      "status": {
+        "scheduled": "Scheduled",
+        "inTransit": "In Transit",
+        "arrivedDestination": "Arrived Destination",
+        "completed": "Completed",
+        "emergencyRerouting": "Emergency Rerouting"
+      },
+      "actions": {
+        "checklist": "Pre-departure Checklist",
+        "execution": "Route & Checkpoints",
+        "welfare": "Horse Welfare Log",
+        "arrival": "Handover & e-POD",
+        "sos": "Emergency Alert (SOS)"
+      }
+    },
+    "checklist": {
+      "title": "Pre-departure Safety Checklist",
+      "subtitle": "Vehicle and horse welfare safety checklist before engine start",
+      "vehicle": "Vehicle & Equine Cabin Inspection",
+      "equipment": "Safety & First-aid Equipment",
+      "documentation": "Legal & Border Documentation",
+      "horseInspection": "Pre-departure Horse Assessment",
+      "startTrip": "Confirm & Start Mission",
+      "readyToStart": "Eligible for Departure",
+      "mandatoryPending": "Mandatory Items Pending"
+    },
+    "execution": {
+      "title": "Route Operations & Checkpoints",
+      "telemetry": "Real-time Telemetry",
+      "cabinTemp": "Equine Cabin Temp",
+      "speed": "GPS Speed",
+      "arrive": "Check-in Arrive",
+      "clear": "Complete Clearance / Inspection",
+      "depart": "Check-in Depart"
+    },
+    "welfare": {
+      "title": "Biometric Health & Equine Welfare Log",
+      "heartRate": "Heart Rate (BPM)",
+      "temperature": "Body Temp (°C)",
+      "hydration": "Hydration Status",
+      "stress": "Stress Level",
+      "condition": "Physical Condition",
+      "saveLog": "Save Welfare & Biometrics Log"
+    },
+    "arrival": {
+      "title": "Destination Handover & Digital e-POD",
+      "inspection": "Post-trip Equine Condition Assessment",
+      "documents": "Legal Documents & Assets Handover",
+      "recipient": "Receiving Party Information",
+      "signatures": "Digital POD Verification Signatures",
+      "driverSignature": "Lead Driver Signature",
+      "receiverSignature": "Recipient Signature",
+      "confirmHandover": "Sign & Complete e-POD Delivery"
+    }
   }
 }

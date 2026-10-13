@@ -1050,5 +1050,64 @@
       "cannotRejectEarly": "Chỉ có thể từ chối khi hồ sơ đang thẩm định hoặc đã nộp cơ quan",
       "onlyForIssue": "Chỉ khả dụng khi hồ sơ đang có vướng mắc (Issue)"
     }
+  },
+  "driver": {
+    "missions": {
+      "title": "Nhiệm vụ vận chuyển của tôi",
+      "subtitle": "Trung tâm tác nghiệp dành cho Tài xế & Nhân sự áp tải",
+      "status": {
+        "scheduled": "Chờ xuất bến",
+        "inTransit": "Đang di chuyển",
+        "arrivedDestination": "Đã tới điểm đích",
+        "completed": "Đã hoàn thành",
+        "emergencyRerouting": "Sự cố / Đổi tuyến"
+      },
+      "actions": {
+        "checklist": "Kiểm tra tiền khởi hành",
+        "execution": "Lộ trình & Trạm kiểm soát",
+        "welfare": "Nhật ký phúc lợi ngựa",
+        "arrival": "Bàn giao & Ký e-POD",
+        "sos": "Báo cáo khẩn cấp (SOS)"
+      }
+    },
+    "checklist": {
+      "title": "Kiểm tra an toàn tiền khởi hành",
+      "subtitle": "Danh mục kiểm tra an toàn phương tiện và thể trạng ngựa trước khi nổ máy",
+      "vehicle": "Kiểm tra Phương tiện & Cabin",
+      "equipment": "Trang thiết bị an toàn & Sơ cứu",
+      "documentation": "Hồ sơ pháp lý & Giấy tờ",
+      "horseInspection": "Khảo sát thể trạng ngựa",
+      "startTrip": "Xác nhận & Bắt đầu xuất bến",
+      "readyToStart": "Đủ điều kiện xuất bến",
+      "mandatoryPending": "Còn mục bắt buộc chưa hoàn thành"
+    },
+    "execution": {
+      "title": "Vận hành lộ trình & Trạm kiểm soát",
+      "telemetry": "Thông số thời gian thực",
+      "cabinTemp": "Nhiệt độ cabin ngựa",
+      "speed": "Vận tốc GPS",
+      "arrive": "Xác nhận Đã đến trạm",
+      "clear": "Hoàn tất kiểm tra / Thông quan",
+      "depart": "Xác nhận Rời trạm"
+    },
+    "welfare": {
+      "title": "Nhật ký thể trạng sinh trắc & Phúc lợi ngựa",
+      "heartRate": "Nhịp tim (BPM)",
+      "temperature": "Thân nhiệt (°C)",
+      "hydration": "Tình trạng tiếp nhận nước",
+      "stress": "Mức độ căng thẳng (Stress)",
+      "condition": "Thể trạng vận động",
+      "saveLog": "Lưu nhật ký chăm sóc & Sinh trắc"
+    },
+    "arrival": {
+      "title": "Nghiệm thu bàn giao điểm đến & Chữ ký số e-POD",
+      "inspection": "Khảo sát thể trạng ngựa tại điểm đích",
+      "documents": "Bàn giao Giấy tờ & Tài sản",
+      "recipient": "Thông tin bên tiếp nhận",
+      "signatures": "Chữ ký xác thực e-POD",
+      "driverSignature": "Chữ ký của Tài xế trưởng",
+      "receiverSignature": "Chữ ký của Người nhận ngựa",
+      "confirmHandover": "Ký xác nhận & Hoàn tất bàn giao e-POD"
+    }
   }
 }

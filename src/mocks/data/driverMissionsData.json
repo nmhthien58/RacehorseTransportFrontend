@@ -1,0 +1,513 @@
+[
+  {
+    "tripId": 101,
+    "tripCode": "TRP-2026-0001",
+    "overallStatus": "Scheduled",
+    "vehicleId": 1,
+    "vehicleCode": "29B-888.99",
+    "vehicleName": "Mercedes-Benz Actros Equine Van VIP (2-Horse)",
+    "vehicleType": "HorseTruck_AirSuspension",
+    "hasClimateControl": true,
+    "hasGpsTracker": true,
+    "plannedStartDate": "2026-10-14T06:00:00Z",
+    "plannedEndDate": "2026-10-16T18:00:00Z",
+    "actualStartDate": null,
+    "actualEndDate": null,
+    "origin": "Trang trại Yên Bài, Ba Vì, Hà Nội",
+    "originCode": "HAN",
+    "destination": "Trường đua Tùng Hóa, TP. Quảng Châu",
+    "destinationCode": "CAN",
+    "plannedCost": 4500,
+    "actualCost": 0,
+    "delayMinutes": 0,
+    "onTimeStatus": "OnTime",
+    "customerName": "Jane Smith",
+    "customerPhone": "+84988111222",
+    "customerEmail": "customer@test.com",
+    "bookingCode": "BKG-2026-0001",
+    "coordinatorName": "Lê Hoàng Nam",
+    "coordinatorPhone": "+84912000003",
+    "specialInstructions": "Ngựa đua cấp độ Group 1, yêu cầu giữ nhiệt độ cabin 18-20°C và dừng nghỉ đúng mốc 4 tiếng/lần.",
+    "crew": [
+      {
+        "userId": 4,
+        "fullName": "Phạm Văn Đức",
+        "phoneNumber": "+84912000004",
+        "crewRole": "Driver",
+        "isLead": true,
+        "duty": "Tài xế trưởng phụ trách toàn chặng đường bộ",
+        "licenseNumber": "VN-D-66321"
+      },
+      {
+        "userId": 9,
+        "fullName": "Trần Thị Hoa",
+        "phoneNumber": "+84912000077",
+        "crewRole": "Escort",
+        "isLead": false,
+        "duty": "Bác sĩ thú y áp tải, theo dõi sinh trắc học và hỗ trợ thông quan",
+        "licenseNumber": "FEI-VET-8841"
+      }
+    ],
+    "horses": [
+      {
+        "tripHorseId": 1,
+        "horseId": 1,
+        "horseName": "Red Flash (Tia Chớp Đỏ)",
+        "breed": "Thoroughbred",
+        "gender": "Stallion",
+        "dateOfBirth": "2020-04-12",
+        "microchipNumber": "982000412345671",
+        "passportNumber": "FEI-VN-2024-001",
+        "color": "Hồng sắc (Bay)",
+        "stallSlotNumber": 1,
+        "stallClass": "Comfort Air-Suspension",
+        "specialCareRequirements": "Lót đệm rơm dày, nhiệt độ cabin 18-20°C, bổ sung điện giải định kỳ",
+        "healthStatus": "Excellent",
+        "dossierStatus": "Cleared"
+      },
+      {
+        "tripHorseId": 2,
+        "horseId": 2,
+        "horseName": "Golden Pegasus (Kim Mã)",
+        "breed": "Arabian",
+        "gender": "Mare",
+        "dateOfBirth": "2021-02-18",
+        "microchipNumber": "982000412345672",
+        "passportNumber": "FEI-VN-2024-002",
+        "color": "Bạch kim (Grey)",
+        "stallSlotNumber": 2,
+        "stallClass": "Comfort Air-Suspension",
+        "specialCareRequirements": "Nhạy cảm tiếng ồn, cấp cỏ khô Timothy, kiểm tra nhịp tim khi nghỉ",
+        "healthStatus": "Good",
+        "dossierStatus": "Cleared"
+      }
+    ],
+    "checkpoints": [
+      {
+        "checkpointId": 1,
+        "sequenceOrder": 1,
+        "checkpointName": "Trang trại Yên Bài (Điểm đón)",
+        "checkpointType": "Origin",
+        "address": "Yên Bài, Ba Vì, Hà Nội, Việt Nam",
+        "plannedTime": "2026-10-14T06:00:00Z",
+        "mandatoryRestMinutes": 0,
+        "actualArrivalTime": null,
+        "actualDepartureTime": null,
+        "status": "Pending",
+        "notes": "Kiểm tra niêm phong khoang xe và đón ngựa lên chuồng"
+      },
+      {
+        "checkpointId": 2,
+        "sequenceOrder": 2,
+        "checkpointName": "Trạm dừng nghỉ Chi Lăng (Rest Stop 1)",
+        "checkpointType": "RestStop",
+        "address": "Km 45, Quốc lộ 1A, Chi Lăng, Lạng Sơn",
+        "plannedTime": "2026-10-14T10:30:00Z",
+        "mandatoryRestMinutes": 45,
+        "actualArrivalTime": null,
+        "actualDepartureTime": null,
+        "status": "Pending",
+        "notes": "Cho ngựa uống nước, bổ sung điện giải và thông gió khoang"
+      },
+      {
+        "checkpointId": 3,
+        "sequenceOrder": 3,
+        "checkpointName": "Cửa khẩu Quốc tế Hữu Nghị",
+        "checkpointType": "BorderGate",
+        "address": "Thị trấn Đồng Đăng, Cao Lộc, Lạng Sơn",
+        "plannedTime": "2026-10-14T14:00:00Z",
+        "mandatoryRestMinutes": 60,
+        "actualArrivalTime": null,
+        "actualDepartureTime": null,
+        "status": "Pending",
+        "notes": "Thủ tục kiểm dịch thú y qua biên giới và kiểm tra hộ chiếu FEI"
+      },
+      {
+        "checkpointId": 4,
+        "sequenceOrder": 4,
+        "checkpointName": "Trạm kiểm dịch Bằng Tường (Pingxiang Quarantine)",
+        "checkpointType": "RestStop",
+        "address": "Thành phố Bằng Tường, Sùng Tả, Quảng Tây, Trung Quốc",
+        "plannedTime": "2026-10-15T08:00:00Z",
+        "mandatoryRestMinutes": 90,
+        "actualArrivalTime": null,
+        "actualDepartureTime": null,
+        "status": "Pending",
+        "notes": "Nghỉ đêm và kiểm tra thân nhiệt chuyên sâu bởi bác sĩ thú y"
+      },
+      {
+        "checkpointId": 5,
+        "sequenceOrder": 5,
+        "checkpointName": "Trường đua Quốc tế Tùng Hóa (Điểm đến)",
+        "checkpointType": "Destination",
+        "address": "Quận Tùng Hóa, TP. Quảng Châu, Quảng Đông, Trung Quốc",
+        "plannedTime": "2026-10-16T18:00:00Z",
+        "mandatoryRestMinutes": 0,
+        "actualArrivalTime": null,
+        "actualDepartureTime": null,
+        "status": "Pending",
+        "notes": "Bàn giao ngựa cho ban quản lý trường đua và ký e-POD"
+      }
+    ],
+    "checklist": [
+      {
+        "id": "vehicle",
+        "category": "Vehicle Inspection",
+        "label": "Kiểm tra hệ thống treo khí nén, phanh ABS, lốp xe và camera giám sát",
+        "checked": false,
+        "note": ""
+      },
+      {
+        "id": "stall",
+        "category": "Stall Preparation",
+        "label": "Khử trùng sinh học khoang xe, rải đệm rơm mềm đạt độ dày tiêu chuẩn 15cm",
+        "checked": false,
+        "note": ""
+      },
+      {
+        "id": "climate",
+        "category": "Climate Control",
+        "label": "Hệ thống điều hòa khí hậu & cảm biến nhiệt độ chuồng hoạt động chuẩn (18-20°C)",
+        "checked": false,
+        "note": ""
+      },
+      {
+        "id": "feed",
+        "category": "Water & Feed Supplies",
+        "label": "Chuẩn bị đủ 120L nước uống khoáng, dung dịch điện giải và cỏ khô Timothy",
+        "checked": false,
+        "note": ""
+      },
+      {
+        "id": "documents",
+        "category": "Customs & Health Docs",
+        "label": "Hồ sơ kiểm dịch thú y bản gốc, hộ chiếu FEI và giấy phép vận tải xuyên biên giới",
+        "checked": false,
+        "note": ""
+      }
+    ],
+    "welfareLogs": [],
+    "incidents": [],
+    "handover": null
+  },
+  {
+    "tripId": 102,
+    "tripCode": "TRP-2026-0002",
+    "overallStatus": "InTransit",
+    "vehicleId": 2,
+    "vehicleCode": "51D-921.45",
+    "vehicleName": "Scania EquiTrans Luxury 4-Horse",
+    "vehicleType": "HorseTruck_AirSuspension",
+    "hasClimateControl": true,
+    "hasGpsTracker": true,
+    "plannedStartDate": "2026-10-12T07:00:00Z",
+    "plannedEndDate": "2026-10-14T16:00:00Z",
+    "actualStartDate": "2026-10-12T07:15:00Z",
+    "actualEndDate": null,
+    "origin": "Trung tâm Thể thao Ngựa Long Thành, Đồng Nai",
+    "originCode": "SGN",
+    "destination": "Cửa khẩu Mộc Bài, Tây Ninh (Sang Phnom Penh)",
+    "destinationCode": "KHM",
+    "plannedCost": 3200,
+    "actualCost": 1200,
+    "delayMinutes": 15,
+    "onTimeStatus": "OnTime",
+    "customerName": "Nguyễn Hoàng Nam",
+    "customerPhone": "+84903456789",
+    "customerEmail": "nam.nguyen@equineclub.vn",
+    "bookingCode": "BKG-2026-0002",
+    "coordinatorName": "Lê Hoàng Nam",
+    "coordinatorPhone": "+84912000003",
+    "specialInstructions": "Ngựa đang trong kỳ chuẩn bị thi đấu Derby, giữ nhịp tim dưới 45 bpm khi vận chuyển.",
+    "crew": [
+      {
+        "userId": 4,
+        "fullName": "Phạm Văn Đức",
+        "phoneNumber": "+84912000004",
+        "crewRole": "Driver",
+        "isLead": true,
+        "duty": "Tài xế trưởng",
+        "licenseNumber": "VN-D-66321"
+      },
+      {
+        "userId": 9,
+        "fullName": "Trần Thị Hoa",
+        "phoneNumber": "+84912000077",
+        "crewRole": "Escort",
+        "isLead": false,
+        "duty": "Bác sĩ thú y áp tải",
+        "licenseNumber": "FEI-VET-8841"
+      }
+    ],
+    "horses": [
+      {
+        "tripHorseId": 3,
+        "horseId": 3,
+        "horseName": "Thunderbolt (Sấm Sét)",
+        "breed": "Thoroughbred",
+        "gender": "Gelding",
+        "dateOfBirth": "2019-08-05",
+        "microchipNumber": "982000412345673",
+        "passportNumber": "FEI-VN-2024-003",
+        "color": "Hắc sắc (Black)",
+        "stallSlotNumber": 1,
+        "stallClass": "Comfort Air-Suspension",
+        "specialCareRequirements": "Băng bảo vệ 4 ống chân (Travel Boots), đeo mặt nạ chống côn trùng",
+        "healthStatus": "Good",
+        "dossierStatus": "Cleared"
+      }
+    ],
+    "checkpoints": [
+      {
+        "checkpointId": 11,
+        "sequenceOrder": 1,
+        "checkpointName": "Trại Long Thành (Điểm đón)",
+        "checkpointType": "Origin",
+        "address": "Long Thành, Đồng Nai",
+        "plannedTime": "2026-10-12T07:00:00Z",
+        "mandatoryRestMinutes": 0,
+        "actualArrivalTime": "2026-10-12T06:45:00Z",
+        "actualDepartureTime": "2026-10-12T07:15:00Z",
+        "status": "Departed",
+        "notes": "Đã đón ngựa lên xe an toàn"
+      },
+      {
+        "checkpointId": 12,
+        "sequenceOrder": 2,
+        "checkpointName": "Trạm dừng nghỉ Củ Chi (Rest Stop)",
+        "checkpointType": "RestStop",
+        "address": "Quốc lộ 22, Củ Chi, TP. Hồ Chí Minh",
+        "plannedTime": "2026-10-12T11:00:00Z",
+        "mandatoryRestMinutes": 45,
+        "actualArrivalTime": "2026-10-12T11:10:00Z",
+        "actualDepartureTime": "2026-10-12T12:00:00Z",
+        "status": "Departed",
+        "notes": "Đã cho uống 18L nước và bổ sung điện giải"
+      },
+      {
+        "checkpointId": 13,
+        "sequenceOrder": 3,
+        "checkpointName": "Cửa khẩu Quốc tế Mộc Bài (Điểm đến)",
+        "checkpointType": "Destination",
+        "address": "Bến Cầu, Tây Ninh",
+        "plannedTime": "2026-10-12T15:30:00Z",
+        "mandatoryRestMinutes": 0,
+        "actualArrivalTime": null,
+        "actualDepartureTime": null,
+        "status": "Pending",
+        "notes": "Chờ đến trạm làm thủ tục thông quan và giao nhận"
+      }
+    ],
+    "checklist": [
+      {
+        "id": "vehicle",
+        "category": "Vehicle Inspection",
+        "label": "Kiểm tra hệ thống treo khí nén, phanh ABS, lốp xe và camera giám sát",
+        "checked": true,
+        "note": "Áp suất lốp 8.5 bar, camera HD rõ nét"
+      },
+      {
+        "id": "stall",
+        "category": "Stall Preparation",
+        "label": "Khử trùng sinh học khoang xe, rải đệm rơm mềm đạt độ dày tiêu chuẩn 15cm",
+        "checked": true,
+        "note": "Đã phun Cloramin B và rải rơm sạch"
+      },
+      {
+        "id": "climate",
+        "category": "Climate Control",
+        "label": "Hệ thống điều hòa khí hậu & cảm biến nhiệt độ chuồng hoạt động chuẩn (18-20°C)",
+        "checked": true,
+        "note": "Nhiệt độ hiện tại 18.8°C"
+      },
+      {
+        "id": "feed",
+        "category": "Water & Feed Supplies",
+        "label": "Chuẩn bị đủ 120L nước uống khoáng, dung dịch điện giải và cỏ khô Timothy",
+        "checked": true,
+        "note": "Đầy bình chứa 150L"
+      },
+      {
+        "id": "documents",
+        "category": "Customs & Health Docs",
+        "label": "Hồ sơ kiểm dịch thú y bản gốc, hộ chiếu FEI và giấy phép vận tải xuyên biên giới",
+        "checked": true,
+        "note": "Bản gốc đầy đủ trong cặp hồ sơ chuyên dụng"
+      }
+    ],
+    "welfareLogs": [
+      {
+        "logId": 1,
+        "tripHorseId": 3,
+        "checkpointId": 11,
+        "checkpointName": "Trại Long Thành (Điểm đón)",
+        "cabinTemp": 19.2,
+        "waterIntakeLiters": 12.0,
+        "feedStatus": "Normal",
+        "stressLevel": "Calm",
+        "notes": "Ngựa lên xe thuận lợi, nhịp thở 14 lần/phút, không có dấu hiệu bồn chồn.",
+        "photoUrl": "https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=800",
+        "loggedAt": "2026-10-12T07:10:00Z",
+        "recordedBy": "Phạm Văn Đức (Tài xế)"
+      },
+      {
+        "logId": 2,
+        "tripHorseId": 3,
+        "checkpointId": 12,
+        "checkpointName": "Trạm dừng nghỉ Củ Chi (Rest Stop)",
+        "cabinTemp": 18.8,
+        "waterIntakeLiters": 18.5,
+        "feedStatus": "Normal",
+        "stressLevel": "Calm",
+        "notes": "Nhiệt độ cơ thể 38.0°C, ăn hết khẩu phần cỏ khô, cơ bắp thả lỏng tốt.",
+        "photoUrl": "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800",
+        "loggedAt": "2026-10-12T11:45:00Z",
+        "recordedBy": "Trần Thị Hoa (Bác sĩ thú y)"
+      }
+    ],
+    "incidents": [],
+    "handover": null
+  },
+  {
+    "tripId": 103,
+    "tripCode": "TRP-2026-0003",
+    "overallStatus": "ArrivedDestination",
+    "vehicleId": 3,
+    "vehicleCode": "29B-999.88",
+    "vehicleName": "Volvo Equine Cruiser Pro 2-Horse",
+    "vehicleType": "HorseTruck_AirSuspension",
+    "hasClimateControl": true,
+    "hasGpsTracker": true,
+    "plannedStartDate": "2026-10-10T05:00:00Z",
+    "plannedEndDate": "2026-10-11T20:00:00Z",
+    "actualStartDate": "2026-10-10T05:10:00Z",
+    "actualEndDate": "2026-10-11T19:40:00Z",
+    "origin": "Trại giống Sóc Sơn, Hà Nội",
+    "originCode": "HAN",
+    "destination": "Khu nghỉ dưỡng Thao trường Ninh Bình",
+    "destinationCode": "NBI",
+    "plannedCost": 2200,
+    "actualCost": 2150,
+    "delayMinutes": 0,
+    "onTimeStatus": "OnTime",
+    "customerName": "Trần Tuấn Kiệt",
+    "customerPhone": "+84918234567",
+    "customerEmail": "kiet.tran@equestrian.vn",
+    "bookingCode": "BKG-2026-0003",
+    "coordinatorName": "Lê Hoàng Nam",
+    "coordinatorPhone": "+84912000003",
+    "specialInstructions": "Ngựa thi đấu nhảy rào, giao đúng giờ trước 20:00 để làm quen thảm cát.",
+    "crew": [
+      {
+        "userId": 4,
+        "fullName": "Phạm Văn Đức",
+        "phoneNumber": "+84912000004",
+        "crewRole": "Driver",
+        "isLead": true,
+        "duty": "Tài xế trưởng",
+        "licenseNumber": "VN-D-66321"
+      }
+    ],
+    "horses": [
+      {
+        "tripHorseId": 4,
+        "horseId": 4,
+        "horseName": "Silver Shadow (Bóng Bạc)",
+        "breed": "Warmblood",
+        "gender": "Mare",
+        "dateOfBirth": "2020-11-09",
+        "microchipNumber": "982000412345674",
+        "passportNumber": "FEI-VN-2024-004",
+        "color": "Bạch mã (White)",
+        "stallSlotNumber": 1,
+        "stallClass": "Comfort Air-Suspension",
+        "specialCareRequirements": "Đệm móng chống trơn, nhiệt độ chuồng 19°C",
+        "healthStatus": "Excellent",
+        "dossierStatus": "Cleared"
+      }
+    ],
+    "checkpoints": [
+      {
+        "checkpointId": 21,
+        "sequenceOrder": 1,
+        "checkpointName": "Trại giống Sóc Sơn (Điểm đón)",
+        "checkpointType": "Origin",
+        "address": "Sóc Sơn, Hà Nội",
+        "plannedTime": "2026-10-10T05:00:00Z",
+        "mandatoryRestMinutes": 0,
+        "actualArrivalTime": "2026-10-10T04:45:00Z",
+        "actualDepartureTime": "2026-10-10T05:10:00Z",
+        "status": "Departed",
+        "notes": "Đón ngựa thành công"
+      },
+      {
+        "checkpointId": 22,
+        "sequenceOrder": 2,
+        "checkpointName": "Khu nghỉ dưỡng Thao trường Ninh Bình (Điểm đến)",
+        "checkpointType": "Destination",
+        "address": "Hoa Lư, Ninh Bình",
+        "plannedTime": "2026-10-11T20:00:00Z",
+        "mandatoryRestMinutes": 0,
+        "actualArrivalTime": "2026-10-11T19:40:00Z",
+        "actualDepartureTime": null,
+        "status": "Arrived",
+        "notes": "Đã tới đích an toàn, đang chờ đại diện tiếp nhận ký e-POD"
+      }
+    ],
+    "checklist": [
+      {
+        "id": "vehicle",
+        "category": "Vehicle Inspection",
+        "label": "Kiểm tra hệ thống treo khí nén, phanh ABS, lốp xe và camera giám sát",
+        "checked": true,
+        "note": "Hoàn tất"
+      },
+      {
+        "id": "stall",
+        "category": "Stall Preparation",
+        "label": "Khử trùng sinh học khoang xe, rải đệm rơm mềm đạt độ dày tiêu chuẩn 15cm",
+        "checked": true,
+        "note": "Hoàn tất"
+      },
+      {
+        "id": "climate",
+        "category": "Climate Control",
+        "label": "Hệ thống điều hòa khí hậu & cảm biến nhiệt độ chuồng hoạt động chuẩn (18-20°C)",
+        "checked": true,
+        "note": "Hoàn tất"
+      },
+      {
+        "id": "feed",
+        "category": "Water & Feed Supplies",
+        "label": "Chuẩn bị đủ 120L nước uống khoáng, dung dịch điện giải và cỏ khô Timothy",
+        "checked": true,
+        "note": "Hoàn tất"
+      },
+      {
+        "id": "documents",
+        "category": "Customs & Health Docs",
+        "label": "Hồ sơ kiểm dịch thú y bản gốc, hộ chiếu FEI và giấy phép vận tải xuyên biên giới",
+        "checked": true,
+        "note": "Hoàn tất"
+      }
+    ],
+    "welfareLogs": [
+      {
+        "logId": 10,
+        "tripHorseId": 4,
+        "checkpointId": 22,
+        "checkpointName": "Khu nghỉ dưỡng Thao trường Ninh Bình (Điểm đến)",
+        "cabinTemp": 19.0,
+        "waterIntakeLiters": 20.0,
+        "feedStatus": "Normal",
+        "stressLevel": "Calm",
+        "notes": "Ngựa khỏe mạnh, đi đứng vững vàng, không trầy xước.",
+        "photoUrl": "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800",
+        "loggedAt": "2026-10-11T19:50:00Z",
+        "recordedBy": "Phạm Văn Đức (Tài xế)"
+      }
+    ],
+    "incidents": [],
+    "handover": null
+  }
+]

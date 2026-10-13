@@ -149,6 +149,25 @@ export const driverService = {
   async getHandover(tripId) {
     return api.get(ENDPOINTS.HANDOVER.BY_TRIP(tripId));
   },
+
+  /**
+   * Lấy báo cáo hoàn tất ca trực & tổng kết chuyến đi (Shift Closeout Report)
+   * @param {number|string} tripId
+   * @returns {Promise<any>}
+   */
+  async getCompletionReport(tripId) {
+    return api.get(ENDPOINTS.TRIPS.COMPLETION_REPORT(tripId));
+  },
+
+  /**
+   * Nộp báo cáo tổng kết chuyến đi và kết thúc ca trực lên Quản lý vận hành
+   * @param {number|string} tripId
+   * @param {Object} payload
+   * @returns {Promise<any>}
+   */
+  async submitCompletionReport(tripId, payload) {
+    return api.post(ENDPOINTS.TRIPS.COMPLETION_REPORT(tripId), payload);
+  },
 };
 
 export default driverService;

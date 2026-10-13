@@ -70,6 +70,8 @@ export const ROUTES = {
   DRIVER_TRIPS: '/driver/trips',
   DRIVER_TRIP_DETAIL: '/driver/trips/:id',
   DRIVER_WELFARE_LOG: '/driver/trips/:id/welfare-log',
+  DRIVER_HISTORY: '/driver/history',
+  DRIVER_COMPLETION_REPORT: '/driver/missions/:tripId/completion-report',
 
   // Shared
   PROFILE: '/profile',

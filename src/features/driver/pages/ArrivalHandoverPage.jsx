@@ -224,9 +224,16 @@ export default function ArrivalHandoverPage() {
             extra={[
               <Button
                 type="primary"
+                key="completionReport"
+                onClick={() => navigate(`/driver/missions/${tripId}/completion-report`)}
+                style={{ backgroundColor: '#10B981', borderColor: '#10B981', borderRadius: 8, fontWeight: 600 }}
+              >
+                Xem Báo cáo hoàn thành ca trực
+              </Button>,
+              <Button
                 key="missions"
                 onClick={() => navigate('/driver/missions')}
-                style={{ backgroundColor: '#F59E0B', borderColor: '#F59E0B', borderRadius: 8 }}
+                style={{ borderRadius: 8 }}
               >
                 Về danh sách nhiệm vụ
               </Button>,

@@ -57,6 +57,9 @@ import PreDepartureChecklistPage from '@features/driver/pages/PreDepartureCheckl
 import TripExecutionPage from '@features/driver/pages/TripExecutionPage';
 import HorseWelfareLogPage from '@features/driver/pages/HorseWelfareLogPage';
 import ArrivalHandoverPage from '@features/driver/pages/ArrivalHandoverPage';
+import TripHistoryPage from '@features/driver/pages/TripHistoryPage';
+import ActiveTripPage from '@features/driver/pages/ActiveTripPage';
+import MissionCompletionReportPage from '@features/driver/pages/MissionCompletionReportPage';
 
 // Landing pages
 import MainPage from '@features/landing/pages/MainPage';
@@ -183,8 +186,12 @@ export default function AppRoutes() {
           <Route path="/driver/missions/:tripId/welfare-log" element={<HorseWelfareLogPage />} />
           <Route path={ROUTES.DRIVER_ARRIVAL} element={<ArrivalHandoverPage />} />
           <Route path="/driver/missions/:tripId/arrival" element={<ArrivalHandoverPage />} />
-          <Route path={ROUTES.DRIVER_TRIPS} element={<DriverDashboard />} />
-          <Route path="/driver/trips" element={<DriverDashboard />} />
+          <Route path={ROUTES.DRIVER_COMPLETION_REPORT} element={<MissionCompletionReportPage />} />
+          <Route path="/driver/missions/:tripId/completion-report" element={<MissionCompletionReportPage />} />
+          <Route path={ROUTES.DRIVER_TRIPS} element={<ActiveTripPage />} />
+          <Route path="/driver/trips" element={<ActiveTripPage />} />
+          <Route path={ROUTES.DRIVER_HISTORY} element={<TripHistoryPage />} />
+          <Route path="/driver/history" element={<TripHistoryPage />} />
         </Route>
       </Route>
 

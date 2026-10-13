@@ -1,8 +1,9 @@
 import { http, HttpResponse } from 'msw';
 import driverMissionsData from '../data/driverMissionsData.json';
+import driverCompletionData from '../data/driverCompletionData.json';
 
-// In-memory clone dữ liệu chuyến đi phục vụ thao tác của tài xế
-let missions = JSON.parse(JSON.stringify(driverMissionsData));
+// In-memory clone dữ liệu chuyến đi phục vụ thao tác của tài xế (gộp chuyến hoàn tất TRP-8821)
+let missions = JSON.parse(JSON.stringify([...driverMissionsData, ...driverCompletionData]));
 
 /**
  * Tìm chuyến đi theo ID hoặc mã chuyến
@@ -371,6 +372,74 @@ export const driverHandlers = [
       success: true,
       message: 'Hoàn tất nghiệm thu bàn giao và ký xác nhận e-POD thành công',
       data: handoverData,
+    });
+  }),
+
+  // 10. Báo cáo hoàn tất ca trực / Bàn giao xe (Driver Shift Closeout - Frame 193:1599)
+  http.get('/api/trips/:id/completion-report', ({ params }) => {
+    const trip = findTrip(params.id);
+    if (!trip) {
+      return HttpResponse.json({ success: false, message: 'Không tìm thấy chuyến đi' }, { status: 404 });
+    }
+    return HttpResponse.json({
+      success: true,
+      data: trip.completionReport || {
+        reportId: `CR-${trip.tripId}`,
+        totalKm: '10,480 KM',
+        transitDuration: '54h 15m',
+        careLogsCount: `${(trip.welfareLogs || []).length} / ${(trip.welfareLogs || []).length || 4} (100% Equine Safety)`,
+        disinfectionStatus: 'Completed (Ozone High-Pressure)',
+        gpsEquipmentReturned: true,
+        driverDutyHours: '28.5 Hours (Compliant with Rest Regulations)',
+        transmittedTo: trip.coordinatorName || 'Lê Nguyên Vũ (Operations Manager)',
+        transmittedAt: trip.actualEndDate || new Date().toISOString(),
+        status: 'DeliveredPendingAudit',
+        attachedDocuments: [
+          {
+            id: 'doc-1',
+            name: 'Signed e-POD Handover Certificate',
+            fileCode: `ePOD-${trip.tripId}-FINAL.pdf`,
+            size: '2.4 MB',
+            type: 'application/pdf',
+            signedBy: 'Dr. Michael Evans & Tran Hoang Nam',
+          },
+          {
+            id: 'doc-2',
+            name: 'Equine Hospital / Quarantine Discharge Report',
+            fileCode: `QUARANTINE-CLEARANCE-${trip.tripId}.pdf`,
+            size: '1.8 MB',
+            type: 'application/pdf',
+            signedBy: 'Customs Animal Quarantine Bureau',
+          },
+          {
+            id: 'doc-3',
+            name: 'Layover Fuel & Special Handling Receipts',
+            fileCode: `EXPENSE-PACKET-${trip.tripId}.pdf`,
+            size: '3.1 MB',
+            type: 'application/pdf',
+            signedBy: 'Highway Rest Station & Toll Services',
+          },
+        ],
+      },
+    });
+  }),
+
+  http.post('/api/trips/:id/completion-report', async ({ params, request }) => {
+    const trip = findTrip(params.id);
+    if (!trip) {
+      return HttpResponse.json({ success: false, message: 'Không tìm thấy chuyến đi' }, { status: 404 });
+    }
+    const body = await request.json();
+    trip.completionReport = {
+      ...(trip.completionReport || {}),
+      ...body,
+      transmittedAt: new Date().toISOString(),
+      status: 'DeliveredPendingAudit',
+    };
+    return HttpResponse.json({
+      success: true,
+      message: 'Đã nộp báo cáo tổng kết chuyến đi lên Quản lý vận hành thành công',
+      data: trip.completionReport,
     });
   }),
 ];

@@ -577,7 +577,11 @@ export function approveRoutePlan(id, approvalData = {}) {
   const plan = getStoredRoutePlanById(id);
   if (!plan) return null;
 
-  const newTripId = plan.tripId || Math.floor(100 + Math.random() * 900);
+  const newTripId =
+    plan.tripId ||
+    (typeof crypto !== 'undefined' && crypto.getRandomValues
+      ? 100 + (crypto.getRandomValues(new Uint16Array(1))[0] % 900)
+      : Date.now());
 
   const updated = updateStoredRoutePlan(id, {
     status: 'ASSIGNED',
@@ -765,8 +769,9 @@ export function getDriverDispatchedTrips(driverId) {
   const plans = getStoredRoutePlans();
   return plans.filter(
     (p) =>
-      p.status === 'ASSIGNED' ||
-      p.status === 'InTransit' ||
-      p.status === 'Scheduled',
+      (!driverId || p.driverId === driverId || p.assignedDriverId === driverId) &&
+      (p.status === 'ASSIGNED' ||
+        p.status === 'InTransit' ||
+        p.status === 'Scheduled'),
   );
 }

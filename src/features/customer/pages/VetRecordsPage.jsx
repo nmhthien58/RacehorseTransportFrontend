@@ -130,7 +130,7 @@ const RECORD_TYPE_OPTIONS = [
  * @param {string} recordTypeStr
  * @returns {string}
  */
-export const mapRecordTypeToDocType = (recordTypeStr = '') => {
+const mapRecordTypeToDocType = (recordTypeStr = '') => {
   const str = String(recordTypeStr || '').toLowerCase();
   if (str.includes('vaccin') || str.includes('tiêm')) return 'VACCINE_RECORD';
   if (str.includes('cvi') || str.includes('kiểm dịch') || str.includes('health cert')) return 'HEALTH_CERT';

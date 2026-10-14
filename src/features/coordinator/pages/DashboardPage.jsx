@@ -12,7 +12,6 @@ import {
   Tag,
   Typography,
   message,
-  Select,
   Table,
   DatePicker,
   Alert,
@@ -29,6 +28,7 @@ import {
   FileDoneOutlined,
   CalendarOutlined,
   CheckCircleOutlined,
+  AlertOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
@@ -86,6 +86,51 @@ export default function CoordinatorDashboard() {
   const [managingCrew, setManagingCrew] = useState(null);
   const [selectedCrewDate, setSelectedCrewDate] = useState(null);
   const [pendingCrewDates, setPendingCrewDates] = useState([]);
+
+  const activeFleetTrips = useMemo(() => [
+    {
+      key: 'TRP-2026-001',
+      tripCode: 'TRP-2026-001',
+      bookingCode: 'BKG-2026-0001',
+      route: 'Hà Nội (HAN) ➔ Tokyo (NRT)',
+      origin: 'Trang trại Ba Vì, Hà Nội',
+      destination: 'Tokyo Racecourse, Fuchu, Nhật Bản',
+      mode: 'Air (Boeing 777F)',
+      vehicleName: 'Boeing 777F #VN-A892',
+      horses: ['Midnight Gunner', 'Royal Duchess'],
+      driver: 'Phạm Văn Đức (Tài xế mặt đất)',
+      escort: 'Dr. Elena Rostova (Bác sĩ áp tải bay)',
+      status: 'InTransit',
+      speed: 840,
+      temp: 18.2,
+      humidity: 58,
+      airQuality: 98,
+      heartRate: 38,
+      incident: null,
+      eta: '18:45 Hôm nay',
+    },
+    {
+      key: 'TRP-2026-002',
+      tripCode: 'TRP-2026-002',
+      bookingCode: 'BKG-2026-0002',
+      route: 'TP. Hồ Chí Minh ➔ Singapore (SIN)',
+      origin: 'Trường đua Phú Thọ, TP. HCM',
+      destination: 'Singapore Turf Club, Kranji',
+      mode: 'DoorToDoor',
+      vehicleName: 'Mercedes Actros VIP #51D-8821',
+      horses: ['Golden Thunder'],
+      driver: 'Trần Văn Mạnh (Tài xế chuyên trách)',
+      escort: 'Dr. Sarah Jenkins (Bác sĩ áp tải)',
+      status: 'InTransit',
+      speed: 68,
+      temp: 20.5,
+      humidity: 62,
+      airQuality: 95,
+      heartRate: 42,
+      incident: 'Đèo Hải Vân sạt lở nhẹ — Đang nắn tuyến sang Hầm đường bộ',
+      eta: '22:15 Tối nay',
+    },
+  ], []);
 
   useEffect(() => {
     const handleUpdate = () => {
@@ -1067,6 +1112,153 @@ export default function CoordinatorDashboard() {
                   >
                     Quản lý ngày nghỉ
                   </Button>
+                ),
+              },
+            ]}
+          />
+        </Card>
+      )}
+
+      {/* VIEW 4: LIVE FLEET TRACKING & INCIDENT CENTER (FIGMA IMAGE 5) */}
+      {mainView === 'live_tracking' && (
+        <Card
+          bordered
+          style={{ borderRadius: 20, border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}
+          styles={{ body: { padding: '24px' } }}
+        >
+          <Flex justify="space-between" align="center" wrap="wrap" gap="middle" style={{ marginBottom: 20 }}>
+            <div>
+              <Title level={4} style={{ margin: 0, fontWeight: 800, color: '#0F172A' }}>
+                🛰️ Live Fleet Telemetry & Incident Operations Center
+              </Title>
+              <Text style={{ fontSize: 13, color: '#64748B' }}>
+                Theo dõi giám sát vị trí GPS, cảm biến vi khí hậu thùng xe/khoang bay và xử lý tình huống khẩn cấp theo thời gian thực
+              </Text>
+            </div>
+            <Tag color="success" style={{ fontWeight: 800, fontSize: 13, padding: '6px 14px', borderRadius: 8 }}>
+              🟢 Hệ thống GPS & Telemetry kết nối 100%
+            </Tag>
+          </Flex>
+
+          <Table
+            dataSource={activeFleetTrips}
+            pagination={false}
+            columns={[
+              {
+                title: 'Mã chuyến & Phương thức',
+                key: 'tripInfo',
+                render: (_, r) => (
+                  <div>
+                    <strong style={{ fontSize: 14, color: '#0F172A' }}>{r.tripCode}</strong>
+                    <div style={{ fontSize: 11.5, color: '#64748B' }}>Đơn: {r.bookingCode}</div>
+                    <Tag color="blue" style={{ marginTop: 4, borderRadius: 6, fontWeight: 600 }}>
+                      {r.mode}
+                    </Tag>
+                  </div>
+                ),
+              },
+              {
+                title: 'Lộ trình & Phương tiện',
+                key: 'route',
+                render: (_, r) => (
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#1E293B' }}>{r.route}</div>
+                    <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>{r.vehicleName}</div>
+                    <div style={{ fontSize: 11.5, color: '#059669', fontWeight: 600, marginTop: 2 }}>
+                      ⏱️ Dự kiến đến: {r.eta}
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                title: 'Cá thể ngựa',
+                dataIndex: 'horses',
+                key: 'horses',
+                render: (hList) => (
+                  <Flex wrap="wrap" gap={4}>
+                    {hList.map((h) => (
+                      <Tag key={h} color="gold" style={{ fontWeight: 700, borderRadius: 6 }}>
+                        🐴 {h}
+                      </Tag>
+                    ))}
+                  </Flex>
+                ),
+              },
+              {
+                title: 'Kíp điều khiển & Áp tải',
+                key: 'crew',
+                render: (_, r) => (
+                  <div style={{ fontSize: 12 }}>
+                    <div>🚛 {r.driver}</div>
+                    <div style={{ marginTop: 2 }}>🩺 {r.escort}</div>
+                  </div>
+                ),
+              },
+              {
+                title: 'Cảm biến Telemetry vi khí hậu',
+                key: 'telemetry',
+                render: (_, r) => (
+                  <Space orientation="vertical" size={2}>
+                    <span style={{ fontSize: 12 }}>
+                      🌡️ Nhiệt độ: <strong>{r.temp}°C</strong>
+                    </span>
+                    <span style={{ fontSize: 12 }}>
+                      💧 Độ ẩm: <strong>{r.humidity}%</strong>
+                    </span>
+                    <span style={{ fontSize: 12 }}>
+                      💓 Nhịp tim trung bình: <strong style={{ color: '#16A34A' }}>{r.heartRate} bpm</strong>
+                    </span>
+                  </Space>
+                ),
+              },
+              {
+                title: 'Tình trạng sự cố',
+                key: 'incident',
+                render: (_, r) => {
+                  if (r.incident) {
+                    return (
+                      <Tag color="error" style={{ fontWeight: 700, borderRadius: 6 }}>
+                        ⚠️ {r.incident}
+                      </Tag>
+                    );
+                  }
+                  return (
+                    <Tag color="success" style={{ fontWeight: 700, borderRadius: 6 }}>
+                      ✓ Bình thường
+                    </Tag>
+                  );
+                },
+              },
+              {
+                title: 'Thao tác điều phối',
+                key: 'actions',
+                render: (_, r) => (
+                  <Space wrap>
+                    <Button
+                      type="primary"
+                      size="small"
+                      icon={<CompassOutlined />}
+                      onClick={() => {
+                        setSelectedDetailTrip(r);
+                        setTripDetailModalOpen(true);
+                      }}
+                      style={{ backgroundColor: '#2563EB', borderColor: '#2563EB', fontWeight: 700, borderRadius: 6 }}
+                    >
+                      Chi tiết chuyến
+                    </Button>
+                    <Button
+                      danger
+                      size="small"
+                      icon={<AlertOutlined />}
+                      onClick={() => {
+                        setSelectedCancelTrip(r);
+                        setTripCancelModalOpen(true);
+                      }}
+                      style={{ fontWeight: 700, borderRadius: 6 }}
+                    >
+                      Xử lý sự cố / Hủy
+                    </Button>
+                  </Space>
                 ),
               },
             ]}

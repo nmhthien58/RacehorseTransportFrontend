@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Card,
   Row,
@@ -8,42 +8,26 @@ import {
   Button,
   Space,
   Timeline,
-  Progress,
-  Tabs,
   Badge,
-  Avatar,
   Table,
   Modal,
-  Alert,
   Select,
   Segmented,
-  Tooltip,
-  Divider,
   message,
+  Flex,
 } from 'antd';
 import {
   CompassOutlined,
-  DashboardOutlined,
   ThunderboltOutlined,
   HeartOutlined,
-  SafetyCertificateOutlined,
   PhoneOutlined,
   MessageOutlined,
-  CheckCircleOutlined,
   ClockCircleOutlined,
-  EnvironmentOutlined,
   FileDoneOutlined,
   DownloadOutlined,
   StarFilled,
-  AlertOutlined,
-  SyncOutlined,
-  TeamOutlined,
-  CarOutlined,
 } from '@ant-design/icons';
-import { useTranslation } from 'react-i18next';
-import { useAuthStore } from '@features/auth/store/authStore';
-import { getStoredRoutePlans } from '@utils/routePlanStorage';
-import { getStoredBookings } from '@utils/bookingStorage';
+
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -280,12 +264,9 @@ const SAMPLE_CUSTOMER_TRIPS = [
  * Thiết kế chuẩn hóa theo Figma Screen D (Live Trip & Equine Telemetry Tracker) và Screen E (trip_history 1)
  */
 export default function ActiveTripsPage() {
-  const { t } = useTranslation();
-  const { user } = useAuthStore();
-
   const [activeTabKey, setActiveTabKey] = useState('live');
   const [selectedTripCode, setSelectedTripCode] = useState('TRP-2026-0001');
-  const [selectedHorseId, setSelectedHorseId] = useState(1);
+  const [selectedHorseId, setSelectedHorseId] = useState(null);
   const [historyFilter, setHistoryFilter] = useState('ALL');
   const [podModalOpen, setPodModalOpen] = useState(false);
   const [selectedPodTrip, setSelectedPodTrip] = useState(null);
@@ -295,17 +276,13 @@ export default function ActiveTripsPage() {
     return SAMPLE_CUSTOMER_TRIPS.find((t) => t.tripCode === selectedTripCode) || SAMPLE_CUSTOMER_TRIPS[0];
   }, [selectedTripCode]);
 
+  const effectiveHorseId = selectedHorseId || activeTrip.horses?.[0]?.id || 1;
+
   const activeHorse = useMemo(() => {
     const list = activeTrip.horses || [];
-    return list.find((h) => h.id === Number(selectedHorseId)) || list[0] || {};
-  }, [activeTrip, selectedHorseId]);
+    return list.find((h) => h.id === Number(effectiveHorseId)) || list[0] || {};
+  }, [activeTrip, effectiveHorseId]);
 
-  // Cập nhật selectedHorseId khi đổi chuyến
-  useEffect(() => {
-    if (activeTrip.horses?.length > 0) {
-      setSelectedHorseId(activeTrip.horses[0].id);
-    }
-  }, [activeTrip]);
 
   // Danh sách lịch sử chuyến đi
   const filteredHistory = useMemo(() => {
@@ -753,7 +730,7 @@ export default function ActiveTripsPage() {
                   {/* Segment chọn ngựa */}
                   {activeTrip.horses?.length > 1 && (
                     <Segmented
-                      value={selectedHorseId}
+                      value={effectiveHorseId}
                       onChange={setSelectedHorseId}
                       options={activeTrip.horses.map((h) => ({
                         label: `🐴 ${h.name.split(' ')[0]}`,

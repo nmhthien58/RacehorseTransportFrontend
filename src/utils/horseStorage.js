@@ -113,12 +113,13 @@ export const INITIAL_HORSES = [
     HorseID: 4,
     OwnerUserID: 5,
     Name: 'Thunder',
-    MicrochipNumber: '985141008472914',
-    PassportNumber: 'FEI-VN-2023-04',
-    Breed: 'Arabian Stallion',
-    Gender: 'Stallion',
+    MicrochipNumber: '123456789000000',
+    PassportNumber: '122123',
+    Breed: 'Akhal-Teke',
+    Gender: 'Gelding',
     DateOfBirth: '2021-05-12',
-    Color: 'Dark Golden Brown, star on forehead, white sock left hind',
+    Color: 'Brown',
+    Weight: '1100 lbs',
     SpecialCareRequirements:
       'Đang theo dõi hồi phục sau giải đấu, cần xe đệm êm và kiểm tra thân nhiệt định kỳ.',
     HealthStatus: 'Attention',
@@ -569,6 +570,99 @@ export function deleteHorseVetRecord(horseId, recordId) {
   horses[index] = { ...horse };
   saveStoredHorses(horses);
   return true;
+}
+
+/**
+ * Lưu đặc điểm nhận dạng thể chất cho ngựa
+ */
+export function saveHorseMarkings(horseId, markings) {
+  const horses = getStoredHorses();
+  const index = horses.findIndex((h) => String(h.HorseID) === String(horseId));
+  if (index === -1) return null;
+
+  horses[index].PhysicalMarkings = markings;
+  saveStoredHorses(horses);
+  return markings;
+}
+
+/**
+ * Lấy đặc điểm nhận dạng thể chất của ngựa
+ */
+export function getHorseMarkings(horseId) {
+  const horse = getStoredHorseById(horseId);
+  return horse?.PhysicalMarkings || null;
+}
+
+/**
+ * Lưu bộ ảnh 6 góc nhận dạng cho ngựa
+ */
+export function saveHorsePhotos(horseId, photos) {
+  const horses = getStoredHorses();
+  const index = horses.findIndex((h) => String(h.HorseID) === String(horseId));
+  if (index === -1) return null;
+
+  horses[index].AnglePhotos = photos;
+  saveStoredHorses(horses);
+  return photos;
+}
+
+/**
+ * Lấy bộ ảnh 6 góc nhận dạng của ngựa
+ */
+export function getHorsePhotos(horseId) {
+  const horse = getStoredHorseById(horseId);
+  return horse?.AnglePhotos || null;
+}
+
+/**
+ * Thêm lời nhắc cho ngựa
+ */
+export function addHorseReminder(horseId, reminder) {
+  const horses = getStoredHorses();
+  const index = horses.findIndex((h) => String(h.HorseID) === String(horseId));
+  if (index === -1) return null;
+
+  const newReminder = {
+    id: Date.now(),
+    horseId,
+    title: reminder.title || 'Nhắc nhở thú y',
+    type: reminder.type || reminder.category || 'General',
+    category: reminder.category || reminder.type || 'General',
+    dueDate: reminder.dueDate || new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+    repeat: reminder.repeat || 'None',
+    notes: reminder.notes || '',
+    status: 'Upcoming',
+    createdAt: new Date().toISOString(),
+  };
+
+  const currentReminders = horses[index].Reminders || [];
+  horses[index].Reminders = [newReminder, ...currentReminders];
+  saveStoredHorses(horses);
+  return newReminder;
+}
+
+/**
+ * Xóa lời nhắc của ngựa
+ */
+export function deleteHorseReminder(horseId, reminderId) {
+  const horses = getStoredHorses();
+  const index = horses.findIndex((h) => String(h.HorseID) === String(horseId));
+  if (index === -1) return false;
+
+  const reminders = (horses[index].Reminders || []).filter(
+    (rem) => String(rem.id) !== String(reminderId)
+  );
+  horses[index].Reminders = reminders;
+  saveStoredHorses(horses);
+  return true;
+}
+
+/**
+ * Lấy danh sách lời nhắc của ngựa
+ */
+export function getHorseReminders(horseId) {
+  const horse = getStoredHorseById(horseId);
+  return horse?.Reminders || [];
 }
 
 export {

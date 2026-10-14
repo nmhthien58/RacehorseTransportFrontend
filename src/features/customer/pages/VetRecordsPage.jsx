@@ -38,8 +38,9 @@ import {
   ClockCircleOutlined,
   CalendarOutlined,
   SendOutlined,
-  EyeOutlined,
   FilePdfOutlined,
+  BellOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import StandardFormTemplateModal from '@components/common/StandardFormTemplateModal';
 import {
@@ -125,6 +126,64 @@ const RECORD_TYPE_OPTIONS = [
   },
 ];
 
+const TEMPLATE_MENU_ITEMS = [
+  {
+    key: 'VACCINE_RECORD',
+    label: '💉 Mẫu Sổ tiêm chủng Vaccine (FEI Annex VI)',
+    docType: 'VACCINE_RECORD',
+    title: 'Mẫu Sổ Tiêm Chủng Vaccine Cúm Ngựa Chuẩn Quốc Tế',
+  },
+  {
+    key: 'HEALTH_CERT',
+    label: '📋 Mẫu Chứng nhận kiểm dịch CVI (Health Certificate)',
+    docType: 'HEALTH_CERT',
+    title: 'Mẫu Giấy Chứng Nhận Kiểm Dịch Động Vật CVI Xuất Khẩu',
+  },
+  {
+    key: 'COGGINS_EIA',
+    label: '🔬 Mẫu Phiếu xét nghiệm Coggins EIA (PCR Âm tính)',
+    docType: 'COGGINS_EIA',
+    title: 'Mẫu Phiếu Xét Nghiệm Huyết Thanh Coggins (EIA)',
+  },
+  {
+    key: 'DEWORMING',
+    label: '💊 Mẫu Sổ theo dõi tẩy giun & Ký sinh trùng',
+    docType: 'DEWORMING',
+    title: 'Mẫu Sổ Theo Dõi Tẩy Giun & Phòng Ký Sinh Trùng',
+  },
+  {
+    key: 'DENTAL',
+    label: '🦷 Mẫu Phiếu khám nha khoa & Mài răng',
+    docType: 'DENTAL',
+    title: 'Mẫu Phiếu Khám Nha Khoa & Chăm Sóc Răng Miệng',
+  },
+  {
+    key: 'FARRIER',
+    label: '🔨 Mẫu Phiếu chăm sóc móng & Đóng móng thi đấu',
+    docType: 'FARRIER',
+    title: 'Mẫu Phiếu Chăm Sóc Móng Guốc & Đóng Móng Thể Thao',
+  },
+  {
+    key: 'WELLNESS',
+    label: '🩺 Mẫu Biên bản khám lâm sàng Fit-to-Fly',
+    docType: 'WELLNESS',
+    title: 'Mẫu Biên Bản Khám Lâm Sàng Thể Lực (Fit-to-Fly)',
+  },
+  {
+    key: 'HORSE_PASSPORT',
+    label: '🐎 Mẫu Hộ chiếu ngựa FEI & Đối soát vi mạch',
+    docType: 'HORSE_PASSPORT',
+    title: 'Mẫu Hộ Chiếu Ngựa Quốc Tế FEI & Đối Soát Vi Mạch',
+  },
+  {
+    key: 'IMPORT_PERMIT',
+    label: '🏛️ Mẫu Giấy phép xuất nhập cảnh & Quá cảnh',
+    docType: 'IMPORT_PERMIT',
+    title: 'Mẫu Giấy Phép Xuất Nhập Cảnh & Quá Cảnh',
+  },
+];
+
+
 /**
  * Ánh xạ loại hồ sơ thú y sang mã biểu mẫu chuẩn PDF quốc tế
  * @param {string} recordTypeStr
@@ -198,6 +257,7 @@ export default function VetRecordsPage() {
   const [recordForm] = Form.useForm();
   const [reminderForm] = Form.useForm();
   const [attachmentList, setAttachmentList] = useState([]);
+  const [selectedRecordType, setSelectedRecordType] = useState(RECORD_TYPE_OPTIONS[0].value);
   const [templateModal, setTemplateModal] = useState({
     open: false,
     docType: 'HEALTH_CERT',
@@ -375,15 +435,58 @@ export default function VetRecordsPage() {
     message.info('Photo removed.');
   };
 
+  // Open Add Vet Record Modal cleanly
+  const handleOpenAddRecordModal = () => {
+    recordForm.resetFields();
+    setAttachmentList([]);
+    let defaultType = RECORD_TYPE_OPTIONS[0].value;
+    if (recordCategory && recordCategory !== 'All') {
+      const matched = RECORD_TYPE_OPTIONS.find((opt) => {
+        const optStr = opt.value.toLowerCase();
+        const catStr = recordCategory.toLowerCase();
+        if (catStr === 'vaccinations') return optStr.includes('vaccin') || optStr.includes('tiêm');
+        if (catStr === 'health cert') return optStr.includes('cvi') || optStr.includes('kiểm dịch');
+        if (catStr === 'coggins') return optStr.includes('coggins') || optStr.includes('eia');
+        if (catStr === 'deworming') return optStr.includes('deworm') || optStr.includes('tẩy');
+        if (catStr === 'dental') return optStr.includes('dent') || optStr.includes('răng');
+        if (catStr === 'farrier') return optStr.includes('farrier') || optStr.includes('móng');
+        return optStr.includes(catStr);
+      });
+      if (matched) defaultType = matched.value;
+    }
+    const cleanSuggestedTitle = defaultType.replace(/\(.*?\)/g, '').trim();
+    recordForm.setFieldsValue({
+      recordType: defaultType,
+      title: cleanSuggestedTitle,
+      date: dayjs(),
+      expirationDate: null,
+      nextDueDate: null,
+      providerName: '',
+      providerContact: '',
+      lotNumber: '',
+      resultFinding: '',
+      accessionNumber: '',
+      issuingState: '',
+      notes: '',
+    });
+    setSelectedRecordType(defaultType);
+    setIsRecordModalOpen(true);
+  };
+
   // Add Vet Record handler
   const handleAddRecord = (values) => {
-    const trimmedTitle = (values.title || '').trim().toLowerCase();
+    const rawTitle = (values.title || '').trim();
+    if (!rawTitle) {
+      message.error('Vui lòng nhập tên/tiêu đề hồ sơ thú y!');
+      return;
+    }
+    const trimmedTitle = rawTitle.toLowerCase();
     const isDuplicateTitle = horseRecords.some(
       (r) => (r.title || '').trim().toLowerCase() === trimmedTitle,
     );
     if (isDuplicateTitle) {
       message.error(
-        `Ngựa "${currentHorse.Name}" đã có hồ sơ mang tên "${values.title}". Không được đặt trùng tên thư mục/hồ sơ của ngựa này!`,
+        `Ngựa "${currentHorse.Name}" đã có hồ sơ mang tên "${rawTitle}". Vui lòng đặt tên phân biệt cho hồ sơ này!`,
       );
       return;
     }
@@ -408,23 +511,38 @@ export default function VetRecordsPage() {
       ? (typeof values.nextDueDate === 'string' ? values.nextDueDate : dayjs(values.nextDueDate).format('YYYY-MM-DD'))
       : '';
 
+    // Calculate status dynamically based on expiration date
+    let calcStatus = 'Valid';
+    if (formattedExp) {
+      const now = new Date().getTime();
+      const expTime = new Date(formattedExp).getTime();
+      const diffDays = Math.ceil((expTime - now) / (1000 * 60 * 60 * 24));
+      if (diffDays < 0) {
+        calcStatus = 'Expired';
+      } else if (diffDays <= 30) {
+        calcStatus = 'Attention';
+      } else {
+        calcStatus = 'Valid';
+      }
+    }
+
     const recordPayload = {
       horseId: currentHorse.HorseID,
       horseName: currentHorse.Name,
-      recordType: values.recordType || 'Wellness Exam',
-      title: values.title,
+      recordType: values.recordType || selectedRecordType || 'Wellness Exam',
+      title: rawTitle,
       date: formattedDate,
       expirationDate: formattedExp,
       nextDueDate: formattedDue,
-      providerName: values.providerName || '',
-      providerContact: values.providerContact || '',
-      lotNumber: values.lotNumber || '',
-      resultFinding: values.resultFinding || 'Passed',
-      accessionNumber: values.accessionNumber || '',
-      issuingState: values.issuingState || '',
-      notes: values.notes || '',
+      providerName: (values.providerName || '').trim(),
+      providerContact: (values.providerContact || '').trim(),
+      lotNumber: (values.lotNumber || '').trim(),
+      resultFinding: (values.resultFinding || '').trim(),
+      accessionNumber: (values.accessionNumber || '').trim(),
+      issuingState: (values.issuingState || '').trim(),
+      notes: (values.notes || '').trim(),
       attachments: attachmentList.map((f) => f.name),
-      status: 'Valid',
+      status: calcStatus,
     };
 
     addStoredVetRecord(recordPayload);
@@ -802,118 +920,10 @@ export default function VetRecordsPage() {
               })}
             </div>
             <Space wrap>
-              <Dropdown
-                menu={{
-                  items: [
-                    {
-                      key: 'VACCINE_RECORD',
-                      label: '💉 Mẫu Sổ tiêm chủng Vaccine (FEI Annex VI)',
-                      onClick: () =>
-                        setTemplateModal({
-                          open: true,
-                          docType: 'VACCINE_RECORD',
-                          title: 'Mẫu Sổ Tiêm Chủng Vaccine Cúm Ngựa Chuẩn Quốc Tế',
-                        }),
-                    },
-                    {
-                      key: 'HEALTH_CERT',
-                      label: '📋 Mẫu Chứng nhận kiểm dịch CVI (Health Certificate)',
-                      onClick: () =>
-                        setTemplateModal({
-                          open: true,
-                          docType: 'HEALTH_CERT',
-                          title: 'Mẫu Giấy Chứng Nhận Kiểm Dịch Động Vật CVI Xuất Khẩu',
-                        }),
-                    },
-                    {
-                      key: 'COGGINS_EIA',
-                      label: '🔬 Mẫu Phiếu xét nghiệm Coggins EIA (PCR Âm tính)',
-                      onClick: () =>
-                        setTemplateModal({
-                          open: true,
-                          docType: 'COGGINS_EIA',
-                          title: 'Mẫu Phiếu Xét Nghiệm Huyết Thanh Coggins (EIA)',
-                        }),
-                    },
-                    {
-                      key: 'DEWORMING',
-                      label: '💊 Mẫu Sổ theo dõi tẩy giun & Ký sinh trùng',
-                      onClick: () =>
-                        setTemplateModal({
-                          open: true,
-                          docType: 'DEWORMING',
-                          title: 'Mẫu Sổ Theo Dõi Tẩy Giun & Phòng Ký Sinh Trùng',
-                        }),
-                    },
-                    {
-                      key: 'DENTAL',
-                      label: '🦷 Mẫu Phiếu khám nha khoa & Mài răng',
-                      onClick: () =>
-                        setTemplateModal({
-                          open: true,
-                          docType: 'DENTAL',
-                          title: 'Mẫu Phiếu Khám Nha Khoa & Chăm Sóc Răng Miệng',
-                        }),
-                    },
-                    {
-                      key: 'FARRIER',
-                      label: '🔨 Mẫu Phiếu chăm sóc móng & Đóng móng thi đấu',
-                      onClick: () =>
-                        setTemplateModal({
-                          open: true,
-                          docType: 'FARRIER',
-                          title: 'Mẫu Phiếu Chăm Sóc Móng Guốc & Đóng Móng Thể Thao',
-                        }),
-                    },
-                    {
-                      key: 'WELLNESS',
-                      label: '🩺 Mẫu Biên bản khám lâm sàng Fit-to-Fly',
-                      onClick: () =>
-                        setTemplateModal({
-                          open: true,
-                          docType: 'WELLNESS',
-                          title: 'Mẫu Biên Bản Khám Lâm Sàng Thể Lực (Fit-to-Fly)',
-                        }),
-                    },
-                    {
-                      key: 'HORSE_PASSPORT',
-                      label: '🐎 Mẫu Hộ chiếu ngựa FEI & Đối soát vi mạch',
-                      onClick: () =>
-                        setTemplateModal({
-                          open: true,
-                          docType: 'HORSE_PASSPORT',
-                          title: 'Mẫu Hộ Chiếu Ngựa Quốc Tế FEI & Đối Soát Vi Mạch',
-                        }),
-                    },
-                    {
-                      key: 'IMPORT_PERMIT',
-                      label: '🏛️ Mẫu Giấy phép xuất nhập cảnh & Quá cảnh',
-                      onClick: () =>
-                        setTemplateModal({
-                          open: true,
-                          docType: 'IMPORT_PERMIT',
-                          title: 'Mẫu Giấy Phép Xuất Nhập Cảnh & Quá Cảnh',
-                        }),
-                    },
-                  ],
-                }}
-              >
-                <Button
-                  icon={<FilePdfOutlined />}
-                  style={{
-                    borderColor: '#F59E0B',
-                    color: '#B45309',
-                    borderRadius: 20,
-                    fontWeight: 600,
-                  }}
-                >
-                  Tải biểu mẫu PDF mẫu
-                </Button>
-              </Dropdown>
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
-                onClick={() => setIsRecordModalOpen(true)}
+                onClick={() => handleOpenAddRecordModal()}
                 style={{
                   backgroundColor: '#F59E0B',
                   borderColor: '#F59E0B',
@@ -965,40 +975,87 @@ export default function VetRecordsPage() {
                   styles={{ body: { padding: '18px 22px' } }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
-                    <div>
-                      <Space size={8} style={{ marginBottom: 6 }}>
-                        <Tag color="blue" style={{ borderRadius: 6, fontWeight: 600 }}>
+                    <div style={{ flex: 1, minWidth: 260 }}>
+                      <Space size={8} style={{ marginBottom: 6 }} wrap>
+                        <Tag color="blue" style={{ borderRadius: 6, fontWeight: 700 }}>
                           {r.recordType || 'General'}
                         </Tag>
                         {r.status && (
                           <Tag
-                            color={r.status === 'Valid' || r.status === 'Passed' ? 'success' : 'warning'}
-                            style={{ borderRadius: 6 }}
+                            color={
+                              r.status === 'Valid' || r.status === 'Passed'
+                                ? 'success'
+                                : r.status === 'Expired' || r.status === 'Unfit'
+                                ? 'error'
+                                : 'warning'
+                            }
+                            style={{ borderRadius: 6, fontWeight: 600 }}
                           >
-                            {r.status}
+                            {r.status === 'Valid' ? '✓ Hợp lệ' : r.status === 'Expired' ? '⚠️ Hết hạn' : r.status}
                           </Tag>
                         )}
-                        <span style={{ fontSize: 12, color: '#64748B' }}>
-                          <CalendarOutlined style={{ marginRight: 4 }} />
-                          {r.date}
+                        <span style={{ fontSize: 12.5, color: '#64748B', fontWeight: 500 }}>
+                          <CalendarOutlined style={{ marginRight: 4, color: '#3B82F6' }} />
+                          Ngày thực hiện: <strong>{r.date}</strong>
                         </span>
+                        {r.expirationDate && (
+                          <span style={{ fontSize: 12.5, color: '#D97706', fontWeight: 500 }}>
+                            <ClockCircleOutlined style={{ marginRight: 4 }} />
+                            Hết hạn: <strong>{r.expirationDate}</strong>
+                          </span>
+                        )}
+                        {r.nextDueDate && (
+                          <span style={{ fontSize: 12.5, color: '#2563EB', fontWeight: 500 }}>
+                            <BellOutlined style={{ marginRight: 4 }} />
+                            Tái khám: <strong>{r.nextDueDate}</strong>
+                          </span>
+                        )}
                       </Space>
-                      <h4 style={{ margin: '4px 0', fontSize: 15, fontWeight: 700, color: '#1E293B' }}>
+
+                      <h4 style={{ margin: '4px 0 8px 0', fontSize: 16, fontWeight: 800, color: '#0F172A' }}>
                         {r.title}
                       </h4>
-                      <p style={{ margin: '2px 0 8px 0', fontSize: 13, color: '#475569' }}>
-                        <strong>Provider:</strong> {r.providerName || 'Dr. Sarah Jenkins'}{' '}
-                        {r.providerContact && `· ${r.providerContact}`}
-                      </p>
-                      {r.resultFinding && (
-                        <p style={{ margin: '2px 0', fontSize: 12.5, color: '#059669' }}>
-                          <strong>Finding:</strong> {r.resultFinding}
+
+                      {/* Thông tin bác sĩ / cơ sở thú y */}
+                      {r.providerName && (
+                        <p style={{ margin: '3px 0', fontSize: 13, color: '#334155' }}>
+                          <strong style={{ color: '#475569' }}>Bác sĩ / Cơ sở thú y:</strong> {r.providerName}
+                          {r.providerContact ? ` · Liên hệ: ${r.providerContact}` : ''}
                         </p>
                       )}
-                      {r.notes && (
-                        <p style={{ margin: '4px 0 0 0', fontSize: 12.5, color: '#64748B' }}>
-                          {r.notes}
+
+                      {/* Kết quả / Đánh giá */}
+                      {r.resultFinding && (
+                        <p style={{ margin: '3px 0', fontSize: 13, color: '#059669' }}>
+                          <strong style={{ color: '#047857' }}>Kết quả / Đánh giá:</strong> {r.resultFinding}
                         </p>
+                      )}
+
+                      {/* Số lô / Mã lưu trữ / Cơ quan cấp */}
+                      {(r.lotNumber || r.accessionNumber || r.issuingState) && (
+                        <p style={{ margin: '3px 0', fontSize: 12.5, color: '#64748B' }}>
+                          {r.lotNumber ? <span><strong>Số lô (Lot):</strong> {r.lotNumber} </span> : null}
+                          {r.accessionNumber ? <span>{r.lotNumber ? '· ' : ''}<strong>Mã lưu trữ:</strong> {r.accessionNumber} </span> : null}
+                          {r.issuingState ? <span>{(r.lotNumber || r.accessionNumber) ? '· ' : ''}<strong>Cơ quan cấp:</strong> {r.issuingState}</span> : null}
+                        </p>
+                      )}
+
+                      {/* Ghi chú */}
+                      {r.notes && (
+                        <p style={{ margin: '5px 0 0 0', fontSize: 12.5, color: '#64748B', fontStyle: 'italic' }}>
+                          <strong>Ghi chú:</strong> {r.notes}
+                        </p>
+                      )}
+
+                      {/* Tệp đính kèm */}
+                      {r.attachments && r.attachments.length > 0 && (
+                        <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {r.attachments.map((att, idx) => (
+                            <Tag key={idx} icon={<FilePdfOutlined />} color="default" style={{ borderRadius: 6, fontSize: 12 }}>
+                              {att}
+                            </Tag>
+                          ))}
+                        </div>
                       )}
                     </div>
                     <Space>
@@ -2216,12 +2273,86 @@ export default function VetRecordsPage() {
           form={recordForm}
           layout="vertical"
           onFinish={handleAddRecord}
-          initialValues={{
-            recordType: 'Tiêm phòng Vaccine (Vaccinations / Equine Influenza)',
-            resultFinding: 'Negative (Passed)',
-          }}
-          style={{ marginTop: 16 }}
+          style={{ marginTop: 8 }}
         >
+          {/* BANNER PDF MẪU KHI MỞ ĐƠN (YÊU CẦU 2) */}
+          <div
+            style={{
+              backgroundColor: '#FEF3C7',
+              border: '1px solid #FCD34D',
+              borderRadius: 10,
+              padding: '12px 16px',
+              marginBottom: 18,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 10,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <FilePdfOutlined style={{ fontSize: 22, color: '#D97706' }} />
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: '#92400E' }}>
+                  Biểu mẫu PDF chuẩn hóa y tế & kiểm dịch quốc tế
+                </div>
+                <div style={{ fontSize: 12, color: '#B45309' }}>
+                  Xem và tải mẫu đơn chuẩn để bác sĩ thú y hoặc cơ sở kiểm dịch ký chứng nhận
+                </div>
+              </div>
+            </div>
+            <Space wrap>
+              <Button
+                type="primary"
+                size="small"
+                icon={<FilePdfOutlined />}
+                onClick={() => {
+                  const curType = recordForm.getFieldValue('recordType') || selectedRecordType;
+                  const mappedDocType = mapRecordTypeToDocType(curType);
+                  setTemplateModal({
+                    open: true,
+                    docType: mappedDocType,
+                    title: `Mẫu đơn chuẩn: ${curType}`,
+                  });
+                }}
+                style={{
+                  backgroundColor: '#D97706',
+                  borderColor: '#D97706',
+                  fontWeight: 600,
+                  borderRadius: 6,
+                }}
+              >
+                Mẫu PDF mục này
+              </Button>
+              <Dropdown
+                menu={{
+                  items: TEMPLATE_MENU_ITEMS.map((item) => ({
+                    key: item.key,
+                    label: item.label,
+                    onClick: () =>
+                      setTemplateModal({
+                        open: true,
+                        docType: item.docType,
+                        title: item.title,
+                      }),
+                  })),
+                }}
+              >
+                <Button
+                  size="small"
+                  style={{
+                    borderColor: '#D97706',
+                    color: '#92400E',
+                    fontWeight: 600,
+                    borderRadius: 6,
+                  }}
+                >
+                  Tất cả biểu mẫu ▼
+                </Button>
+              </Dropdown>
+            </Space>
+          </div>
+
           <Form.Item
             label="Danh mục kiểm tra / Loại hồ sơ thú y (Record Type)"
             name="recordType"
@@ -2231,38 +2362,26 @@ export default function VetRecordsPage() {
               options={RECORD_TYPE_OPTIONS}
               showSearch
               placeholder="Chọn loại hồ sơ y tế / kiểm tra..."
+              onChange={(val) => {
+                setSelectedRecordType(val);
+                const curTitle = recordForm.getFieldValue('title');
+                if (!curTitle || RECORD_TYPE_OPTIONS.some((opt) => opt.value === curTitle || opt.label.includes(curTitle))) {
+                  recordForm.setFieldsValue({ title: val.replace(/\(.*?\)/g, '').trim() });
+                }
+              }}
               filterOption={(input, option) =>
                 (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
               }
             />
-            <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
-              <Button
-                type="link"
-                size="small"
-                icon={<FilePdfOutlined />}
-                onClick={() => {
-                  const currentSelectedType = recordForm.getFieldValue('recordType') || RECORD_TYPE_OPTIONS[0].value;
-                  const mappedDocType = mapRecordTypeToDocType(currentSelectedType);
-                  setTemplateModal({
-                    open: true,
-                    docType: mappedDocType,
-                    title: `Mẫu đơn chuẩn: ${currentSelectedType}`,
-                  });
-                }}
-                style={{ color: '#D97706', fontWeight: 600, padding: 0 }}
-              >
-                📄 Tải / Xem Mẫu đơn PDF chuẩn của loại này
-              </Button>
-            </div>
           </Form.Item>
 
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item
-                label="Tên hồ sơ / Thư mục / Tiêu đề (Title)"
+                label="Tiêu đề / Tên hồ sơ thú y (Record Title)"
                 name="title"
                 rules={[
-                  { required: true, message: 'Vui lòng nhập tên hồ sơ' },
+                  { required: true, message: 'Vui lòng nhập tên hồ sơ thú y' },
                   {
                     validator: (_, value) => {
                       if (!value) return Promise.resolve();
@@ -2272,7 +2391,7 @@ export default function VetRecordsPage() {
                       );
                       if (exists) {
                         return Promise.reject(
-                          new Error(`Ngựa "${currentHorse.Name}" đã có hồ sơ mang tên "${value}". Không được đặt trùng tên thư mục/hồ sơ của ngựa này!`),
+                          new Error(`Ngựa "${currentHorse.Name}" đã có hồ sơ mang tên "${value}". Vui lòng đặt tên phân biệt cho hồ sơ này!`),
                         );
                       }
                       return Promise.resolve();
@@ -2280,7 +2399,7 @@ export default function VetRecordsPage() {
                   },
                 ]}
               >
-                <Input placeholder="e.g. Equine Influenza Vaccine" />
+                <Input placeholder="Ví dụ: Equine Influenza Vaccine Booster, Xét nghiệm Coggins EIA..." />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
@@ -2321,26 +2440,26 @@ export default function VetRecordsPage() {
 
           <Row gutter={16}>
             <Col xs={24} sm={12}>
-              <Form.Item label="Provider / Vet Name" name="providerName">
-                <Input placeholder="e.g. Dr. Sarah Jenkins" />
+              <Form.Item label="Bác sĩ / Phòng khám thực hiện (Provider / Vet Name)" name="providerName">
+                <Input placeholder="Ví dụ: Dr. Sarah Jenkins, BV Thú y Hoàng Gia..." />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
-              <Form.Item label="Provider Phone / Email" name="providerContact">
-                <Input placeholder="e.g. (555) 234-5678" />
+              <Form.Item label="SĐT / Email liên hệ bác sĩ (Provider Contact)" name="providerContact">
+                <Input placeholder="Ví dụ: (555) 234-5678 / vet@hospital.com" />
               </Form.Item>
             </Col>
           </Row>
 
           <Row gutter={16}>
             <Col xs={24} sm={12}>
-              <Form.Item label="Lot / Batch Number" name="lotNumber">
-                <Input placeholder="e.g. LOT-2026-99" />
+              <Form.Item label="Số lô thuốc / Vaccine (Lot / Batch Number)" name="lotNumber">
+                <Input placeholder="Ví dụ: LOT-2026-99" />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
-              <Form.Item label="Result / Finding" name="resultFinding">
-                <Input placeholder="e.g. Passed, Normal, Negative" />
+              <Form.Item label="Kết quả / Đánh giá lâm sàng (Result / Finding)" name="resultFinding">
+                <Input placeholder="Ví dụ: Passed, Negative, Normal, Đạt chuẩn..." />
               </Form.Item>
             </Col>
           </Row>

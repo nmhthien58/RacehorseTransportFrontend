@@ -520,7 +520,7 @@ export default function RouteApprovalsPage() {
               height: 40,
             }}
           >
-            ← Quay lại danh sách kế hoạch
+            Quay lại danh sách kế hoạch
           </Button>
           <div>
             <Title level={3} style={{ margin: 0, fontWeight: 800, color: '#0F172A', fontSize: 22 }}>

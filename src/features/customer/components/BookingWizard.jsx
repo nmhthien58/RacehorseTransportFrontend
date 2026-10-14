@@ -932,23 +932,15 @@ export default function BookingWizard({
       });
     }
 
-    // 4. Các tiện ích bổ sung với giá niêm yết công khai
-    items.push({
-      key: 'climate',
-      code: 'SUR_CLIMATE',
-      name: '❄️ Điều hòa buồng lái / khoang ổn định nhiệt độ (16-19°C) (Tiêu chuẩn FEI - Đã bao gồm)',
-      qty: 1,
-      unitPrice: 0,
-      amount: 0,
-    });
-
+    // 4. Tiện ích Bác sĩ thú y áp tải hành trình (Đồng bộ với chi phí khi lên plan: $1,400 Air / $1,600 Door-to-Door / $600 Ground)
+    const escortFee = transportMode === 'DoorToDoor' ? 1600 : transportMode === 'Air' ? 1400 : 600;
     items.push({
       key: 'vetEscort',
       code: 'SUR_VET_ESCORT',
-      name: '🩺 Bác sĩ thú y FEI chuyên trách áp tải hành trình (Bắt buộc theo chuẩn FEI - Đã bao gồm)',
+      name: `🩺 Bác sĩ thú y FEI chuyên trách áp tải hành trình (${transportMode === 'Air' ? 'In-Flight Escort' : 'Ground / Door-to-Door Escort'})`,
       qty: 1,
-      unitPrice: 0,
-      amount: 0,
+      unitPrice: escortFee,
+      amount: escortFee,
     });
 
     if (isExpress) {
@@ -1706,6 +1698,371 @@ export default function BookingWizard({
             )}
           </div>
 
+          
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* BƯỚC 3: WHAT (CHỌN NGỰA, HẠNG CHUỒNG, PHƯƠNG THỨC & ĐỊA CHỈ CHI TIẾT) */}
+      {/* ======================================================== */}
+      {currentStep === 2 && (
+        <div>
+          {/* BANNER THỜI GIAN & HÀNH LANG VẬN CHUYỂN ĐÃ XÁC NHẬN */}
+          <div
+            style={{
+              padding: '12px 18px',
+              backgroundColor: '#F0FDF4',
+              border: '1.5px solid #BBF7D0',
+              borderRadius: 14,
+              marginBottom: 20,
+            }}
+          >
+            <Flex align="center" justify="space-between" wrap="wrap" gap={8}>
+              <div>
+                <span style={{ fontSize: 13, color: '#166534', fontWeight: 700 }}>
+                  📅 Khoảng thời gian vận chuyển đã xác nhận:
+                </span>{' '}
+                <strong style={{ color: '#14532D', fontSize: 14.5 }}>
+                  {departureDate ? dayjs(departureDate).format('DD/MM/YYYY') : '---'} ➔{' '}
+                  {deliveryDate ? dayjs(deliveryDate).format('DD/MM/YYYY') : (departureDate ? dayjs(departureDate).format('DD/MM/YYYY') : '---')}
+                </strong>
+              </div>
+              <Tag color="green" style={{ fontWeight: 800, margin: 0 }}>
+                Hệ thống tự động kiểm tra xung đột lịch & thời gian nghỉ 1 tuần
+              </Tag>
+            </Flex>
+          </div>
+          {/* PHẦN 1: WHICH HORSES ARE TRAVELING? */}
+          <div style={{ marginBottom: 36 }}>
+            <Title level={4} style={{ margin: '0 0 6px', fontWeight: 800, color: '#0f172a' }}>
+              Which horses are traveling?
+            </Title>
+            <Text style={{ color: '#64748b', fontSize: 13, display: 'block', marginBottom: 20 }}>
+              Select one or more horses for this trip.
+            </Text>
+
+            {selectedHorseIds.length === 0 && (
+              <Alert
+                type="warning"
+                showIcon
+                message={t('bookings.validation.selectHorseRequired') || 'Vui lòng chọn ít nhất 1 cá thể ngựa để tiếp tục'}
+                style={{ marginBottom: 20, borderRadius: 10 }}
+              />
+            )}
+
+            {loadingHorses ? (
+              <Text type="secondary">{t('common.loading')}</Text>
+            ) : availableHorses.length === 0 ? (
+              <Card
+                bordered
+                style={{
+                  borderRadius: 16,
+                  textAlign: 'center',
+                  backgroundColor: '#f8fafc',
+                  border: '1.5px dashed #cbd5e1',
+                  padding: '24px 16px',
+                }}
+              >
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description={
+                    <div>
+                      <strong style={{ fontSize: 16, color: '#0f172a', display: 'block', marginBottom: 4 }}>
+                        {t('horses.emptyText') || 'Tài khoản của bạn chưa có hồ sơ ngựa nào'}
+                      </strong>
+                      <Text style={{ fontSize: 13, color: '#64748b' }}>
+                        {t('bookings.noHorsesHint') || 'Vui lòng thêm ngựa vào hồ sơ trước khi tạo yêu cầu vận chuyển mới.'}
+                      </Text>
+                    </div>
+                  }
+                >
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => navigate(ROUTES.CUSTOMER_HORSES_NEW)}
+                    style={{
+                      borderRadius: 9999,
+                      fontWeight: 700,
+                      backgroundColor: '#f59e0b',
+                      borderColor: '#f59e0b',
+                      color: '#0f172a',
+                      marginTop: 8,
+                    }}
+                  >
+                    Thêm hồ sơ ngựa mới
+                  </Button>
+                </Empty>
+              </Card>
+            ) : (
+              <Row gutter={[16, 16]}>
+                {availableHorses.map((horse) => {
+                  const horseId = horse.horseId || horse.HorseID;
+                  const isSelected = selectedHorseIds.some((id) => String(id) === String(horseId));
+                  const horseName = horse.name || horse.Name;
+                  const horseBreed = horse.breed || horse.Breed;
+                  const horseGender = horse.gender || horse.Gender;
+                  const horseMicrochip = horse.microchipNumber || horse.MicrochipNumber;
+                  const eligibility = checkHorseTransportEligibility(horse, i18n?.language || 'vi');
+                  const conflict = checkHorseBookingConflict(horseId, departureDate, deliveryDate, null, user?.userId || user?.UserID);
+                  const isConflict = conflict.hasConflict;
+                  const isCritical = (horse.HealthStatus || horse.healthStatus || '').trim().toLowerCase() === 'critical';
+                  const isBlocked = isCritical || isConflict;
+
+                  return (
+                    <Col key={horseId} xs={24} md={12}>
+                      <div
+                        role="button"
+                        tabIndex={isBlocked ? -1 : 0}
+                        aria-disabled={isBlocked}
+                        onClick={(e) => {
+                          if (isBlocked) {
+                            if (isConflict) message.error(conflict.reason);
+                            return;
+                          }
+                          if (e.target.closest?.('.stall-select-container') || e.target.closest?.('.ant-select') || e.target.closest?.('input')) return;
+                          handleToggleHorse(horseId);
+                        }}
+                        onKeyDown={(e) => {
+                          if (isBlocked) return;
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleToggleHorse(horseId);
+                          }
+                        }}
+                        style={{
+                          padding: 18,
+                          borderRadius: 16,
+                          border: isCritical
+                            ? '1.5px solid #FECACA'
+                            : isConflict
+                            ? '1.5px solid #FECACA'
+                            : isSelected
+                            ? '2.5px solid #F59E0B'
+                            : '1.5px solid #E2E8F0',
+                          backgroundColor: isCritical || isConflict
+                            ? '#FEF2F2'
+                            : isSelected
+                            ? '#FFFBEB'
+                            : '#FFFFFF',
+                          cursor: isBlocked ? 'not-allowed' : 'pointer',
+                          opacity: isBlocked ? 0.75 : 1,
+                          transform: isSelected && !isBlocked ? 'scale(1.02)' : 'scale(1)',
+                          boxShadow: isSelected && !isBlocked
+                            ? '0 8px 24px rgba(245, 158, 11, 0.22)'
+                            : '0 2px 8px rgba(0, 0, 0, 0.02)',
+                          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                        }}
+                      >
+                        <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
+                          <Checkbox
+                            checked={!isBlocked && isSelected}
+                            disabled={isBlocked}
+                            onChange={() => !isBlocked && handleToggleHorse(horseId)}
+                          >
+                            <strong
+                              style={{
+                                fontSize: 16,
+                                color: isCritical || isConflict
+                                  ? '#991B1B'
+                                  : isSelected
+                                  ? '#92400E'
+                                  : '#0F172A',
+                                marginLeft: 4,
+                              }}
+                            >
+                              🐴 {horseName}
+                            </strong>
+                          </Checkbox>
+                          <Space size={6} wrap>
+                            {isSelected && !isBlocked && (
+                              <Tag color="gold" style={{ fontWeight: 800, borderRadius: 9999 }}>
+                                ✓ Đã chọn
+                              </Tag>
+                            )}
+                            {isConflict && (
+                              <Tag color="error" style={{ fontWeight: 800, borderRadius: 6, margin: 0 }}>
+                                ⛔ TRÙNG LỊCH TRÌNH
+                              </Tag>
+                            )}
+                            <Tag
+                              color={eligibility.tagColor}
+                              style={{ fontWeight: 700, borderRadius: 6, margin: 0 }}
+                            >
+                              {eligibility.tagText}
+                            </Tag>
+                            <Tag color="blue">{horseBreed}</Tag>
+                          </Space>
+                        </Flex>
+
+                        <div style={{ fontSize: 13, color: isBlocked ? '#991B1B' : '#64748b', marginLeft: 28, marginBottom: 8 }}>
+                          {t(`horses.genderOptions.${horseGender?.toLowerCase()}`) || horseGender} · {t('horses.fields.microchip')}:{' '}
+                          <code>{horseMicrochip || '---'}</code>
+                        </div>
+
+                        {/* Banner cảnh báo chặn nếu bị trùng lịch trình hoặc trong 1 tuần hạ nhiệt sau chuyến bay */}
+                        {isConflict && (
+                          <div
+                            style={{
+                              marginLeft: 28,
+                              marginTop: 6,
+                              marginBottom: 8,
+                              padding: '8px 12px',
+                              backgroundColor: '#FEE2E2',
+                              borderRadius: 8,
+                              fontSize: 12,
+                              fontWeight: 700,
+                              color: '#991B1B',
+                              border: '1px solid #FECACA',
+                            }}
+                          >
+                            ⛔ {conflict.reason}
+                          </div>
+                        )}
+
+                        {/* Banner cảnh báo chặn vận chuyển nếu chấn thương nguy cấp */}
+                        {isCritical && (
+                          <div
+                            style={{
+                              marginLeft: 28,
+                              marginTop: 6,
+                              padding: '8px 12px',
+                              backgroundColor: '#FEE2E2',
+                              borderRadius: 8,
+                              fontSize: 12,
+                              fontWeight: 700,
+                              color: '#991B1B',
+                              border: '1px solid #FECACA',
+                            }}
+                          >
+                            ⛔ Non-Fit-to-Travel: Rủi ro nguy cấp hoặc chấn thương nặng theo kết luận hồ sơ y tế, CẤM VẬN CHUYỂN!
+                          </div>
+                        )}
+
+                        {/* Tùy chọn hạng chuồng khi được tick chọn */}
+                        {isSelected && !isBlocked && (
+                          <div
+                            className="stall-select-container"
+                            style={{
+                              marginTop: 14,
+                              paddingTop: 14,
+                              borderTop: '1px dashed #e2e8f0',
+                            }}
+                          >
+                            <div style={{ marginBottom: 8 }}>
+                              <strong style={{ fontSize: 13, color: '#0f172a' }}>
+                                🏷️ Chọn hạng chuồng vận chuyển (Stall Class):
+                              </strong>
+                            </div>
+
+                            <Row gutter={[8, 8]} style={{ marginBottom: 10 }}>
+                              {/* Option Shared */}
+                              <Col xs={24} sm={8}>
+                                <div
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setStallClasses((prev) => ({ ...prev, [horseId]: 'Shared' }));
+                                  }}
+                                  style={{
+                                    padding: '10px 10px',
+                                    borderRadius: 10,
+                                    border: (stallClasses[horseId] || 'Comfort') === 'Shared' ? '2px solid #f59e0b' : '1px solid #e2e8f0',
+                                    backgroundColor: (stallClasses[horseId] || 'Comfort') === 'Shared' ? '#fffdf5' : '#ffffff',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                  }}
+                                >
+                                  <Flex justify="space-between" align="center">
+                                    <strong style={{ fontSize: 12, color: '#0f172a' }}>Shared</strong>
+                                    <Tag color="default" style={{ margin: 0, fontSize: 11 }}>+$0</Tag>
+                                  </Flex>
+                                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                                    Chuồng tiêu chuẩn (Tích hợp kiểm soát nhiệt độ FEI 16-19°C)
+                                  </div>
+                                </div>
+                              </Col>
+
+                              {/* Option Comfort */}
+                              <Col xs={24} sm={8}>
+                                <div
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setStallClasses((prev) => ({ ...prev, [horseId]: 'Comfort' }));
+                                  }}
+                                  style={{
+                                    padding: '10px 10px',
+                                    borderRadius: 10,
+                                    border: (stallClasses[horseId] || 'Comfort') === 'Comfort' ? '2px solid #f59e0b' : '1px solid #e2e8f0',
+                                    backgroundColor: (stallClasses[horseId] || 'Comfort') === 'Comfort' ? '#fffdf5' : '#ffffff',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                  }}
+                                >
+                                  <Flex justify="space-between" align="center">
+                                    <strong style={{ fontSize: 12, color: '#0f172a' }}>Comfort</strong>
+                                    <Tag color="gold" style={{ margin: 0, fontSize: 11, fontWeight: 700 }}>+$200</Tag>
+                                  </Flex>
+                                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                                    Khoang rộng 1.5x (Điều hòa FEI 16-19°C & đệm chống rung)
+                                  </div>
+                                </div>
+                              </Col>
+
+                              {/* Option Private */}
+                              <Col xs={24} sm={8}>
+                                <div
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setStallClasses((prev) => ({ ...prev, [horseId]: 'Private' }));
+                                  }}
+                                  style={{
+                                    padding: '10px 10px',
+                                    borderRadius: 10,
+                                    border: (stallClasses[horseId] || 'Comfort') === 'Private' ? '2px solid #f59e0b' : '1px solid #e2e8f0',
+                                    backgroundColor: (stallClasses[horseId] || 'Comfort') === 'Private' ? '#fffdf5' : '#ffffff',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                  }}
+                                >
+                                  <Flex justify="space-between" align="center">
+                                    <strong style={{ fontSize: 12, color: '#0f172a' }}>Private</strong>
+                                    <Tag color="purple" style={{ margin: 0, fontSize: 11, fontWeight: 700 }}>+$500</Tag>
+                                  </Flex>
+                                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                                    Khoang riêng VIP (Vi khí hậu độc lập & buồng cách âm)
+                                  </div>
+                                </div>
+                              </Col>
+                            </Row>
+
+                            <Input
+                              size="small"
+                              value={horseNotes[horseId] || ''}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) =>
+                                setHorseNotes((prev) => ({
+                                  ...prev,
+                                  [horseId]: e.target.value,
+                                }))
+                              }
+                              placeholder="Ghi chú khẩu phần hoặc chăm sóc riêng cho cá thể ngựa này..."
+                              style={{ borderRadius: 8 }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </Col>
+                  );
+                })}
+              </Row>
+            )}
+          </div>
+
           <Divider style={{ margin: '18px 0' }} />
 
           {/* 2. KHỐI BẢO HIỂM HÀNH TRÌNH (TRIP INSURANCE) */}
@@ -2090,12 +2447,12 @@ export default function BookingWizard({
                     <strong style={{ color: '#0F172A', fontSize: 13.5 }}>
                       ❄️ Climate Control (16-19°C)
                     </strong>
-                    <Tag color="green" style={{ fontWeight: 800, margin: 0, fontSize: 11.5 }}>
-                      Đã bao gồm ($0)
+                    <Tag color="cyan" style={{ fontWeight: 800, margin: 0, fontSize: 11.5 }}>
+                      Tích hợp trong chuồng ($0 thêm)
                     </Tag>
                   </Flex>
                   <Text style={{ fontSize: 11.5, color: '#64748B', display: 'block', lineHeight: 1.35 }}>
-                    Tiêu chuẩn kiểm soát khí hậu FEI bắt buộc, được tích hợp sẵn trong cước vận chuyển tiêu chuẩn.
+                    Nhiệt độ buồng nuôi duy trì nghiêm ngặt 16-19°C theo chuẩn FEI, đã tích hợp trọn gói trong cấu hình chuồng bạn đã chọn.
                   </Text>
                 </div>
               </Col>
@@ -2116,11 +2473,11 @@ export default function BookingWizard({
                       🩺 Equine Vet Escort
                     </strong>
                     <Tag color="green" style={{ fontWeight: 800, margin: 0, fontSize: 11.5 }}>
-                      Bắt buộc ($0)
+                      +${transportMode === 'DoorToDoor' ? '1,600' : transportMode === 'Air' ? '1,400' : '600'} USD
                     </Tag>
                   </Flex>
                   <Text style={{ fontSize: 11.5, color: '#64748B', display: 'block', lineHeight: 1.35 }}>
-                    Bác sĩ thú y chuyên trách áp tải theo dõi sinh hiệu, bắt buộc theo chuẩn FEI và đã tính trong cước.
+                    Bác sĩ thú y chuyên trách áp tải theo dõi sinh hiệu suốt hành trình, bắt buộc theo chuẩn FEI (Đồng bộ với chi phí Route Plan).
                   </Text>
                 </div>
               </Col>
@@ -2192,369 +2549,6 @@ export default function BookingWizard({
                 />
               )}
             />
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* BƯỚC 3: WHAT (CHỌN NGỰA, HẠNG CHUỒNG, PHƯƠNG THỨC & ĐỊA CHỈ CHI TIẾT) */}
-      {/* ======================================================== */}
-      {currentStep === 2 && (
-        <div>
-          {/* BANNER THỜI GIAN & HÀNH LANG VẬN CHUYỂN ĐÃ XÁC NHẬN */}
-          <div
-            style={{
-              padding: '12px 18px',
-              backgroundColor: '#F0FDF4',
-              border: '1.5px solid #BBF7D0',
-              borderRadius: 14,
-              marginBottom: 20,
-            }}
-          >
-            <Flex align="center" justify="space-between" wrap="wrap" gap={8}>
-              <div>
-                <span style={{ fontSize: 13, color: '#166534', fontWeight: 700 }}>
-                  📅 Khoảng thời gian vận chuyển đã xác nhận:
-                </span>{' '}
-                <strong style={{ color: '#14532D', fontSize: 14.5 }}>
-                  {departureDate ? dayjs(departureDate).format('DD/MM/YYYY') : '---'} ➔{' '}
-                  {deliveryDate ? dayjs(deliveryDate).format('DD/MM/YYYY') : (departureDate ? dayjs(departureDate).format('DD/MM/YYYY') : '---')}
-                </strong>
-              </div>
-              <Tag color="green" style={{ fontWeight: 800, margin: 0 }}>
-                Hệ thống tự động kiểm tra xung đột lịch & thời gian nghỉ 1 tuần
-              </Tag>
-            </Flex>
-          </div>
-          {/* PHẦN 1: WHICH HORSES ARE TRAVELING? */}
-          <div style={{ marginBottom: 36 }}>
-            <Title level={4} style={{ margin: '0 0 6px', fontWeight: 800, color: '#0f172a' }}>
-              Which horses are traveling?
-            </Title>
-            <Text style={{ color: '#64748b', fontSize: 13, display: 'block', marginBottom: 20 }}>
-              Select one or more horses for this trip.
-            </Text>
-
-            {selectedHorseIds.length === 0 && (
-              <Alert
-                type="warning"
-                showIcon
-                message={t('bookings.validation.selectHorseRequired') || 'Vui lòng chọn ít nhất 1 cá thể ngựa để tiếp tục'}
-                style={{ marginBottom: 20, borderRadius: 10 }}
-              />
-            )}
-
-            {loadingHorses ? (
-              <Text type="secondary">{t('common.loading')}</Text>
-            ) : availableHorses.length === 0 ? (
-              <Card
-                bordered
-                style={{
-                  borderRadius: 16,
-                  textAlign: 'center',
-                  backgroundColor: '#f8fafc',
-                  border: '1.5px dashed #cbd5e1',
-                  padding: '24px 16px',
-                }}
-              >
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={
-                    <div>
-                      <strong style={{ fontSize: 16, color: '#0f172a', display: 'block', marginBottom: 4 }}>
-                        {t('horses.emptyText') || 'Tài khoản của bạn chưa có hồ sơ ngựa nào'}
-                      </strong>
-                      <Text style={{ fontSize: 13, color: '#64748b' }}>
-                        {t('bookings.noHorsesHint') || 'Vui lòng thêm ngựa vào hồ sơ trước khi tạo yêu cầu vận chuyển mới.'}
-                      </Text>
-                    </div>
-                  }
-                >
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={() => navigate(ROUTES.CUSTOMER_HORSES_NEW)}
-                    style={{
-                      borderRadius: 9999,
-                      fontWeight: 700,
-                      backgroundColor: '#f59e0b',
-                      borderColor: '#f59e0b',
-                      color: '#0f172a',
-                      marginTop: 8,
-                    }}
-                  >
-                    Thêm hồ sơ ngựa mới
-                  </Button>
-                </Empty>
-              </Card>
-            ) : (
-              <Row gutter={[16, 16]}>
-                {availableHorses.map((horse) => {
-                  const horseId = horse.horseId || horse.HorseID;
-                  const isSelected = selectedHorseIds.some((id) => String(id) === String(horseId));
-                  const horseName = horse.name || horse.Name;
-                  const horseBreed = horse.breed || horse.Breed;
-                  const horseGender = horse.gender || horse.Gender;
-                  const horseMicrochip = horse.microchipNumber || horse.MicrochipNumber;
-                  const eligibility = checkHorseTransportEligibility(horse, i18n?.language || 'vi');
-                  const conflict = checkHorseBookingConflict(horseId, departureDate, deliveryDate, null, user?.userId || user?.UserID);
-                  const isConflict = conflict.hasConflict;
-                  const isCritical = (horse.HealthStatus || horse.healthStatus || '').trim().toLowerCase() === 'critical';
-                  const isBlocked = isCritical || isConflict;
-
-                  return (
-                    <Col key={horseId} xs={24} md={12}>
-                      <div
-                        role="button"
-                        tabIndex={isBlocked ? -1 : 0}
-                        aria-disabled={isBlocked}
-                        onClick={(e) => {
-                          if (isBlocked) {
-                            if (isConflict) message.error(conflict.reason);
-                            return;
-                          }
-                          if (e.target.closest?.('.stall-select-container') || e.target.closest?.('.ant-select') || e.target.closest?.('input')) return;
-                          handleToggleHorse(horseId);
-                        }}
-                        onKeyDown={(e) => {
-                          if (isBlocked) return;
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            handleToggleHorse(horseId);
-                          }
-                        }}
-                        style={{
-                          padding: 18,
-                          borderRadius: 16,
-                          border: isCritical
-                            ? '1.5px solid #FECACA'
-                            : isConflict
-                            ? '1.5px solid #FECACA'
-                            : isSelected
-                            ? '2.5px solid #F59E0B'
-                            : '1.5px solid #E2E8F0',
-                          backgroundColor: isCritical || isConflict
-                            ? '#FEF2F2'
-                            : isSelected
-                            ? '#FFFBEB'
-                            : '#FFFFFF',
-                          cursor: isBlocked ? 'not-allowed' : 'pointer',
-                          opacity: isBlocked ? 0.75 : 1,
-                          transform: isSelected && !isBlocked ? 'scale(1.02)' : 'scale(1)',
-                          boxShadow: isSelected && !isBlocked
-                            ? '0 8px 24px rgba(245, 158, 11, 0.22)'
-                            : '0 2px 8px rgba(0, 0, 0, 0.02)',
-                          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                        }}
-                      >
-                        <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
-                          <Checkbox
-                            checked={!isBlocked && isSelected}
-                            disabled={isBlocked}
-                            onChange={() => !isBlocked && handleToggleHorse(horseId)}
-                          >
-                            <strong
-                              style={{
-                                fontSize: 16,
-                                color: isCritical || isConflict
-                                  ? '#991B1B'
-                                  : isSelected
-                                  ? '#92400E'
-                                  : '#0F172A',
-                                marginLeft: 4,
-                              }}
-                            >
-                              🐴 {horseName}
-                            </strong>
-                          </Checkbox>
-                          <Space size={6} wrap>
-                            {isSelected && !isBlocked && (
-                              <Tag color="gold" style={{ fontWeight: 800, borderRadius: 9999 }}>
-                                ✓ Đã chọn
-                              </Tag>
-                            )}
-                            {isConflict && (
-                              <Tag color="error" style={{ fontWeight: 800, borderRadius: 6, margin: 0 }}>
-                                ⛔ TRÙNG LỊCH TRÌNH
-                              </Tag>
-                            )}
-                            <Tag
-                              color={eligibility.tagColor}
-                              style={{ fontWeight: 700, borderRadius: 6, margin: 0 }}
-                            >
-                              {eligibility.tagText}
-                            </Tag>
-                            <Tag color="blue">{horseBreed}</Tag>
-                          </Space>
-                        </Flex>
-
-                        <div style={{ fontSize: 13, color: isBlocked ? '#991B1B' : '#64748b', marginLeft: 28, marginBottom: 8 }}>
-                          {t(`horses.genderOptions.${horseGender?.toLowerCase()}`) || horseGender} · {t('horses.fields.microchip')}:{' '}
-                          <code>{horseMicrochip || '---'}</code>
-                        </div>
-
-                        {/* Banner cảnh báo chặn nếu bị trùng lịch trình hoặc trong 1 tuần hạ nhiệt sau chuyến bay */}
-                        {isConflict && (
-                          <div
-                            style={{
-                              marginLeft: 28,
-                              marginTop: 6,
-                              marginBottom: 8,
-                              padding: '8px 12px',
-                              backgroundColor: '#FEE2E2',
-                              borderRadius: 8,
-                              fontSize: 12,
-                              fontWeight: 700,
-                              color: '#991B1B',
-                              border: '1px solid #FECACA',
-                            }}
-                          >
-                            ⛔ {conflict.reason}
-                          </div>
-                        )}
-
-                        {/* Banner cảnh báo chặn vận chuyển nếu chấn thương nguy cấp */}
-                        {isCritical && (
-                          <div
-                            style={{
-                              marginLeft: 28,
-                              marginTop: 6,
-                              padding: '8px 12px',
-                              backgroundColor: '#FEE2E2',
-                              borderRadius: 8,
-                              fontSize: 12,
-                              fontWeight: 700,
-                              color: '#991B1B',
-                              border: '1px solid #FECACA',
-                            }}
-                          >
-                            ⛔ Non-Fit-to-Travel: Rủi ro nguy cấp hoặc chấn thương nặng theo kết luận hồ sơ y tế, CẤM VẬN CHUYỂN!
-                          </div>
-                        )}
-
-                        {/* Tùy chọn hạng chuồng khi được tick chọn */}
-                        {isSelected && !isBlocked && (
-                          <div
-                            className="stall-select-container"
-                            style={{
-                              marginTop: 14,
-                              paddingTop: 14,
-                              borderTop: '1px dashed #e2e8f0',
-                            }}
-                          >
-                            <div style={{ marginBottom: 8 }}>
-                              <strong style={{ fontSize: 13, color: '#0f172a' }}>
-                                🏷️ Chọn hạng chuồng vận chuyển (Stall Class):
-                              </strong>
-                            </div>
-
-                            <Row gutter={[8, 8]} style={{ marginBottom: 10 }}>
-                              {/* Option Shared */}
-                              <Col xs={24} sm={8}>
-                                <div
-                                  role="button"
-                                  tabIndex={0}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setStallClasses((prev) => ({ ...prev, [horseId]: 'Shared' }));
-                                  }}
-                                  style={{
-                                    padding: '10px 10px',
-                                    borderRadius: 10,
-                                    border: (stallClasses[horseId] || 'Comfort') === 'Shared' ? '2px solid #f59e0b' : '1px solid #e2e8f0',
-                                    backgroundColor: (stallClasses[horseId] || 'Comfort') === 'Shared' ? '#fffdf5' : '#ffffff',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s',
-                                  }}
-                                >
-                                  <Flex justify="space-between" align="center">
-                                    <strong style={{ fontSize: 12, color: '#0f172a' }}>Shared</strong>
-                                    <Tag color="default" style={{ margin: 0, fontSize: 11 }}>+$0</Tag>
-                                  </Flex>
-                                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-                                    Chuồng tiêu chuẩn (x1.0)
-                                  </div>
-                                </div>
-                              </Col>
-
-                              {/* Option Comfort */}
-                              <Col xs={24} sm={8}>
-                                <div
-                                  role="button"
-                                  tabIndex={0}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setStallClasses((prev) => ({ ...prev, [horseId]: 'Comfort' }));
-                                  }}
-                                  style={{
-                                    padding: '10px 10px',
-                                    borderRadius: 10,
-                                    border: (stallClasses[horseId] || 'Comfort') === 'Comfort' ? '2px solid #f59e0b' : '1px solid #e2e8f0',
-                                    backgroundColor: (stallClasses[horseId] || 'Comfort') === 'Comfort' ? '#fffdf5' : '#ffffff',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s',
-                                  }}
-                                >
-                                  <Flex justify="space-between" align="center">
-                                    <strong style={{ fontSize: 12, color: '#0f172a' }}>Comfort</strong>
-                                    <Tag color="gold" style={{ margin: 0, fontSize: 11, fontWeight: 700 }}>+$200</Tag>
-                                  </Flex>
-                                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-                                    Khoang rộng 1.5x (x1.4)
-                                  </div>
-                                </div>
-                              </Col>
-
-                              {/* Option Private */}
-                              <Col xs={24} sm={8}>
-                                <div
-                                  role="button"
-                                  tabIndex={0}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setStallClasses((prev) => ({ ...prev, [horseId]: 'Private' }));
-                                  }}
-                                  style={{
-                                    padding: '10px 10px',
-                                    borderRadius: 10,
-                                    border: (stallClasses[horseId] || 'Comfort') === 'Private' ? '2px solid #f59e0b' : '1px solid #e2e8f0',
-                                    backgroundColor: (stallClasses[horseId] || 'Comfort') === 'Private' ? '#fffdf5' : '#ffffff',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s',
-                                  }}
-                                >
-                                  <Flex justify="space-between" align="center">
-                                    <strong style={{ fontSize: 12, color: '#0f172a' }}>Private</strong>
-                                    <Tag color="purple" style={{ margin: 0, fontSize: 11, fontWeight: 700 }}>+$500</Tag>
-                                  </Flex>
-                                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-                                    Khoang riêng VIP (x2.2)
-                                  </div>
-                                </div>
-                              </Col>
-                            </Row>
-
-                            <Input
-                              size="small"
-                              value={horseNotes[horseId] || ''}
-                              onClick={(e) => e.stopPropagation()}
-                              onChange={(e) =>
-                                setHorseNotes((prev) => ({
-                                  ...prev,
-                                  [horseId]: e.target.value,
-                                }))
-                              }
-                              placeholder="Ghi chú khẩu phần hoặc chăm sóc riêng cho cá thể ngựa này..."
-                              style={{ borderRadius: 8 }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </Col>
-                  );
-                })}
-              </Row>
-            )}
           </div>
 
           <Divider style={{ margin: '24px 0 20px' }} />
@@ -2950,8 +2944,8 @@ export default function BookingWizard({
                         : '🚛 ĐƯỜNG BỘ CHUYÊN DỤNG (GROUND TRAILER)'}
                     </Tag>
                     <Space size={6} wrap>
-                      <Tag color="cyan" style={{ fontWeight: 700, margin: 0 }}>❄ FEI Climate Control ($0)</Tag>
-                      <Tag color="green" style={{ fontWeight: 700, margin: 0 }}>🩺 Equine Vet Escort ($0)</Tag>
+                      <Tag color="cyan" style={{ fontWeight: 700, margin: 0 }}>❄ FEI Climate Control (Tích hợp chuồng)</Tag>
+                      <Tag color="green" style={{ fontWeight: 700, margin: 0 }}>🩺 Equine Vet Escort (+${transportMode === 'DoorToDoor' ? '1,600' : transportMode === 'Air' ? '1,400' : '600'})</Tag>
                       {isExpress && <Tag color="volcano" style={{ fontWeight: 700, margin: 0 }}>⚡ Express (+$650)</Tag>}
                     </Space>
                   </Flex>

@@ -69,9 +69,17 @@ export default function CoordinatorDashboard() {
   const [shortageModalOpen, setShortageModalOpen] = useState(false);
   const [charterCost, setCharterCost] = useState(2500);
 
-  // State cho Alt Flow C: Driver Conflict Resolution Modal
+  // State cho Alt Flow C: Driver Conflict Resolution Modal (Figma Image 3)
   const [driverConflictModalOpen, setDriverConflictModalOpen] = useState(false);
-  const [selectedReplacementDriver, setSelectedReplacementDriver] = useState('Le Hoang Nam');
+  const [selectedReplacementDriver, setSelectedReplacementDriver] = useState('Nguyen Van Binh');
+
+  // State cho Live Fleet Tracking & Incident Center (Figma Image 5)
+  const [tripDetailModalOpen, setTripDetailModalOpen] = useState(false);
+  const [selectedDetailTrip, setSelectedDetailTrip] = useState(null);
+  const [tripCancelModalOpen, setTripCancelModalOpen] = useState(false);
+  const [selectedCancelTrip, setSelectedCancelTrip] = useState(null);
+  const [cancelOption, setCancelOption] = useState('divert');
+  const [managerOverrideRemarks, setManagerOverrideRemarks] = useState('');
 
   // State cho Quản lý ngày nghỉ nhân sự (Item 5)
   const [crewLeaveModalOpen, setCrewLeaveModalOpen] = useState(false);
@@ -381,12 +389,11 @@ export default function CoordinatorDashboard() {
           <Card
             bordered
             onClick={() => {
-              setMainView('plans');
-              setActivePlanTab('Assigned');
+              setMainView('live_tracking');
             }}
             style={{
               borderRadius: 18,
-              border: mainView === 'plans' && activePlanTab === 'Assigned' ? '2px solid #059669' : '1px solid #E2E8F0',
+              border: mainView === 'live_tracking' ? '2px solid #059669' : '1px solid #E2E8F0',
               cursor: 'pointer',
               height: '100%',
             }}
@@ -447,6 +454,10 @@ export default function CoordinatorDashboard() {
               {
                 label: `👥 Lịch trực & Ngày nghỉ Driver / Escort (${personnelList.length})`,
                 value: 'crew_schedule',
+              },
+              {
+                label: '🛰️ Live Fleet Tracking & Incident Center (2)',
+                value: 'live_tracking',
               },
             ]}
             style={{ backgroundColor: '#EDF2F7', padding: 4, borderRadius: 12, fontWeight: 700 }}
@@ -1174,40 +1185,487 @@ export default function CoordinatorDashboard() {
         </div>
       </Modal>
 
-      {/* MODAL ALT FLOW C: DRIVER CONFLICT RESOLUTION */}
+      {/* MODAL ALT FLOW C: DRIVER CONFLICT RESOLUTION (FIGMA IMAGE 3) */}
       <Modal
         open={driverConflictModalOpen}
         onCancel={() => setDriverConflictModalOpen(false)}
-        onOk={handleResolveDriverConflict}
-        title="Driver Schedule Conflict Resolution (Alt Flow C)"
-        okText="Confirm Replacement"
-        cancelText="Cancel"
-        okButtonProps={{ style: { backgroundColor: '#16A34A', borderColor: '#16A34A', fontWeight: 700 } }}
+        footer={null}
+        width={820}
+        title={
+          <div>
+            <div style={{ fontSize: 12, color: '#64748B', fontWeight: 600 }}>← Back to Fleet & Personnel Roster</div>
+            <Title level={4} style={{ margin: '2px 0 0', fontWeight: 800, color: '#0F172A' }}>
+              Driver Conflict Resolution
+            </Title>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              Alt Flow C: Schedule overlap detected for Plan #PLN-8821
+            </Text>
+          </div>
+        }
       >
-        <div style={{ padding: '12px 0' }}>
-          <Paragraph>
-            Tài xế <strong>Nguyễn Văn Bình</strong> đang bị trùng lịch chạy xe trên chuyến #TRP-401 vào ngày 24/09/2026. Hãy chọn tài xế thay thế đủ điều kiện:
-          </Paragraph>
-          <div style={{ marginBottom: 16 }}>
-            <label htmlFor="replacement-driver-select" style={{ fontWeight: 700, display: 'block', marginBottom: 6 }}>
-              Chọn tài xế khả dụng:
-            </label>
-            <Select
-              id="replacement-driver-select"
-              value={selectedReplacementDriver}
-              onChange={setSelectedReplacementDriver}
-              size="large"
-              style={{ width: '100%' }}
-              options={[
-                { value: 'Le Hoang Nam', label: 'Lê Hoàng Nam (License #VN-99201 • Nghỉ đủ 24h • Sẵn sàng)' },
-                { value: 'Pham Van Duc', label: 'Phạm Văn Đức (License #VN-66321 • Standby • Sẵn sàng)' },
+        <div style={{ padding: '10px 0' }}>
+          {/* Banner Cảnh báo đỏ */}
+          <div
+            style={{
+              backgroundColor: '#FEF2F2',
+              border: '1.5px solid #FECACA',
+              borderRadius: 12,
+              padding: '14px 18px',
+              marginBottom: 18,
+            }}
+          >
+            <Flex justify="space-between" align="center" wrap="wrap" gap={10}>
+              <div>
+                <strong style={{ color: '#991B1B', fontSize: 14, display: 'block' }}>
+                  ⚠️ Schedule Conflict Detected
+                </strong>
+                <span style={{ fontSize: 12.5, color: '#7F1D1D' }}>
+                  Driver <strong>Le Hoang Nam (VN-99201)</strong> has overlapping assignment on <strong>Sep 25, 2026</strong>.
+                  Trip #TRP-401 (Hanoi Overland) overlaps with Plan #PLN-8821 (SGN ➔ CDG).
+                </span>
+              </div>
+              <Tag color="error" style={{ fontWeight: 800, padding: '4px 10px', borderRadius: 6, fontSize: 12 }}>
+                Submission Blocked
+              </Tag>
+            </Flex>
+          </div>
+
+          {/* 2 Khối: Conflict Details vs Impact Analysis */}
+          <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+            <Col xs={24} md={12}>
+              <div
+                style={{
+                  border: '1px solid #E2E8F0',
+                  borderRadius: 12,
+                  padding: '14px 16px',
+                  height: '100%',
+                  backgroundColor: '#FFFFFF',
+                }}
+              >
+                <strong style={{ fontSize: 13.5, color: '#0F172A', display: 'block', marginBottom: 10 }}>
+                  Conflict Details
+                </strong>
+                <div style={{ backgroundColor: '#FEE2E2', padding: '8px 12px', borderRadius: 8, marginBottom: 8, fontSize: 12, color: '#991B1B' }}>
+                  <strong>Current Assignment: Trip #TRP-401</strong>
+                  <div style={{ fontSize: 11.5 }}>Route: Hanoi Overland • Sep 24-26, 2026 • Driver: Le Hoang Nam</div>
+                </div>
+                <div style={{ backgroundColor: '#FEF3C7', padding: '8px 12px', borderRadius: 8, fontSize: 12, color: '#92400E' }}>
+                  <strong>New Assignment: Plan #PLN-8821</strong>
+                  <div style={{ fontSize: 11.5 }}>Route: SGN ➔ DXB ➔ CDG • Sep 25-28, 2026 • Driver: Le Hoang Nam</div>
+                </div>
+                <div style={{ color: '#DC2626', fontSize: 11.5, fontWeight: 700, marginTop: 8 }}>
+                  Overlap Period: Sep 25, 2026 (Full day)
+                </div>
+              </div>
+            </Col>
+
+            <Col xs={24} md={12}>
+              <div
+                style={{
+                  border: '1px solid #E2E8F0',
+                  borderRadius: 12,
+                  padding: '14px 16px',
+                  height: '100%',
+                  backgroundColor: '#F8FAFC',
+                }}
+              >
+                <strong style={{ fontSize: 13.5, color: '#0F172A', display: 'block', marginBottom: 10 }}>
+                  Impact Analysis
+                </strong>
+                <div style={{ fontSize: 12.5, color: '#334155', lineHeight: 1.6 }}>
+                  <div>If driver is changed:</div>
+                  <div style={{ color: '#D97706', fontWeight: 700, marginTop: 4 }}>
+                    ⏱️ Departure delay: +2 hours
+                  </div>
+                  <div style={{ fontSize: 12, color: '#64748B' }}>
+                    New ETA at CDG: Sep 28, 2026 • 08:30 AM (was 06:30 AM)
+                  </div>
+                  <div style={{ fontSize: 12, color: '#16A34A', fontWeight: 600, marginTop: 4 }}>
+                    Additional cost: $0 (no extra charges)
+                  </div>
+                </div>
+              </div>
+            </Col>
+          </Row>
+
+          {/* Alternative Drivers Table */}
+          <div style={{ marginBottom: 20 }}>
+            <strong style={{ fontSize: 13.5, color: '#0F172A', display: 'block', marginBottom: 8 }}>
+              Alternative Drivers (Available drivers with compatible certifications)
+            </strong>
+            <Table
+              size="small"
+              pagination={false}
+              dataSource={[
+                {
+                  key: '1',
+                  name: 'Nguyen Van Binh',
+                  title: 'Senior Heavy Van Driver',
+                  license: 'VN-88201',
+                  status: 'AVAILABLE',
+                  experience: '8 years • 45 trips',
+                  match: '95% Match',
+                },
+                {
+                  key: '2',
+                  name: 'Tran Hoang',
+                  title: 'International Route Specialist',
+                  license: 'VN-77302',
+                  status: 'AVAILABLE',
+                  experience: '12 years • 78 trips',
+                  match: '88% Match',
+                },
+                {
+                  key: '3',
+                  name: 'Pham Duc',
+                  title: 'Cross-border Certified',
+                  license: 'VN-66403',
+                  status: 'LIMITED',
+                  experience: '5 years • 23 trips',
+                  match: '72% Match',
+                },
+              ]}
+              columns={[
+                {
+                  title: 'DRIVER',
+                  dataIndex: 'name',
+                  render: (name, r) => (
+                    <div>
+                      <strong style={{ color: '#0F172A' }}>{name}</strong>
+                      <div style={{ fontSize: 11, color: '#64748B' }}>{r.title}</div>
+                    </div>
+                  ),
+                },
+                { title: 'LICENSE', dataIndex: 'license', render: (l) => <code>{l}</code> },
+                {
+                  title: 'AVAILABILITY',
+                  dataIndex: 'status',
+                  render: (st) => (
+                    <Tag color={st === 'AVAILABLE' ? 'green' : 'gold'} style={{ fontWeight: 800 }}>
+                      {st}
+                    </Tag>
+                  ),
+                },
+                { title: 'EXPERIENCE', dataIndex: 'experience', render: (e) => <span style={{ fontSize: 12 }}>{e}</span> },
+                {
+                  title: 'COMPATIBILITY',
+                  dataIndex: 'match',
+                  render: (m) => <strong style={{ color: '#16A34A', fontSize: 12 }}>{m}</strong>,
+                },
+                {
+                  title: 'ACTION',
+                  key: 'action',
+                  render: (_, r) => (
+                    <Button
+                      size="small"
+                      type={selectedReplacementDriver === r.name ? 'primary' : 'default'}
+                      onClick={() => {
+                        setSelectedReplacementDriver(r.name);
+                        message.success(`Đã chọn tài xế ${r.name} thay thế!`);
+                      }}
+                      style={{
+                        backgroundColor: selectedReplacementDriver === r.name ? '#16A34A' : undefined,
+                        borderColor: selectedReplacementDriver === r.name ? '#16A34A' : undefined,
+                        fontWeight: 700,
+                        borderRadius: 6,
+                      }}
+                    >
+                      {selectedReplacementDriver === r.name ? '✓ Selected' : 'Select Driver'}
+                    </Button>
+                  ),
+                },
               ]}
             />
           </div>
-          <Text style={{ fontSize: 12, color: '#16A34A', fontWeight: 600 }}>
-            ✓ Tài xế được chọn đã hoàn thành bài kiểm tra an toàn FEI và không bị chồng chéo lịch trình.
-          </Text>
+
+          {/* Dải nút hành động chân trang */}
+          <Flex justify="space-between" align="center" wrap="wrap" gap={10} style={{ marginBottom: 14 }}>
+            <Button
+              type="primary"
+              onClick={handleResolveDriverConflict}
+              style={{ backgroundColor: '#16A34A', borderColor: '#16A34A', fontWeight: 700, borderRadius: 8, height: 38 }}
+            >
+              ✓ Select Replacement Driver
+            </Button>
+            <Space size={8} wrap>
+              <Button
+                onClick={() => {
+                  message.info('Đã gửi yêu cầu ngoại lệ đổi tài xế tới Logistics Manager!');
+                  setDriverConflictModalOpen(false);
+                }}
+                style={{ borderRadius: 8, fontWeight: 600 }}
+              >
+                Request Change from Manager
+              </Button>
+              <Button
+                onClick={() => {
+                  message.info('Đã dời lịch khởi hành lùi 2 ngày để tránh trùng lịch!');
+                  setDriverConflictModalOpen(false);
+                }}
+                style={{ borderRadius: 8, fontWeight: 600, color: '#D97706', borderColor: '#D97706' }}
+              >
+                Reschedule Trip
+              </Button>
+              <Button onClick={() => setDriverConflictModalOpen(false)} style={{ borderRadius: 8 }}>
+                Back to Roster
+              </Button>
+            </Space>
+          </Flex>
+
+          <Alert
+            type="warning"
+            showIcon
+            message="Validation: 'Submit to Manager' button is blocked until conflict is resolved."
+            style={{ borderRadius: 8 }}
+          />
         </div>
+      </Modal>
+
+      {/* MODAL TRIP DETAIL VIEW (FIGMA IMAGE 5 - TRIP_DETAIL 1) */}
+      <Modal
+        open={tripDetailModalOpen}
+        onCancel={() => setTripDetailModalOpen(false)}
+        footer={[
+          <Button key="close" onClick={() => setTripDetailModalOpen(false)} style={{ borderRadius: 8 }}>
+            Đóng
+          </Button>,
+        ]}
+        width={800}
+        title={
+          <Flex align="center" gap={8}>
+            <CompassOutlined style={{ color: '#2563EB', fontSize: 20 }} />
+            <span style={{ fontWeight: 800, fontSize: 16 }}>
+              Trip Detail View — {selectedDetailTrip?.tripCode} ({selectedDetailTrip?.status})
+            </span>
+          </Flex>
+        }
+      >
+        {selectedDetailTrip && (
+          <div style={{ padding: '8px 0' }}>
+            {/* Thẻ Lộ trình & Thông tin cơ bản */}
+            <div
+              style={{
+                backgroundColor: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                borderRadius: 12,
+                padding: '16px 18px',
+                marginBottom: 16,
+              }}
+            >
+              <Row gutter={[16, 12]}>
+                <Col span={12}>
+                  <Text type="secondary" style={{ fontSize: 12 }}>ĐIỂM XUẤT PHÁT (ORIGIN):</Text>
+                  <div style={{ fontWeight: 700, fontSize: 13.5, color: '#0F172A' }}>{selectedDetailTrip.origin}</div>
+                </Col>
+                <Col span={12}>
+                  <Text type="secondary" style={{ fontSize: 12 }}>ĐIỂM GIAO ĐÍCH (DESTINATION):</Text>
+                  <div style={{ fontWeight: 700, fontSize: 13.5, color: '#0F172A' }}>{selectedDetailTrip.destination}</div>
+                </Col>
+                <Col span={12}>
+                  <Text type="secondary" style={{ fontSize: 12 }}>KÍP ĐIỀU KHIỂN & ÁP TẢI:</Text>
+                  <div style={{ fontSize: 13, color: '#334155' }}>
+                    Tài xế: <strong>{selectedDetailTrip.driver}</strong> • Thú y: <strong>{selectedDetailTrip.escort}</strong>
+                  </div>
+                </Col>
+                <Col span={12}>
+                  <Text type="secondary" style={{ fontSize: 12 }}>VẬN TỐC HIỆN TẠI:</Text>
+                  <div style={{ fontWeight: 800, color: '#16A34A', fontSize: 14 }}>
+                    {selectedDetailTrip.speed} km/h (GPS Locked)
+                  </div>
+                </Col>
+              </Row>
+            </div>
+
+            {/* Dải Telemetry Vi khí hậu */}
+            <div style={{ marginBottom: 16 }}>
+              <strong style={{ fontSize: 13.5, color: '#0F172A', display: 'block', marginBottom: 8 }}>
+                Cabin Telemetry (Điều hòa vi khí hậu buồng ngựa)
+              </strong>
+              <Row gutter={[12, 12]}>
+                <Col span={6}>
+                  <div style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: 10, textAlign: 'center' }}>
+                    <div style={{ fontSize: 11, color: '#166534' }}>CABIN TEMP</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: '#166534' }}>{selectedDetailTrip.temp}°C</div>
+                    <Tag color="success" style={{ margin: 0, fontSize: 10 }}>FEI 16-19°C</Tag>
+                  </div>
+                </Col>
+                <Col span={6}>
+                  <div style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10, padding: 10, textAlign: 'center' }}>
+                    <div style={{ fontSize: 11, color: '#1E40AF' }}>ĐỘ ẨM</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: '#1E40AF' }}>{selectedDetailTrip.humidity}%</div>
+                    <Tag color="blue" style={{ margin: 0, fontSize: 10 }}>Lý tưởng</Tag>
+                  </div>
+                </Col>
+                <Col span={6}>
+                  <div style={{ backgroundColor: '#FAF5FF', border: '1px solid #E9D5FF', borderRadius: 10, padding: 10, textAlign: 'center' }}>
+                    <div style={{ fontSize: 11, color: '#6B21A8' }}>CO2 PPM</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: '#6B21A8' }}>{selectedDetailTrip.co2}</div>
+                    <span style={{ fontSize: 10, color: '#6B21A8' }}>Trong lành</span>
+                  </div>
+                </Col>
+                <Col span={6}>
+                  <div style={{ backgroundColor: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10, padding: 10, textAlign: 'center' }}>
+                    <div style={{ fontSize: 11, color: '#92400E' }}>THÔNG GIÓ</div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: '#92400E' }}>Level 3</div>
+                    <span style={{ fontSize: 10, color: '#92400E' }}>Khí tươi liên tục</span>
+                  </div>
+                </Col>
+              </Row>
+            </div>
+
+            {/* Checkpoints & Vitals */}
+            <Row gutter={[16, 16]}>
+              <Col span={12}>
+                <strong style={{ fontSize: 13, color: '#0F172A', display: 'block', marginBottom: 6 }}>
+                  Checkpoints Progress:
+                </strong>
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: '#475569' }}>
+                  {selectedDetailTrip.checkpoints?.map((c, i) => (
+                    <li key={i} style={{ marginBottom: 4 }}>{c}</li>
+                  ))}
+                </ul>
+              </Col>
+              <Col span={12}>
+                <strong style={{ fontSize: 13, color: '#0F172A', display: 'block', marginBottom: 6 }}>
+                  Horse Health Vitals:
+                </strong>
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: '#475569' }}>
+                  {selectedDetailTrip.horses?.map((h, i) => (
+                    <li key={i} style={{ marginBottom: 4 }}>🐴 {h}</li>
+                  ))}
+                </ul>
+              </Col>
+            </Row>
+          </div>
+        )}
+      </Modal>
+
+      {/* MODAL TRIP CANCELLATION & EMERGENCY ALTERNATIVES (FIGMA IMAGE 5 - TRIP_CANCELLATION 1) */}
+      <Modal
+        open={tripCancelModalOpen}
+        onCancel={() => setTripCancelModalOpen(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setTripCancelModalOpen(false)} style={{ borderRadius: 8 }}>
+            Hủy thao tác
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            danger
+            onClick={() => {
+              message.success(
+                cancelOption === 'divert'
+                  ? '✓ Đã kích hoạt Phương án 1: Chuyển hướng hạ cánh khẩn cấp tại Ga cứu trợ Đà Nẵng!'
+                  : '✓ Đã kích hoạt Phương án 2: Hủy chuyến khẩn cấp, đưa ngựa quay lại Cảng xuất phát!'
+              );
+              setTripCancelModalOpen(false);
+            }}
+            style={{ fontWeight: 700, borderRadius: 8 }}
+          >
+            Confirm Emergency Action
+          </Button>,
+        ]}
+        width={680}
+        title={
+          <Flex align="center" gap={8}>
+            <AlertOutlined style={{ color: '#DC2626', fontSize: 20 }} />
+            <span style={{ fontWeight: 800, fontSize: 16, color: '#991B1B' }}>
+              Trip Cancellation & Emergency Alternatives (Xử lý sự cố khẩn cấp)
+            </span>
+          </Flex>
+        }
+      >
+        {selectedCancelTrip && (
+          <div style={{ padding: '8px 0' }}>
+            <div
+              style={{
+                backgroundColor: '#FEF2F2',
+                border: '1.5px solid #FECACA',
+                borderRadius: 12,
+                padding: '14px 16px',
+                marginBottom: 16,
+              }}
+            >
+              <strong style={{ color: '#991B1B', fontSize: 13.5, display: 'block', marginBottom: 4 }}>
+                ⚠️ Active Incident Detected:
+              </strong>
+              <div style={{ fontSize: 12.5, color: '#7F1D1D' }}>{selectedCancelTrip.incident}</div>
+              <div style={{ fontSize: 12, color: '#991B1B', marginTop: 4 }}>
+                Vị trí hiện tại: <strong>{selectedCancelTrip.currentLocation}</strong>
+              </div>
+            </div>
+
+            <Title level={5} style={{ margin: '0 0 10px', fontSize: 14 }}>
+              Available Actions (Chọn 1 trong 2 phương án khẩn cấp):
+            </Title>
+
+            {/* Option 1: Divert */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setCancelOption('divert')}
+              style={{
+                padding: '14px 16px',
+                borderRadius: 12,
+                border: cancelOption === 'divert' ? '2px solid #F59E0B' : '1px solid #E2E8F0',
+                backgroundColor: cancelOption === 'divert' ? '#FFFBEB' : '#FFFFFF',
+                cursor: 'pointer',
+                marginBottom: 12,
+                transition: 'all 0.2s',
+              }}
+            >
+              <Flex justify="space-between" align="center" style={{ marginBottom: 4 }}>
+                <strong style={{ fontSize: 14, color: '#92400E' }}>
+                  Option 1: Emergency Divert to Safe Haven Facility
+                </strong>
+                <Tag color="orange" style={{ fontWeight: 800 }}>Chuyển hướng dự bị</Tag>
+              </Flex>
+              <Text style={{ fontSize: 12, color: '#64748B', display: 'block' }}>
+                Hạ cánh khẩn cấp tại Trạm kiểm dịch động vật Đà Nẵng (DAD), đưa ngựa vào chuồng nghỉ trung chuyển FEI chờ bão tan.
+              </Text>
+            </div>
+
+            {/* Option 2: Full Cancellation */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setCancelOption('cancel')}
+              style={{
+                padding: '14px 16px',
+                borderRadius: 12,
+                border: cancelOption === 'cancel' ? '2px solid #DC2626' : '1px solid #E2E8F0',
+                backgroundColor: cancelOption === 'cancel' ? '#FEF2F2' : '#FFFFFF',
+                cursor: 'pointer',
+                marginBottom: 16,
+                transition: 'all 0.2s',
+              }}
+            >
+              <Flex justify="space-between" align="center" style={{ marginBottom: 4 }}>
+                <strong style={{ fontSize: 14, color: '#991B1B' }}>
+                  Option 2: Cancel Trip & Return to Origin
+                </strong>
+                <Tag color="red" style={{ fontWeight: 800 }}>Hủy chuyến & Hoàn trả</Tag>
+              </Flex>
+              <Text style={{ fontSize: 12, color: '#64748B', display: 'block' }}>
+                Hủy bỏ chặng bay, quay đầu về Nội Bài (HAN), kích hoạt hợp đồng bảo hiểm Trip Protection bồi thường 100% cho khách hàng.
+              </Text>
+            </div>
+
+            <div>
+              <label htmlFor="emergency-notes-input" style={{ fontSize: 12.5, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 6 }}>
+                Ghi chú điều phối & phê duyệt từ Logistics Manager:
+              </label>
+              <Input.TextArea
+                id="emergency-notes-input"
+                rows={2}
+                value={managerOverrideRemarks}
+                onChange={(e) => setManagerOverrideRemarks(e.target.value)}
+                placeholder="Nhập căn cứ kỹ thuật thú y hoặc lệnh kiểm soát không lưu..."
+                style={{ borderRadius: 8 }}
+              />
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

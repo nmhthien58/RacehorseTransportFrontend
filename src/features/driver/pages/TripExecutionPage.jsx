@@ -30,6 +30,8 @@ import {
   SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@features/auth/store/authStore';
+import { Tooltip } from 'antd';
 import { useMissionDetail } from '../hooks/useDriverMissions';
 import MissionHeaderCard from '../components/MissionHeaderCard';
 import EmergencyReportModal from '../components/EmergencyReportModal';
@@ -78,6 +80,15 @@ export default function TripExecutionPage() {
   const [clearForm] = Form.useForm();
 
   const checkpoints = mission?.routeCheckpoints || [];
+  const { user } = useAuthStore();
+  const userRole = user?.role || user?.Role;
+  const isEscort = userRole === 'Escort';
+  const isDriver = userRole === 'Driver';
+  const isAirFlight = mission?.transportMode === 'Air';
+  // Phân quyền Flow 4 theo Figma: Chuyến Air do Escort cập nhật, Ground/Door-to-Door do Driver cập nhật
+  const canUpdateRoute = isAirFlight
+    ? (isEscort || userRole === 'Admin' || userRole === 'LogisticsManager' || userRole === 'FleetCoordinator')
+    : (isDriver || userRole === 'Admin' || userRole === 'LogisticsManager' || userRole === 'FleetCoordinator');
 
   // Mở modal hoàn tất kiểm tra trạm
   const handleOpenClearModal = (cp) => {
@@ -277,6 +288,25 @@ export default function TripExecutionPage() {
           </Tag>
         </div>
 
+        {/* Banner phân quyền tác nghiệp Flow 4 theo Figma */}
+        {!canUpdateRoute && (
+          <Alert
+            type="info"
+            showIcon
+            style={{ marginBottom: 20, borderRadius: 10 }}
+            message={
+              isAirFlight
+                ? '✈️ Hành trình Chuyên cơ Hàng không (Air Flight)'
+                : '🚛 Tuyến đường bộ / Door-to-Door (Ground Trailer)'
+            }
+            description={
+              isAirFlight
+                ? 'Theo quy định vận hành, Bác sĩ thú y / Chuyên viên Áp tải (Escort) trực tiếp áp tải trên chuyên cơ và phụ trách check-in các mốc lộ trình bay. Cả Tài xế và Áp tải đều có toàn quyền gửi Báo cáo Tình huống Khẩn cấp (SOS).'
+                : 'Theo quy định vận hành, Tài xế (Driver) phụ trách check-in các trạm dừng và ghi nhận chỉ số Odometer. Bác sĩ Áp tải (Escort) phụ trách ghi nhận Nhật ký Phúc lợi ngựa. Cả Tài xế và Áp tải đều có toàn quyền gửi Báo cáo Tình huống Khẩn cấp (SOS).'
+            }
+          />
+        )}
+
         {/* Timeline chi tiết các trạm */}
         <Timeline
           mode="left"
@@ -414,10 +444,12 @@ export default function TripExecutionPage() {
                       <Space size={8} wrap>
                         {/* 1. Nếu Pending -> Có nút Arrive */}
                         {cp.status === 'Pending' && (
+                          <Tooltip title={!canUpdateRoute ? (isAirFlight ? "Chỉ Escort phụ trách cập nhật hành trình chuyến bay" : "Chỉ Driver phụ trách cập nhật trạm dừng & Odometer") : ""}>
                           <Button
                             type="primary"
                             icon={<LoginOutlined />}
                             loading={actionLoading}
+                            disabled={!canUpdateRoute}
                             onClick={() => handleArrive(cp)}
                             style={{
                               backgroundColor: '#0284C7',
@@ -428,48 +460,56 @@ export default function TripExecutionPage() {
                           >
                             Xác nhận Đã đến trạm
                           </Button>
+                          </Tooltip>
                         )}
 
                         {/* 2. Nếu Arrived -> Có nút Clear */}
                         {cp.status === 'Arrived' && (
-                          <Button
-                            type="primary"
-                            icon={<SafetyCertificateOutlined />}
-                            onClick={() => handleOpenClearModal(cp)}
-                            style={{
-                              backgroundColor: '#7C3AED',
-                              borderColor: '#7C3AED',
-                              borderRadius: 8,
-                              fontWeight: 600,
-                            }}
-                          >
-                            Hoàn tất kiểm tra / Thông quan
-                          </Button>
-                        )}
-
-                        {/* 3. Nếu Cleared -> Có nút Depart */}
-                        {cp.status === 'Cleared' && (
-                          <Popconfirm
-                            title="Xác nhận rời trạm kiểm soát?"
-                            description="Đảm bảo ngựa đã ổn định và toàn bộ giấy tờ đã được bàn giao lại cho kíp lái."
-                            onConfirm={() => handleDepart(cp)}
-                            okText="Rời trạm"
-                            cancelText="Kiểm tra lại"
-                          >
+                          <Tooltip title={!canUpdateRoute ? (isAirFlight ? "Chỉ Escort phụ trách cập nhật hành trình chuyến bay" : "Chỉ Driver phụ trách cập nhật trạm dừng & Odometer") : ""}>
                             <Button
                               type="primary"
-                              icon={<LogoutOutlined />}
-                              loading={actionLoading}
+                              icon={<SafetyCertificateOutlined />}
+                              disabled={!canUpdateRoute}
+                              onClick={() => handleOpenClearModal(cp)}
                               style={{
-                                backgroundColor: '#10B981',
-                                borderColor: '#10B981',
+                                backgroundColor: '#7C3AED',
+                                borderColor: '#7C3AED',
                                 borderRadius: 8,
                                 fontWeight: 600,
                               }}
                             >
-                              Xác nhận Rời trạm
+                              Hoàn tất kiểm tra / Thông quan
                             </Button>
-                          </Popconfirm>
+                          </Tooltip>
+                        )}
+
+                        {/* 3. Nếu Cleared -> Có nút Depart */}
+                        {cp.status === 'Cleared' && (
+                          <Tooltip title={!canUpdateRoute ? (isAirFlight ? "Chỉ Escort phụ trách cập nhật hành trình chuyến bay" : "Chỉ Driver phụ trách cập nhật trạm dừng & Odometer") : ""}>
+                            <Popconfirm
+                              title="Xác nhận rời trạm kiểm soát?"
+                              description="Đảm bảo ngựa đã ổn định và toàn bộ giấy tờ đã được bàn giao lại cho kíp lái."
+                              onConfirm={() => handleDepart(cp)}
+                              okText="Rời trạm"
+                              cancelText="Kiểm tra lại"
+                              disabled={!canUpdateRoute}
+                            >
+                              <Button
+                                type="primary"
+                                icon={<LogoutOutlined />}
+                                loading={actionLoading}
+                                disabled={!canUpdateRoute}
+                                style={{
+                                  backgroundColor: '#10B981',
+                                  borderColor: '#10B981',
+                                  borderRadius: 8,
+                                  fontWeight: 600,
+                                }}
+                              >
+                                Xác nhận Rời trạm
+                              </Button>
+                            </Popconfirm>
+                          </Tooltip>
                         )}
 
                         {/* 4. Nếu Departed -> Hiển thị badge hoàn tất */}

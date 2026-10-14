@@ -16,10 +16,12 @@ import {
   Upload,
   Steps,
   Empty,
+  Tooltip,
 } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@routes/routes';
 import { useAuthStore } from '@features/auth/store/authStore';
+import { getStoredBookings } from '@utils/bookingStorage';
 import {
   MedicineBoxOutlined,
   AlertOutlined,
@@ -862,7 +864,37 @@ export default function VetRecordsPage() {
         const isSubmitted = Boolean(curSubmission?.submitted);
         const currentStep = isSubmitted ? (curSubmission.step || 1) : 0;
 
+        // Lấy danh sách bookings để kiểm tra điều kiện phê duyệt của Manager (Requirement 1)
+        const allBookings = getStoredBookings();
+        const customerBookings = currentUserId
+          ? allBookings.filter((b) => Number(b.customerUserId || b.CustomerUserID) === Number(currentUserId))
+          : allBookings;
+
+        // Tìm đơn đặt chuyến chứa chú ngựa này
+        const horseBooking = customerBookings.find((b) => {
+          const horseList = b.horses || b.bookingHorses || [];
+          return horseList.some(
+            (h) =>
+              String(h.horseId || h.HorseID) === String(selectedHorseId) ||
+              (h.name && String(h.name).toLowerCase() === String(currentHorse.Name || '').toLowerCase()),
+          );
+        }) || customerBookings[0] || null;
+
+        // Kiểm tra xem đơn đã được Logistics Manager duyệt hay chưa
+        const isBookingApproved = Boolean(
+          horseBooking &&
+            ['APPROVED', 'CONFIRMED', 'IN_PLANNING', 'ASSIGNED', 'INTRANSIT', 'COMPLETED'].includes(
+              String(horseBooking.status || horseBooking.Status).toUpperCase(),
+            ),
+        );
+
         const handleSubmitDossier = () => {
+          if (!isBookingApproved) {
+            message.warning(
+              'Yêu cầu vận chuyển ngựa chưa được Logistics Manager phê duyệt! Chỉ được nộp hồ sơ Digital Dossier sau khi Manager phê duyệt đơn.',
+            );
+            return;
+          }
           const updated = {
             ...dossierSubmissions,
             [selectedHorseId]: {
@@ -1233,17 +1265,71 @@ export default function VetRecordsPage() {
               bordered
               style={{
                 borderRadius: 16,
-                border: isSubmitted ? '1.5px solid #86EFAC' : '1.5px solid #BFDBFE',
-                backgroundColor: isSubmitted ? '#F0FDF4' : '#EFF6FF',
+                border: isSubmitted ? '1.5px solid #86EFAC' : !isBookingApproved ? '1.5px solid #FCD34D' : '1.5px solid #BFDBFE',
+                backgroundColor: isSubmitted ? '#F0FDF4' : !isBookingApproved ? '#FFFDF5' : '#EFF6FF',
               }}
               styles={{ body: { padding: '20px 24px' } }}
             >
+              {!isBookingApproved && !isSubmitted && (
+                <div
+                  style={{
+                    backgroundColor: '#FEF3C7',
+                    border: '1px solid #FDE68A',
+                    borderRadius: 10,
+                    padding: '12px 16px',
+                    marginBottom: 16,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                  }}
+                >
+                  <ClockCircleOutlined style={{ color: '#D97706', fontSize: 20, flexShrink: 0 }} />
+                  <div>
+                    <strong style={{ color: '#92400E', fontSize: 13.5 }}>
+                      ⏳ Chờ Logistics Manager phê duyệt yêu cầu vận chuyển
+                    </strong>
+                    <div style={{ color: '#B45309', fontSize: 12.5, marginTop: 2 }}>
+                      {horseBooking ? (
+                        <>
+                          Yêu cầu vận chuyển <strong>#{horseBooking.bookingCode}</strong> hiện đang ở trạng thái{' '}
+                          <Tag color="orange" style={{ fontWeight: 700 }}>{horseBooking.status || 'Pending'}</Tag>. Theo quy trình nghiệp vụ (Flow 2), khách hàng chỉ được gửi bộ hồ sơ Digital Dossier cho Chuyên viên thủ tục sau khi Logistics Manager đã phê duyệt đơn vận chuyển!
+                        </>
+                      ) : (
+                        <>
+                          Bạn chưa có yêu cầu vận chuyển nào cho chú ngựa này được Logistics Manager phê duyệt. Vui lòng tạo yêu cầu tại mục <strong>Đơn đặt chuyến</strong> và chờ Manager phê duyệt trước.
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {isBookingApproved && !isSubmitted && (
+                <div
+                  style={{
+                    backgroundColor: '#DCFCE7',
+                    border: '1px solid #86EFAC',
+                    borderRadius: 10,
+                    padding: '10px 14px',
+                    marginBottom: 16,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                  }}
+                >
+                  <CheckCircleOutlined style={{ color: '#16A34A', fontSize: 18 }} />
+                  <span style={{ color: '#15803D', fontSize: 13, fontWeight: 600 }}>
+                    ✓ Yêu cầu vận chuyển #{horseBooking?.bookingCode} đã được Logistics Manager phê duyệt. Bạn đã đủ điều kiện nộp bộ hồ sơ Digital Dossier cho Chuyên viên thủ tục (ST).
+                  </span>
+                </div>
+              )}
+
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
                 <div>
-                  <h4 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 800, color: isSubmitted ? '#166534' : '#1E3A8A' }}>
+                  <h4 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 800, color: isSubmitted ? '#166534' : !isBookingApproved ? '#92400E' : '#1E3A8A' }}>
                     {isSubmitted ? '✅ Bộ hồ sơ Digital Dossier đã được gửi đi thành công!' : '📤 Nộp hồ sơ Digital Dossier cho Transport Specialist phê duyệt'}
                   </h4>
-                  <p style={{ margin: 0, fontSize: 13, color: isSubmitted ? '#15803D' : '#1E40AF', maxWidth: 640 }}>
+                  <p style={{ margin: 0, fontSize: 13, color: isSubmitted ? '#15803D' : '#475569', maxWidth: 640 }}>
                     {isSubmitted
                       ? `Chuyên viên thủ tục (${curSubmission.officer}) đang tiến hành thẩm định đối soát chéo thông tin vi mạch, chứng thư CVI và vaccine để nộp cho Logistics Manager.`
                       : 'Sau khi gửi, Chuyên viên thủ tục sẽ kiểm tra tính pháp lý của giấy tờ, xử lý thủ tục kiểm dịch hải quan và nộp cho Ban Quản lý điều vận để phê duyệt lộ trình.'}
@@ -1259,23 +1345,26 @@ export default function VetRecordsPage() {
                       Bổ sung thêm tài liệu
                     </Button>
                   ) : (
-                    <Button
-                      type="primary"
-                      size="large"
-                      icon={<SendOutlined />}
-                      onClick={handleSubmitDossier}
-                      style={{
-                        backgroundColor: '#2563EB',
-                        borderColor: '#2563EB',
-                        borderRadius: 10,
-                        fontWeight: 800,
-                        height: 44,
-                        padding: '0 24px',
-                        boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
-                      }}
-                    >
-                      Gửi hồ sơ Digital Dossier cho TS phê duyệt
-                    </Button>
+                    <Tooltip title={!isBookingApproved ? 'Chỉ được nộp hồ sơ sau khi Logistics Manager phê duyệt yêu cầu vận chuyển' : ''}>
+                      <Button
+                        type="primary"
+                        size="large"
+                        icon={<SendOutlined />}
+                        disabled={!isBookingApproved}
+                        onClick={handleSubmitDossier}
+                        style={{
+                          backgroundColor: isBookingApproved ? '#2563EB' : undefined,
+                          borderColor: isBookingApproved ? '#2563EB' : undefined,
+                          borderRadius: 10,
+                          fontWeight: 800,
+                          height: 44,
+                          padding: '0 24px',
+                          boxShadow: isBookingApproved ? '0 4px 12px rgba(37, 99, 235, 0.25)' : 'none',
+                        }}
+                      >
+                        Gửi hồ sơ Digital Dossier cho TS phê duyệt
+                      </Button>
+                    </Tooltip>
                   )}
                 </Space>
               </div>

@@ -26,6 +26,8 @@ import {
   PlusCircleOutlined,
 } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
+import { useAuthStore } from '@features/auth/store/authStore';
+import { Tooltip } from 'antd';
 import { useMissionDetail } from '../hooks/useDriverMissions';
 import MissionHeaderCard from '../components/MissionHeaderCard';
 import EmergencyReportModal from '../components/EmergencyReportModal';
@@ -84,6 +86,13 @@ export default function HorseWelfareLogPage() {
   const [sosModalOpen, setSosModalOpen] = useState(false);
   const [selectedHorseId, setSelectedHorseId] = useState('ALL');
   const [form] = Form.useForm();
+
+  const { user } = useAuthStore();
+  const userRole = user?.role || user?.Role;
+  const isEscort = userRole === 'Escort';
+  const isDriver = userRole === 'Driver';
+  // Quyền ghi nhật ký thú y: Escort chuyên trách, Manager hoặc Admin
+  const canLogWelfare = isEscort || userRole === 'Admin' || userRole === 'LogisticsManager' || userRole === 'FleetCoordinator';
 
   const horses = useMemo(() => mission?.horses || [], [mission?.horses]);
   const welfareLogs = useMemo(() => mission?.welfareLogs || [], [mission?.welfareLogs]);

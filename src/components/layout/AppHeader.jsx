@@ -145,7 +145,8 @@ export default function AppHeader({
     };
 
     const handlePlanAssigned = (e) => {
-      const plan = e?.detail;
+      const rawDetail = e?.detail || {};
+      const plan = rawDetail.plan || rawDetail;
       if (!plan) return;
       const isDriverOrEscort =
         userRole === ROLES.DRIVER ||
@@ -154,21 +155,21 @@ export default function AppHeader({
         userRole === 'Escort';
 
       if (isDriverOrEscort) {
-        const key = `assign-${plan?.id || Date.now()}`;
+        const key = `assign-${plan?.planId || plan?.tripId || rawDetail?.tripId || Date.now()}`;
         notification.open({
           key,
           message: (
             <span style={{ fontWeight: 800, fontSize: 14.5, color: '#065f46' }}>
-              🚀 Bạn có nhiệm vụ vận chuyển mới: {plan?.routePlanCode || plan?.bookingCode || 'Chuyến đi'}
+              🚀 Bạn có nhiệm vụ vận chuyển mới: {plan?.planCode || plan?.orderCode || plan?.bookingCode || 'Chuyến đi'}
             </span>
           ),
           description: (
             <div style={{ marginTop: 6 }}>
               <div style={{ fontSize: 13, color: '#1e293b' }}>
-                Lộ trình: <strong>{plan?.pickup || 'Điểm xuất phát'} ➔ {plan?.dropoff || 'Điểm đến'}</strong>
+                Lộ trình: <strong>{plan?.origin || plan?.pickup || 'Điểm xuất phát'} ➔ {plan?.destination || plan?.dropoff || 'Điểm đến'}</strong>
               </div>
               <div style={{ fontSize: 12.5, color: '#475569', marginTop: 4 }}>
-                Phương thức: <strong>{plan?.transportMode || 'Ground / Air'}</strong> • Phân công: Driver & Escort
+                Phương thức: <strong>{plan?.transportMode || 'Ground / Air'}</strong> • Phân công: {plan?.driverName ? `Tài xế ${plan.driverName} & ` : ''}Bác sĩ {plan?.vetEscortName || 'Escort'}
               </div>
               <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
                 <Button

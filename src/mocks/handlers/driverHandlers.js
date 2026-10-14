@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw';
 import driverMissionsData from '../data/driverMissionsData.json';
 import driverCompletionData from '../data/driverCompletionData.json';
 import { getStoredRoutePlans } from '../../utils/routePlanStorage';
+import { getStoredUsers } from '../../utils/userStorage';
 
 // In-memory clone dữ liệu chuyến đi phục vụ thao tác của tài xế (gộp chuyến hoàn tất TRP-8821)
 let baseMissions = JSON.parse(JSON.stringify([...driverMissionsData, ...driverCompletionData]));
@@ -13,6 +14,19 @@ function getAllMissions() {
   const isCleanMode = typeof window !== 'undefined' && localStorage.getItem('racehorse_clean_data_mode') === 'true';
   const rawBase = isCleanMode ? [] : [...baseMissions];
 
+  // Đảm bảo các chuyến tĩnh trong rawBase có đầy đủ routeCheckpoints
+  rawBase.forEach((m) => {
+    if (!m.routeCheckpoints && m.checkpoints) {
+      m.routeCheckpoints = m.checkpoints.map((cp, idx) => ({
+        ...cp,
+        orderIndex: cp.orderIndex || cp.sequenceOrder || idx + 1,
+        locationName: cp.locationName || cp.checkpointName || 'Trạm kiểm soát',
+        locationType: cp.locationType || cp.checkpointType || (idx === 0 ? 'Origin' : idx === m.checkpoints.length - 1 ? 'Destination' : 'Waypoint'),
+        plannedArrivalTime: cp.plannedArrivalTime || cp.plannedTime,
+      }));
+    }
+  });
+
   // Lấy các kế hoạch đã được Manager phê duyệt (ASSIGNED)
   const storedPlans = getStoredRoutePlans();
   const assignedPlans = storedPlans.filter((p) => p.status === 'ASSIGNED');
@@ -22,6 +36,53 @@ function getAllMissions() {
       const tripId = plan.tripId || Number(plan.planId) || 8800 + (Number(String(plan.planCode || '').replace(/\D/g, '')) || 1);
       const existing = rawBase.find((m) => String(m.tripId) === String(tripId) || m.planCode === plan.planCode);
       if (existing) return null;
+
+      const rawCheckpoints = Array.isArray(plan.checkpoints) ? plan.checkpoints : [];
+      const routeCheckpoints = rawCheckpoints.map((c, idx) => ({
+        checkpointId: c.checkpointId || (tripId * 10 + (c.step || idx + 1)),
+        sequenceOrder: c.step || idx + 1,
+        orderIndex: c.step || idx + 1,
+        checkpointName: c.name || `Trạm ${idx + 1}`,
+        locationName: c.name || `Trạm ${idx + 1}`,
+        checkpointType: c.type === 'ORIGIN' ? 'Origin' : c.type === 'ARRIVAL' ? 'Destination' : 'Waypoint',
+        locationType: c.type === 'ORIGIN' ? 'Origin' : c.type === 'ARRIVAL' ? 'Destination' : 'Waypoint',
+        address: c.location || plan.origin || 'Trạm kiểm soát',
+        plannedArrivalTime: plan.departureDate,
+        plannedTime: plan.departureDate,
+        status: c.status || 'Pending',
+        notes: c.description || '',
+        mandatoryRestMinutes: 45,
+      }));
+
+      const crew = [
+        {
+          userId: plan.driverId || 4,
+          fullName: plan.driverName || 'Phạm Văn Đức',
+          phoneNumber: '+84912000004',
+          crewRole: 'Driver',
+          isLead: true,
+          duty: 'Tài xế trưởng phụ trách toàn chặng đường bộ',
+          licenseNumber: 'VN-D-66321',
+        },
+        {
+          userId: 6,
+          fullName: plan.vetEscortName || 'Dr. Elena Rostova',
+          phoneNumber: '+84912000006',
+          crewRole: 'Escort',
+          isLead: false,
+          duty: 'Bác sĩ thú y áp tải, theo dõi sinh trắc học và hỗ trợ thông quan',
+          licenseNumber: 'FEI-VET-8841',
+        },
+      ];
+
+      const preDepartureChecklist = [
+        { id: 'CHK-01', category: 'Vehicle', label: 'Kiểm tra hệ thống treo khí nén, phanh ABS, lốp xe và camera giám sát', text: 'Kiểm tra hệ thống treo khí nén & phanh ABS', checked: false, isMandatory: true },
+        { id: 'CHK-02', category: 'Equipment', label: 'Khử trùng sinh học khoang xe, rải đệm rơm mềm đạt chuẩn FEI', text: 'Khử trùng sinh học khoang xe & đệm rơm', checked: false, isMandatory: true },
+        { id: 'CHK-03', category: 'Vehicle', label: 'Hệ thống điều hòa khí hậu & cảm biến nhiệt độ chuồng (16-19°C)', text: 'Hệ thống điều hòa HVAC & cảm biến nhiệt', checked: false, isMandatory: true },
+        { id: 'CHK-04', category: 'Equipment', label: 'Chuẩn bị đủ 120L nước khoáng, dung dịch điện giải và cỏ khô Timothy', text: 'Chuẩn bị nước khoáng & cỏ khô Timothy', checked: false, isMandatory: true },
+        { id: 'CHK-05', category: 'Documentation', label: 'Đối soát hộ chiếu ngựa FEI, giấy phép CVI và mã vi mạch RFID', text: 'Đối soát hộ chiếu FEI, giấy phép CVI & RFID', checked: false, isMandatory: true },
+        { id: 'CHK-06', category: 'HorseInspection', label: 'Kiểm tra sinh hiệu ngựa, niêm mạc mắt, nhịp tim và không có triệu chứng colic', text: 'Kiểm tra sinh hiệu ngựa & không có colic', checked: false, isMandatory: true },
+      ];
 
       return {
         tripId,
@@ -43,6 +104,7 @@ function getAllMissions() {
         destinationAddress: plan.destination,
         plannedStartDate: plan.departureDate,
         estimatedArrivalDate: plan.deliveryDate,
+        transportMode: plan.transportMode || 'Ground',
         horses: Array.isArray(plan.horses)
           ? plan.horses.map((h, i) => (typeof h === 'string' ? { horseId: i + 1, name: h, breed: 'Thoroughbred' } : h))
           : [{ horseId: 1, name: 'Ngựa đua' }],
@@ -53,13 +115,10 @@ function getAllMissions() {
           plateNumber: plan.vehicleId || '51D-8921',
           type: plan.transportMode || 'Ground',
         },
-        preDepartureChecklist: [
-          { id: 'CHK-01', text: 'Kiểm tra thông gió & điều hòa HVAC', checked: false },
-          { id: 'CHK-02', text: 'Cấp đủ nước uống & cỏ khô cho ngựa', checked: false },
-          { id: 'CHK-03', text: 'Kiểm tra dây đai an toàn & vách ngăn stall', checked: false },
-          { id: 'CHK-04', text: 'Đối soát vi mạch và hộ chiếu ngựa', checked: false },
-        ],
-        checkpoints: Array.isArray(plan.checkpoints) ? plan.checkpoints : [],
+        crew,
+        preDepartureChecklist,
+        checkpoints: routeCheckpoints,
+        routeCheckpoints,
       };
     })
     .filter(Boolean);
@@ -77,15 +136,61 @@ function findTrip(idOrCode) {
   );
 }
 
+function filterMissionsForUser(filtered, tokenUserId) {
+  if (!tokenUserId) return filtered;
+  const users = getStoredUsers();
+  const currentUser = users.find((u) => Number(u.userId) === Number(tokenUserId));
+  if (!currentUser) return filtered;
+
+  if (currentUser.role === 'Customer') {
+    return filtered.filter(
+      (m) =>
+        Number(m.customerId) === tokenUserId ||
+        (m.customerEmail && m.customerEmail.toLowerCase() === currentUser.email?.toLowerCase())
+    );
+  }
+  if (currentUser.role === 'Driver') {
+    return filtered.filter(
+      (m) =>
+        !m.driverId ||
+        Number(m.driverId) === tokenUserId ||
+        (m.driverName && m.driverName.toLowerCase() === currentUser.fullName?.toLowerCase()) ||
+        m.crew?.some((c) => Number(c.userId) === tokenUserId || c.crewRole === 'Driver')
+    );
+  }
+  if (currentUser.role === 'Escort') {
+    return filtered.filter(
+      (m) =>
+        !m.vetEscortId ||
+        Number(m.vetEscortId) === tokenUserId ||
+        Number(m.vetEscortId) === 2 ||
+        (m.vetEscortName && m.vetEscortName.toLowerCase() === currentUser.fullName?.toLowerCase()) ||
+        m.crew?.some((c) => Number(c.userId) === tokenUserId || c.crewRole === 'Escort')
+    );
+  }
+  return filtered;
+}
+
 export const driverHandlers = [
-  // 1. Lấy danh sách nhiệm vụ của tài xế (/api/driver/missions hoặc /api/trips)
+  // 1. Lấy danh sách nhiệm vụ của tài xế & áp tải (/api/driver/missions hoặc /api/trips)
   http.get('/api/driver/missions', ({ request }) => {
     const url = new URL(request.url);
     const status = url.searchParams.get('status');
+
+    const authHeader = request.headers.get('Authorization') || '';
+    let tokenUserId = null;
+    if (authHeader.startsWith('Bearer mock-token-')) {
+      tokenUserId = Number(authHeader.replace('Bearer mock-token-', ''));
+    } else if (authHeader.startsWith('Bearer mock-google-token-')) {
+      tokenUserId = Number(authHeader.replace('Bearer mock-google-token-', ''));
+    }
+
     let filtered = getAllMissions();
     if (status && status !== 'All') {
       filtered = filtered.filter((m) => m.overallStatus === status);
     }
+    filtered = filterMissionsForUser(filtered, tokenUserId);
+
     return HttpResponse.json({
       success: true,
       data: filtered,
@@ -115,8 +220,8 @@ export const driverHandlers = [
       filtered = filtered.filter((m) => Number(m.customerId) === Number(customerId));
     } else if (customerEmail) {
       filtered = filtered.filter((m) => (m.customerEmail || '').toLowerCase() === customerEmail.toLowerCase());
-    } else if (tokenUserId && tokenUserId > 4) {
-      filtered = filtered.filter((m) => Number(m.customerId) === tokenUserId);
+    } else if (tokenUserId) {
+      filtered = filterMissionsForUser(filtered, tokenUserId);
     }
     return HttpResponse.json({
       success: true,

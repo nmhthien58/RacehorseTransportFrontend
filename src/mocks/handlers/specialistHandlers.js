@@ -1,9 +1,7 @@
 import { http, HttpResponse } from 'msw';
-import specialistDossiersData from '../data/specialistDossiersData.json';
 import quarantineRulesData from '../data/quarantineRulesData.json';
+import { getStoredDossiers, saveStoredDossiers } from '../../utils/dossierStorage';
 
-// Trạng thái bộ nhớ của dossiers phục vụ tương tác trên giao diện
-let dossiers = JSON.parse(JSON.stringify(specialistDossiersData));
 let rules = JSON.parse(JSON.stringify(quarantineRulesData));
 
 /**
@@ -22,6 +20,7 @@ function recalculateDossierState(dossier) {
 export const specialistHandlers = [
   // 1. Thống kê tổng quan cho màn Compliance Overview (/specialist/dashboard)
   http.get('/api/specialist/overview', () => {
+    const dossiers = getStoredDossiers();
     const overdueCount = dossiers.filter((d) => d.slaStatus === 'Overdue').length;
     const pendingCount = dossiers.filter((d) => d.status === 'Reviewing' || d.status === 'AwaitingDocs').length;
     const activeQuarantineCount = dossiers.filter((d) => ['Reviewing', 'SubmittedToAuthorities', 'Draft'].includes(d.status)).length;
@@ -69,6 +68,7 @@ export const specialistHandlers = [
     const page = parseInt(url.searchParams.get('page') || '1', 10);
     const pageSize = parseInt(url.searchParams.get('pageSize') || url.searchParams.get('size') || '10', 10);
 
+    const dossiers = getStoredDossiers();
     let filtered = [...dossiers];
 
     if (status && status !== 'all' && status !== 'All') {
@@ -105,6 +105,7 @@ export const specialistHandlers = [
   // 3. Chi tiết một bộ hồ sơ kiểm dịch kèm checklist
   http.get('/api/dossiers/:id', ({ params }) => {
     const dossierId = Number(params.id);
+    const dossiers = getStoredDossiers();
     const dossier = dossiers.find((d) => d.dossierId === dossierId);
 
     if (!dossier) {
@@ -121,8 +122,10 @@ export const specialistHandlers = [
   }),
 
   // 4. Phê duyệt một tài liệu trong checklist
+  // 4. Phê duyệt một tài liệu trong checklist
   http.post('/api/documents/:id/approve', ({ params }) => {
     const docId = Number(params.id);
+    const dossiers = getStoredDossiers();
     let targetDoc = null;
     let targetDossier = null;
 
@@ -141,6 +144,7 @@ export const specialistHandlers = [
 
     if (targetDossier) {
       recalculateDossierState(targetDossier);
+      saveStoredDossiers(dossiers);
     }
 
     return HttpResponse.json({
@@ -155,6 +159,7 @@ export const specialistHandlers = [
     const docId = Number(params.id);
     const body = await request.json().catch(() => ({}));
     const reason = body.reason || body.correctionNote || 'Tài liệu không đạt yêu cầu theo quy chuẩn';
+    const dossiers = getStoredDossiers();
 
     let targetDoc = null;
     let targetDossier = null;
@@ -182,6 +187,7 @@ export const specialistHandlers = [
 
     if (targetDossier) {
       recalculateDossierState(targetDossier);
+      saveStoredDossiers(dossiers);
     }
 
     return HttpResponse.json({
@@ -195,6 +201,7 @@ export const specialistHandlers = [
   http.post('/api/dossiers/:id/request-documents', async ({ params, request }) => {
     const dossierId = Number(params.id);
     const body = await request.json().catch(() => ({}));
+    const dossiers = getStoredDossiers();
     const dossier = dossiers.find((d) => d.dossierId === dossierId);
 
     if (dossier) {
@@ -203,6 +210,7 @@ export const specialistHandlers = [
       if (body.notes || docListText) {
         dossier.issueReason = `${body.notes || 'Yêu cầu kiểm tra và bổ sung tài liệu'}${docListText}`;
       }
+      saveStoredDossiers(dossiers);
     }
 
     return HttpResponse.json({
@@ -215,6 +223,7 @@ export const specialistHandlers = [
   // 7. Nộp bộ hồ sơ đã hoàn chỉnh lên Cơ quan chức năng (Cục Thú y / Hải quan)
   http.post('/api/dossiers/:id/submit-to-authorities', ({ params }) => {
     const dossierId = Number(params.id);
+    const dossiers = getStoredDossiers();
     const dossier = dossiers.find((d) => d.dossierId === dossierId);
 
     if (!dossier) {
@@ -222,6 +231,7 @@ export const specialistHandlers = [
     }
 
     dossier.status = 'SubmittedToAuthorities';
+    saveStoredDossiers(dossiers);
 
     return HttpResponse.json({
       success: true,
@@ -234,6 +244,7 @@ export const specialistHandlers = [
   http.post('/api/dossiers/:id/clear', async ({ params, request }) => {
     const dossierId = Number(params.id);
     const body = await request.json().catch(() => ({}));
+    const dossiers = getStoredDossiers();
     const dossier = dossiers.find((d) => d.dossierId === dossierId);
 
     if (!dossier) {
@@ -244,6 +255,7 @@ export const specialistHandlers = [
     dossier.clearanceNumber = body.clearanceNumber || `VET-CERT-${new Date().getFullYear()}-${String(dossierId).padStart(4, '0')}`;
     dossier.clearedAt = new Date().toISOString();
     dossier.issueReason = null;
+    saveStoredDossiers(dossiers);
 
     return HttpResponse.json({
       success: true,
@@ -257,6 +269,7 @@ export const specialistHandlers = [
   http.post('/api/dossiers/:id/issue', async ({ params, request }) => {
     const dossierId = Number(params.id);
     const body = await request.json().catch(() => ({}));
+    const dossiers = getStoredDossiers();
     const dossier = dossiers.find((d) => d.dossierId === dossierId);
 
     if (!dossier) {
@@ -265,6 +278,7 @@ export const specialistHandlers = [
 
     dossier.status = 'Issue';
     dossier.issueReason = body.reason || body.issueDescription || 'Cơ quan chức năng yêu cầu làm rõ hồ sơ kiểm dịch';
+    saveStoredDossiers(dossiers);
 
     return HttpResponse.json({
       success: true,

@@ -224,7 +224,7 @@ export function deleteStoredBooking(id) {
  * @param {number|string} [currentBookingId]
  * @returns {{ hasConflict: boolean, reason?: string, conflictBooking?: Object }}
  */
-export function checkHorseBookingConflict(horseId, departureDate, deliveryDate, currentBookingId = null) {
+export function checkHorseBookingConflict(horseId, departureDate, deliveryDate, currentBookingId = null, customerUserId = null) {
   if (!horseId || !departureDate) return { hasConflict: false };
   const hId = Number(horseId);
   const newStart = dayjs(departureDate).startOf('day');
@@ -236,6 +236,10 @@ export function checkHorseBookingConflict(horseId, departureDate, deliveryDate, 
   for (const b of bookings) {
     const bId = Number(b.BookingID || b.bookingId);
     if (currentBookingId && bId === Number(currentBookingId)) continue;
+
+    if (customerUserId && Number(b.customerUserId || b.CustomerUserID) !== Number(customerUserId)) {
+      continue;
+    }
 
     const bStatus = String(b.Status || b.status || '').toLowerCase();
     if (['cancelled', 'rejected'].includes(bStatus)) continue;

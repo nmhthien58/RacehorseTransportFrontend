@@ -40,7 +40,7 @@ export default function AddHorsePage() {
       setSubmitting(true);
       const payload = {
         ...formData,
-        ownerUserId: user?.userId || 5,
+        ownerUserId: user?.userId || user?.UserID || undefined,
       };
 
       const res = await horseService.createHorse(payload);

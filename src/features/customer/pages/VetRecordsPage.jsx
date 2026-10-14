@@ -15,7 +15,11 @@ import {
   message,
   Upload,
   Steps,
+  Empty,
 } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@routes/routes';
+import { useAuthStore } from '@features/auth/store/authStore';
 import {
   MedicineBoxOutlined,
   AlertOutlined,
@@ -91,11 +95,22 @@ const PHOTO_ANGLES = [
  * Trang Quản lý Hồ sơ Thú y (Vet Records) cho chủ ngựa - Chuẩn 100% Figma & Flow 2
  */
 export default function VetRecordsPage() {
-  const [horses, setHorses] = useState(() => getStoredHorses());
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const currentUserId = user?.userId || user?.UserID;
+
+  const [horses, setHorses] = useState(() => {
+    const list = getStoredHorses();
+    if (!currentUserId) return list;
+    return list.filter((h) => Number(h.OwnerUserID || h.ownerUserId) === Number(currentUserId));
+  });
+
   const [selectedHorseId, setSelectedHorseId] = useState(() => {
     const list = getStoredHorses();
-    const thunder = list.find((h) => h.Name?.toLowerCase() === 'thunder');
-    return thunder ? thunder.HorseID : list[0]?.HorseID || 1;
+    const filtered = currentUserId
+      ? list.filter((h) => Number(h.OwnerUserID || h.ownerUserId) === Number(currentUserId))
+      : list;
+    return filtered[0]?.HorseID || null;
   });
 
   const [activeTab, setActiveTab] = useState('overview');
@@ -123,13 +138,22 @@ export default function VetRecordsPage() {
 
   // Selected horse object
   const currentHorse = useMemo(() => {
+    if (horses.length === 0) return {};
     return horses.find((h) => String(h.HorseID) === String(selectedHorseId)) || horses[0] || {};
   }, [horses, selectedHorseId]);
 
   // Sync horses and records listeners
   useEffect(() => {
     const handleHorsesUpdate = (e) => {
-      if (e.detail) setHorses(e.detail);
+      if (e.detail && Array.isArray(e.detail)) {
+        const filtered = currentUserId
+          ? e.detail.filter((h) => Number(h.OwnerUserID || h.ownerUserId) === Number(currentUserId))
+          : e.detail;
+        setHorses(filtered);
+        if (filtered.length > 0 && (!selectedHorseId || !filtered.some((h) => String(h.HorseID) === String(selectedHorseId)))) {
+          setSelectedHorseId(filtered[0].HorseID);
+        }
+      }
     };
     const handleVetUpdate = (e) => {
       if (e.detail) setRecords(e.detail);
@@ -147,7 +171,7 @@ export default function VetRecordsPage() {
       window.removeEventListener('vet_records_updated', handleVetUpdate);
       window.removeEventListener('reminders_updated', handleRemindersUpdate);
     };
-  }, []);
+  }, [currentUserId, selectedHorseId]);
 
   // Filter records for current horse
   const horseRecords = useMemo(() => {
@@ -405,18 +429,54 @@ export default function VetRecordsPage() {
         </span>
       </div>
 
-      {/* 3. Horse Selector Bar */}
-      <Card
-        styles={{ body: { padding: '14px 20px' } }}
-        style={{
-          borderRadius: 12,
-          border: '1px solid #F1F5F9',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-          marginBottom: 20,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-          <span style={{ fontWeight: 600, color: '#334155', fontSize: 14 }}>Select Horse:</span>
+      {/* 3. Horse Selector Bar / Empty State */}
+      {horses.length === 0 ? (
+        <Card
+          style={{
+            borderRadius: 16,
+            textAlign: 'center',
+            padding: '50px 20px',
+            marginBottom: 30,
+            border: '1px solid #e2e8f0',
+          }}
+        >
+          <Empty
+            description={
+              <span style={{ color: '#64748b', fontSize: 15 }}>
+                Chưa có hồ sơ cá thể ngựa nào thuộc tài khoản của bạn. Vui lòng thêm ngựa để theo dõi và quản lý hồ sơ thú y.
+              </span>
+            }
+          >
+            <Button
+              type="primary"
+              size="large"
+              icon={<PlusOutlined />}
+              onClick={() => navigate(ROUTES.CUSTOMER_HORSE_NEW)}
+              style={{
+                backgroundColor: '#F59E0B',
+                borderColor: '#F59E0B',
+                fontWeight: 600,
+                borderRadius: 8,
+                marginTop: 12,
+              }}
+            >
+              Thêm hồ sơ ngựa mới
+            </Button>
+          </Empty>
+        </Card>
+      ) : (
+        <>
+          <Card
+            styles={{ body: { padding: '14px 20px' } }}
+            style={{
+              borderRadius: 12,
+              border: '1px solid #F1F5F9',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+              marginBottom: 20,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+              <span style={{ fontWeight: 600, color: '#334155', fontSize: 14 }}>Select Horse:</span>
           <Select
             value={Number(selectedHorseId)}
             onChange={(val) => setSelectedHorseId(val)}
@@ -1697,6 +1757,8 @@ export default function VetRecordsPage() {
             </div>
           </Card>
         </Space>
+      )}
+        </>
       )}
 
       {/* 6. MODAL: ADD VET RECORD (Matching media_1791474295407_bbfa77ed.png) */}

@@ -70,7 +70,7 @@ export default function CustomerBookings() {
 
     bookingService
       .getBookings({
-        customerId: user?.UserID || 5,
+        customerId: user?.userId || user?.UserID || undefined,
       })
       .then((res) => {
         if (isSubscribed) {

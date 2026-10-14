@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Button,
   Card,
@@ -6,8 +7,11 @@ import {
   Spin,
   Space,
   Tag,
-  Tooltip,
   Typography,
+  Modal,
+  Form,
+  Input,
+  message,
 } from 'antd';
 import {
   UserOutlined,
@@ -21,19 +25,63 @@ import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import PageHeader from '@components/layout/PageHeader';
 import useProfile from '@features/customer/hooks/useProfile';
+import { useAuthStore } from '@features/auth/store/authStore';
+import authService from '@services/authService';
 
 const { Title, Text } = Typography;
 
 /**
  * Trang thông tin hồ sơ tài khoản khách hàng (Customer Profile)
  * Đường dẫn: /customer/profile
- * Sử dụng AntD Descriptions [Họ tên, Email, SĐT, CLB, Role] + nút "Chỉnh sửa" (disabled)
+ * Sử dụng AntD Descriptions [Họ tên, Email, SĐT, CLB, Role] + nút "Chỉnh sửa"
  *
  * @returns {JSX.Element}
  */
 export default function ProfilePage() {
   const { t } = useTranslation();
   const { data: profile, loading } = useProfile();
+  const { user, setUser } = useAuthStore();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form] = Form.useForm();
+
+  const handleOpenEdit = () => {
+    form.setFieldsValue({
+      fullName: profile?.fullName || profile?.FullName || '',
+      phoneNumber: profile?.phoneNumber || profile?.PhoneNumber || '',
+      clubName: profile?.clubName || profile?.ClubName || '',
+      address: profile?.address || profile?.Address || '',
+      city: profile?.city || profile?.City || '',
+      country: profile?.country || profile?.Country || '',
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveProfile = async (values) => {
+    try {
+      setSaving(true);
+      await authService.updateProfile(values);
+      const updatedUser = {
+        ...user,
+        ...values,
+        fullName: values.fullName,
+        FullName: values.fullName,
+        phoneNumber: values.phoneNumber,
+        PhoneNumber: values.phoneNumber,
+        address: values.address,
+        Address: values.address,
+        clubName: values.clubName,
+        ClubName: values.clubName,
+      };
+      setUser(updatedUser);
+      message.success(t('profile.updateSuccess') || 'Cập nhật hồ sơ thành công!');
+      setIsEditModalOpen(false);
+    } catch (err) {
+      message.error(t('profile.updateError') || 'Không thể cập nhật hồ sơ: ' + (err.message || ''));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -59,23 +107,22 @@ export default function ProfilePage() {
             : t('profile.staffSubtitle') || 'Thông tin tài khoản vận hành, phân quyền quản lý và điều phối chuyên môn'
         }
         actions={
-          <Tooltip title={t('profile.editDisabledHint') || 'Tính năng chỉnh sửa hồ sơ đang được cập nhật'}>
-            <Button
-              type="default"
-              icon={<EditOutlined />}
-              disabled
-              style={{
-                borderRadius: 9999,
-                fontWeight: 600,
-                height: 40,
-                padding: '0 22px',
-                borderColor: '#e2e8f0',
-                color: '#94a3b8',
-              }}
-            >
-              {t('profile.edit') || 'Edit Profile'}
-            </Button>
-          </Tooltip>
+          <Button
+            type="primary"
+            icon={<EditOutlined />}
+            onClick={handleOpenEdit}
+            style={{
+              borderRadius: 9999,
+              fontWeight: 600,
+              height: 40,
+              padding: '0 22px',
+              backgroundColor: '#F59E0B',
+              borderColor: '#F59E0B',
+              color: '#ffffff',
+            }}
+          >
+            {t('profile.edit') || 'Edit Profile'}
+          </Button>
         }
       />
 
@@ -243,6 +290,81 @@ export default function ProfilePage() {
           </Descriptions.Item>
         </Descriptions>
       </Card>
+
+      {/* Modal Chỉnh sửa hồ sơ cá nhân */}
+      <Modal
+        title={
+          <span style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
+            {t('profile.editModalTitle') || 'Chỉnh sửa thông tin hồ sơ'}
+          </span>
+        }
+        open={isEditModalOpen}
+        onCancel={() => setIsEditModalOpen(false)}
+        footer={null}
+        destroyOnClose
+        width={560}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSaveProfile}
+          style={{ marginTop: 18 }}
+        >
+          <Form.Item
+            label={<strong>{t('profile.fullName') || 'Họ và tên'}</strong>}
+            name="fullName"
+            rules={[{ required: true, message: 'Vui lòng nhập họ và tên' }]}
+          >
+            <Input size="large" placeholder="Nhập họ và tên đầy đủ" />
+          </Form.Item>
+
+          <Form.Item
+            label={<strong>{t('profile.phone') || 'Số điện thoại liên hệ'}</strong>}
+            name="phoneNumber"
+          >
+            <Input size="large" placeholder="Ví dụ: +84 988 123 456" />
+          </Form.Item>
+
+          {isCustomer && (
+            <Form.Item
+              label={<strong>{t('profile.club') || 'Tên Trang trại / Câu lạc bộ ngựa'}</strong>}
+              name="clubName"
+            >
+              <Input size="large" placeholder="Ví dụ: Trang trại Đua ngựa Hoàng Gia" />
+            </Form.Item>
+          )}
+
+          <Form.Item
+            label={<strong>{t('profile.address') || 'Địa chỉ Trang trại / Nơi ở đón ngựa'}</strong>}
+            name="address"
+            tooltip="Địa chỉ này sẽ được dùng để tự động điền vào Detailed Pickup Address khi bạn tạo yêu cầu vận chuyển Door-to-Door hoặc Ground."
+          >
+            <Input.TextArea
+              rows={3}
+              placeholder="Ví dụ: Trang trại Đua ngựa Tân Uyên, Đường ĐT746, Bình Dương"
+            />
+          </Form.Item>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
+            <Button onClick={() => setIsEditModalOpen(false)}>
+              {t('common.cancel') || 'Hủy bỏ'}
+            </Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={saving}
+              style={{
+                backgroundColor: '#F59E0B',
+                borderColor: '#F59E0B',
+                fontWeight: 600,
+                padding: '0 24px',
+              }}
+            >
+              {t('common.save') || 'Lưu thông tin'}
+            </Button>
+          </div>
+        </Form>
+      </Modal>
     </div>
   );
 }

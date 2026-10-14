@@ -5,6 +5,7 @@ import {
   addStoredBooking,
   updateStoredBooking,
 } from '../../utils/bookingStorage';
+import { addDossierFromBooking } from '../../utils/dossierStorage';
 
 function normalizeBooking(b) {
   if (!b) return b;
@@ -133,13 +134,18 @@ export const bookingHandlers = [
 
     let list = getStoredBookings().map(normalizeBooking);
 
-    if (customerId) {
-      const parsedId = Number(customerId);
-      if (parsedId === 5) {
-        list = list.filter((b) => b.customerUserId === 5 || !b.customerUserId);
-      } else {
-        list = list.filter((b) => b.customerUserId === parsedId);
-      }
+    const authHeader = request.headers.get('Authorization') || '';
+    let tokenUserId = null;
+    if (authHeader.startsWith('Bearer mock-token-')) {
+      tokenUserId = Number(authHeader.replace('Bearer mock-token-', ''));
+    } else if (authHeader.startsWith('Bearer mock-google-token-')) {
+      tokenUserId = Number(authHeader.replace('Bearer mock-google-token-', ''));
+    }
+
+    const effectiveCustomerId = customerId ? Number(customerId) : (tokenUserId ? Number(tokenUserId) : null);
+
+    if (effectiveCustomerId) {
+      list = list.filter((b) => Number(b.customerUserId || b.CustomerUserID) === effectiveCustomerId);
     }
 
     if (status && status !== 'All') {
@@ -188,6 +194,14 @@ export const bookingHandlers = [
       );
     }
 
+    const authHeader = request.headers.get('Authorization') || '';
+    let tokenUserId = null;
+    if (authHeader.startsWith('Bearer mock-token-')) {
+      tokenUserId = Number(authHeader.replace('Bearer mock-token-', ''));
+    } else if (authHeader.startsWith('Bearer mock-google-token-')) {
+      tokenUserId = Number(authHeader.replace('Bearer mock-google-token-', ''));
+    }
+
     const newBooking = addStoredBooking({
       ...body,
       PickupAddress: pickup,
@@ -195,7 +209,7 @@ export const bookingHandlers = [
       DepartureDate: departure || new Date().toISOString(),
       DeliveryDate: body.deliveryDate || body.DeliveryDate || departure || new Date().toISOString(),
       TransportMode: body.transportMode || body.TransportMode || 'Ground',
-      CustomerUserID: Number(body.customerUserId || body.CustomerUserID || 5),
+      CustomerUserID: Number(body.customerUserId || body.CustomerUserID) || tokenUserId || 5,
       EstimatedCost: Number(body.estimatedCost || body.EstimatedCost || 0),
       Status: 'Submitted',
     });
@@ -223,6 +237,14 @@ export const bookingHandlers = [
       assignedCoordinatorId: coordId,
       ReviewedAt: new Date().toISOString(),
     });
+
+    if (updated) {
+      try {
+        addDossierFromBooking(updated, specId);
+      } catch (err) {
+        console.error('Lỗi khi tự động khởi tạo hồ sơ kiểm dịch cho Transport Specialist:', err);
+      }
+    }
 
     return sendBookingResponse(updated, 'Duyệt đơn vận chuyển thành công');
   }),

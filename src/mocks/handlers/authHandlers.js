@@ -156,6 +156,45 @@ export const authHandlers = [
     });
   }),
 
+  // PUT /api/auth/me - Cập nhật hồ sơ cá nhân
+  http.put('/api/auth/me', async ({ request }) => {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader) {
+      return HttpResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+    const tokenPart = authHeader.replace('Bearer ', '');
+    const userIdStr = tokenPart.replace('mock-token-', '').replace('mock-google-token-', '');
+    const userId = Number(userIdStr);
+    const body = await request.json();
+
+    let user = usersData.find((u) => u.userId === userId);
+    if (!user) {
+      user = {
+        userId: userId || Date.now(),
+        email: body.email || 'user@test.com',
+        role: body.role || 'Customer',
+        isActive: true,
+      };
+      usersData.push(user);
+    }
+
+    if (body.fullName !== undefined) user.fullName = body.fullName;
+    if (body.phoneNumber !== undefined) user.phoneNumber = body.phoneNumber;
+    if (body.farmName !== undefined) user.farmName = body.farmName;
+    if (body.club !== undefined) user.club = body.club;
+    if (body.address !== undefined) user.address = body.address;
+    if (body.farmAddress !== undefined) user.farmAddress = body.farmAddress;
+    if (body.city !== undefined) user.city = body.city;
+    if (body.country !== undefined) user.country = body.country;
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Cập nhật thông tin hồ sơ thành công',
+      data: user,
+      user,
+    });
+  }),
+
   // Dropdown nhân sự
   http.get('/api/users/staff', ({ request }) => {
     const url = new URL(request.url);

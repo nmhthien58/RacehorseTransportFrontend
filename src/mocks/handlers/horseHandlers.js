@@ -96,7 +96,7 @@ async function parseHorseRequestBody(request) {
       color: formData.get('color') || formData.get('Color'),
       specialCareRequirements: formData.get('specialCareRequirements') || formData.get('SpecialCareRequirements'),
       healthStatus: formData.get('healthStatus') || formData.get('HealthStatus'),
-      ownerUserId: 5,
+      ownerUserId: formData.get('ownerUserId') || formData.get('OwnerUserID') || null,
       isActive: true,
     };
   }
@@ -112,15 +112,9 @@ export const horseHandlers = [
     let result = getStoredHorses().map(normalizeHorse);
     if (ownerId) {
       const parsedId = Number(ownerId);
-      if (parsedId === 5) {
-        result = result.filter(
-          (h) => h.ownerUserId === 5 || !h.ownerUserId,
-        );
-      } else {
-        result = result.filter(
-          (h) => h.ownerUserId === parsedId,
-        );
-      }
+      result = result.filter(
+        (h) => Number(h.ownerUserId || h.OwnerUserID) === parsedId,
+      );
     }
 
     return HttpResponse.json({
@@ -162,6 +156,14 @@ export const horseHandlers = [
       );
     }
 
+    const authHeader = request.headers.get('Authorization') || '';
+    let tokenUserId = null;
+    if (authHeader.startsWith('Bearer mock-token-')) {
+      tokenUserId = Number(authHeader.replace('Bearer mock-token-', ''));
+    } else if (authHeader.startsWith('Bearer mock-google-token-')) {
+      tokenUserId = Number(authHeader.replace('Bearer mock-google-token-', ''));
+    }
+
     try {
       const newHorse = addStoredHorse({
         Name: horseName,
@@ -184,7 +186,7 @@ export const horseHandlers = [
         vetRecord: body.vetRecord,
         VetRecords: body.VetRecords || body.vetRecords,
         hasVetRecord: body.hasVetRecord,
-        OwnerUserID: Number(body.ownerUserId || body.OwnerUserID) || 5,
+        OwnerUserID: Number(body.ownerUserId || body.OwnerUserID) || tokenUserId || 5,
         IsActive: true,
       });
 

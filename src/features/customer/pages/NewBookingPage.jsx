@@ -7,7 +7,7 @@ import {
   EnvironmentOutlined,
   CalendarOutlined,
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import PageHeader from '@components/layout/PageHeader';
@@ -28,6 +28,7 @@ const { Title, Text } = Typography;
 export default function NewBookingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuthStore();
 
   const [submitting, setSubmitting] = useState(false);
@@ -44,10 +45,10 @@ export default function NewBookingPage() {
       setSubmitting(true);
       const fullPayload = {
         ...payload,
-        customerUserId: user?.userId || 5,
-        customerName: user?.fullName || user?.FullName || 'Jane Smith',
+        customerUserId: user?.userId || user?.UserID || undefined,
+        customerName: user?.fullName || user?.FullName || 'Chủ ngựa',
         customerEmail: user?.email || user?.Email || 'customer@test.com',
-        customerPhone: user?.phoneNumber || user?.Phone || '+84988111222',
+        customerPhone: user?.phoneNumber || user?.Phone || '',
       };
 
       const res = await bookingService.createBooking(fullPayload);
@@ -104,6 +105,7 @@ export default function NewBookingPage() {
         onSubmit={handleCreateBooking}
         onCancel={handleBackToList}
         loading={submitting}
+        initialValues={location.state || {}}
       />
 
       {/* POPUP XÁC NHẬN "REQUEST POSTED!" THEO FIGMA FRAME 77:8195 */}

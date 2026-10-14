@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import horseService from '@services/horseService';
+import { useAuthStore } from '@features/auth/store/authStore';
 
 /**
  * Hook lấy danh sách ngựa của Customer hiện tại qua horseService.
@@ -7,6 +8,8 @@ import horseService from '@services/horseService';
  * @returns {{ data: Array<any>, loading: boolean, error: Error|null, refetch: () => void }}
  */
 export function useMyHorses() {
+  const { user } = useAuthStore();
+  const currentUserId = user?.userId || user?.UserID;
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,7 +24,7 @@ export function useMyHorses() {
     let isSubscribed = true;
 
     horseService
-      .getHorses()
+      .getHorses({ ownerId: currentUserId || undefined })
       .then((res) => {
         if (isSubscribed) {
           const list = res.data?.data || res.data || [];
@@ -44,7 +47,7 @@ export function useMyHorses() {
     return () => {
       isSubscribed = false;
     };
-  }, [refreshIndex]);
+  }, [refreshIndex, currentUserId]);
 
   return { data, loading, error, refetch };
 }

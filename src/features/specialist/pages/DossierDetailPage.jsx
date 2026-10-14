@@ -28,6 +28,7 @@ import {
   SafetyCertificateOutlined,
   ExclamationCircleOutlined,
   FileTextOutlined,
+  FilePdfOutlined,
   RollbackOutlined,
 } from '@ant-design/icons';
 import { useDossierDetail } from '../hooks/useDossierDetail';
@@ -36,6 +37,8 @@ import RejectDocumentModal from '../components/RejectDocumentModal';
 import SubmitAuthorityModal from '../components/SubmitAuthorityModal';
 import RequestDocumentsModal from '../components/RequestDocumentsModal';
 import ClearDossierModal from '../components/ClearDossierModal';
+import StandardFormTemplateModal from '@components/common/StandardFormTemplateModal';
+import { simulateCustomsClearance } from '@utils/dossierStorage';
 import { ROUTES } from '@routes/routes';
 
 const { Title, Text } = Typography;
@@ -56,6 +59,7 @@ export default function DossierDetailPage() {
     loading,
     actionLoading,
     error,
+    fetchDossier,
     approveDocument,
     rejectDocument,
     requestDocuments,
@@ -74,6 +78,43 @@ export default function DossierDetailPage() {
   const [issueModalOpen, setIssueModalOpen] = useState(false);
   const [issueReasonInput, setIssueReasonInput] = useState('');
   const [previewFileModal, setPreviewFileModal] = useState({ open: false, url: '', title: '' });
+  const [templateModal, setTemplateModal] = useState({
+    open: false,
+    docType: 'HEALTH_CERT',
+    title: '',
+    horse: null,
+  });
+
+  const handleSimulateCustomsQuickApproval = () => {
+    try {
+      const res = simulateCustomsClearance(dossier?.dossierId || id);
+      message.success({
+        content: `🏛️ Mô phỏng Cơ quan Thẩm quyền & Hải quan phê duyệt thành công! Mã số kiểm dịch: ${res.clearanceNumber}`,
+        duration: 5,
+      });
+      if (typeof fetchDossier === 'function') {
+        fetchDossier();
+      }
+    } catch (err) {
+      message.error('Không thể thực hiện phê duyệt tự động: ' + (err?.message || 'Lỗi hệ thống'));
+    }
+  };
+
+  const handleOpenTemplateModal = (item, doc) => {
+    const docTypeCode = item?.docTypeCode || doc?.docTypeCode || 'HEALTH_CERT';
+    setTemplateModal({
+      open: true,
+      docType: docTypeCode,
+      title: item?.docTypeName || 'Mẫu đơn tiêu chuẩn',
+      horse: {
+        name: dossier?.horseName,
+        passportNumber: dossier?.horsePassportNumber || dossier?.passportNumber,
+        microchipNumber: dossier?.horseMicrochip || dossier?.microchipNumber,
+        breed: dossier?.horseBreed,
+        ownerName: dossier?.customerName,
+      },
+    });
+  };
 
   // Condition checklist states (quản lý tick câu hỏi điều kiện cục bộ)
   const [conditionChecks, setConditionChecks] = useState({
@@ -521,21 +562,35 @@ export default function DossierDetailPage() {
                               <span style={{ color: '#64748B' }}>Nộp bởi {doc.uploadedByName}</span>
                             </div>
 
-                            <Button
-                              type="link"
-                              size="small"
-                              icon={<EyeOutlined />}
-                              style={{ padding: 0, fontSize: 12, color: '#2563EB' }}
-                              onClick={() =>
-                                setPreviewFileModal({
-                                   open: true,
-                                   url: doc.fileUrl,
-                                   title: item.docTypeName,
-                                })
-                              }
-                            >
-                              {t('specialist.detail.viewDoc', 'Xem tệp')}
-                            </Button>
+                            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                              <Button
+                                type="link"
+                                size="small"
+                                icon={<EyeOutlined />}
+                                style={{ padding: 0, fontSize: 12, color: '#2563EB' }}
+                                onClick={() =>
+                                  setPreviewFileModal({
+                                     open: true,
+                                     url: doc.fileUrl,
+                                     title: item.docTypeName,
+                                  })
+                                }
+                              >
+                                {t('specialist.detail.viewDoc', 'Xem tệp')}
+                              </Button>
+
+                              <span style={{ color: '#CBD5E1' }}>|</span>
+
+                              <Button
+                                type="link"
+                                size="small"
+                                icon={<FilePdfOutlined />}
+                                style={{ padding: 0, fontSize: 12, color: '#059669', fontWeight: 500 }}
+                                onClick={() => handleOpenTemplateModal(item, doc)}
+                              >
+                                Mẫu đơn
+                              </Button>
+                            </div>
                           </div>
 
                           {/* 3-Point Checklist indicators */}
@@ -552,8 +607,19 @@ export default function DossierDetailPage() {
                           )}
                         </div>
                       ) : (
-                        <div style={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic', marginBottom: 8 }}>
-                          Khách hàng chưa tải lên giấy tờ này.
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, padding: '6px 10px', backgroundColor: '#F8FAFC', borderRadius: 4, border: '1px dashed #CBD5E1' }}>
+                          <span style={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic' }}>
+                            Khách hàng chưa tải lên giấy tờ này.
+                          </span>
+                          <Button
+                            type="link"
+                            size="small"
+                            icon={<FilePdfOutlined />}
+                            style={{ padding: 0, fontSize: 12, color: '#059669', fontWeight: 500 }}
+                            onClick={() => handleOpenTemplateModal(item, null)}
+                          >
+                            Xem mẫu đơn chuẩn
+                          </Button>
                         </div>
                       )}
 
@@ -822,6 +888,25 @@ export default function DossierDetailPage() {
                       </span>
                     </Tooltip>
                   )}
+
+                  {/* Nút mô phỏng Hải quan phê duyệt nhanh (One-Click) */}
+                  {dossier?.status !== 'Cleared' && (
+                    <Button
+                      type="primary"
+                      block
+                      icon={<SafetyCertificateOutlined />}
+                      style={{
+                        backgroundColor: '#059669',
+                        borderColor: '#059669',
+                        borderRadius: 4,
+                        fontWeight: 600,
+                        marginTop: 8,
+                      }}
+                      onClick={handleSimulateCustomsQuickApproval}
+                    >
+                      🏛️ Mô phỏng Hải quan duyệt nhanh
+                    </Button>
+                  )}
                 </div>
 
                 <Divider style={{ margin: '4px 0' }} />
@@ -993,6 +1078,15 @@ export default function DossierDetailPage() {
           />
         </div>
       </Modal>
+
+      {/* Modal Mẫu Đơn Pháp Lý Chuẩn Quốc Tế (Official Standard Form Preview) */}
+      <StandardFormTemplateModal
+        open={templateModal.open}
+        onClose={() => setTemplateModal((prev) => ({ ...prev, open: false }))}
+        docType={templateModal.docType}
+        title={templateModal.title}
+        horse={templateModal.horse}
+      />
     </div>
   );
 }

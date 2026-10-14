@@ -35,7 +35,13 @@ import {
   CalendarOutlined,
   SendOutlined,
   EyeOutlined,
+  FilePdfOutlined,
 } from '@ant-design/icons';
+import StandardFormTemplateModal from '@components/common/StandardFormTemplateModal';
+import {
+  syncCustomerDossierSubmission,
+  simulateCustomsClearance,
+} from '@utils/dossierStorage';
 import {
   getStoredHorses,
   calculateHorseRisk,
@@ -135,6 +141,11 @@ export default function VetRecordsPage() {
   const [recordForm] = Form.useForm();
   const [reminderForm] = Form.useForm();
   const [attachmentList, setAttachmentList] = useState([]);
+  const [templateModal, setTemplateModal] = useState({
+    open: false,
+    docType: 'HEALTH_CERT',
+    title: '',
+  });
 
   // Selected horse object
   const currentHorse = useMemo(() => {
@@ -825,18 +836,37 @@ export default function VetRecordsPage() {
               submittedAt: dayjs().format('DD/MM/YYYY HH:mm'),
               status: 'Reviewing',
               step: 1,
-              officer: 'Dr. Sarah Jenkins (FEI Senior Vet #VN-884)',
+              officer: 'Nguyễn Thị Mai (Chuyên viên Thủ tục & Kiểm dịch)',
             },
           };
           setDossierSubmissions(updated);
           try {
             localStorage.setItem('racehorse_customer_dossier_submissions', JSON.stringify(updated));
-            window.dispatchEvent(new CustomEvent('dossiers_updated'));
+            syncCustomerDossierSubmission({ horse: currentHorse, customerUser: user });
           } catch (err) {
             console.error(err);
           }
           message.success(
             `Đã nộp thành công bộ hồ sơ Digital Dossier của ngựa "${currentHorse.Name || 'Ngựa đua'}" cho Chuyên viên thủ tục (Transport Specialist) phê duyệt!`,
+          );
+        };
+
+        const handleSimulateCustomsApproval = () => {
+          const res = simulateCustomsClearance(selectedHorseId);
+          const updated = {
+            ...dossierSubmissions,
+            [selectedHorseId]: {
+              submitted: true,
+              submittedAt: dayjs().format('DD/MM/YYYY HH:mm'),
+              status: 'Cleared',
+              step: 4,
+              clearanceNumber: res.clearanceNumber,
+              officer: 'Cơ quan Hải quan Cửa khẩu Quốc tế & Cục Thú y',
+            },
+          };
+          setDossierSubmissions(updated);
+          message.success(
+            `🎉 Hải quan & Cục Thú y đã cấp Giấy phép Xuất Nhập Cảnh & Thông quan thành công! Số hiệu: ${res.clearanceNumber}`,
           );
         };
 
@@ -853,51 +883,59 @@ export default function VetRecordsPage() {
           message.info('Đã mở khóa trạng thái để tải thêm tài liệu bổ sung.');
         };
 
+        const isCustomsCleared = curSubmission?.status === 'Cleared';
+
         const dossierDocs = [
           {
             id: 'DOC-01',
             title: 'FEI Equine Passport & Microchip Registration',
-            type: 'Passport',
+            type: 'HORSE_PASSPORT',
             fileName: 'FEI_Passport_Verified.pdf',
             size: '2.4 MB',
             status: 'Verified',
             authority: 'Fédération Equestre Internationale (FEI)',
+            category: 'Khách hàng nộp',
           },
           {
             id: 'DOC-02',
             title: 'Certificate of Veterinary Inspection (CVI)',
-            type: 'HealthCert',
+            type: 'HEALTH_CERT',
             fileName: 'CVI_Official_Inspection.pdf',
             size: '1.8 MB',
             status: hasCVI ? 'Verified' : 'Pending',
             authority: 'Cục Thú y / Dept. of Animal Health',
+            category: 'Khách hàng nộp',
           },
           {
             id: 'DOC-03',
             title: 'Equine Influenza & Core Vaccinations Log',
-            type: 'Vaccination',
+            type: 'VACCINE_RECORD',
             fileName: 'Vaccination_Log_2026.pdf',
             size: '1.2 MB',
             status: hasVaccines ? 'Verified' : 'Pending',
             authority: 'Royal Ba Vi Equine Clinic',
+            category: 'Khách hàng nộp',
           },
           {
             id: 'DOC-04',
             title: 'Pre-export Blood Test & Lab PCR (Coggins EIA Negative)',
-            type: 'LabTest',
+            type: 'COGGINS_EIA',
             fileName: 'Coggins_PCR_Negative.pdf',
             size: '850 KB',
             status: hasCoggins ? 'Cleared' : 'Pending',
             authority: 'Central Veterinary Laboratory',
+            category: 'Khách hàng nộp',
           },
           {
             id: 'DOC-05',
-            title: 'Official Export / Transit Clearance Permit',
-            type: 'Permit',
-            fileName: 'DAFF_AFCD_Transit_Permit.pdf',
+            title: 'Official Export / Transit Clearance Permit (Giấy phép xuất nhập cảnh)',
+            type: 'IMPORT_PERMIT',
+            fileName: curSubmission?.clearanceNumber ? `Customs_Permit_${curSubmission.clearanceNumber}.pdf` : 'DAFF_AFCD_Transit_Permit.pdf',
             size: '3.1 MB',
-            status: isSubmitted ? 'InReview' : 'Draft',
-            authority: 'Border Quarantine & Customs Authority',
+            status: isCustomsCleared ? 'Cleared' : (isSubmitted ? 'InReview' : 'Draft'),
+            authority: 'Border Quarantine & Customs Authority (Cơ quan Hải quan & Cục Thú y)',
+            category: 'Do ST đảm nhiệm',
+            isSpecialistResponsibility: true,
           },
         ];
 
@@ -928,7 +966,11 @@ export default function VetRecordsPage() {
                 </div>
 
                 <div style={{ textAlign: 'right' }}>
-                  {isSubmitted ? (
+                  {isCustomsCleared ? (
+                    <Tag color="success" style={{ fontSize: 12.5, padding: '4px 12px', fontWeight: 800, borderRadius: 6 }}>
+                      ✓ ĐÃ THÔNG QUAN BỞI HẢI QUAN & CỤC THÚ Y
+                    </Tag>
+                  ) : isSubmitted ? (
                     <Tag color="processing" style={{ fontSize: 12.5, padding: '4px 12px', fontWeight: 700, borderRadius: 6 }}>
                       ⏳ ĐANG THẨM ĐỊNH BỞI TRANSPORT SPECIALIST
                     </Tag>
@@ -940,6 +982,11 @@ export default function VetRecordsPage() {
                   {isSubmitted && (
                     <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 4 }}>
                       Nộp lúc: <strong>{curSubmission.submittedAt}</strong>
+                      {curSubmission?.clearanceNumber && (
+                        <div style={{ color: '#166534', fontWeight: 700 }}>
+                          Số cấp phép: <code>{curSubmission.clearanceNumber}</code>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -959,15 +1006,106 @@ export default function VetRecordsPage() {
                   },
                   {
                     title: '3. Cơ quan cấp phép',
-                    description: 'Hải quan & Cục Thú y',
+                    description: isCustomsCleared ? 'Đã duyệt cấp phép' : 'Hải quan & Cục Thú y',
                   },
                   {
                     title: '4. Đã thông quan',
-                    description: 'Bàn giao cho Manager',
+                    description: isCustomsCleared ? 'Hoàn tất bàn giao' : 'Bàn giao cho Manager',
                   },
                 ]}
                 style={{ marginTop: 10, marginBottom: 10 }}
               />
+            </Card>
+
+            {/* BẢNG HƯỚNG DẪN CÁC MỤC KIỂM TRA THÚ Y CẦN NỘP CHO ST & NGHIỆP VỤ GIẤY PHÉP XUẤT NHẬP CẢNH CỦA ST (REQUIREMENT 2) */}
+            <Card
+              bordered
+              style={{
+                borderRadius: 16,
+                border: '1.5px solid #BFDBFE',
+                backgroundColor: '#F8FAFC',
+              }}
+              styles={{ body: { padding: '18px 22px' } }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                <span style={{ fontSize: 22 }}>📋</span>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: 15.5, fontWeight: 800, color: '#1E3A8A' }}>
+                    Danh mục Kiểm tra Y tế & Giấy tờ cần nộp cho Chuyên viên Thủ tục (ST)
+                  </h4>
+                  <span style={{ fontSize: 12.5, color: '#64748B' }}>
+                    Khách hàng chỉ cần chuẩn bị 4 hạng mục y tế cơ sở do Bác sĩ Thú y / Phòng khám thực hiện. Giấy phép xuất nhập cảnh cửa khẩu là nghiệp vụ của ST.
+                  </span>
+                </div>
+              </div>
+
+              <Row gutter={[16, 12]}>
+                {/* Phần A: Khách hàng nộp */}
+                <Col xs={24} md={14}>
+                  <div style={{ padding: '12px 14px', backgroundColor: '#FFFFFF', borderRadius: 10, border: '1.5px solid #E2E8F0', height: '100%' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <strong style={{ fontSize: 13, color: '#0F172A' }}>
+                        A. 4 Hạng mục Khách hàng cần thực hiện & nộp cho ST:
+                      </strong>
+                      <Tag color="blue" style={{ fontWeight: 700 }}>Khách hàng chuẩn bị</Tag>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: '#334155' }}>
+                      <div>
+                        1. 🐎 <strong>Hộ chiếu ngựa FEI Quốc tế & Vi mạch:</strong> Còn hạn hiệu lực, đối chiếu mã chip 15 số ISO 11784/11785.
+                      </div>
+                      <div>
+                        2. 💉 <strong>Chứng nhận tiêm phòng Cúm ngựa (Equine Influenza):</strong> Đủ 2 mũi cơ bản + mũi nhắc lại trong 6 tháng (cách ngày bay ≥ 14 ngày).
+                      </div>
+                      <div>
+                        3. 🩸 <strong>Xét nghiệm máu Coggins EIA âm tính & EVA / Glanders:</strong> Phiếu xét nghiệm âm tính trong vòng 30 ngày từ Viện xét nghiệm chỉ định.
+                      </div>
+                      <div>
+                        4. 🩺 <strong>Giấy chứng nhận Khám Lâm sàng (CVI Health Cert):</strong> Khám tổng quát xác nhận ngựa khỏe mạnh, đủ điều kiện bay (Fit-to-Fly).
+                      </div>
+                    </div>
+                  </div>
+                </Col>
+
+                {/* Phần B: ST đảm nhiệm */}
+                <Col xs={24} md={10}>
+                  <div style={{ padding: '12px 14px', backgroundColor: '#EFF6FF', borderRadius: 10, border: '1.5px solid #93C5FD', height: '100%' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <strong style={{ fontSize: 13, color: '#1E40AF' }}>
+                        B. Nghiệp vụ của Transport Specialist (ST):
+                      </strong>
+                      <Tag color="purple" style={{ fontWeight: 700 }}>Do ST đảm nhiệm</Tag>
+                    </div>
+                    <div style={{ fontSize: 12, color: '#1E3A8A', lineHeight: 1.5 }}>
+                      🏛️ <strong>Giấy phép Xuất Nhập Cảnh & Quá Cảnh Quốc Tế (Import/Export Permit):</strong>
+                      <p style={{ margin: '4px 0 8px 0', fontSize: 11.5, color: '#3B82F6' }}>
+                        Khách hàng <strong>KHÔNG cần tự xin giấy phép này</strong>. Sau khi tiếp nhận 4 hồ sơ y tế từ bạn, ST sẽ đại diện nộp hồ sơ xin cấp phép đến Cục Thú y Nông nghiệp (USDA / DAFF / GACC) và làm thủ tục thông quan hải quan.
+                      </p>
+                      {!isCustomsCleared ? (
+                        <Button
+                          type="primary"
+                          size="small"
+                          icon={<SafetyCertificateOutlined />}
+                          onClick={handleSimulateCustomsApproval}
+                          style={{
+                            backgroundColor: '#059669',
+                            borderColor: '#059669',
+                            borderRadius: 6,
+                            fontWeight: 700,
+                            fontSize: 11.5,
+                            width: '100%',
+                          }}
+                        >
+                          🏛️ Mô phỏng Hải quan phê duyệt cấp phép (Click để duyệt nhanh)
+                        </Button>
+                      ) : (
+                        <div style={{ padding: '6px 10px', backgroundColor: '#DCFCE7', borderRadius: 6, border: '1px solid #86EFAC', color: '#15803D', fontWeight: 700, fontSize: 12, textAlign: 'center' }}>
+                          ✓ Hải quan đã cấp Giấy phép #{curSubmission?.clearanceNumber}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Col>
+              </Row>
             </Card>
 
             {/* CARD 2: DIGITAL DOSSIER DOCUMENTS CHECKLIST */}
@@ -1024,16 +1162,23 @@ export default function VetRecordsPage() {
                           📄
                         </div>
                         <div>
-                          <strong style={{ fontSize: 13.5, color: '#0F172A', display: 'block' }}>
-                            {doc.title}
-                          </strong>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <strong style={{ fontSize: 13.5, color: '#0F172A' }}>
+                              {doc.title}
+                            </strong>
+                            {doc.isSpecialistResponsibility && (
+                              <Tag color="purple" style={{ fontSize: 11, fontWeight: 700, margin: 0 }}>
+                                🛡️ Do Transport Specialist đảm nhiệm
+                              </Tag>
+                            )}
+                          </div>
                           <span style={{ fontSize: 12, color: '#64748B' }}>
                             Tệp: <code>{doc.fileName}</code> ({doc.size}) • Cơ quan cấp: <em>{doc.authority}</em>
                           </span>
                         </div>
                       </div>
 
-                      <Space size={8}>
+                      <Space size={8} wrap>
                         {isVerified ? (
                           <Tag color="success" style={{ fontWeight: 700, borderRadius: 6 }}>
                             ✓ ĐÃ XÁC THỰC (VERIFIED)
@@ -1049,12 +1194,37 @@ export default function VetRecordsPage() {
                         )}
                         <Button
                           size="small"
+                          icon={<FilePdfOutlined />}
+                          onClick={() =>
+                            setTemplateModal({
+                              open: true,
+                              docType: doc.type,
+                              title: doc.title,
+                            })
+                          }
+                          style={{ borderRadius: 6, fontSize: 12, borderColor: '#F59E0B', color: '#B45309', fontWeight: 600 }}
+                        >
+                          Mẫu đơn
+                        </Button>
+                        <Button
+                          size="small"
                           icon={<EyeOutlined />}
                           onClick={() => message.info(`Đang mở bản xem trước tài liệu "${doc.fileName}"`)}
                           style={{ borderRadius: 6, fontSize: 12 }}
                         >
                           Xem tệp
                         </Button>
+                        {doc.isSpecialistResponsibility && !isCustomsCleared && (
+                          <Button
+                            size="small"
+                            type="primary"
+                            icon={<SafetyCertificateOutlined />}
+                            onClick={handleSimulateCustomsApproval}
+                            style={{ borderRadius: 6, fontSize: 11.5, backgroundColor: '#059669', borderColor: '#059669', fontWeight: 700 }}
+                          >
+                            🏛️ Hải quan duyệt
+                          </Button>
+                        )}
                       </Space>
                     </div>
                   );
@@ -1991,6 +2161,18 @@ export default function VetRecordsPage() {
           </div>
         </Form>
       </Modal>
+
+      {/* 8. MODAL: BIỂU MẪU HỒ SƠ KIỂM DỊCH & THÚ Y CHUẨN QUỐC TẾ */}
+      <StandardFormTemplateModal
+        open={templateModal.open}
+        onClose={() => setTemplateModal((prev) => ({ ...prev, open: false }))}
+        docType={templateModal.docType}
+        title={templateModal.title}
+        horse={currentHorse}
+        onApply={() => {
+          message.success(`Đã chọn đính kèm biểu mẫu "${templateModal.title}" vào hồ sơ!`);
+        }}
+      />
     </div>
   );
 }

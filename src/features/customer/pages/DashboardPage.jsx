@@ -86,10 +86,11 @@ export default function CustomerDashboard() {
 
   const loadData = useCallback(() => {
     const ownerId = user?.userId || user?.UserID;
+    const userEmail = user?.email || user?.Email;
     Promise.all([
       horseService.getHorses({ ownerId: ownerId || undefined }),
       bookingService.getBookings({ customerId: ownerId || undefined }),
-      tripService.getTrips(),
+      tripService.getTrips({ customerId: ownerId || undefined, customerEmail: userEmail || undefined }),
     ])
       .then(([horseRes, bookingRes, tripRes]) => {
         const rawHorses = horseRes.data?.data || horseRes.data || [];
@@ -117,7 +118,27 @@ export default function CustomerDashboard() {
     loadData();
   }, [loadData]);
 
-  const activeTripsCount = trips.filter((tr) => {
+  // Chỉ tính active trip thuộc về các đơn hàng thực tế của khách hàng này
+  const customerEmail = (user?.email || user?.Email || '').toLowerCase();
+  const customerId = user?.userId || user?.UserID;
+  const userBookingCodes = new Set(
+    (bookings || []).map((b) => b.bookingCode || b.BookingCode).filter(Boolean)
+  );
+
+  const customerTrips = trips.filter((tr) => {
+    if (userBookingCodes.size > 0 && tr.bookingCode && userBookingCodes.has(tr.bookingCode)) {
+      return true;
+    }
+    if (tr.customerId && customerId && Number(tr.customerId) === Number(customerId)) {
+      return true;
+    }
+    if (tr.customerEmail && customerEmail && tr.customerEmail.toLowerCase() === customerEmail) {
+      return userBookingCodes.has(tr.bookingCode);
+    }
+    return false;
+  });
+
+  const activeTripsCount = customerTrips.filter((tr) => {
     const status = tr.overallStatus || tr.status || tr.Status;
     return status === 'InTransit' || status === 'Scheduled';
   }).length;

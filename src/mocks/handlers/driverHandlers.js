@@ -34,9 +34,27 @@ export const driverHandlers = [
   http.get('/api/trips', ({ request }) => {
     const url = new URL(request.url);
     const status = url.searchParams.get('status');
+    const customerId = url.searchParams.get('customerId');
+    const customerEmail = url.searchParams.get('customerEmail');
+
+    const authHeader = request.headers.get('Authorization') || '';
+    let tokenUserId = null;
+    if (authHeader.startsWith('Bearer mock-token-')) {
+      tokenUserId = Number(authHeader.replace('Bearer mock-token-', ''));
+    } else if (authHeader.startsWith('Bearer mock-google-token-')) {
+      tokenUserId = Number(authHeader.replace('Bearer mock-google-token-', ''));
+    }
+
     let filtered = [...missions];
     if (status && status !== 'All') {
       filtered = filtered.filter((m) => m.overallStatus === status);
+    }
+    if (customerId) {
+      filtered = filtered.filter((m) => Number(m.customerId) === Number(customerId));
+    } else if (customerEmail) {
+      filtered = filtered.filter((m) => (m.customerEmail || '').toLowerCase() === customerEmail.toLowerCase());
+    } else if (tokenUserId && tokenUserId > 4) {
+      filtered = filtered.filter((m) => Number(m.customerId) === tokenUserId);
     }
     return HttpResponse.json({
       success: true,

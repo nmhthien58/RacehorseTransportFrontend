@@ -29,6 +29,20 @@ export function useSpecialistDossiers(initialParams = {}) {
     }
   }, []);
 
+  // Lắng nghe sự kiện đồng bộ khi khách hàng nộp hồ sơ hoặc cập nhật
+  useEffect(() => {
+    const handleUpdate = () => {
+      fetchDossiers();
+      fetchOverview();
+    };
+    window.addEventListener('dossiers_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('dossiers_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, [fetchDossiers, fetchOverview]);
+
   useEffect(() => {
     let isSubscribed = true;
 

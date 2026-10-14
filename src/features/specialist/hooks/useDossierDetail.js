@@ -18,6 +18,19 @@ export function useDossierDetail(dossierId) {
     setRefreshKey((prev) => prev + 1);
   }, []);
 
+  // Lắng nghe cập nhật khi khách hàng nộp hồ sơ hoặc mô phỏng phê duyệt
+  useEffect(() => {
+    const handleUpdate = () => {
+      fetchDossier();
+    };
+    window.addEventListener('dossiers_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('dossiers_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, [fetchDossier]);
+
   useEffect(() => {
     let isSubscribed = true;
 

@@ -10,6 +10,8 @@ import {
   DollarCircleOutlined,
   SendOutlined,
   AuditOutlined,
+  FileTextOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -134,8 +136,23 @@ export default function AppSidebar({ collapsed, user }) {
       return [
         {
           key: ROUTES.DRIVER_DASHBOARD,
+          icon: <AppstoreOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.driverDashboard', 'Bảng điều khiển & Ca trực'),
+        },
+        {
+          key: ROUTES.DRIVER_MISSIONS,
           icon: <SendOutlined style={{ fontSize: 18 }} />,
-          label: t('nav.driverMission', 'Nhiệm vụ vận chuyển'),
+          label: t('nav.driverMissions', 'Nhiệm vụ vận chuyển'),
+        },
+        {
+          key: ROUTES.DRIVER_TRIPS,
+          icon: <CompassOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.activeTrips', 'Hành trình đang chạy'),
+        },
+        {
+          key: ROUTES.DRIVER_HISTORY,
+          icon: <HistoryOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.tripHistory', 'Lịch sử chuyến đi'),
         },
         {
           key: ROUTES.PROFILE,
@@ -149,8 +166,23 @@ export default function AppSidebar({ collapsed, user }) {
       return [
         {
           key: ROUTES.DRIVER_DASHBOARD,
+          icon: <AppstoreOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.escortDashboard', 'Bảng điều khiển & Ca trực'),
+        },
+        {
+          key: ROUTES.DRIVER_MISSIONS,
           icon: <MedicineBoxOutlined style={{ fontSize: 18 }} />,
-          label: t('nav.escortMission', 'Giám sát thú y & Áp tải'),
+          label: t('nav.escortMissions', 'Nhiệm vụ áp tải thú y'),
+        },
+        {
+          key: ROUTES.DRIVER_TRIPS,
+          icon: <CompassOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.activeTrips', 'Hành trình đang chạy'),
+        },
+        {
+          key: ROUTES.DRIVER_HISTORY,
+          icon: <HistoryOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.tripHistory', 'Lịch sử chuyến đi'),
         },
         {
           key: ROUTES.PROFILE,
@@ -164,8 +196,23 @@ export default function AppSidebar({ collapsed, user }) {
       return [
         {
           key: ROUTES.SPECIALIST_DASHBOARD,
+          icon: <AppstoreOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.specialistDashboard', 'Bảng điều khiển'),
+        },
+        {
+          key: ROUTES.SPECIALIST_DOSSIERS,
+          icon: <AuditOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.specialistDossiers', 'Hồ sơ pháp lý'),
+        },
+        {
+          key: ROUTES.SPECIALIST_DOCUMENTS,
+          icon: <FileTextOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.specialistDocuments', 'Biểu mẫu hồ sơ'),
+        },
+        {
+          key: ROUTES.SPECIALIST_QUARANTINE_RULES,
           icon: <MedicineBoxOutlined style={{ fontSize: 18 }} />,
-          label: t('nav.specialistDashboard', 'Hồ sơ kiểm dịch'),
+          label: t('nav.specialistQuarantineRules', 'Quy định kiểm dịch'),
         },
         {
           key: ROUTES.PROFILE,
@@ -209,7 +256,13 @@ export default function AppSidebar({ collapsed, user }) {
     if (current.startsWith('/coordinator/route-planning')) return ROUTES.COORDINATOR_ROUTE_PLANNING;
     if (current.startsWith('/coordinator/fleet-roster') || current.startsWith('/coordinator/driver-schedules')) return ROUTES.COORDINATOR_FLEET_ROSTER;
     if (current.startsWith('/coordinator/dashboard') || current.startsWith('/coordinator')) return ROUTES.COORDINATOR_DASHBOARD;
-    if (current.startsWith('/driver/dashboard') || current.startsWith('/driver')) return ROUTES.DRIVER_DASHBOARD;
+    if (current.startsWith('/driver/history') || current.includes('/completion-report')) return ROUTES.DRIVER_HISTORY;
+    if (current.startsWith('/driver/trips')) return ROUTES.DRIVER_TRIPS;
+    if (current.startsWith('/driver/missions')) return ROUTES.DRIVER_MISSIONS;
+    if (current.startsWith('/driver/dashboard') || current === '/driver') return ROUTES.DRIVER_DASHBOARD;
+    if (current.startsWith('/specialist/documents')) return ROUTES.SPECIALIST_DOCUMENTS;
+    if (current.startsWith('/specialist/quarantine-rules')) return ROUTES.SPECIALIST_QUARANTINE_RULES;
+    if (current.startsWith('/specialist/dossiers')) return ROUTES.SPECIALIST_DOSSIERS;
     if (current.startsWith('/specialist/dashboard') || current.startsWith('/specialist')) return ROUTES.SPECIALIST_DASHBOARD;
     if (current === '/profile') return ROUTES.PROFILE;
     return current;

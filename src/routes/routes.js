@@ -46,6 +46,7 @@ export const ROUTES = {
   SPECIALIST_DOSSIERS: '/specialist/dossiers',
   SPECIALIST_DOSSIER_DETAIL: '/specialist/dossiers/:id',
   SPECIALIST_DOCUMENTS: '/specialist/documents',
+  SPECIALIST_QUARANTINE_RULES: '/specialist/quarantine-rules',
 
   // Coordinator
   COORDINATOR_DASHBOARD: '/coordinator/dashboard',
@@ -61,9 +62,16 @@ export const ROUTES = {
 
   // Driver
   DRIVER_DASHBOARD: '/driver/dashboard',
+  DRIVER_MISSIONS: '/driver/missions',
+  DRIVER_CHECKLIST: '/driver/missions/:tripId/checklist',
+  DRIVER_EXECUTION: '/driver/missions/:tripId/execution',
+  DRIVER_WELFARE: '/driver/missions/:tripId/welfare-log',
+  DRIVER_ARRIVAL: '/driver/missions/:tripId/arrival',
   DRIVER_TRIPS: '/driver/trips',
   DRIVER_TRIP_DETAIL: '/driver/trips/:id',
   DRIVER_WELFARE_LOG: '/driver/trips/:id/welfare-log',
+  DRIVER_HISTORY: '/driver/history',
+  DRIVER_COMPLETION_REPORT: '/driver/missions/:tripId/completion-report',
 
   // Shared
   PROFILE: '/profile',

@@ -40,6 +40,10 @@ import RouteApprovalsPage from '@features/manager/pages/RouteApprovalsPage';
 
 // Specialist pages
 import SpecialistDashboard from '@features/specialist/pages/DashboardPage';
+import DossiersPage from '@features/specialist/pages/DossiersPage';
+import DossierDetailPage from '@features/specialist/pages/DossierDetailPage';
+import QuarantineRulesPage from '@features/specialist/pages/QuarantineRulesPage';
+import DocumentsPage from '@features/specialist/pages/DocumentsPage';
 
 // Coordinator pages
 import CoordinatorDashboard from '@features/coordinator/pages/DashboardPage';
@@ -48,6 +52,14 @@ import FleetRosterPage from '@features/coordinator/pages/FleetRosterPage';
 
 // Driver pages
 import DriverDashboard from '@features/driver/pages/DashboardPage';
+import MissionBriefingPage from '@features/driver/pages/MissionBriefingPage';
+import PreDepartureChecklistPage from '@features/driver/pages/PreDepartureChecklistPage';
+import TripExecutionPage from '@features/driver/pages/TripExecutionPage';
+import HorseWelfareLogPage from '@features/driver/pages/HorseWelfareLogPage';
+import ArrivalHandoverPage from '@features/driver/pages/ArrivalHandoverPage';
+import TripHistoryPage from '@features/driver/pages/TripHistoryPage';
+import ActiveTripPage from '@features/driver/pages/ActiveTripPage';
+import MissionCompletionReportPage from '@features/driver/pages/MissionCompletionReportPage';
 
 // Landing pages
 import MainPage from '@features/landing/pages/MainPage';
@@ -130,9 +142,17 @@ export default function AppRoutes() {
       </Route>
 
       {/* Specialist */}
-      <Route element={<PrivateRoute allowedRoles={[ROLES.SPECIALIST]} />}>
+      <Route element={<PrivateRoute allowedRoles={[ROLES.SPECIALIST, 'Specialist', 'TransportSpecialist']} />}>
         <Route element={<MainLayout />}>
           <Route path={ROUTES.SPECIALIST_DASHBOARD} element={<SpecialistDashboard />} />
+          <Route path={ROUTES.SPECIALIST_DOSSIERS} element={<DossiersPage />} />
+          <Route path="/specialist/dossiers" element={<DossiersPage />} />
+          <Route path={ROUTES.SPECIALIST_DOSSIER_DETAIL} element={<DossierDetailPage />} />
+          <Route path="/specialist/dossiers/:id" element={<DossierDetailPage />} />
+          <Route path={ROUTES.SPECIALIST_QUARANTINE_RULES} element={<QuarantineRulesPage />} />
+          <Route path="/specialist/quarantine-rules" element={<QuarantineRulesPage />} />
+          <Route path={ROUTES.SPECIALIST_DOCUMENTS} element={<DocumentsPage />} />
+          <Route path="/specialist/documents" element={<DocumentsPage />} />
         </Route>
       </Route>
 
@@ -156,8 +176,22 @@ export default function AppRoutes() {
       <Route element={<PrivateRoute allowedRoles={[ROLES.DRIVER, ROLES.ESCORT, 'Driver', 'Escort']} />}>
         <Route element={<MainLayout />}>
           <Route path={ROUTES.DRIVER_DASHBOARD} element={<DriverDashboard />} />
-          <Route path={ROUTES.DRIVER_TRIPS} element={<DriverDashboard />} />
-          <Route path="/driver/trips" element={<DriverDashboard />} />
+          <Route path={ROUTES.DRIVER_MISSIONS} element={<MissionBriefingPage />} />
+          <Route path="/driver/missions" element={<MissionBriefingPage />} />
+          <Route path={ROUTES.DRIVER_CHECKLIST} element={<PreDepartureChecklistPage />} />
+          <Route path="/driver/missions/:tripId/checklist" element={<PreDepartureChecklistPage />} />
+          <Route path={ROUTES.DRIVER_EXECUTION} element={<TripExecutionPage />} />
+          <Route path="/driver/missions/:tripId/execution" element={<TripExecutionPage />} />
+          <Route path={ROUTES.DRIVER_WELFARE} element={<HorseWelfareLogPage />} />
+          <Route path="/driver/missions/:tripId/welfare-log" element={<HorseWelfareLogPage />} />
+          <Route path={ROUTES.DRIVER_ARRIVAL} element={<ArrivalHandoverPage />} />
+          <Route path="/driver/missions/:tripId/arrival" element={<ArrivalHandoverPage />} />
+          <Route path={ROUTES.DRIVER_COMPLETION_REPORT} element={<MissionCompletionReportPage />} />
+          <Route path="/driver/missions/:tripId/completion-report" element={<MissionCompletionReportPage />} />
+          <Route path={ROUTES.DRIVER_TRIPS} element={<ActiveTripPage />} />
+          <Route path="/driver/trips" element={<ActiveTripPage />} />
+          <Route path={ROUTES.DRIVER_HISTORY} element={<TripHistoryPage />} />
+          <Route path="/driver/history" element={<TripHistoryPage />} />
         </Route>
       </Route>
 

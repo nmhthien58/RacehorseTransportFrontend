@@ -17,6 +17,21 @@ export function useDriverMissions(initialParams = {}) {
     setRefreshKey((prev) => prev + 1);
   }, []);
 
+  // Lắng nghe sự kiện khi Manager phê duyệt kế hoạch lộ trình và giao cho Driver/Escort
+  useEffect(() => {
+    const handleUpdate = () => {
+      refresh();
+    };
+    window.addEventListener('plan_assigned_to_driver', handleUpdate);
+    window.addEventListener('plans_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('plan_assigned_to_driver', handleUpdate);
+      window.removeEventListener('plans_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, [refresh]);
+
   useEffect(() => {
     let isSubscribed = true;
 

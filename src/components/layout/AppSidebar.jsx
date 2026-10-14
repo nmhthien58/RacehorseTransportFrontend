@@ -12,6 +12,7 @@ import {
   AuditOutlined,
   FileTextOutlined,
   HistoryOutlined,
+  TeamOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -98,6 +99,11 @@ export default function AppSidebar({ collapsed, user }) {
           key: ROUTES.MANAGER_ROUTE_APPROVALS,
           icon: <AuditOutlined style={{ fontSize: 18 }} />,
           label: t('nav.routeApprovals', 'Phê duyệt lộ trình'),
+        },
+        {
+          key: ROUTES.ADMIN_USERS,
+          icon: <TeamOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.userManagement', 'Quản lý người dùng'),
         },
         {
           key: ROUTES.PROFILE,

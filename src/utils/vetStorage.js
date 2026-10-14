@@ -166,15 +166,23 @@ export function deduplicateReminders(reminders) {
  * Lấy toàn bộ hồ sơ thú y từ localStorage (Tự động lọc trùng lặp)
  */
 export function getStoredVetRecords() {
-  if (typeof window === 'undefined') return deduplicateVetRecords([...INITIAL_VET_RECORDS]);
+  const isCleanMode = typeof window !== 'undefined' && localStorage.getItem('racehorse_clean_data_mode') === 'true';
+  if (typeof window === 'undefined') return isCleanMode ? [] : deduplicateVetRecords([...INITIAL_VET_RECORDS]);
   try {
     const raw = localStorage.getItem(VET_RECORDS_KEY);
     if (!raw) {
+      if (isCleanMode) {
+        localStorage.setItem(VET_RECORDS_KEY, JSON.stringify([]));
+        return [];
+      }
       const deduped = deduplicateVetRecords([...INITIAL_VET_RECORDS]);
       localStorage.setItem(VET_RECORDS_KEY, JSON.stringify(deduped));
       return deduped;
     }
     const parsed = JSON.parse(raw);
+    if (isCleanMode) {
+      return Array.isArray(parsed) ? deduplicateVetRecords(parsed) : [];
+    }
     if (Array.isArray(parsed) && parsed.length > 0) {
       const deduped = deduplicateVetRecords(parsed);
       if (deduped.length !== parsed.length) {
@@ -187,7 +195,7 @@ export function getStoredVetRecords() {
     return deduped;
   } catch (err) {
     console.error('Lỗi khi đọc hồ sơ thú y từ storage:', err);
-    return deduplicateVetRecords([...INITIAL_VET_RECORDS]);
+    return isCleanMode ? [] : deduplicateVetRecords([...INITIAL_VET_RECORDS]);
   }
 }
 
@@ -270,15 +278,23 @@ export function deleteStoredVetRecord(id) {
  * Lấy danh sách nhắc nhở (Reminders)
  */
 export function getStoredReminders() {
-  if (typeof window === 'undefined') return deduplicateReminders([...INITIAL_REMINDERS]);
+  const isCleanMode = typeof window !== 'undefined' && localStorage.getItem('racehorse_clean_data_mode') === 'true';
+  if (typeof window === 'undefined') return isCleanMode ? [] : deduplicateReminders([...INITIAL_REMINDERS]);
   try {
     const raw = localStorage.getItem(VET_REMINDERS_KEY);
     if (!raw) {
+      if (isCleanMode) {
+        localStorage.setItem(VET_REMINDERS_KEY, JSON.stringify([]));
+        return [];
+      }
       const deduped = deduplicateReminders([...INITIAL_REMINDERS]);
       localStorage.setItem(VET_REMINDERS_KEY, JSON.stringify(deduped));
       return deduped;
     }
     const parsed = JSON.parse(raw);
+    if (isCleanMode) {
+      return Array.isArray(parsed) ? deduplicateReminders(parsed) : [];
+    }
     if (Array.isArray(parsed) && parsed.length > 0) {
       const deduped = deduplicateReminders(parsed);
       if (deduped.length !== parsed.length) {
@@ -291,7 +307,7 @@ export function getStoredReminders() {
     return deduped;
   } catch (err) {
     console.error('Lỗi khi đọc nhắc nhở từ storage:', err);
-    return deduplicateReminders([...INITIAL_REMINDERS]);
+    return isCleanMode ? [] : deduplicateReminders([...INITIAL_REMINDERS]);
   }
 }
 

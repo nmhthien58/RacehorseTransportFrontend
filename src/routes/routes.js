@@ -40,6 +40,8 @@ export const ROUTES = {
   MANAGER_TRIPS: '/manager/trips',
   MANAGER_REPORTS: '/manager/reports',
   MANAGER_PROFILE: '/manager/profile',
+  MANAGER_USERS: '/manager/users',
+  ADMIN_USERS: '/manager/users',
 
   // Specialist
   SPECIALIST_DASHBOARD: '/specialist/dashboard',

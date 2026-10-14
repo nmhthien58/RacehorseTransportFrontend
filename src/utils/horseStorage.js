@@ -202,7 +202,8 @@ export function deduplicateHorses(list) {
     unique.push(h);
   }
 
-  return unique.length > 0 ? unique : [...INITIAL_HORSES];
+  const isCleanMode = typeof window !== 'undefined' && localStorage.getItem('racehorse_clean_data_mode') === 'true';
+  return unique.length > 0 ? unique : (isCleanMode ? [] : [...INITIAL_HORSES]);
 }
 
 /**
@@ -210,14 +211,22 @@ export function deduplicateHorses(list) {
  * @returns {Array<any>}
  */
 export function getStoredHorses() {
-  if (typeof window === 'undefined') return [...INITIAL_HORSES];
+  const isCleanMode = typeof window !== 'undefined' && localStorage.getItem('racehorse_clean_data_mode') === 'true';
+  if (typeof window === 'undefined') return isCleanMode ? [] : [...INITIAL_HORSES];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
+      if (isCleanMode) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+        return [];
+      }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_HORSES));
       return [...INITIAL_HORSES];
     }
     const parsed = JSON.parse(raw);
+    if (isCleanMode) {
+      return Array.isArray(parsed) ? deduplicateHorses(parsed) : [];
+    }
     if (Array.isArray(parsed) && parsed.length > 0) {
       // Đảm bảo cá thể ví dụ Critical Risk (Shadowfax) có mặt để người dùng kiểm nghiệm
       let combined = [...parsed];

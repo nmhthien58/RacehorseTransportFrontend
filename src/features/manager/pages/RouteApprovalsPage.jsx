@@ -230,15 +230,70 @@ export default function RouteApprovalsPage() {
       ),
     },
     {
-      title: 'Tổng chi phí',
-      dataIndex: 'totalEstimatedCost',
-      key: 'totalEstimatedCost',
+      title: 'Chi phí ban đầu',
+      key: 'initialCost',
       align: 'right',
-      render: (val, record) => (
-        <strong style={{ fontSize: 13, color: '#d97706' }}>
-          ${(val || record.totalCost || 0).toLocaleString()}
-        </strong>
-      ),
+      width: 140,
+      render: (_, record) => {
+        const val =
+          Number(record.customerFeeCap) ||
+          Number(record.initialCost) ||
+          Number(record.bookingCost) ||
+          Number(record.price) ||
+          Number(record.totalPrice) ||
+          (String(record.transportMode).toLowerCase().includes('air') ? 18000 : 7500);
+        return (
+          <div style={{ textAlign: 'right' }}>
+            <span style={{ fontSize: 13, color: '#334155', fontWeight: 600 }}>
+              ${val.toLocaleString()}
+            </span>
+            <div style={{ fontSize: 11, color: '#94A3B8' }}>Ngân sách đơn đặt</div>
+          </div>
+        );
+      },
+    },
+    {
+      title: 'Chi phí đề xuất (Coordinator)',
+      key: 'proposedCost',
+      align: 'right',
+      width: 175,
+      render: (_, record) => {
+        const proposed =
+          Number(record.estimatedCost) ||
+          Number(record.coordinatorCost) ||
+          Number(record.proposedCost) ||
+          Number(record.costBreakdown?.total) ||
+          Number(record.totalEstimatedCost) ||
+          Number(record.totalCost) ||
+          (String(record.transportMode).toLowerCase().includes('air') ? 14800 : 6200);
+
+        const initial =
+          Number(record.customerFeeCap) ||
+          Number(record.initialCost) ||
+          Number(record.bookingCost) ||
+          Number(record.price) ||
+          (String(record.transportMode).toLowerCase().includes('air') ? 18000 : 7500);
+
+        const margin = initial - proposed;
+        const marginPct = initial > 0 ? Math.round((margin / initial) * 100) : 0;
+
+        return (
+          <div style={{ textAlign: 'right' }}>
+            <strong style={{ fontSize: 13.5, color: '#D97706', fontWeight: 700 }}>
+              ${proposed.toLocaleString()}
+            </strong>
+            {margin >= 0 ? (
+              <div style={{ fontSize: 11, color: '#16A34A', fontWeight: 600 }}>
+                +{marginPct}% (${margin.toLocaleString()})
+              </div>
+            ) : (
+              <div style={{ fontSize: 11, color: '#DC2626', fontWeight: 600 }}>
+                Vượt trần (${Math.abs(margin).toLocaleString()})
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       title: 'Trạng thái',
@@ -687,32 +742,41 @@ export default function RouteApprovalsPage() {
               </Text>
 
               {/* 3 Ô THÔNG SỐ: CAP, ESTIMATED TOTAL, GROSS MARGIN */}
-              <Row gutter={16} style={{ marginBottom: 16 }}>
-                <Col span={8}>
-                  <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 12, padding: '12px 14px' }}>
-                    <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>Customer Fee Cap:</Text>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: '#0F172A' }}>
-                      ${Number(activePlan.customerFeeCap || 22500).toLocaleString()}
-                    </div>
-                  </div>
-                </Col>
-                <Col span={8}>
-                  <div style={{ backgroundColor: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 12, padding: '12px 14px' }}>
-                    <Text style={{ fontSize: 12, color: '#B45309', display: 'block' }}>Estimated Total:</Text>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: '#D97706' }}>
-                      ${Number(activePlan.estimatedCost || 18450).toLocaleString()}
-                    </div>
-                  </div>
-                </Col>
-                <Col span={8}>
-                  <div style={{ backgroundColor: '#ECFDF5', border: '1px solid #BBF7D0', borderRadius: 12, padding: '12px 14px' }}>
-                    <Text style={{ fontSize: 12, color: '#15803D', display: 'block' }}>Gross Margin:</Text>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: '#16A34A' }}>
-                      +${Number(activePlan.grossMargin || 4050).toLocaleString()} ({activePlan.grossMarginPercent || '18%'})
-                    </div>
-                  </div>
-                </Col>
-              </Row>
+              {(() => {
+                const capVal = Number(activePlan.customerFeeCap || activePlan.initialCost || activePlan.bookingCost || activePlan.price || (String(activePlan.transportMode).toLowerCase().includes('air') ? 18000 : 7500));
+                const estVal = Number(activePlan.estimatedCost || activePlan.coordinatorCost || activePlan.proposedCost || activePlan.costBreakdown?.total || (String(activePlan.transportMode).toLowerCase().includes('air') ? 14800 : 6200));
+                const marginVal = capVal - estVal;
+                const marginPct = capVal > 0 ? `${Math.round((marginVal / capVal) * 100)}%` : '0%';
+
+                return (
+                  <Row gutter={16} style={{ marginBottom: 16 }}>
+                    <Col span={8}>
+                      <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: 12, padding: '12px 14px' }}>
+                        <Text type="secondary" style={{ fontSize: 12, display: 'block', fontWeight: 600 }}>Chi phí ban đầu (Customer Cap):</Text>
+                        <div style={{ fontSize: 20, fontWeight: 800, color: '#0F172A' }}>
+                          ${capVal.toLocaleString()}
+                        </div>
+                      </div>
+                    </Col>
+                    <Col span={8}>
+                      <div style={{ backgroundColor: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 12, padding: '12px 14px' }}>
+                        <Text style={{ fontSize: 12, color: '#B45309', display: 'block', fontWeight: 600 }}>Chi phí đề xuất (Coordinator):</Text>
+                        <div style={{ fontSize: 20, fontWeight: 800, color: '#D97706' }}>
+                          ${estVal.toLocaleString()}
+                        </div>
+                      </div>
+                    </Col>
+                    <Col span={8}>
+                      <div style={{ backgroundColor: marginVal >= 0 ? '#ECFDF5' : '#FEF2F2', border: `1px solid ${marginVal >= 0 ? '#BBF7D0' : '#FECACA'}`, borderRadius: 12, padding: '12px 14px' }}>
+                        <Text style={{ fontSize: 12, color: marginVal >= 0 ? '#15803D' : '#DC2626', display: 'block', fontWeight: 600 }}>Chênh lệch lợi nhuận (Gross Margin):</Text>
+                        <div style={{ fontSize: 20, fontWeight: 800, color: marginVal >= 0 ? '#16A34A' : '#DC2626' }}>
+                          {marginVal >= 0 ? `+$${marginVal.toLocaleString()} (${marginPct})` : `-$${Math.abs(marginVal).toLocaleString()} (${marginPct})`}
+                        </div>
+                      </div>
+                    </Col>
+                  </Row>
+                );
+              })()}
 
               <div style={{ fontSize: 12.5, color: '#64748B', marginBottom: 12 }}>
                 Includes: Air Charter (${Number(activePlan.costBreakdown?.airCharter || 14200) / 1000}k), Stall Rental (${Number(activePlan.costBreakdown?.stallRent || 2100) / 1000}k), Escort Vet (${Number(activePlan.costBreakdown?.vetEscort || 1450) / 1000}k), Quarantine (${activePlan.costBreakdown?.quarantine || 700})

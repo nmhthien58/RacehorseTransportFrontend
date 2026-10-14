@@ -40,7 +40,6 @@ import {
 import StandardFormTemplateModal from '@components/common/StandardFormTemplateModal';
 import {
   syncCustomerDossierSubmission,
-  simulateCustomsClearance,
 } from '@utils/dossierStorage';
 import {
   getStoredHorses,
@@ -77,14 +76,49 @@ const TABS = [
 
 // Record sub-filter categories matching Figma
 const RECORD_CATEGORIES = [
-  'All',
-  'Vaccinations',
-  'Deworming',
-  'Dental',
-  'Farrier',
-  'Coggins',
-  'Health Cert',
-  'Other',
+  { key: 'All', label: 'Tất cả (All)' },
+  { key: 'Vaccinations', label: '💉 Tiêm phòng Vaccine' },
+  { key: 'Health Cert', label: '📋 Kiểm dịch CVI' },
+  { key: 'Coggins', label: '🔬 Xét nghiệm Coggins EIA' },
+  { key: 'Deworming', label: '💊 Tẩy giun sán' },
+  { key: 'Dental', label: '🦷 Khám nha khoa' },
+  { key: 'Farrier', label: '🔨 Chăm sóc móng' },
+  { key: 'Other', label: '📁 Hồ sơ khác' },
+];
+
+const RECORD_TYPE_OPTIONS = [
+  {
+    value: 'Tiêm phòng Vaccine (Vaccinations / Equine Influenza)',
+    label: '💉 Tiêm phòng Vaccine (Vaccinations / Equine Influenza)',
+  },
+  {
+    value: 'Chứng nhận kiểm dịch thú y xuất khẩu (Health Certificate / CVI)',
+    label: '📋 Chứng nhận kiểm dịch thú y xuất khẩu (Health Certificate / CVI)',
+  },
+  {
+    value: 'Xét nghiệm máu Coggins EIA (Coggins / Equine Infectious Anemia PCR)',
+    label: '🔬 Xét nghiệm máu Coggins EIA (Coggins / Equine Infectious Anemia PCR)',
+  },
+  {
+    value: 'Tẩy giun & Phòng ký sinh trùng (Deworming & Parasite Control)',
+    label: '💊 Tẩy giun & Phòng ký sinh trùng (Deworming & Parasite Control)',
+  },
+  {
+    value: 'Khám nha khoa & Chăm sóc răng miệng (Dental Examination & Floating)',
+    label: '🦷 Khám nha khoa & Chăm sóc răng miệng (Dental Examination & Floating)',
+  },
+  {
+    value: 'Chăm sóc móng guốc & Đóng móng (Farrier & Hoof Balance)',
+    label: '🔨 Chăm sóc móng guốc & Đóng móng (Farrier & Hoof Balance)',
+  },
+  {
+    value: 'Khám lâm sàng & Sức khỏe tổng quát (Wellness & Clinical Exam)',
+    label: '🩺 Khám lâm sàng & Sức khỏe tổng quát (Wellness & Clinical Exam)',
+  },
+  {
+    value: 'Hồ sơ điều trị thú y / Khác (General Medical Treatment / Other)',
+    label: '📁 Hồ sơ điều trị thú y / Khác (General Medical Treatment / Other)',
+  },
 ];
 
 // 6 Required Angles for Equine Identification Photo Gallery
@@ -691,11 +725,11 @@ export default function VetRecordsPage() {
           >
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {RECORD_CATEGORIES.map((cat) => {
-                const isSelected = recordCategory === cat;
+                const isSelected = recordCategory === cat.key;
                 return (
                   <button
-                    key={cat}
-                    onClick={() => setRecordCategory(cat)}
+                    key={cat.key}
+                    onClick={() => setRecordCategory(cat.key)}
                     style={{
                       backgroundColor: isSelected ? '#334155' : '#FFFFFF',
                       color: isSelected ? '#FFFFFF' : '#475569',
@@ -708,7 +742,7 @@ export default function VetRecordsPage() {
                       transition: 'all 0.15s ease',
                     }}
                   >
-                    {cat}
+                    {cat.label}
                   </button>
                 );
               })}
@@ -848,25 +882,6 @@ export default function VetRecordsPage() {
           }
           message.success(
             `Đã nộp thành công bộ hồ sơ Digital Dossier của ngựa "${currentHorse.Name || 'Ngựa đua'}" cho Chuyên viên thủ tục (Transport Specialist) phê duyệt!`,
-          );
-        };
-
-        const handleSimulateCustomsApproval = () => {
-          const res = simulateCustomsClearance(selectedHorseId);
-          const updated = {
-            ...dossierSubmissions,
-            [selectedHorseId]: {
-              submitted: true,
-              submittedAt: dayjs().format('DD/MM/YYYY HH:mm'),
-              status: 'Cleared',
-              step: 4,
-              clearanceNumber: res.clearanceNumber,
-              officer: 'Cơ quan Hải quan Cửa khẩu Quốc tế & Cục Thú y',
-            },
-          };
-          setDossierSubmissions(updated);
-          message.success(
-            `🎉 Hải quan & Cục Thú y đã cấp Giấy phép Xuất Nhập Cảnh & Thông quan thành công! Số hiệu: ${res.clearanceNumber}`,
           );
         };
 
@@ -1081,22 +1096,9 @@ export default function VetRecordsPage() {
                         Khách hàng <strong>KHÔNG cần tự xin giấy phép này</strong>. Sau khi tiếp nhận 4 hồ sơ y tế từ bạn, ST sẽ đại diện nộp hồ sơ xin cấp phép đến Cục Thú y Nông nghiệp (USDA / DAFF / GACC) và làm thủ tục thông quan hải quan.
                       </p>
                       {!isCustomsCleared ? (
-                        <Button
-                          type="primary"
-                          size="small"
-                          icon={<SafetyCertificateOutlined />}
-                          onClick={handleSimulateCustomsApproval}
-                          style={{
-                            backgroundColor: '#059669',
-                            borderColor: '#059669',
-                            borderRadius: 6,
-                            fontWeight: 700,
-                            fontSize: 11.5,
-                            width: '100%',
-                          }}
-                        >
-                          🏛️ Mô phỏng Hải quan phê duyệt cấp phép (Click để duyệt nhanh)
-                        </Button>
+                        <div style={{ padding: '8px 12px', backgroundColor: '#FEF3C7', border: '1px solid #FCD34D', borderRadius: 6, fontSize: 11.5, color: '#92400E', fontWeight: 600 }}>
+                          ⏳ Đang được Transport Specialist xử lý thẩm định với Cục Thú y & Hải quan cửa khẩu
+                        </div>
                       ) : (
                         <div style={{ padding: '6px 10px', backgroundColor: '#DCFCE7', borderRadius: 6, border: '1px solid #86EFAC', color: '#15803D', fontWeight: 700, fontSize: 12, textAlign: 'center' }}>
                           ✓ Hải quan đã cấp Giấy phép #{curSubmission?.clearanceNumber}
@@ -1215,15 +1217,9 @@ export default function VetRecordsPage() {
                           Xem tệp
                         </Button>
                         {doc.isSpecialistResponsibility && !isCustomsCleared && (
-                          <Button
-                            size="small"
-                            type="primary"
-                            icon={<SafetyCertificateOutlined />}
-                            onClick={handleSimulateCustomsApproval}
-                            style={{ borderRadius: 6, fontSize: 11.5, backgroundColor: '#059669', borderColor: '#059669', fontWeight: 700 }}
-                          >
-                            🏛️ Hải quan duyệt
-                          </Button>
+                          <Tag style={{ borderRadius: 6, fontSize: 11, backgroundColor: '#F1F5F9', borderColor: '#CBD5E1', color: '#475569', fontWeight: 600 }}>
+                            Đang xử lý tại Cục Thú y / Hải quan
+                          </Tag>
                         )}
                       </Space>
                     </div>
@@ -1949,27 +1945,23 @@ export default function VetRecordsPage() {
           layout="vertical"
           onFinish={handleAddRecord}
           initialValues={{
-            recordType: 'Wellness Exam',
+            recordType: 'Tiêm phòng Vaccine (Vaccinations / Equine Influenza)',
             resultFinding: 'Negative (Passed)',
           }}
           style={{ marginTop: 16 }}
         >
           <Form.Item
-            label="Record Type"
+            label="Danh mục kiểm tra / Loại hồ sơ thú y (Record Type)"
             name="recordType"
-            rules={[{ required: true, message: 'Please select record type' }]}
+            rules={[{ required: true, message: 'Vui lòng chọn loại hồ sơ thú y' }]}
           >
             <Select
-              options={[
-                { value: 'Wellness Exam', label: 'Wellness Exam' },
-                { value: 'Vaccinations', label: 'Vaccinations' },
-                { value: 'Deworming', label: 'Deworming' },
-                { value: 'Dental', label: 'Dental' },
-                { value: 'Farrier', label: 'Farrier' },
-                { value: 'Coggins', label: 'Coggins / EIA Test' },
-                { value: 'Health Cert', label: 'Health Certificate (CVI)' },
-                { value: 'Other', label: 'Other' },
-              ]}
+              options={RECORD_TYPE_OPTIONS}
+              showSearch
+              placeholder="Chọn loại hồ sơ y tế / kiểm tra..."
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
             />
           </Form.Item>
 
@@ -2110,14 +2102,16 @@ export default function VetRecordsPage() {
             <Input placeholder="e.g. Coggins 6-Month Renewal" />
           </Form.Item>
 
-          <Form.Item label="Category" name="category">
+          <Form.Item label="Danh mục nhắc lịch (Category)" name="category">
             <Select
               options={[
-                { value: 'Vaccination', label: 'Vaccination' },
-                { value: 'Coggins', label: 'Coggins Test' },
-                { value: 'Dental', label: 'Dental Exam' },
-                { value: 'Farrier', label: 'Farrier Shoe Reset' },
-                { value: 'General', label: 'General Checkup' },
+                { value: 'Vaccination', label: '💉 Tiêm phòng Vaccine cúm & bệnh truyền nhiễm' },
+                { value: 'Health Cert', label: '📋 Tái cấp Chứng nhận kiểm dịch xuất khẩu CVI' },
+                { value: 'Coggins', label: '🔬 Xét nghiệm định kỳ Coggins EIA' },
+                { value: 'Deworming', label: '💊 Tẩy giun sán & Ký sinh trùng định kỳ' },
+                { value: 'Dental', label: '🦷 Khám nha khoa & Chăm sóc răng miệng' },
+                { value: 'Farrier', label: '🔨 Thay móng guốc & Cân bằng chân chạy' },
+                { value: 'General', label: '🩺 Khám sức khỏe tổng quát định kỳ' },
               ]}
             />
           </Form.Item>

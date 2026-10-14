@@ -412,14 +412,22 @@ const INITIAL_PERSONNEL = [
  * @returns {Array<any>}
  */
 export function getStoredRoutePlans() {
-  if (typeof window === 'undefined') return [...INITIAL_ROUTE_PLANS];
+  const isCleanMode = typeof window !== 'undefined' && localStorage.getItem('racehorse_clean_data_mode') === 'true';
+  if (typeof window === 'undefined') return isCleanMode ? [] : [...INITIAL_ROUTE_PLANS];
   try {
     const raw = localStorage.getItem(STORAGE_KEY_PLANS);
     if (!raw) {
+      if (isCleanMode) {
+        localStorage.setItem(STORAGE_KEY_PLANS, JSON.stringify([]));
+        return [];
+      }
       localStorage.setItem(STORAGE_KEY_PLANS, JSON.stringify(INITIAL_ROUTE_PLANS));
       return [...INITIAL_ROUTE_PLANS];
     }
     const parsed = JSON.parse(raw);
+    if (isCleanMode) {
+      return Array.isArray(parsed) ? parsed : [];
+    }
     if (Array.isArray(parsed) && parsed.length > 0) {
       // Nếu dữ liệu cũ trong localStorage chứa tên bịa ra (Sheikh Al-Mansoor) thì cập nhật lại đúng thông tin khách thật
       const hasOldFakeData = parsed.some((p) => p.customerName === 'Sheikh Al-Mansoor');

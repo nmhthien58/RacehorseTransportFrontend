@@ -9,14 +9,22 @@ const STORAGE_KEY = 'racehorse_bookings_storage';
  * @returns {Array<any>}
  */
 export function getStoredBookings() {
-  if (typeof window === 'undefined') return [...initialBookings];
+  const isCleanMode = typeof window !== 'undefined' && localStorage.getItem('racehorse_clean_data_mode') === 'true';
+  if (typeof window === 'undefined') return isCleanMode ? [] : [...initialBookings];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
+      if (isCleanMode) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+        return [];
+      }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(initialBookings));
       return [...initialBookings];
     }
     const parsed = JSON.parse(raw);
+    if (isCleanMode) {
+      return Array.isArray(parsed) ? parsed : [];
+    }
     if (Array.isArray(parsed) && parsed.length > 0) {
       return parsed;
     }
@@ -24,7 +32,7 @@ export function getStoredBookings() {
     return [...initialBookings];
   } catch (err) {
     console.error('Lỗi khi đọc danh sách bookings từ localStorage:', err);
-    return [...initialBookings];
+    return isCleanMode ? [] : [...initialBookings];
   }
 }
 

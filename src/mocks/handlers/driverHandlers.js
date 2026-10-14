@@ -1,16 +1,78 @@
 import { http, HttpResponse } from 'msw';
 import driverMissionsData from '../data/driverMissionsData.json';
 import driverCompletionData from '../data/driverCompletionData.json';
+import { getStoredRoutePlans } from '../../utils/routePlanStorage';
 
 // In-memory clone dữ liệu chuyến đi phục vụ thao tác của tài xế (gộp chuyến hoàn tất TRP-8821)
-let missions = JSON.parse(JSON.stringify([...driverMissionsData, ...driverCompletionData]));
+let baseMissions = JSON.parse(JSON.stringify([...driverMissionsData, ...driverCompletionData]));
+
+/**
+ * Lấy toàn bộ danh sách chuyến đi, kết hợp các Route Plan đã được Manager phê duyệt (ASSIGNED)
+ */
+function getAllMissions() {
+  const isCleanMode = typeof window !== 'undefined' && localStorage.getItem('racehorse_clean_data_mode') === 'true';
+  const rawBase = isCleanMode ? [] : [...baseMissions];
+
+  // Lấy các kế hoạch đã được Manager phê duyệt (ASSIGNED)
+  const storedPlans = getStoredRoutePlans();
+  const assignedPlans = storedPlans.filter((p) => p.status === 'ASSIGNED');
+
+  const planMissions = assignedPlans
+    .map((plan) => {
+      const tripId = plan.tripId || Number(plan.planId) || 8800 + (Number(String(plan.planCode || '').replace(/\D/g, '')) || 1);
+      const existing = rawBase.find((m) => String(m.tripId) === String(tripId) || m.planCode === plan.planCode);
+      if (existing) return null;
+
+      return {
+        tripId,
+        tripCode: `TRP-${String(plan.planCode || '').replace('#', '')}`,
+        planCode: plan.planCode,
+        bookingCode: plan.orderCode || plan.bookingCode,
+        customerId: plan.customerId || plan.orderId || 5,
+        customerName: plan.customerName || 'Khách hàng',
+        customerEmail: plan.customerEmail || 'customer@test.com',
+        customerPhone: plan.customerPhone || '+84988111222',
+        driverId: plan.driverId || 4,
+        driverName: plan.driverName || 'Phạm Văn Đức',
+        vetEscortId: plan.vetEscortId || 2,
+        vetEscortName: plan.vetEscortName || 'Dr. Elena Rostova',
+        overallStatus: 'Scheduled',
+        origin: plan.origin,
+        originAddress: plan.origin,
+        destination: plan.destination,
+        destinationAddress: plan.destination,
+        plannedStartDate: plan.departureDate,
+        estimatedArrivalDate: plan.deliveryDate,
+        horses: Array.isArray(plan.horses)
+          ? plan.horses.map((h, i) => (typeof h === 'string' ? { horseId: i + 1, name: h, breed: 'Thoroughbred' } : h))
+          : [{ horseId: 1, name: 'Ngựa đua' }],
+        totalHorses: plan.totalHorses || (plan.horses?.length || 1),
+        vehicle: {
+          id: plan.vehicleId || 'VAN-51D-8921',
+          name: plan.vehicleName || 'Mercedes Actros #51D-8921',
+          plateNumber: plan.vehicleId || '51D-8921',
+          type: plan.transportMode || 'Ground',
+        },
+        preDepartureChecklist: [
+          { id: 'CHK-01', text: 'Kiểm tra thông gió & điều hòa HVAC', checked: false },
+          { id: 'CHK-02', text: 'Cấp đủ nước uống & cỏ khô cho ngựa', checked: false },
+          { id: 'CHK-03', text: 'Kiểm tra dây đai an toàn & vách ngăn stall', checked: false },
+          { id: 'CHK-04', text: 'Đối soát vi mạch và hộ chiếu ngựa', checked: false },
+        ],
+        checkpoints: Array.isArray(plan.checkpoints) ? plan.checkpoints : [],
+      };
+    })
+    .filter(Boolean);
+
+  return [...planMissions, ...rawBase];
+}
 
 /**
  * Tìm chuyến đi theo ID hoặc mã chuyến
  * @param {string|number} idOrCode
  */
 function findTrip(idOrCode) {
-  return missions.find(
+  return getAllMissions().find(
     (m) => String(m.tripId) === String(idOrCode) || String(m.tripCode) === String(idOrCode)
   );
 }
@@ -20,7 +82,7 @@ export const driverHandlers = [
   http.get('/api/driver/missions', ({ request }) => {
     const url = new URL(request.url);
     const status = url.searchParams.get('status');
-    let filtered = [...missions];
+    let filtered = getAllMissions();
     if (status && status !== 'All') {
       filtered = filtered.filter((m) => m.overallStatus === status);
     }
@@ -45,7 +107,7 @@ export const driverHandlers = [
       tokenUserId = Number(authHeader.replace('Bearer mock-google-token-', ''));
     }
 
-    let filtered = [...missions];
+    let filtered = getAllMissions();
     if (status && status !== 'All') {
       filtered = filtered.filter((m) => m.overallStatus === status);
     }
@@ -205,7 +267,7 @@ export const driverHandlers = [
   // Check-in Arrive
   http.post('/api/checkpoints/:id/arrive', ({ params }) => {
     const checkpointId = Number(params.id);
-    for (const trip of missions) {
+    for (const trip of getAllMissions()) {
       const cp = (trip.routeCheckpoints || []).find((c) => c.checkpointId === checkpointId);
       if (cp) {
         cp.status = 'Arrived';
@@ -226,7 +288,7 @@ export const driverHandlers = [
       payload = {};
     }
 
-    for (const trip of missions) {
+    for (const trip of getAllMissions()) {
       const cp = (trip.routeCheckpoints || []).find((c) => c.checkpointId === checkpointId);
       if (cp) {
         cp.status = 'Cleared';
@@ -242,7 +304,7 @@ export const driverHandlers = [
   // Check-in Depart (rời trạm)
   http.post('/api/checkpoints/:id/depart', ({ params }) => {
     const checkpointId = Number(params.id);
-    for (const trip of missions) {
+    for (const trip of getAllMissions()) {
       const cps = trip.routeCheckpoints || [];
       const cpIndex = cps.findIndex((c) => c.checkpointId === checkpointId);
       if (cpIndex !== -1) {

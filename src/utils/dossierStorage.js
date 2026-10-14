@@ -7,14 +7,22 @@ const STORAGE_KEY = 'racehorse_specialist_dossiers';
  * @returns {Array<any>}
  */
 export function getStoredDossiers() {
-  if (typeof window === 'undefined') return [...specialistDossiersData];
+  const isCleanMode = typeof window !== 'undefined' && localStorage.getItem('racehorse_clean_data_mode') === 'true';
+  if (typeof window === 'undefined') return isCleanMode ? [] : [...specialistDossiersData];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
+      if (isCleanMode) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+        return [];
+      }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(specialistDossiersData));
       return [...specialistDossiersData];
     }
     const parsed = JSON.parse(raw);
+    if (isCleanMode) {
+      return Array.isArray(parsed) ? parsed : [];
+    }
     if (Array.isArray(parsed) && parsed.length > 0) {
       return parsed;
     }
@@ -22,7 +30,7 @@ export function getStoredDossiers() {
     return [...specialistDossiersData];
   } catch (err) {
     console.error('Lỗi khi đọc dossiers từ localStorage:', err);
-    return [...specialistDossiersData];
+    return isCleanMode ? [] : [...specialistDossiersData];
   }
 }
 

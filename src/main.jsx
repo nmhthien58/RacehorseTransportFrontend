@@ -5,6 +5,13 @@ import { ConfigProvider, App as AntApp } from 'antd';
 import App from './App';
 import './i18n';
 import './index.css';
+import { resetToCleanData } from './utils/dataReset';
+
+// Khởi tạo chế độ dữ liệu trắng theo yêu cầu người dùng (giữ nguyên 100% tài khoản)
+if (typeof window !== 'undefined' && localStorage.getItem('racehorse_data_initialized_v2') !== 'true') {
+  resetToCleanData();
+  localStorage.setItem('racehorse_data_initialized_v2', 'true');
+}
 
 async function enableMocking() {
   if (import.meta.env.VITE_USE_MOCK === 'false') {

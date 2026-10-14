@@ -13,6 +13,7 @@ import {
   Tag,
   message,
   notification,
+  Modal,
 } from 'antd';
 import {
   MenuFoldOutlined,
@@ -31,6 +32,8 @@ import {
   DownOutlined,
   SendOutlined,
   CompassOutlined,
+  TeamOutlined,
+  ClearOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -43,6 +46,8 @@ import {
   markLetterAsRead,
   markAllLettersAsRead,
 } from '@utils/requestLetterStorage';
+import { getStoredUsers } from '@utils/userStorage';
+import { resetToCleanData } from '@utils/dataReset';
 
 const { Header } = Layout;
 
@@ -138,13 +143,80 @@ export default function AppHeader({
         });
       }
     };
+
+    const handlePlanAssigned = (e) => {
+      const plan = e?.detail;
+      if (!plan) return;
+      const isDriverOrEscort =
+        userRole === ROLES.DRIVER ||
+        userRole === 'Driver' ||
+        userRole === ROLES.ESCORT ||
+        userRole === 'Escort';
+
+      if (isDriverOrEscort) {
+        const key = `assign-${plan?.id || Date.now()}`;
+        notification.open({
+          key,
+          message: (
+            <span style={{ fontWeight: 800, fontSize: 14.5, color: '#065f46' }}>
+              🚀 Bạn có nhiệm vụ vận chuyển mới: {plan?.routePlanCode || plan?.bookingCode || 'Chuyến đi'}
+            </span>
+          ),
+          description: (
+            <div style={{ marginTop: 6 }}>
+              <div style={{ fontSize: 13, color: '#1e293b' }}>
+                Lộ trình: <strong>{plan?.pickup || 'Điểm xuất phát'} ➔ {plan?.dropoff || 'Điểm đến'}</strong>
+              </div>
+              <div style={{ fontSize: 12.5, color: '#475569', marginTop: 4 }}>
+                Phương thức: <strong>{plan?.transportMode || 'Ground / Air'}</strong> • Phân công: Driver & Escort
+              </div>
+              <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
+                <Button
+                  type="primary"
+                  size="small"
+                  style={{
+                    backgroundColor: '#059669',
+                    borderColor: '#059669',
+                    fontWeight: 700,
+                    borderRadius: 6,
+                  }}
+                  onClick={(ev) => {
+                    ev?.stopPropagation?.();
+                    notification.destroy(key);
+                    navigate(ROUTES.DRIVER_DASHBOARD);
+                  }}
+                >
+                  Xem nhiệm vụ ngay →
+                </Button>
+              </div>
+            </div>
+          ),
+          duration: 12,
+          placement: 'topRight',
+          style: {
+            cursor: 'pointer',
+            borderRadius: 14,
+            border: '2px solid #a7f3d0',
+            backgroundColor: '#ecfdf5',
+            boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.25)',
+          },
+          onClick: () => {
+            notification.destroy(key);
+            navigate(ROUTES.DRIVER_DASHBOARD);
+          },
+        });
+      }
+    };
+
     window.addEventListener('letters_updated', handleUpdate);
     window.addEventListener('request_letter_received', handleNewLetter);
+    window.addEventListener('plan_assigned_to_driver', handlePlanAssigned);
     return () => {
       window.removeEventListener('letters_updated', handleUpdate);
       window.removeEventListener('request_letter_received', handleNewLetter);
+      window.removeEventListener('plan_assigned_to_driver', handlePlanAssigned);
     };
-  }, [isAdminOrManager, navigate]);
+  }, [isAdminOrManager, navigate, userRole]);
 
   const getProfileRoute = () => {
     if (isAdminOrManager) return ROUTES.MANAGER_PROFILE;
@@ -153,6 +225,7 @@ export default function AppHeader({
   };
 
   // Danh sách các vai trò chuẩn hệ thống (Logistic Manager & Admin là 1)
+  const storedUsers = getStoredUsers();
   const roleOptions = [
     {
       key: 'Customer',
@@ -160,7 +233,7 @@ export default function AppHeader({
       subtitle: `${userFullName} • Tạo yêu cầu vận chuyển ngựa`,
       role: ROLES.CUSTOMER,
       route: ROUTES.CUSTOMER_DASHBOARD,
-      user: usersData.find((u) => u.role === ROLES.CUSTOMER),
+      user: storedUsers.find((u) => u.role === ROLES.CUSTOMER) || usersData.find((u) => u.role === ROLES.CUSTOMER),
     },
     {
       key: 'LogisticsManager',
@@ -168,7 +241,7 @@ export default function AppHeader({
       subtitle: 'Trần Quốc Bảo • Duyệt đơn khách & Duyệt kế hoạch lộ trình',
       role: ROLES.MANAGER,
       route: ROUTES.MANAGER_DASHBOARD,
-      user: usersData.find((u) => u.role === ROLES.MANAGER),
+      user: storedUsers.find((u) => u.role === ROLES.MANAGER) || usersData.find((u) => u.role === ROLES.MANAGER),
     },
     {
       key: 'FleetCoordinator',
@@ -176,7 +249,7 @@ export default function AppHeader({
       subtitle: 'Lê Hoàng Nam • Lập kế hoạch lộ trình, chọn xe, driver & escort',
       role: ROLES.COORDINATOR,
       route: ROUTES.COORDINATOR_DASHBOARD,
-      user: usersData.find((u) => u.role === ROLES.COORDINATOR),
+      user: storedUsers.find((u) => u.role === ROLES.COORDINATOR) || usersData.find((u) => u.role === ROLES.COORDINATOR),
     },
     {
       key: 'Driver',
@@ -184,7 +257,7 @@ export default function AppHeader({
       subtitle: 'Phạm Văn Đức • Bắt đầu chuyến & Chạy lộ trình',
       role: ROLES.DRIVER,
       route: ROUTES.DRIVER_DASHBOARD,
-      user: usersData.find((u) => u.role === ROLES.DRIVER),
+      user: storedUsers.find((u) => u.role === ROLES.DRIVER) || usersData.find((u) => u.role === ROLES.DRIVER),
     },
     {
       key: 'Escort',
@@ -192,7 +265,7 @@ export default function AppHeader({
       subtitle: 'Dr. Elena Rostova • Giám sát & Ghi log phúc lợi thú y',
       role: ROLES.ESCORT,
       route: ROUTES.DRIVER_DASHBOARD,
-      user: usersData.find((u) => u.role === ROLES.ESCORT),
+      user: storedUsers.find((u) => u.role === ROLES.ESCORT) || usersData.find((u) => u.role === ROLES.ESCORT),
     },
     {
       key: 'Specialist',
@@ -200,7 +273,7 @@ export default function AppHeader({
       subtitle: 'Nguyễn Thị Mai • Kiểm dịch & Hồ sơ xuất nhập cảnh',
       role: ROLES.SPECIALIST,
       route: ROUTES.SPECIALIST_DASHBOARD,
-      user: usersData.find((u) => u.role === ROLES.SPECIALIST),
+      user: storedUsers.find((u) => u.role === ROLES.SPECIALIST) || usersData.find((u) => u.role === ROLES.SPECIALIST),
     },
   ];
 
@@ -244,6 +317,12 @@ export default function AppHeader({
             icon: <AuditOutlined />,
             label: t('nav.routeApprovals', 'Phê duyệt kế hoạch lộ trình'),
             onClick: () => navigate(ROUTES.MANAGER_ROUTE_APPROVALS),
+          },
+          {
+            key: 'user-management',
+            icon: <TeamOutlined />,
+            label: 'Quản lý người dùng',
+            onClick: () => navigate(ROUTES.ADMIN_USERS),
           },
         ]
       : []),
@@ -295,6 +374,24 @@ export default function AppHeader({
           },
         ]
       : []),
+    {
+      key: 'clean-data',
+      icon: <ClearOutlined style={{ color: '#ef4444' }} />,
+      label: <span style={{ color: '#ef4444', fontWeight: 600 }}>Dọn sạch dữ liệu mẫu (Reset Data)</span>,
+      onClick: () => {
+        Modal.confirm({
+          title: 'Xác nhận dọn dẹp dữ liệu mẫu?',
+          content: 'Toàn bộ đơn đặt chuyến, kế hoạch lộ trình, hồ sơ kiểm dịch và nhật ký vận chuyển sẽ được xóa sạch để bắt đầu từ đầu. MỌI TÀI KHOẢN NGƯỜI DÙNG ĐƯỢC GIỮ NGUYÊN 100%.',
+          okText: 'Dọn sạch ngay',
+          okType: 'danger',
+          cancelText: 'Hủy',
+          onOk: () => {
+            resetToCleanData();
+            message.success('Đã dọn dẹp dữ liệu mẫu thành công! Tất cả tài khoản người dùng vẫn được giữ nguyên.');
+          },
+        });
+      },
+    },
     {
       type: 'divider',
     },

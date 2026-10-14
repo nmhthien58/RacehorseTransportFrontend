@@ -37,6 +37,7 @@ import ManagerBookings from '@features/manager/pages/BookingsPage';
 import BookingDetailPage from '@features/manager/pages/BookingDetailPage';
 import PendingRequestsPage from '@features/manager/pages/PendingRequestsPage';
 import RouteApprovalsPage from '@features/manager/pages/RouteApprovalsPage';
+import UserManagementPage from '@features/manager/pages/UserManagementPage';
 
 // Specialist pages
 import SpecialistDashboard from '@features/specialist/pages/DashboardPage';
@@ -137,6 +138,8 @@ export default function AppRoutes() {
           <Route path={ROUTES.MANAGER_PENDING_REQUESTS} element={<PendingRequestsPage />} />
           <Route path={ROUTES.MANAGER_ROUTE_APPROVALS} element={<RouteApprovalsPage />} />
           <Route path="/manager/route-approvals" element={<RouteApprovalsPage />} />
+          <Route path={ROUTES.MANAGER_USERS} element={<UserManagementPage />} />
+          <Route path="/manager/users" element={<UserManagementPage />} />
           <Route path={ROUTES.MANAGER_PROFILE} element={<ProfilePage />} />
         </Route>
       </Route>

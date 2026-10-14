@@ -4,7 +4,41 @@ import usersData from '../data/users.json';
 export const authHandlers = [
   http.post('/api/auth/login', async ({ request }) => {
     const body = await request.json();
-    const user = usersData.find((u) => u.email === body.email);
+    const rawEmail = (body?.email || '').trim().toLowerCase();
+
+    let candidateUsers = [...usersData];
+    try {
+      if (typeof window !== 'undefined') {
+        const rawUsers = localStorage.getItem('racehorse_users_storage');
+        if (rawUsers) {
+          const parsed = JSON.parse(rawUsers);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            candidateUsers = parsed;
+          }
+        }
+      }
+    } catch {
+      // fallback
+    }
+
+    let user = candidateUsers.find((u) => (u.email || '').trim().toLowerCase() === rawEmail);
+
+    if (!user) {
+      if (rawEmail === 'coordinator@test.com' || rawEmail === 'nam.le@fleet.com' || rawEmail === 'fleet@test.com' || rawEmail === 'coordinator@gmail.com') {
+        user = candidateUsers.find((u) => u.role === 'FleetCoordinator') || usersData.find((u) => u.role === 'FleetCoordinator');
+      } else if (rawEmail === 'admin@test.com' || rawEmail === 'manager@test.com' || rawEmail === 'admin@admin.com') {
+        user = candidateUsers.find((u) => u.role === 'LogisticsManager') || usersData.find((u) => u.role === 'LogisticsManager');
+      } else if (rawEmail === 'specialist@test.com' || rawEmail === 'mai.nguyen@vet.com') {
+        user = candidateUsers.find((u) => u.role === 'TransportSpecialist') || usersData.find((u) => u.role === 'TransportSpecialist');
+      } else if (rawEmail === 'driver@test.com' || rawEmail === 'duc.pham@driver.com') {
+        user = candidateUsers.find((u) => u.role === 'Driver') || usersData.find((u) => u.role === 'Driver');
+      } else if (rawEmail === 'escort@test.com' || rawEmail === 'elena.rostova@vet.com') {
+        user = candidateUsers.find((u) => u.role === 'Escort') || usersData.find((u) => u.role === 'Escort');
+      } else if (rawEmail === 'customer@test.com') {
+        user = candidateUsers.find((u) => u.role === 'Customer') || usersData.find((u) => u.role === 'Customer');
+      }
+    }
+
     if (!user) {
       return HttpResponse.json(
         { success: false, message: 'Email hoặc mật khẩu không đúng', errors: ['Invalid credentials'] },

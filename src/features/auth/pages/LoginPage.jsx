@@ -88,12 +88,21 @@ export default function LoginPage() {
       // Chuyển hướng theo role của người dùng (tách biệt rõ ràng quyền hạn)
       const dashboardMap = {
         [ROLES.CUSTOMER]: ROUTES.CUSTOMER_DASHBOARD,
+        'Customer': ROUTES.CUSTOMER_DASHBOARD,
         [ROLES.MANAGER]: ROUTES.MANAGER_DASHBOARD,
+        'LogisticsManager': ROUTES.MANAGER_DASHBOARD,
         [ROLES.ADMIN]: ROUTES.MANAGER_DASHBOARD,
+        'Admin': ROUTES.MANAGER_DASHBOARD,
         [ROLES.SPECIALIST]: ROUTES.SPECIALIST_DASHBOARD,
+        'Specialist': ROUTES.SPECIALIST_DASHBOARD,
+        'TransportSpecialist': ROUTES.SPECIALIST_DASHBOARD,
         [ROLES.COORDINATOR]: ROUTES.COORDINATOR_DASHBOARD,
+        'FleetCoordinator': ROUTES.COORDINATOR_DASHBOARD,
+        'Coordinator': ROUTES.COORDINATOR_DASHBOARD,
         [ROLES.DRIVER]: ROUTES.DRIVER_DASHBOARD,
+        'Driver': ROUTES.DRIVER_DASHBOARD,
         [ROLES.ESCORT]: ROUTES.DRIVER_DASHBOARD,
+        'Escort': ROUTES.DRIVER_DASHBOARD,
       };
 
       const userRole = user?.role || user?.Role;
@@ -265,10 +274,19 @@ export default function LoginPage() {
           }}
         >
           <div style={{ marginBottom: 4 }}>
+            🚚 <b>Fleet & Route Coordinator (Điều phối viên):</b> <code>coordinator@test.com</code> | Mật khẩu: <code>password123</code>
+          </div>
+          <div style={{ marginBottom: 4 }}>
             👤 <b>Customer (Khách hàng):</b> <code>customer@test.com</code> | Mật khẩu: <code>password123</code>
           </div>
+          <div style={{ marginBottom: 4 }}>
+            🛡️ <b>Logistics Manager & Admin:</b> <code>manager@test.com</code> / <code>admin@test.com</code> | Mật khẩu: <code>password123</code>
+          </div>
+          <div style={{ marginBottom: 4 }}>
+            🔬 <b>Transport Specialist (Kiểm dịch):</b> <code>specialist@test.com</code> | Mật khẩu: <code>password123</code>
+          </div>
           <div>
-            🛡️ <b>Admin (Quản trị viên):</b> <code>admin@test.com</code> | Mật khẩu: <code>password123</code>
+            🚛 <b>Driver & Escort:</b> <code>driver@test.com</code> / <code>escort@test.com</code> | Mật khẩu: <code>password123</code>
           </div>
         </div>
       </div>

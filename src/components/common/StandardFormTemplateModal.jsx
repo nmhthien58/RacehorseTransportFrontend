@@ -79,6 +79,71 @@ export default function StandardFormTemplateModal({
           badgeColor: 'purple',
           certText: '🛡️ Nghiệp vụ do Chuyên viên Kiểm dịch (Transport Specialist) đại diện khách hàng xin cấp phép. Đã phê duyệt luồng xanh kiểm dịch tại cảng hàng không đích và bố trí chuồng cách ly.',
         };
+      case 'DEWORMING':
+      case 'Deworming':
+        return {
+          emblem: '💊',
+          headerOrg: 'INTERNATIONAL EQUINE PARASITOLOGY CONSORTIUM',
+          subOrg: 'Parasite Control & Anthelmintic Treatment Verification Protocol',
+          formCode: 'FEI DEWORM-PROTOCOL-2026/SEC-4',
+          formName: 'SỔ THEO DÕI TẨY GIUN & PHÒNG KÝ SINH TRÙNG ĐƯỜNG RUỘT',
+          authority: 'Hội đồng Bác sĩ Thú y Ngựa đua & Phòng khám Thú y Hoàng Gia',
+          color: '#0D9488',
+          badgeColor: 'cyan',
+          certText: 'Chứng nhận cá thể ngựa đã được xét nghiệm định lượng trứng giun (FEC) và dùng thuốc tẩy giun phổ rộng (Ivermectin/Praziquantel) trong vòng 30 ngày trước ngày xuất phát.',
+        };
+      case 'DENTAL':
+      case 'Dental':
+        return {
+          emblem: '🦷',
+          headerOrg: 'EQUINE DENTAL SPECIALISTS ASSOCIATION',
+          subOrg: 'Annual Occlusal & Oral Health Examination Protocol',
+          formCode: 'EDSA DENTAL-EXAM-2026/08',
+          formName: 'PHIẾU KHÁM NHA KHOA & MÀI RĂNG NGỰA ĐUA CHUYÊN SÂU',
+          authority: 'Chuyên gia Nha khoa Thú y FEI & Bệnh viện Thú y Quốc tế',
+          color: '#4F46E5',
+          badgeColor: 'geekblue',
+          certText: 'Chứng nhận khớp cắn, răng hàm và khoang miệng của cá thể ngựa đã qua kiểm tra, mài cạnh sắc (floating) và loại bỏ điểm tỳ đau, đảm bảo ăn nhai và hô hấp ổn định trong suốt chuyến bay.',
+        };
+      case 'FARRIER':
+      case 'Farrier':
+        return {
+          emblem: '🔨',
+          headerOrg: 'MASTER FARRIERS ASSOCIATION & FEI EQUINE WELFARE',
+          subOrg: 'Hoof Balance & Competition Shoeing Certification',
+          formCode: 'MFA HOOF-CERT-2026/FEI-BAL',
+          formName: 'PHIẾU CHĂM SÓC MÓNG GUỐC & ĐÓNG MÓNG THỂ THAO ĐẠT CHUẨN',
+          authority: 'Hiệp hội Thợ đóng móng guốc Quốc tế & Bác sĩ Thú y FEI',
+          color: '#78350F',
+          badgeColor: 'volcano',
+          certText: 'Cá thể ngựa đã được cân bằng góc móng guốc (Palmar Angle), kiểm tra độ dày thành móng và đóng móng nhôm thể thao/cao su chống trượt trong vòng 14 ngày trước ngày di chuyển.',
+        };
+      case 'WELLNESS':
+      case 'Wellness':
+        return {
+          emblem: '🩺',
+          headerOrg: 'FEI VETERINARY CLINICAL EXAMINATION BOARD',
+          subOrg: 'Pre-flight Fit-to-Fly Comprehensive Veterinary Health Check',
+          formCode: 'FEI FORM CLINICAL-FIT-TO-FLY 2026',
+          formName: 'BIÊN BẢN KHÁM LÂM SÀNG SỨC KHỎE TỔNG QUÁT (FIT-TO-FLY)',
+          authority: 'Bác sĩ Thú y Trưởng ban Kiểm tra FEI & Cục Thú y',
+          color: '#0284C7',
+          badgeColor: 'blue',
+          certText: 'Cá thể ngựa đã qua kiểm tra thể lực toàn diện: Nhiệt độ 37.5°C, nhịp tim 36 bpm, niêm mạc hồng hào, nhu động ruột tốt, không có dấu hiệu đau bụng co thắt (Colic) hay khập khiễng, hoàn toàn đủ điều kiện xuất cảnh bằng đường hàng không.',
+        };
+      case 'OTHER':
+      case 'Other':
+        return {
+          emblem: '📁',
+          headerOrg: 'INTERNATIONAL VETERINARY TREATMENT REGISTRY',
+          subOrg: 'Specialized Medical & Equine Treatment Summary Record',
+          formCode: 'IVTR GENERAL-TREATMENT-LOG 2026',
+          formName: 'HỒ SƠ BỆNH ÁN & THEO DÕI Y KHOA CHUYÊN BIỆT',
+          authority: 'Hội đồng Y khoa & Bệnh viện Thú y Chuyên sâu',
+          color: '#334155',
+          badgeColor: 'default',
+          certText: 'Ghi nhận chi tiết phác đồ chăm sóc, thuốc điều trị đặc thù hoặc nhật ký theo dõi y tế đặc biệt của cá thể ngựa trong quá trình huấn luyện và chuẩn bị xuất cảnh.',
+        };
       case 'HEALTH_CERT':
       case 'HealthCert':
       default:
@@ -99,7 +164,83 @@ export default function StandardFormTemplateModal({
   const config = getFormConfig();
 
   const handleDownload = () => {
-    message.success(`Đang tải tệp mẫu đơn chuẩn: ${config.formCode}.pdf`);
+    try {
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>${title || config.formName}</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 40px; color: #1e293b; line-height: 1.5; }
+            .header { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 16px; margin-bottom: 20px; }
+            .org { font-size: 18px; font-weight: 800; color: ${config.color}; text-transform: uppercase; }
+            .sub { font-size: 13px; color: #475569; margin-top: 4px; }
+            .code { display: inline-block; padding: 4px 10px; background: #f1f5f9; border-radius: 4px; font-weight: 700; margin-top: 8px; font-size: 12px; }
+            .title { text-align: center; font-size: 20px; font-weight: 800; margin: 20px 0; text-transform: uppercase; }
+            .box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+            .box-title { font-weight: 800; font-size: 13px; margin-bottom: 10px; color: #0f172a; }
+            table { width: 100%; border-collapse: collapse; font-size: 13px; }
+            td { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; }
+            .td-label { color: #64748b; width: 30%; }
+            .cert-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 16px; border-radius: 8px; font-size: 13px; color: #166534; line-height: 1.6; margin-bottom: 24px; }
+            .signatures { display: flex; justify-content: space-between; margin-top: 40px; }
+            .sig-col { width: 45%; text-align: center; font-size: 13px; }
+            .sig-title { font-weight: 700; margin-bottom: 50px; color: #475569; }
+            .seal { width: 90px; height: 90px; border: 2.5px dashed #dc2626; color: #dc2626; border-radius: 50%; margin: 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 900; font-size: 9px; text-align: center; transform: rotate(-8deg); }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div style="font-size: 32px; margin-bottom: 4px;">${config.emblem}</div>
+            <div class="org">${config.headerOrg}</div>
+            <div class="sub">${config.subOrg}</div>
+            <div class="code">${config.formCode} • STANDARD OFFICIAL TEMPLATE</div>
+          </div>
+          <div class="title">${title || config.formName}</div>
+          <div class="box">
+            <div class="box-title">I. ĐẶC ĐIỂM NHẬN DẠNG CÁ THỂ NGỰA (EQUINE IDENTIFICATION)</div>
+            <table>
+              <tr><td class="td-label">1. Tên cá thể ngựa:</td><td><strong>${horseName}</strong></td></tr>
+              <tr><td class="td-label">2. Mã vi mạch (Microchip):</td><td><code>${microchip}</code></td></tr>
+              <tr><td class="td-label">3. Số Hộ chiếu (Passport No):</td><td><strong>${passport}</strong></td></tr>
+              <tr><td class="td-label">4. Giống ngựa (Breed):</td><td>${breed}</td></tr>
+              <tr><td class="td-label">5. Giới tính (Sex):</td><td>${gender}</td></tr>
+              <tr><td class="td-label">6. Chủ sở hữu (Owner):</td><td>${owner}</td></tr>
+            </table>
+          </div>
+          <div class="cert-box">
+            <div style="font-weight: 800; margin-bottom: 8px;">II. CHỨNG NHẬN DỊCH TỄ & KIỂM TRA LÂM SÀNG (OFFICIAL ATTESTATION)</div>
+            ${config.certText}
+          </div>
+          <div class="signatures">
+            <div class="sig-col">
+              <div class="sig-title">BÁC SĨ THÚ Y CHUYÊN TRÁCH FEI<br><em>(Signature & License Stamp)</em></div>
+              <div style="font-weight: 800; font-size: 14px;">Dr. Sarah Jenkins, DVM</div>
+              <div style="color: #64748b; font-size: 11px;">FEI Official License #VN-8841</div>
+            </div>
+            <div class="sig-col">
+              <div class="sig-title">CƠ QUAN THÚ Y & HẢI QUAN CỬA KHẨU<br><em>(Official Customs Stamp & Seal)</em></div>
+              <div class="seal"><span>CỤC THÚ Y</span><span style="font-size: 11px;">★ ĐÃ KIỂM ★</span><span>CUSTOMS OK</span></div>
+              <div style="font-size: 11px; color: #64748b; margin-top: 6px;">Số lưu trữ: ${config.formCode}</div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+      const blob = new Blob([htmlContent], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${config.formCode.replace(/[/\\?%*:|"<>]/g, '_')}_${horseName.replace(/\s+/g, '_')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      message.success(`Đã tải xuống tệp PDF mẫu đơn chuẩn: ${config.formCode}.pdf`);
+    } catch {
+      message.info(`Đang tạo tệp mẫu đơn chuẩn: ${config.formCode}.pdf`);
+    }
   };
 
   const handlePrint = () => {

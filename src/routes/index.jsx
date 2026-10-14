@@ -160,7 +160,7 @@ export default function AppRoutes() {
       </Route>
 
       {/* Coordinator */}
-      <Route element={<PrivateRoute allowedRoles={[ROLES.COORDINATOR]} />}>
+      <Route element={<PrivateRoute allowedRoles={[ROLES.COORDINATOR, 'Coordinator', 'FleetCoordinator']} />}>
         <Route element={<MainLayout />}>
           <Route path={ROUTES.COORDINATOR_DASHBOARD} element={<CoordinatorDashboard />} />
           <Route path={ROUTES.COORDINATOR_OPERATIONS_HUB} element={<CoordinatorDashboard />} />

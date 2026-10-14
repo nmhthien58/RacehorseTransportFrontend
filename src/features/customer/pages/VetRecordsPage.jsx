@@ -17,6 +17,8 @@ import {
   Steps,
   Empty,
   Tooltip,
+  DatePicker,
+  Dropdown,
 } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@routes/routes';
@@ -122,6 +124,25 @@ const RECORD_TYPE_OPTIONS = [
     label: '📁 Hồ sơ điều trị thú y / Khác (General Medical Treatment / Other)',
   },
 ];
+
+/**
+ * Ánh xạ loại hồ sơ thú y sang mã biểu mẫu chuẩn PDF quốc tế
+ * @param {string} recordTypeStr
+ * @returns {string}
+ */
+export const mapRecordTypeToDocType = (recordTypeStr = '') => {
+  const str = String(recordTypeStr || '').toLowerCase();
+  if (str.includes('vaccin') || str.includes('tiêm')) return 'VACCINE_RECORD';
+  if (str.includes('cvi') || str.includes('kiểm dịch') || str.includes('health cert')) return 'HEALTH_CERT';
+  if (str.includes('coggins') || str.includes('eia') || str.includes('máu')) return 'COGGINS_EIA';
+  if (str.includes('deworm') || str.includes('tẩy giun')) return 'DEWORMING';
+  if (str.includes('dent') || str.includes('nha khoa') || str.includes('răng')) return 'DENTAL';
+  if (str.includes('farrier') || str.includes('móng')) return 'FARRIER';
+  if (str.includes('well') || str.includes('lâm sàng') || str.includes('khám')) return 'WELLNESS';
+  if (str.includes('permit') || str.includes('xuất nhập') || str.includes('hải quan')) return 'IMPORT_PERMIT';
+  if (str.includes('passport') || str.includes('hộ chiếu') || str.includes('vi mạch')) return 'HORSE_PASSPORT';
+  return 'OTHER';
+};
 
 // 6 Required Angles for Equine Identification Photo Gallery
 const PHOTO_ANGLES = [
@@ -356,14 +377,45 @@ export default function VetRecordsPage() {
 
   // Add Vet Record handler
   const handleAddRecord = (values) => {
+    const trimmedTitle = (values.title || '').trim().toLowerCase();
+    const isDuplicateTitle = horseRecords.some(
+      (r) => (r.title || '').trim().toLowerCase() === trimmedTitle,
+    );
+    if (isDuplicateTitle) {
+      message.error(
+        `Ngựa "${currentHorse.Name}" đã có hồ sơ mang tên "${values.title}". Không được đặt trùng tên thư mục/hồ sơ của ngựa này!`,
+      );
+      return;
+    }
+
+    // Check duplicate attachment file names for this horse
+    const existingFileNames = horseRecords.flatMap((r) => r.attachments || []);
+    const duplicateAttachment = attachmentList.find((f) => existingFileNames.includes(f.name));
+    if (duplicateAttachment) {
+      message.error(
+        `Tệp "${duplicateAttachment.name}" đã tồn tại trong hồ sơ của ngựa "${currentHorse.Name}". Vui lòng đổi tên tệp trước khi lưu!`,
+      );
+      return;
+    }
+
+    const formattedDate = values.date
+      ? (typeof values.date === 'string' ? values.date : dayjs(values.date).format('YYYY-MM-DD'))
+      : dayjs().format('YYYY-MM-DD');
+    const formattedExp = values.expirationDate
+      ? (typeof values.expirationDate === 'string' ? values.expirationDate : dayjs(values.expirationDate).format('YYYY-MM-DD'))
+      : '';
+    const formattedDue = values.nextDueDate
+      ? (typeof values.nextDueDate === 'string' ? values.nextDueDate : dayjs(values.nextDueDate).format('YYYY-MM-DD'))
+      : '';
+
     const recordPayload = {
       horseId: currentHorse.HorseID,
       horseName: currentHorse.Name,
       recordType: values.recordType || 'Wellness Exam',
       title: values.title,
-      date: values.date || new Date().toISOString().split('T')[0],
-      expirationDate: values.expirationDate || '',
-      nextDueDate: values.nextDueDate || '',
+      date: formattedDate,
+      expirationDate: formattedExp,
+      nextDueDate: formattedDue,
       providerName: values.providerName || '',
       providerContact: values.providerContact || '',
       lotNumber: values.lotNumber || '',
@@ -749,20 +801,130 @@ export default function VetRecordsPage() {
                 );
               })}
             </div>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setIsRecordModalOpen(true)}
-              style={{
-                backgroundColor: '#F59E0B',
-                borderColor: '#F59E0B',
-                borderRadius: 20,
-                fontWeight: 600,
-                boxShadow: 'none',
-              }}
-            >
-              Add Record
-            </Button>
+            <Space wrap>
+              <Dropdown
+                menu={{
+                  items: [
+                    {
+                      key: 'VACCINE_RECORD',
+                      label: '💉 Mẫu Sổ tiêm chủng Vaccine (FEI Annex VI)',
+                      onClick: () =>
+                        setTemplateModal({
+                          open: true,
+                          docType: 'VACCINE_RECORD',
+                          title: 'Mẫu Sổ Tiêm Chủng Vaccine Cúm Ngựa Chuẩn Quốc Tế',
+                        }),
+                    },
+                    {
+                      key: 'HEALTH_CERT',
+                      label: '📋 Mẫu Chứng nhận kiểm dịch CVI (Health Certificate)',
+                      onClick: () =>
+                        setTemplateModal({
+                          open: true,
+                          docType: 'HEALTH_CERT',
+                          title: 'Mẫu Giấy Chứng Nhận Kiểm Dịch Động Vật CVI Xuất Khẩu',
+                        }),
+                    },
+                    {
+                      key: 'COGGINS_EIA',
+                      label: '🔬 Mẫu Phiếu xét nghiệm Coggins EIA (PCR Âm tính)',
+                      onClick: () =>
+                        setTemplateModal({
+                          open: true,
+                          docType: 'COGGINS_EIA',
+                          title: 'Mẫu Phiếu Xét Nghiệm Huyết Thanh Coggins (EIA)',
+                        }),
+                    },
+                    {
+                      key: 'DEWORMING',
+                      label: '💊 Mẫu Sổ theo dõi tẩy giun & Ký sinh trùng',
+                      onClick: () =>
+                        setTemplateModal({
+                          open: true,
+                          docType: 'DEWORMING',
+                          title: 'Mẫu Sổ Theo Dõi Tẩy Giun & Phòng Ký Sinh Trùng',
+                        }),
+                    },
+                    {
+                      key: 'DENTAL',
+                      label: '🦷 Mẫu Phiếu khám nha khoa & Mài răng',
+                      onClick: () =>
+                        setTemplateModal({
+                          open: true,
+                          docType: 'DENTAL',
+                          title: 'Mẫu Phiếu Khám Nha Khoa & Chăm Sóc Răng Miệng',
+                        }),
+                    },
+                    {
+                      key: 'FARRIER',
+                      label: '🔨 Mẫu Phiếu chăm sóc móng & Đóng móng thi đấu',
+                      onClick: () =>
+                        setTemplateModal({
+                          open: true,
+                          docType: 'FARRIER',
+                          title: 'Mẫu Phiếu Chăm Sóc Móng Guốc & Đóng Móng Thể Thao',
+                        }),
+                    },
+                    {
+                      key: 'WELLNESS',
+                      label: '🩺 Mẫu Biên bản khám lâm sàng Fit-to-Fly',
+                      onClick: () =>
+                        setTemplateModal({
+                          open: true,
+                          docType: 'WELLNESS',
+                          title: 'Mẫu Biên Bản Khám Lâm Sàng Thể Lực (Fit-to-Fly)',
+                        }),
+                    },
+                    {
+                      key: 'HORSE_PASSPORT',
+                      label: '🐎 Mẫu Hộ chiếu ngựa FEI & Đối soát vi mạch',
+                      onClick: () =>
+                        setTemplateModal({
+                          open: true,
+                          docType: 'HORSE_PASSPORT',
+                          title: 'Mẫu Hộ Chiếu Ngựa Quốc Tế FEI & Đối Soát Vi Mạch',
+                        }),
+                    },
+                    {
+                      key: 'IMPORT_PERMIT',
+                      label: '🏛️ Mẫu Giấy phép xuất nhập cảnh & Quá cảnh',
+                      onClick: () =>
+                        setTemplateModal({
+                          open: true,
+                          docType: 'IMPORT_PERMIT',
+                          title: 'Mẫu Giấy Phép Xuất Nhập Cảnh & Quá Cảnh',
+                        }),
+                    },
+                  ],
+                }}
+              >
+                <Button
+                  icon={<FilePdfOutlined />}
+                  style={{
+                    borderColor: '#F59E0B',
+                    color: '#B45309',
+                    borderRadius: 20,
+                    fontWeight: 600,
+                  }}
+                >
+                  Tải biểu mẫu PDF mẫu
+                </Button>
+              </Dropdown>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setIsRecordModalOpen(true)}
+                style={{
+                  backgroundColor: '#F59E0B',
+                  borderColor: '#F59E0B',
+                  borderRadius: 20,
+                  fontWeight: 600,
+                  boxShadow: 'none',
+                }}
+              >
+                Add Record
+              </Button>
+            </Space>
           </div>
 
           {/* Records List or Empty State */}
@@ -840,6 +1002,27 @@ export default function VetRecordsPage() {
                       )}
                     </div>
                     <Space>
+                      <Button
+                        size="small"
+                        icon={<FilePdfOutlined />}
+                        onClick={() => {
+                          const mappedDocType = mapRecordTypeToDocType(r.recordType || r.title);
+                          setTemplateModal({
+                            open: true,
+                            docType: mappedDocType,
+                            title: `Mẫu đơn chuẩn: ${r.recordType || r.title}`,
+                          });
+                        }}
+                        style={{
+                          borderRadius: 6,
+                          fontSize: 12,
+                          borderColor: '#F59E0B',
+                          color: '#B45309',
+                          fontWeight: 600,
+                        }}
+                      >
+                        Mẫu PDF
+                      </Button>
                       <Popconfirm
                         title="Delete Vet Record?"
                         description="Are you sure you want to remove this record?"
@@ -2052,38 +2235,86 @@ export default function VetRecordsPage() {
                 (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
               }
             />
+            <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+              <Button
+                type="link"
+                size="small"
+                icon={<FilePdfOutlined />}
+                onClick={() => {
+                  const currentSelectedType = recordForm.getFieldValue('recordType') || RECORD_TYPE_OPTIONS[0].value;
+                  const mappedDocType = mapRecordTypeToDocType(currentSelectedType);
+                  setTemplateModal({
+                    open: true,
+                    docType: mappedDocType,
+                    title: `Mẫu đơn chuẩn: ${currentSelectedType}`,
+                  });
+                }}
+                style={{ color: '#D97706', fontWeight: 600, padding: 0 }}
+              >
+                📄 Tải / Xem Mẫu đơn PDF chuẩn của loại này
+              </Button>
+            </div>
           </Form.Item>
 
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item
-                label="Title / Product Name"
+                label="Tên hồ sơ / Thư mục / Tiêu đề (Title)"
                 name="title"
-                rules={[{ required: true, message: 'Please enter title' }]}
+                rules={[
+                  { required: true, message: 'Vui lòng nhập tên hồ sơ' },
+                  {
+                    validator: (_, value) => {
+                      if (!value) return Promise.resolve();
+                      const trimmed = value.trim().toLowerCase();
+                      const exists = horseRecords.some(
+                        (r) => (r.title || '').trim().toLowerCase() === trimmed,
+                      );
+                      if (exists) {
+                        return Promise.reject(
+                          new Error(`Ngựa "${currentHorse.Name}" đã có hồ sơ mang tên "${value}". Không được đặt trùng tên thư mục/hồ sơ của ngựa này!`),
+                        );
+                      }
+                      return Promise.resolve();
+                    },
+                  },
+                ]}
               >
                 <Input placeholder="e.g. Equine Influenza Vaccine" />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
               <Form.Item
-                label="Date"
+                label="Date (Ngày thực hiện)"
                 name="date"
-                rules={[{ required: true, message: 'Please enter date' }]}
+                rules={[{ required: true, message: 'Vui lòng chọn ngày trên lịch' }]}
               >
-                <Input placeholder="mm/dd/yyyy" />
+                <DatePicker
+                  format="DD/MM/YYYY"
+                  placeholder="Chọn ngày trên lịch"
+                  style={{ width: '100%', borderRadius: 8 }}
+                />
               </Form.Item>
             </Col>
           </Row>
 
           <Row gutter={16}>
             <Col xs={24} sm={12}>
-              <Form.Item label="Expiration Date" name="expirationDate">
-                <Input placeholder="mm/dd/yyyy" />
+              <Form.Item label="Expiration Date (Ngày hết hạn)" name="expirationDate">
+                <DatePicker
+                  format="DD/MM/YYYY"
+                  placeholder="Chọn ngày hết hạn trên lịch"
+                  style={{ width: '100%', borderRadius: 8 }}
+                />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
-              <Form.Item label="Next Due Date" name="nextDueDate">
-                <Input placeholder="mm/dd/yyyy" />
+              <Form.Item label="Next Due Date (Lịch tái khám kế tiếp)" name="nextDueDate">
+                <DatePicker
+                  format="DD/MM/YYYY"
+                  placeholder="Chọn ngày tái khám trên lịch"
+                  style={{ width: '100%', borderRadius: 8 }}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -2135,6 +2366,13 @@ export default function VetRecordsPage() {
           <Form.Item label="Attachment (PDF / Image / Scan)">
             <Upload
               beforeUpload={(file) => {
+                const existingFileNames = horseRecords.flatMap((r) => r.attachments || []);
+                if (existingFileNames.includes(file.name) || attachmentList.some((f) => f.name === file.name)) {
+                  message.error(
+                    `Tệp "${file.name}" đã tồn tại trong danh mục hồ sơ của ngựa "${currentHorse.Name}". Vui lòng đổi tên tệp để không trùng lặp!`,
+                  );
+                  return Upload.LIST_IGNORE;
+                }
                 setAttachmentList((prev) => [...prev, file]);
                 return false;
               }}

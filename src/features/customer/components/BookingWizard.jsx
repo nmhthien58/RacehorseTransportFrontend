@@ -781,32 +781,16 @@ export default function BookingWizard({
       setAvailableHorses(horsesList);
 
       if (horsesList.length > 0) {
-        // Ưu tiên chọn những chú ngựa đủ điều kiện di chuyển (có vet record và không bị Critical/Unfit)
-        const eligible = horsesList.filter((h) => {
-          const res = checkHorseTransportEligibility(h, i18n?.language || 'vi');
-          return res.eligible;
-        });
-        const pool = eligible.length > 0 ? eligible : horsesList;
-        const requestedCount = Number(initialValues?.totalHorses) || 1;
-        const chosenHorses = pool.slice(0, requestedCount);
-        const chosenIds = chosenHorses.map((h) => h.horseId || h.HorseID);
-
-        setSelectedHorseIds(chosenIds);
-
-        const newStallClasses = {};
-        chosenHorses.forEach((h, idx) => {
-          const hId = h.horseId || h.HorseID;
-          if (initialValues?.calcHorses && initialValues.calcHorses[idx]?.stallClass) {
-            const sc = initialValues.calcHorses[idx].stallClass.toLowerCase();
-            newStallClasses[hId] = sc === 'private' ? 'Private' : sc === 'comfort' ? 'Comfort' : 'Shared';
-          } else if (initialValues?.stallClass) {
-            const sc = initialValues.stallClass.toLowerCase();
-            newStallClasses[hId] = sc === 'private' ? 'Private' : sc === 'shared' ? 'Shared' : 'Comfort';
-          } else {
-            newStallClasses[hId] = 'Comfort';
-          }
-        });
-        setStallClasses(newStallClasses);
+        // Chỉ chọn trước ngựa nếu được chỉ định cụ thể qua initialValues (VD: bấm "Đặt chuyến" từ trang chi tiết ngựa)
+        const specificHorseId = initialValues?.horseId || initialValues?.horseIds?.[0];
+        if (specificHorseId && horsesList.some((h) => String(h.horseId || h.HorseID) === String(specificHorseId))) {
+          setSelectedHorseIds([specificHorseId]);
+          setStallClasses({ [specificHorseId]: 'Comfort' });
+        } else {
+          // Mặc định để trống để khách hàng tự chọn ngựa (Yêu cầu 2: tránh lỗi báo trùng lịch sai từ ngựa đầu)
+          setSelectedHorseIds([]);
+          setStallClasses({});
+        }
       } else {
         setSelectedHorseIds([]);
         setStallClasses({});
@@ -1675,27 +1659,6 @@ export default function BookingWizard({
                 />
               </Col>
             </Row>
-
-            {/* Cảnh báo nếu ngựa đã chọn bị trùng lịch trình với ngày mới chọn */}
-            {selectedHorseIds.some((hId) => checkHorseBookingConflict(hId, departureDate, deliveryDate, null, user?.userId || user?.UserID).hasConflict) && (
-              <div style={{ marginTop: 14 }}>
-                {selectedHorseIds.map((hId) => {
-                  const conf = checkHorseBookingConflict(hId, departureDate, deliveryDate, null, user?.userId || user?.UserID);
-                  if (!conf.hasConflict) return null;
-                  const hFound = availableHorses.find((h) => String(h.horseId || h.HorseID) === String(hId));
-                  return (
-                    <Alert
-                      key={hId}
-                      type="error"
-                      showIcon
-                      style={{ marginBottom: 8, borderRadius: 10 }}
-                      message={`Trùng lịch vận chuyển: Ngựa "${hFound?.name || hFound?.Name || hId}"`}
-                      description={conf.reason}
-                    />
-                  );
-                })}
-              </div>
-            )}
           </div>
 
           

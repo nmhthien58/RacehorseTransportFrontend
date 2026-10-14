@@ -22,10 +22,16 @@ export default function PrivateRoute({ allowedRoles }) {
       ? 'LogisticsManager'
       : (rawRole === 'DriverEscort')
       ? 'Driver'
+      : (rawRole === 'Coordinator' || rawRole === 'FleetCoordinator')
+      ? 'FleetCoordinator'
+      : (rawRole === 'Specialist' || rawRole === 'TransportSpecialist')
+      ? 'TransportSpecialist'
       : rawRole;
 
     const normalizedAllowed = allowedRoles.map((r) =>
-      (r === 'Admin' || r === 'LogisticsManager') ? 'LogisticsManager' : r
+      (r === 'Admin' || r === 'LogisticsManager') ? 'LogisticsManager' :
+      (r === 'Coordinator' || r === 'FleetCoordinator') ? 'FleetCoordinator' :
+      (r === 'Specialist' || r === 'TransportSpecialist') ? 'TransportSpecialist' : r
     );
 
     if (!normalizedRole || !normalizedAllowed.includes(normalizedRole)) {

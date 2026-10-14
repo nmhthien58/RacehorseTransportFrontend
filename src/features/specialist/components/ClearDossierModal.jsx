@@ -36,7 +36,9 @@ export default function ClearDossierModal({
 
   useEffect(() => {
     if (open && dossier) {
-      const generatedCode = `VET-CLR-${new Date().getFullYear()}-${String(dossier.dossierId || Math.floor(Math.random() * 1000)).padStart(4, '0')}`;
+      const fallbackSuffix = crypto.randomUUID().slice(0, 4).toUpperCase();
+      const dossierCode = dossier.dossierId ? String(dossier.dossierId).padStart(4, '0') : fallbackSuffix;
+      const generatedCode = `VET-CLR-${new Date().getFullYear()}-${dossierCode}`;
       form.setFieldsValue({
         clearanceNumber: dossier.clearanceNumber || generatedCode,
         authorityNote: 'Đã hoàn tất kiểm tra lâm sàng và đối chiếu vi mạch RFID đạt chuẩn.',

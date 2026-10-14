@@ -19,6 +19,44 @@ function recalculateDossierState(dossier) {
   dossier.isReadyToSubmit = approvedMandatory.length === mandatoryDocs.length;
 }
 
+/**
+ * Lọc danh sách quy định kiểm dịch theo tham số query
+ * @param {Request} request
+ * @returns {HttpResponse}
+ */
+function filterQuarantineRules(request) {
+  const url = new URL(request.url);
+  const countryCode = url.searchParams.get('countryCode');
+  const direction = url.searchParams.get('direction');
+  const search = url.searchParams.get('search')?.toLowerCase() || '';
+
+  let result = [...rules];
+
+  if (countryCode && countryCode !== 'all') {
+    result = result.filter((r) => r.countryCode.toLowerCase() === countryCode.toLowerCase());
+  }
+
+  if (direction && direction !== 'all') {
+    result = result.filter((r) => r.direction.toLowerCase() === direction.toLowerCase());
+  }
+
+  if (search) {
+    result = result.filter(
+      (r) =>
+        r.docTypeName.toLowerCase().includes(search) ||
+        r.countryName.toLowerCase().includes(search) ||
+        r.regulationNote.toLowerCase().includes(search) ||
+        r.issuingAuthority.toLowerCase().includes(search)
+    );
+  }
+
+  return HttpResponse.json({
+    success: true,
+    data: result,
+    total: result.length,
+  });
+}
+
 export const specialistHandlers = [
   // 1. Thống kê tổng quan cho màn Compliance Overview (/specialist/dashboard)
   http.get('/api/specialist/overview', () => {
@@ -66,8 +104,8 @@ export const specialistHandlers = [
     const url = new URL(request.url);
     const status = url.searchParams.get('status');
     const search = url.searchParams.get('search')?.toLowerCase() || '';
-    const page = parseInt(url.searchParams.get('page') || '1', 10);
-    const pageSize = parseInt(url.searchParams.get('pageSize') || url.searchParams.get('size') || '10', 10);
+    const page = Number.parseInt(url.searchParams.get('page') || '1', 10);
+    const pageSize = Number.parseInt(url.searchParams.get('pageSize') || url.searchParams.get('size') || '10', 10);
 
     let filtered = [...dossiers];
 
@@ -230,6 +268,37 @@ export const specialistHandlers = [
     });
   }),
 
+  // Bí danh nộp hồ sơ kiểm dịch (/submit tương đương /submit-to-authorities)
+  http.post('/api/dossiers/:id/submit', ({ params }) => {
+    const dossierId = Number(params.id);
+    const dossier = dossiers.find((d) => d.dossierId === dossierId);
+
+    if (!dossier) {
+      return HttpResponse.json({ success: false, message: 'Không tìm thấy hồ sơ' }, { status: 404 });
+    }
+
+    dossier.status = 'SubmittedToAuthorities';
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Hồ sơ đã được nộp cho cơ quan chức năng',
+      data: dossier,
+      ...dossier,
+    });
+  }),
+
+  // Tải lên giấy tờ cho hồ sơ
+  http.post('/api/dossiers/:id/documents', ({ params }) => {
+    return HttpResponse.json(
+      {
+        success: true,
+        message: `Tải lên giấy tờ cho hồ sơ ${params.id} thành công`,
+        data: { documentId: Date.now(), status: 'Pending' },
+      },
+      { status: 201 }
+    );
+  }),
+
   // 8. Cấp phép thông quan thành công (Cleared)
   http.post('/api/dossiers/:id/clear', async ({ params, request }) => {
     const dossierId = Number(params.id);
@@ -274,70 +343,43 @@ export const specialistHandlers = [
   }),
 
   // 10. Tra cứu cơ sở dữ liệu quy định kiểm dịch thú y quốc tế (Quarantine Rules DB)
-  http.get('/api/clearance/requirements', ({ request }) => {
-    const url = new URL(request.url);
-    const countryCode = url.searchParams.get('countryCode');
-    const direction = url.searchParams.get('direction');
-    const search = url.searchParams.get('search')?.toLowerCase() || '';
+  http.get('/api/clearance/requirements', ({ request }) => filterQuarantineRules(request)),
 
-    let result = [...rules];
+  // Alias cho quarantine rules
+  http.get('/api/quarantine-rules', ({ request }) => filterQuarantineRules(request)),
 
-    if (countryCode && countryCode !== 'all') {
-      result = result.filter((r) => r.countryCode.toLowerCase() === countryCode.toLowerCase());
+  // Bí danh phê duyệt hồ sơ thông quan (/approve tương đương /clear)
+  http.post('/api/dossiers/:id/approve', async ({ params, request }) => {
+    const dossierId = Number(params.id);
+    const body = await request.json().catch(() => ({}));
+    const dossier = dossiers.find((d) => d.dossierId === dossierId);
+
+    if (!dossier) {
+      return HttpResponse.json({ success: false, message: 'Không tìm thấy hồ sơ' }, { status: 404 });
     }
 
-    if (direction && direction !== 'all') {
-      result = result.filter((r) => r.direction.toLowerCase() === direction.toLowerCase());
-    }
-
-    if (search) {
-      result = result.filter(
-        (r) =>
-          r.docTypeName.toLowerCase().includes(search) ||
-          r.countryName.toLowerCase().includes(search) ||
-          r.regulationNote.toLowerCase().includes(search) ||
-          r.issuingAuthority.toLowerCase().includes(search)
-      );
-    }
+    dossier.status = 'Cleared';
+    dossier.clearanceNumber = body.clearanceNumber || `VET-CERT-${new Date().getFullYear()}-${String(dossierId).padStart(4, '0')}`;
+    dossier.clearedAt = new Date().toISOString();
+    dossier.issueReason = null;
 
     return HttpResponse.json({
       success: true,
-      data: result,
-      total: result.length,
+      message: 'Bộ hồ sơ đã được thông quan thành công',
+      data: dossier,
+      ...dossier,
     });
   }),
 
-  // Alias cho quarantine rules
-  http.get('/api/quarantine-rules', ({ request }) => {
-    const url = new URL(request.url);
-    const countryCode = url.searchParams.get('countryCode');
-    const direction = url.searchParams.get('direction');
-    const search = url.searchParams.get('search')?.toLowerCase() || '';
-
-    let result = [...rules];
-
-    if (countryCode && countryCode !== 'all') {
-      result = result.filter((r) => r.countryCode.toLowerCase() === countryCode.toLowerCase());
-    }
-
-    if (direction && direction !== 'all') {
-      result = result.filter((r) => r.direction.toLowerCase() === direction.toLowerCase());
-    }
-
-    if (search) {
-      result = result.filter(
-        (r) =>
-          r.docTypeName.toLowerCase().includes(search) ||
-          r.countryName.toLowerCase().includes(search) ||
-          r.regulationNote.toLowerCase().includes(search) ||
-          r.issuingAuthority.toLowerCase().includes(search)
-      );
-    }
-
+  // Document types lookup
+  http.get('/api/document-types/lookup', () => {
     return HttpResponse.json({
       success: true,
-      data: result,
-      total: result.length,
+      data: [
+        { docTypeId: 1, docTypeCode: 'HORSE_PASSPORT', docTypeName: 'Hộ chiếu ngựa FEI' },
+        { docTypeId: 2, docTypeCode: 'COGGINS_EIA', docTypeName: 'Chứng nhận xét nghiệm Coggins âm tính' },
+        { docTypeId: 3, docTypeCode: 'HEALTH_CERT', docTypeName: 'Giấy chứng nhận kiểm dịch xuất nhập khẩu' },
+      ],
     });
   }),
 ];

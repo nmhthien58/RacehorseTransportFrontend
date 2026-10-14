@@ -92,7 +92,7 @@ export function useQuarantineRules(initialFilters = {}) {
       }
     }
 
-    loadData();
+    void loadData().catch(console.error);
 
     return () => {
       isSubscribed = false;

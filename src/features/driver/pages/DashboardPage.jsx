@@ -207,8 +207,8 @@ export default function DriverDashboard() {
     try {
       setWelfareSubmitting(true);
       await driverService.createWelfareLog(activeMission.tripId, {
-        cabinTemp: parseFloat(bodyTemp) || 19.0,
-        waterIntakeLiters: parseFloat(waterIntake) || 15.0,
+        cabinTemp: Number.parseFloat(bodyTemp) || 19.0,
+        waterIntakeLiters: Number.parseFloat(waterIntake) || 15.0,
         notes: welfareNotes,
         loggedAt: new Date().toISOString(),
         recordedBy: user?.fullName || 'Tài xế / Bác sĩ áp tải',

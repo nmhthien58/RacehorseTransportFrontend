@@ -64,7 +64,7 @@ export function useSpecialistDossiers(initialParams = {}) {
       }
     }
 
-    loadData();
+    void loadData().catch(console.error);
 
     return () => {
       isSubscribed = false;

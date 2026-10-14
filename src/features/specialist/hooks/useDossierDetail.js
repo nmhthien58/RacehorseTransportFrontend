@@ -39,7 +39,7 @@ export function useDossierDetail(dossierId) {
     }
 
     if (dossierId) {
-      loadData();
+      void loadData().catch(console.error);
     }
 
     return () => {

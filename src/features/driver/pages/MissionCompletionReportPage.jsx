@@ -72,7 +72,7 @@ export default function MissionCompletionReportPage() {
     }
 
     if (tripId) {
-      fetchData();
+      void fetchData().catch(console.error);
     }
   }, [tripId]);
 

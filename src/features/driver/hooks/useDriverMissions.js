@@ -43,7 +43,7 @@ export function useDriverMissions(initialParams = {}) {
       }
     }
 
-    loadData();
+    void loadData().catch(console.error);
 
     return () => {
       isSubscribed = false;
@@ -99,7 +99,7 @@ export function useMissionDetail(tripId) {
       }
     }
 
-    loadDetail();
+    void loadDetail().catch(console.error);
 
     return () => {
       isSubscribed = false;

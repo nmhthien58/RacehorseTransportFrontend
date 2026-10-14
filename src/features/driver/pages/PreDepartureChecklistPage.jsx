@@ -333,7 +333,16 @@ export default function PreDepartureChecklistPage() {
                 {items.map((item) => (
                   <div
                     key={item.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={Boolean(item.checked)}
                     onClick={() => handleToggle(item)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleToggle(item);
+                      }
+                    }}
                     style={{
                       display: 'flex',
                       alignItems: 'flex-start',
@@ -349,7 +358,10 @@ export default function PreDepartureChecklistPage() {
                     <Space align="start" size={12} style={{ flex: 1 }}>
                       <Checkbox
                         checked={item.checked}
-                        onChange={() => handleToggle(item)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          handleToggle(item);
+                        }}
                         style={{ marginTop: 2 }}
                       />
                       <div>

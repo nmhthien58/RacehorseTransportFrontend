@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import {
   Card,
   Table,
-  Tag,
   Button,
   Input,
   Select,
@@ -20,6 +19,7 @@ import {
 } from '@ant-design/icons';
 import { useSpecialistDossiers } from '../hooks/useSpecialistDossiers';
 import { ROUTES } from '@routes/routes';
+import DossierStatusTag from '../components/DossierStatusTag';
 
 const { Title, Text } = Typography;
 
@@ -67,96 +67,8 @@ export default function DossiersPage() {
     navigate(ROUTES.SPECIALIST_QUARANTINE_RULES || '/specialist/quarantine-rules');
   };
 
-  // Render tag trạng thái tông màu nhẹ nhàng, đồng bộ
-  const renderStatusTag = (status) => {
-    switch (status) {
-      case 'Cleared':
-        return (
-          <Tag
-            style={{
-              backgroundColor: '#F0FDF4',
-              borderColor: '#DCFCE7',
-              color: '#166534',
-              borderRadius: 4,
-              fontSize: 12,
-            }}
-          >
-            {t('specialist.status.cleared', 'Cleared')}
-          </Tag>
-        );
-      case 'SubmittedToAuthorities':
-        return (
-          <Tag
-            style={{
-              backgroundColor: '#F8FAFC',
-              borderColor: '#E2E8F0',
-              color: '#334155',
-              borderRadius: 4,
-              fontSize: 12,
-            }}
-          >
-            {t('specialist.status.submitted', 'Submitted')}
-          </Tag>
-        );
-      case 'Reviewing':
-        return (
-          <Tag
-            style={{
-              backgroundColor: '#FFFBEB',
-              borderColor: '#FEF3C7',
-              color: '#92400E',
-              borderRadius: 4,
-              fontSize: 12,
-            }}
-          >
-            {t('specialist.status.reviewing', 'Reviewing')}
-          </Tag>
-        );
-      case 'AwaitingDocs':
-        return (
-          <Tag
-            style={{
-              backgroundColor: '#F8FAFC',
-              borderColor: '#E2E8F0',
-              color: '#475569',
-              borderRadius: 4,
-              fontSize: 12,
-            }}
-          >
-            {t('specialist.status.awaitingDocs', 'Awaiting Docs')}
-          </Tag>
-        );
-      case 'Issue':
-        return (
-          <Tag
-            style={{
-              backgroundColor: '#FEF2F2',
-              borderColor: '#FEE2E2',
-              color: '#991B1B',
-              borderRadius: 4,
-              fontSize: 12,
-            }}
-          >
-            {t('specialist.status.issue', 'Issue')}
-          </Tag>
-        );
-      case 'Draft':
-      default:
-        return (
-          <Tag
-            style={{
-              backgroundColor: '#F8FAFC',
-              borderColor: '#E2E8F0',
-              color: '#64748B',
-              borderRadius: 4,
-              fontSize: 12,
-            }}
-          >
-            {t('specialist.status.draft', 'Draft')}
-          </Tag>
-        );
-    }
-  };
+  // Render tag trạng thái thông qua component tái sử dụng
+  const renderStatusTag = (status) => <DossierStatusTag status={status} />;
 
   // Cấu hình các cột bảng danh sách
   const columns = [

@@ -5,7 +5,6 @@ import {
   Card,
   Row,
   Col,
-  Tag,
   Button,
   Input,
   Space,
@@ -22,6 +21,7 @@ import {
 } from '@ant-design/icons';
 import { useSpecialistDossiers } from '../hooks/useSpecialistDossiers';
 import { ROUTES } from '@routes/routes';
+import DossierStatusTag from '../components/DossierStatusTag';
 
 const { Title, Text } = Typography;
 
@@ -70,96 +70,8 @@ export default function DashboardPage() {
     complianceRate: 94.2,
   };
 
-  // Render tag trạng thái tông màu nhẹ nhàng, đồng bộ, không lòe loẹt
-  const renderStatusTag = (status) => {
-    switch (status) {
-      case 'Cleared':
-        return (
-          <Tag
-            style={{
-              backgroundColor: '#F0FDF4',
-              borderColor: '#DCFCE7',
-              color: '#166534',
-              borderRadius: 4,
-              fontSize: 12,
-            }}
-          >
-            {t('specialist.status.cleared', 'Cleared')}
-          </Tag>
-        );
-      case 'SubmittedToAuthorities':
-        return (
-          <Tag
-            style={{
-              backgroundColor: '#F8FAFC',
-              borderColor: '#E2E8F0',
-              color: '#334155',
-              borderRadius: 4,
-              fontSize: 12,
-            }}
-          >
-            {t('specialist.status.submitted', 'Submitted')}
-          </Tag>
-        );
-      case 'Reviewing':
-        return (
-          <Tag
-            style={{
-              backgroundColor: '#FFFBEB',
-              borderColor: '#FEF3C7',
-              color: '#92400E',
-              borderRadius: 4,
-              fontSize: 12,
-            }}
-          >
-            {t('specialist.status.reviewing', 'Reviewing')}
-          </Tag>
-        );
-      case 'AwaitingDocs':
-        return (
-          <Tag
-            style={{
-              backgroundColor: '#F8FAFC',
-              borderColor: '#E2E8F0',
-              color: '#475569',
-              borderRadius: 4,
-              fontSize: 12,
-            }}
-          >
-            {t('specialist.status.awaitingDocs', 'Awaiting Docs')}
-          </Tag>
-        );
-      case 'Issue':
-        return (
-          <Tag
-            style={{
-              backgroundColor: '#FEF2F2',
-              borderColor: '#FEE2E2',
-              color: '#991B1B',
-              borderRadius: 4,
-              fontSize: 12,
-            }}
-          >
-            {t('specialist.status.issue', 'Issue')}
-          </Tag>
-        );
-      case 'Draft':
-      default:
-        return (
-          <Tag
-            style={{
-              backgroundColor: '#F8FAFC',
-              borderColor: '#E2E8F0',
-              color: '#64748B',
-              borderRadius: 4,
-              fontSize: 12,
-            }}
-          >
-            {t('specialist.status.draft', 'Draft')}
-          </Tag>
-        );
-    }
-  };
+  // Render tag trạng thái thông qua component tái sử dụng
+  const renderStatusTag = (status) => <DossierStatusTag status={status} />;
 
   return (
     <div style={{ padding: '0 0 24px 0' }}>
@@ -249,97 +161,34 @@ export default function DashboardPage() {
         <>
           {/* 1. Hàng 4 thẻ số liệu thống kê - Tinh gọn, tối giản, màu sắc trung tính nhẹ nhàng */}
           <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
-            {/* Card 1: Overdue Dossiers */}
-            <Col xs={12} sm={6}>
-              <Card
-                hoverable
-                style={{
-                  borderRadius: 6,
-                  border: '1px solid #E2E8F0',
-                  boxShadow: 'none',
-                  cursor: 'pointer',
-                  backgroundColor: '#FFFFFF',
-                }}
-                styles={{ body: { padding: '14px 16px' } }}
-                onClick={() => handleNavigateToList('all')}
-              >
-                <div style={{ fontSize: 12, color: '#64748B', marginBottom: 4, fontWeight: 500 }}>
-                  {t('specialist.stats.overdue', 'Overdue Dossiers')}
-                </div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: '#0F172A', lineHeight: 1.2 }}>
-                  {stats.overdueDossiers}
-                </div>
-              </Card>
-            </Col>
-
-            {/* Card 2: Pending Approval */}
-            <Col xs={12} sm={6}>
-              <Card
-                hoverable
-                style={{
-                  borderRadius: 6,
-                  border: '1px solid #E2E8F0',
-                  boxShadow: 'none',
-                  cursor: 'pointer',
-                  backgroundColor: '#FFFFFF',
-                }}
-                styles={{ body: { padding: '14px 16px' } }}
-                onClick={() => handleNavigateToList('Reviewing')}
-              >
-                <div style={{ fontSize: 12, color: '#64748B', marginBottom: 4, fontWeight: 500 }}>
-                  {t('specialist.stats.pending', 'Pending Approval')}
-                </div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: '#0F172A', lineHeight: 1.2 }}>
-                  {stats.pendingApproval}
-                </div>
-              </Card>
-            </Col>
-
-            {/* Card 3: Active Quarantine */}
-            <Col xs={12} sm={6}>
-              <Card
-                hoverable
-                style={{
-                  borderRadius: 6,
-                  border: '1px solid #E2E8F0',
-                  boxShadow: 'none',
-                  cursor: 'pointer',
-                  backgroundColor: '#FFFFFF',
-                }}
-                styles={{ body: { padding: '14px 16px' } }}
-                onClick={() => handleNavigateToList('all')}
-              >
-                <div style={{ fontSize: 12, color: '#64748B', marginBottom: 4, fontWeight: 500 }}>
-                  {t('specialist.stats.activeQuarantine', 'Active Quarantine')}
-                </div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: '#0F172A', lineHeight: 1.2 }}>
-                  {stats.activeQuarantine}
-                </div>
-              </Card>
-            </Col>
-
-            {/* Card 4: Exceptions */}
-            <Col xs={12} sm={6}>
-              <Card
-                hoverable
-                style={{
-                  borderRadius: 6,
-                  border: '1px solid #E2E8F0',
-                  boxShadow: 'none',
-                  cursor: 'pointer',
-                  backgroundColor: '#FFFFFF',
-                }}
-                styles={{ body: { padding: '14px 16px' } }}
-                onClick={() => handleNavigateToList('Issue')}
-              >
-                <div style={{ fontSize: 12, color: '#64748B', marginBottom: 4, fontWeight: 500 }}>
-                  {t('specialist.stats.exceptions', 'Exceptions')}
-                </div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: '#0F172A', lineHeight: 1.2 }}>
-                  {stats.exceptions}
-                </div>
-              </Card>
-            </Col>
+            {[
+              { key: 'overdue', label: t('specialist.stats.overdue', 'Overdue Dossiers'), value: stats.overdueDossiers, filter: 'all' },
+              { key: 'pending', label: t('specialist.stats.pending', 'Pending Approval'), value: stats.pendingApproval, filter: 'Reviewing' },
+              { key: 'quarantine', label: t('specialist.stats.activeQuarantine', 'Active Quarantine'), value: stats.activeQuarantine, filter: 'all' },
+              { key: 'exceptions', label: t('specialist.stats.exceptions', 'Exceptions'), value: stats.exceptions, filter: 'Issue' },
+            ].map((statItem) => (
+              <Col xs={12} sm={6} key={statItem.key}>
+                <Card
+                  hoverable
+                  style={{
+                    borderRadius: 6,
+                    border: '1px solid #E2E8F0',
+                    boxShadow: 'none',
+                    cursor: 'pointer',
+                    backgroundColor: '#FFFFFF',
+                  }}
+                  styles={{ body: { padding: '14px 16px' } }}
+                  onClick={() => handleNavigateToList(statItem.filter)}
+                >
+                  <div style={{ fontSize: 12, color: '#64748B', marginBottom: 4, fontWeight: 500 }}>
+                    {statItem.label}
+                  </div>
+                  <div style={{ fontSize: 24, fontWeight: 700, color: '#0F172A', lineHeight: 1.2 }}>
+                    {statItem.value}
+                  </div>
+                </Card>
+              </Col>
+            ))}
           </Row>
 
           {/* 2. Bố cục 2 cột chính */}

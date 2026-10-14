@@ -1,4 +1,5 @@
 import { http, HttpResponse } from 'msw';
+import usersData from '../data/users.json';
 import {
   getStoredBookings,
   getStoredBookingById,
@@ -142,7 +143,14 @@ export const bookingHandlers = [
       tokenUserId = Number(authHeader.replace('Bearer mock-google-token-', ''));
     }
 
-    const effectiveCustomerId = customerId ? Number(customerId) : (tokenUserId ? Number(tokenUserId) : null);
+    // Kiểm tra quyền hạn: Quản lý, Điều phối viên, Chuyên viên kiểm dịch, Tài xế, Admin có quyền xem toàn bộ đơn
+    const currentUser = tokenUserId ? usersData.find((u) => Number(u.userId) === Number(tokenUserId)) : null;
+    const isStaff = currentUser && ['LogisticsManager', 'Admin', 'TransportSpecialist', 'FleetCoordinator', 'Driver', 'Escort'].includes(currentUser.role);
+
+    // Chỉ lọc theo customerId nếu có query param, hoặc người đăng nhập là Khách hàng (Customer)
+    const effectiveCustomerId = customerId
+      ? Number(customerId)
+      : (!isStaff && tokenUserId ? Number(tokenUserId) : null);
 
     if (effectiveCustomerId) {
       list = list.filter((b) => Number(b.customerUserId || b.CustomerUserID) === effectiveCustomerId);

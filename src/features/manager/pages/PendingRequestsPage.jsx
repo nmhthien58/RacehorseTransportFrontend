@@ -127,6 +127,19 @@ export default function PendingRequestsPage() {
     };
   }, [t, refreshKey]);
 
+  // Tự động làm mới khi có đơn mới từ khách hàng hoặc cập nhật trạng thái
+  useEffect(() => {
+    const handleSync = () => {
+      handleRefresh();
+    };
+    window.addEventListener('bookings_updated', handleSync);
+    window.addEventListener('request_letter_received', handleSync);
+    return () => {
+      window.removeEventListener('bookings_updated', handleSync);
+      window.removeEventListener('request_letter_received', handleSync);
+    };
+  }, [handleRefresh]);
+
   // Lọc chỉ lấy các đơn Pending (Submitted)
   const pendingList = useMemo(() => {
     return bookings.filter((b) => b.status === BOOKING_STATUS.SUBMITTED);

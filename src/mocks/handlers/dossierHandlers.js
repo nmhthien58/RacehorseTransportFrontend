@@ -1,11 +1,13 @@
 import { http, HttpResponse } from 'msw';
-import dossiersData from '../data/dossiers.json';
-
-let dossiers = [...dossiersData];
+import {
+  getStoredDossiers,
+  saveStoredDossiers,
+} from '../../utils/dossierStorage';
 
 export const dossierHandlers = [
   // GET /api/dossiers
   http.get('/api/dossiers', () => {
+    const dossiers = getStoredDossiers();
     return HttpResponse.json({
       success: true,
       data: dossiers,
@@ -21,6 +23,7 @@ export const dossierHandlers = [
 
   // GET /api/dossiers/:id
   http.get('/api/dossiers/:id', ({ params }) => {
+    const dossiers = getStoredDossiers();
     const dossier = dossiers.find((d) => d.dossierId === Number(params.id));
     if (!dossier) {
       return HttpResponse.json({ success: false, message: 'Dossier not found' }, { status: 404 });
@@ -67,6 +70,7 @@ export const dossierHandlers = [
 
   // POST /api/dossiers/:id/submit -> Đổi status Reviewing -> SubmittedToAuthorities
   http.post('/api/dossiers/:id/submit', ({ params }) => {
+    const dossiers = getStoredDossiers();
     const dossier = dossiers.find((d) => d.dossierId === Number(params.id));
     if (!dossier) {
       return HttpResponse.json({ success: false, message: 'Dossier not found' }, { status: 404 });
@@ -81,6 +85,7 @@ export const dossierHandlers = [
       );
     }
     dossier.status = 'SubmittedToAuthorities';
+    saveStoredDossiers(dossiers);
     return HttpResponse.json({
       success: true,
       message: 'Hồ sơ đã được nộp cho cơ quan chức năng',
@@ -91,6 +96,7 @@ export const dossierHandlers = [
 
   // POST /api/dossiers/:id/submit-to-authorities (Bí danh tương thích ngược)
   http.post('/api/dossiers/:id/submit-to-authorities', ({ params }) => {
+    const dossiers = getStoredDossiers();
     const dossier = dossiers.find((d) => d.dossierId === Number(params.id));
     if (!dossier) {
       return HttpResponse.json({ success: false, message: 'Dossier not found' }, { status: 404 });
@@ -105,6 +111,7 @@ export const dossierHandlers = [
       );
     }
     dossier.status = 'SubmittedToAuthorities';
+    saveStoredDossiers(dossiers);
     return HttpResponse.json({
       success: true,
       message: 'Hồ sơ đã được nộp cho cơ quan chức năng',
@@ -115,6 +122,7 @@ export const dossierHandlers = [
 
   // POST /api/dossiers/:id/approve -> Chỉ thành công nếu status = SubmittedToAuthorities, đổi thành Cleared
   http.post('/api/dossiers/:id/approve', async ({ params, request }) => {
+    const dossiers = getStoredDossiers();
     const dossier = dossiers.find((d) => d.dossierId === Number(params.id));
     if (!dossier) {
       return HttpResponse.json({ success: false, message: 'Dossier not found' }, { status: 404 });
@@ -132,6 +140,7 @@ export const dossierHandlers = [
     dossier.status = 'Cleared';
     dossier.clearanceNumber = body.clearanceNumber || `VET-CERT-${new Date().getFullYear()}-${String(dossier.dossierId).padStart(4, '0')}`;
     dossier.clearedAt = new Date().toISOString();
+    saveStoredDossiers(dossiers);
 
     return HttpResponse.json({
       success: true,
@@ -143,6 +152,7 @@ export const dossierHandlers = [
 
   // POST /api/dossiers/:id/clear (Bí danh tương thích ngược)
   http.post('/api/dossiers/:id/clear', async ({ params, request }) => {
+    const dossiers = getStoredDossiers();
     const dossier = dossiers.find((d) => d.dossierId === Number(params.id));
     if (!dossier) {
       return HttpResponse.json({ success: false, message: 'Dossier not found' }, { status: 404 });
@@ -160,6 +170,7 @@ export const dossierHandlers = [
     dossier.status = 'Cleared';
     dossier.clearanceNumber = body.clearanceNumber || `VET-CERT-${new Date().getFullYear()}-${String(dossier.dossierId).padStart(4, '0')}`;
     dossier.clearedAt = new Date().toISOString();
+    saveStoredDossiers(dossiers);
 
     return HttpResponse.json({
       success: true,
@@ -171,9 +182,11 @@ export const dossierHandlers = [
 
   // POST /api/dossiers/:id/issue
   http.post('/api/dossiers/:id/issue', ({ params }) => {
+    const dossiers = getStoredDossiers();
     const dossier = dossiers.find((d) => d.dossierId === Number(params.id));
     if (dossier) {
       dossier.status = 'Issue';
+      saveStoredDossiers(dossiers);
     }
     return HttpResponse.json({
       success: true,

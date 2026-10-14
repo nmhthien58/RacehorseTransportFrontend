@@ -812,7 +812,7 @@
         "noDocuments": "No documents uploaded yet",
         "approveTitle": "Approve Request & Assign Specialist",
         "approveConfirmText": "You are approving booking #{{code}}",
-        "approveConfirmNote": "Please assign a Transport Specialist to oversee quarantine and transport operations.",
+        "approveConfirmNote": "Upon approval, the request will be automatically dispatched to Transport Specialist to process quarantine digital dossiers (Flow 2) and to Fleet & Route Coordinator to build transit route plans (Flow 3).",
         "selectSpecialist": "Select Transport Specialist",
         "selectSpecialistRequired": "Please select a specialist",
         "selectSpecialistPlaceholder": "-- Select Specialist --",

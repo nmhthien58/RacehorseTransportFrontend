@@ -811,7 +811,7 @@
         "noDocuments": "Chưa có tài liệu đính kèm nào",
         "approveTitle": "Phê duyệt yêu cầu & Phân công chuyên viên",
         "approveConfirmText": "Bạn đang phê duyệt yêu cầu #{{code}}",
-        "approveConfirmNote": "Vui lòng chọn Transport Specialist chịu trách nhiệm giám sát hồ sơ và hành trình này.",
+        "approveConfirmNote": "Sau khi phê duyệt, đơn sẽ được tự động chuyển đến Transport Specialist để thụ lý bộ hồ sơ kiểm dịch xuất cảnh (Flow 2) và Fleet & Route Coordinator để xây dựng kế hoạch lộ trình di chuyển (Flow 3).",
         "selectSpecialist": "Chọn Transport Specialist",
         "selectSpecialistRequired": "Vui lòng chọn một chuyên viên phụ trách",
         "selectSpecialistPlaceholder": "-- Chọn chuyên viên phụ trách --",

@@ -12,6 +12,7 @@ import {
   Space,
   Tag,
   message,
+  notification,
 } from 'antd';
 import {
   MenuFoldOutlined,
@@ -81,9 +82,59 @@ export default function AppHeader({
       setLetters(getStoredRequestLetters());
       if (isAdminOrManager) {
         const letter = e.detail;
-        message.info({
-          content: `📬 Nhận được thư yêu cầu vận chuyển mới: ${letter.bookingCode} từ ${letter.customerName}`,
-          duration: 5,
+        const key = `notif-${letter.bookingId || letter.bookingCode || Date.now()}`;
+        notification.open({
+          key,
+          message: (
+            <span style={{ fontWeight: 800, fontSize: 14.5, color: '#0f172a' }}>
+              📬 Yêu cầu vận chuyển mới: {letter.bookingCode}
+            </span>
+          ),
+          description: (
+            <div style={{ marginTop: 6 }}>
+              <div style={{ fontSize: 13, color: '#334155' }}>
+                Khách hàng: <strong>{letter.customerName || 'Jane Smith'}</strong>
+              </div>
+              <div style={{ fontSize: 12.5, color: '#64748b', marginTop: 4 }}>
+                📍 {letter.pickupAddress} ➔ {letter.dropoffAddress}
+              </div>
+              <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+                🐎 {letter.totalHorses || 1} ngựa ({letter.transportMode || 'Ground'})
+              </div>
+              <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
+                <Button
+                  type="primary"
+                  size="small"
+                  style={{
+                    backgroundColor: '#d97706',
+                    borderColor: '#d97706',
+                    fontWeight: 700,
+                    borderRadius: 6,
+                  }}
+                  onClick={(ev) => {
+                    ev?.stopPropagation?.();
+                    notification.destroy(key);
+                    navigate(`/manager/pending-requests?id=${letter.bookingId}`);
+                  }}
+                >
+                  Xem và Duyệt ngay →
+                </Button>
+              </div>
+            </div>
+          ),
+          duration: 10,
+          placement: 'topRight',
+          style: {
+            cursor: 'pointer',
+            borderRadius: 14,
+            border: '2px solid #fde68a',
+            backgroundColor: '#fffbeb',
+            boxShadow: '0 10px 25px -5px rgba(245, 158, 11, 0.25)',
+          },
+          onClick: () => {
+            notification.destroy(key);
+            navigate(`/manager/pending-requests?id=${letter.bookingId}`);
+          },
         });
       }
     };
@@ -93,7 +144,7 @@ export default function AppHeader({
       window.removeEventListener('letters_updated', handleUpdate);
       window.removeEventListener('request_letter_received', handleNewLetter);
     };
-  }, [isAdminOrManager]);
+  }, [isAdminOrManager, navigate]);
 
   const getProfileRoute = () => {
     if (isAdminOrManager) return ROUTES.MANAGER_PROFILE;

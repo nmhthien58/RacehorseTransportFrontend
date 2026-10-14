@@ -18,19 +18,72 @@ import {
   message,
   Tabs,
   Badge,
+  Flex,
 } from 'antd';
 import {
   HeartOutlined,
   AlertOutlined,
   HistoryOutlined,
   PlusCircleOutlined,
+  CheckCircleOutlined,
 } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
 import { useAuthStore } from '@features/auth/store/authStore';
-import { Tooltip } from 'antd';
 import { useMissionDetail } from '../hooks/useDriverMissions';
 import MissionHeaderCard from '../components/MissionHeaderCard';
 import EmergencyReportModal from '../components/EmergencyReportModal';
+
+// 4 Current Equine Health Status cards (Matching Figma Image 5)
+const HEALTH_STATUS_CARDS = [
+  {
+    key: 'HEALTHY',
+    title: 'HEALTHY',
+    tagColor: 'success',
+    borderColor: '#22C55E',
+    bgColor: '#F0FDF4',
+    iconColor: '#16A34A',
+    description: 'Normal respiration, calm demeanor, alert',
+    stressLevel: 'Calm',
+    physicalCondition: 'Excellent',
+    hydrationStatus: 'Normal',
+  },
+  {
+    key: 'STRESSED',
+    title: 'STRESSED',
+    tagColor: 'warning',
+    borderColor: '#F59E0B',
+    bgColor: '#FFFBEB',
+    iconColor: '#D97706',
+    description: 'Agitated, head tossing, sweating',
+    stressLevel: 'MildStress',
+    physicalCondition: 'NormalFatigue',
+    hydrationStatus: 'Normal',
+  },
+  {
+    key: 'NOT_EATING',
+    title: 'NOT EATING / DEHYDRATED',
+    tagColor: 'orange',
+    borderColor: '#FB923C',
+    bgColor: '#FFF7ED',
+    iconColor: '#EA580C',
+    description: 'Refused feed, skin pinch > 2s',
+    stressLevel: 'MildStress',
+    physicalCondition: 'NormalFatigue',
+    hydrationStatus: 'Refused',
+  },
+  {
+    key: 'CLIMATE_AFFECTED',
+    title: 'CLIMATE AFFECTED / ELEVATED TEMP',
+    tagColor: 'error',
+    borderColor: '#EF4444',
+    bgColor: '#FEF2F2',
+    iconColor: '#DC2626',
+    description: 'Heavy sweating, shivering, rapid breathing',
+    stressLevel: 'Agitated',
+    physicalCondition: 'Injured',
+    hydrationStatus: 'Reduced',
+  },
+];
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -85,14 +138,15 @@ export default function HorseWelfareLogPage() {
 
   const [sosModalOpen, setSosModalOpen] = useState(false);
   const [selectedHorseId, setSelectedHorseId] = useState('ALL');
+  const [selectedHealthStatus, setSelectedHealthStatus] = useState('HEALTHY');
   const [form] = Form.useForm();
 
   const { user } = useAuthStore();
   const userRole = user?.role || user?.Role;
   const isEscort = userRole === 'Escort';
   const isDriver = userRole === 'Driver';
-  // Quyền ghi nhật ký thú y: Escort chuyên trách, Manager hoặc Admin
-  const canLogWelfare = isEscort || userRole === 'Admin' || userRole === 'LogisticsManager' || userRole === 'FleetCoordinator';
+  // Quyền ghi nhật ký thú y: Cả Driver & Escort đều có thể tương tác và tick chọn
+  const canLogWelfare = isEscort || isDriver || userRole === 'Admin' || userRole === 'LogisticsManager' || userRole === 'FleetCoordinator';
 
   const horses = useMemo(() => mission?.horses || [], [mission?.horses]);
   const welfareLogs = useMemo(() => mission?.welfareLogs || [], [mission?.welfareLogs]);
@@ -361,6 +415,87 @@ export default function HorseWelfareLogPage() {
             humidity: 65,
           }}
         >
+          {/* 1. Current Equine Health Status (Matching Figma Image 5) */}
+          <div
+            style={{
+              backgroundColor: '#F8FAFC',
+              border: '1px solid #E2E8F0',
+              borderRadius: 12,
+              padding: '16px 18px',
+              marginBottom: 20,
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#1E293B', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                1. Current Equine Health Status
+              </div>
+              <span style={{ fontSize: 12, color: '#64748B' }}>
+                (Driver & Escort click to select status)
+              </span>
+            </div>
+            <div style={{ fontSize: 12, color: '#64748B', marginBottom: 12 }}>
+              Select the primary physiological status observed during the checkpoint inspection:
+            </div>
+
+            <Row gutter={[12, 12]}>
+              {HEALTH_STATUS_CARDS.map((status) => {
+                const isSelected = selectedHealthStatus === status.key;
+                return (
+                  <Col xs={24} sm={12} key={status.key}>
+                    <div
+                      onClick={() => {
+                        setSelectedHealthStatus(status.key);
+                        form.setFieldsValue({
+                          stressLevel: status.stressLevel,
+                          physicalCondition: status.physicalCondition,
+                          hydrationStatus: status.hydrationStatus,
+                        });
+                        message.success(`Đã chọn trạng thái: ${status.title}`);
+                      }}
+                      style={{
+                        border: `2px solid ${isSelected ? status.borderColor : '#CBD5E1'}`,
+                        backgroundColor: isSelected ? status.bgColor : '#FFFFFF',
+                        borderRadius: 10,
+                        padding: '12px 14px',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                        boxShadow: isSelected ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+                        userSelect: 'none',
+                      }}
+                    >
+                      <Flex justify="space-between" align="center" style={{ marginBottom: 4 }}>
+                        <Tag
+                          color={status.tagColor}
+                          style={{
+                            fontWeight: 800,
+                            fontSize: 12,
+                            borderRadius: 6,
+                            padding: '2px 8px',
+                            margin: 0,
+                          }}
+                        >
+                          {status.title}
+                        </Tag>
+                        {isSelected && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: status.iconColor, fontWeight: 700, fontSize: 12 }}>
+                            <CheckCircleOutlined /> Đang chọn
+                          </div>
+                        )}
+                      </Flex>
+                      <div style={{ fontSize: 12, color: isSelected ? '#1E293B' : '#64748B', marginTop: 4, fontWeight: isSelected ? 600 : 400 }}>
+                        {status.description}
+                      </div>
+                    </div>
+                  </Col>
+                );
+              })}
+            </Row>
+          </div>
+
+          <div style={{ fontSize: 13.5, fontWeight: 800, color: '#1E293B', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 14 }}>
+            2. Clinical Observations & Vitals
+          </div>
+
           <Row gutter={[20, 16]}>
             {/* Chọn ngựa */}
             <Col xs={24} md={8}>
@@ -489,6 +624,7 @@ export default function HorseWelfareLogPage() {
               size="large"
               icon={<HeartOutlined />}
               loading={actionLoading}
+              disabled={!canLogWelfare}
               onClick={handleSaveLog}
               style={{
                 backgroundColor: '#F59E0B',

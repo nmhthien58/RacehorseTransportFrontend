@@ -73,6 +73,14 @@ export default function ArrivalHandoverPage() {
   const [allHorsesHealthy, setAllHorsesHealthy] = useState(true);
   const [allDocsDelivered, setAllDocsDelivered] = useState(true);
   const [equipmentReturned, setEquipmentReturned] = useState(true);
+  const [acceptedHorses, setAcceptedHorses] = useState({});
+
+  const toggleHorseAccepted = (id) => {
+    setAcceptedHorses((prev) => ({
+      ...prev,
+      [id]: prev[id] === false ? true : !prev[id],
+    }));
+  };
 
   const horses = useMemo(() => mission?.horses || [], [mission?.horses]);
   const isCompleted = mission?.overallStatus === 'Completed';
@@ -270,6 +278,61 @@ export default function ArrivalHandoverPage() {
                   Đối chiếu vi mạch quét thực tế và kiểm tra dấu hiệu ngoại thương hoặc suy nhược
                 </Paragraph>
               </div>
+            </div>
+
+            {/* Delivery Confirmation Horse Cards (Matching Figma Image 5) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 18 }}>
+              {(horses.length > 0 ? horses : [
+                { horseId: 1, horseName: 'Midnight Gunner', temp: '37.6°C', weight: '495 kg (Stable)' },
+                { horseId: 2, horseName: 'Royal Duchess', temp: '37.4°C', weight: '488 kg (Stable)' },
+              ]).map((h) => {
+                const isAccepted = acceptedHorses[h.horseId] !== false;
+                return (
+                  <div
+                    key={h.horseId}
+                    style={{
+                      backgroundColor: '#FFFFFF',
+                      border: `1.5px solid ${isAccepted ? '#BBF7D0' : '#FED7AA'}`,
+                      borderRadius: 12,
+                      padding: '14px 18px',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.03)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 8 }}>
+                      <strong style={{ fontSize: 15, color: '#0F172A' }}>
+                        🐴 {h.horseName || h.name}
+                      </strong>
+                      <Space>
+                        <span style={{ fontSize: 12, color: '#64748B' }}>Final Trip Condition:</span>
+                        <Tag color="success" style={{ fontWeight: 800, borderRadius: 4, margin: 0, padding: '2px 8px' }}>
+                          HEALTHY
+                        </Tag>
+                      </Space>
+                    </div>
+
+                    <div style={{ fontSize: 12.5, color: '#475569', marginBottom: 10 }}>
+                      Temperature: <strong>{h.temp || '37.6°C'}</strong> · Weight: <strong>{h.weight || '495 kg (Stable)'}</strong>
+                    </div>
+
+                    <Button
+                      block
+                      type={isAccepted ? 'primary' : 'default'}
+                      icon={isAccepted ? <CheckCircleOutlined /> : undefined}
+                      onClick={() => toggleHorseAccepted(h.horseId)}
+                      style={{
+                        backgroundColor: isAccepted ? '#16A34A' : '#FFFBEB',
+                        borderColor: isAccepted ? '#16A34A' : '#FCD34D',
+                        color: isAccepted ? '#FFFFFF' : '#92400E',
+                        fontWeight: 700,
+                        borderRadius: 8,
+                        height: 38,
+                      }}
+                    >
+                      {isAccepted ? '✓ Post-trip inspection & Vitals accepted' : 'Bấm để chấp thuận kiểm tra thể trạng'}
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
 
             <Table

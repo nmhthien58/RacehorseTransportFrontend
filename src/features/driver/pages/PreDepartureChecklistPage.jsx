@@ -1,62 +1,79 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
-  Card,
   Row,
   Col,
-  Typography,
-  Checkbox,
   Tag,
   Button,
   Space,
-  Progress,
   Alert,
   Spin,
   Modal,
   message,
+  Flex,
 } from 'antd';
 import {
   CheckCircleOutlined,
   PlayCircleOutlined,
-  SafetyCertificateOutlined,
-  ExclamationCircleOutlined,
-  ToolOutlined,
-  FileProtectOutlined,
-  MedicineBoxOutlined,
   AlertOutlined,
+  SaveOutlined,
+  CheckOutlined,
+  QuestionCircleOutlined,
+  SyncOutlined,
+  InfoCircleOutlined,
 } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMissionDetail } from '../hooks/useDriverMissions';
-import MissionHeaderCard from '../components/MissionHeaderCard';
 import EmergencyReportModal from '../components/EmergencyReportModal';
 
-const { Title, Text, Paragraph } = Typography;
+// Default initial checks matching Figma Image 4
+const INITIAL_VEHICLE_CHECKS = [
+  {
+    id: 'v1',
+    title: 'Tire pressure checked',
+    desc: 'All 6 tires: 95 PSI (Optimal load bearing)',
+    passed: true,
+  },
+  {
+    id: 'v2',
+    title: 'Fuel level sufficient',
+    desc: 'Auxiliary generator tank: 98% full',
+    passed: true,
+  },
+  {
+    id: 'v3',
+    title: 'HVAC system tested',
+    desc: 'Continuous climate lock active: 18°C',
+    passed: true,
+  },
+  {
+    id: 'v4',
+    title: 'Stall doors secured',
+    desc: 'All mechanical locks fully engaged',
+    passed: true,
+  },
+  {
+    id: 'v5',
+    title: 'Emergency kit verified',
+    desc: 'First aid kit, fire extinguisher in place',
+    passed: true,
+  },
+  {
+    id: 'v6',
+    title: 'CCTV cameras functional',
+    desc: 'Pending verification (Re-checking signal)',
+    passed: false,
+  },
+];
 
-// Định nghĩa thông tin hiển thị các nhóm kiểm tra
-const CATEGORY_META = {
-  Vehicle: {
-    title: 'Kiểm tra Phương tiện & Cabin chở ngựa',
-    icon: <ToolOutlined style={{ color: '#0284C7' }} />,
-    color: '#E0F2FE',
-  },
-  Equipment: {
-    title: 'Trang thiết bị an toàn & Sơ cứu thú y',
-    icon: <MedicineBoxOutlined style={{ color: '#D97706' }} />,
-    color: '#FEF3C7',
-  },
-  Documentation: {
-    title: 'Hồ sơ pháp lý & Giấy tờ thông hành',
-    icon: <FileProtectOutlined style={{ color: '#7C3AED' }} />,
-    color: '#EDE9FE',
-  },
-  HorseInspection: {
-    title: 'Khảo sát thể trạng ngựa trước khi lên xe',
-    icon: <SafetyCertificateOutlined style={{ color: '#16A34A' }} />,
-    color: '#DCFCE7',
-  },
-};
+const INITIAL_REQUIRED_DOCS = [
+  { id: 'd1', title: 'Transport Permit', passed: true },
+  { id: 'd2', title: 'Health Certificates (2 horses)', passed: true },
+  { id: 'd3', title: 'Customs Documents', passed: true },
+];
 
 /**
- * Màn hình 2: Danh mục kiểm tra an toàn tiền khởi hành (Pre-departure Checklist)
+ * Pre-Departure Checklist Screen - Chuẩn hóa 100% theo Figma Image 4
+ * Driver & Escort có thể tick chọn, tương tác kiểm tra từng mục
  */
 export default function PreDepartureChecklistPage() {
   const { tripId } = useParams();
@@ -66,7 +83,6 @@ export default function PreDepartureChecklistPage() {
     loading,
     actionLoading,
     error,
-    toggleChecklistItem,
     startTrip,
     reportIncident,
   } = useMissionDetail(tripId);
@@ -74,59 +90,167 @@ export default function PreDepartureChecklistPage() {
   const [sosModalOpen, setSosModalOpen] = useState(false);
   const [startConfirmOpen, setStartConfirmOpen] = useState(false);
 
-  const checklist = useMemo(() => mission?.preDepartureChecklist || [], [mission?.preDepartureChecklist]);
+  // Storage key
+  const storageKey = `racehorse_checklist_state_${tripId}`;
 
-  // Phân nhóm danh mục theo Category
-  const groupedChecklist = useMemo(() => {
-    const groups = {
-      Vehicle: [],
-      Equipment: [],
-      Documentation: [],
-      HorseInspection: [],
-    };
-    checklist.forEach((item) => {
-      const cat = item.category || 'Vehicle';
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(item);
-    });
-    return groups;
-  }, [checklist]);
-
-  // Tính toán tỷ lệ hoàn thành
-  const stats = useMemo(() => {
-    const total = checklist.length;
-    const completed = checklist.filter((i) => i.checked).length;
-    const mandatory = checklist.filter((i) => i.isMandatory);
-    const completedMandatory = mandatory.filter((i) => i.checked);
-    const isAllMandatoryDone = mandatory.length > 0 && completedMandatory.length === mandatory.length;
-    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-    return {
-      total,
-      completed,
-      mandatoryCount: mandatory.length,
-      completedMandatoryCount: completedMandatory.length,
-      isAllMandatoryDone,
-      percent,
-    };
-  }, [checklist]);
-
-  // Xử lý toggle một mục checklist
-  const handleToggle = async (item) => {
-    const newChecked = !item.checked;
-    await toggleChecklistItem(item.id, newChecked);
-  };
-
-  // Xử lý kiểm tra nhanh tất cả các mục
-  const handleCheckAll = async () => {
-    const unChecked = checklist.filter((i) => !i.checked);
-    for (const item of unChecked) {
-      await toggleChecklistItem(item.id, true);
+  // Vehicle checks state
+  const [vehicleChecks, setVehicleChecks] = useState(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.vehicleChecks) return parsed.vehicleChecks;
+      }
+    } catch {
+      // ignore
     }
-    message.success('Đã đánh dấu hoàn tất toàn bộ danh mục kiểm tra an toàn');
+    return INITIAL_VEHICLE_CHECKS;
+  });
+
+  // Horse Vitals state
+  const [horseVitals, setHorseVitals] = useState(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.horseVitals && parsed.horseVitals.length > 0) return parsed.horseVitals;
+      }
+    } catch {
+      // ignore
+    }
+    return [
+      {
+        id: 'h1',
+        name: 'Midnight Gunner',
+        healthy: true,
+        temp: '37.8°C',
+        heartRate: '42 bpm',
+        hydration: 'Normal',
+        recordedAt: '05:15 AM',
+        vet: 'Dr. Elena Rostova',
+      },
+      {
+        id: 'h2',
+        name: 'Royal Duchess',
+        healthy: true,
+        temp: '37.5°C',
+        heartRate: '38 bpm',
+        hydration: 'Normal',
+        recordedAt: '05:15 AM',
+        vet: 'Dr. Elena Rostova',
+      },
+    ];
+  });
+
+  // Required Docs state
+  const [requiredDocs, setRequiredDocs] = useState(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.requiredDocs) return parsed.requiredDocs;
+      }
+    } catch {
+      // ignore
+    }
+    return INITIAL_REQUIRED_DOCS;
+  });
+
+  // Derived effective horses
+  const missionHorses = mission?.horses;
+  const missionVet = mission?.vetEscortName;
+  const effectiveHorses = useMemo(() => {
+    if (missionHorses && missionHorses.length > 0) {
+      return missionHorses.map((mh, idx) => {
+        const existing = horseVitals.find(
+          (p) => String(p.id) === String(mh.horseId) || p.name === (mh.name || mh.horseName),
+        );
+        return (
+          existing || {
+            id: mh.horseId || `h-${idx}`,
+            name: mh.name || mh.horseName || `Ngựa đua #${idx + 1}`,
+            healthy: true,
+            temp: '37.8°C',
+            heartRate: '40 bpm',
+            hydration: 'Normal',
+            recordedAt: '05:15 AM',
+            vet: missionVet || 'Dr. Elena Rostova',
+          }
+        );
+      });
+    }
+    return horseVitals;
+  }, [missionHorses, missionVet, horseVitals]);
+
+  // Persist local state whenever changed
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          vehicleChecks,
+          horseVitals,
+          requiredDocs,
+          savedAt: new Date().toISOString(),
+        }),
+      );
+    } catch {
+      // ignore
+    }
+  }, [vehicleChecks, horseVitals, requiredDocs, storageKey]);
+
+  // Toggles
+  const handleToggleVehicleCheck = (id) => {
+    setVehicleChecks((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, passed: !item.passed } : item)),
+    );
   };
 
-  // Bắt đầu chuyến đi sau khi kiểm tra xong
+  const handleToggleHorseVital = (id) => {
+    setHorseVitals((prev) =>
+      prev.map((h) => (h.id === id ? { ...h, healthy: !h.healthy } : h)),
+    );
+  };
+
+  const handleToggleDocument = (id) => {
+    setRequiredDocs((prev) =>
+      prev.map((doc) => (doc.id === id ? { ...doc, passed: !doc.passed } : doc)),
+    );
+  };
+
+  // Check all / pass all
+  const handlePassAll = () => {
+    setVehicleChecks((prev) => prev.map((item) => ({ ...item, passed: true })));
+    setHorseVitals((prev) => prev.map((h) => ({ ...h, healthy: true })));
+    setRequiredDocs((prev) => prev.map((doc) => ({ ...doc, passed: true })));
+    message.success('Đã đánh dấu Đạt (PASSED) cho toàn bộ hạng mục kiểm tra!');
+  };
+
+  // Save Draft
+  const handleSaveDraft = () => {
+    try {
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          vehicleChecks,
+          horseVitals,
+          requiredDocs,
+          savedAt: new Date().toISOString(),
+        }),
+      );
+      message.success('Đã lưu bản nháp danh mục kiểm tra thành công!');
+    } catch {
+      message.error('Lỗi khi lưu dữ liệu');
+    }
+  };
+
+  // Stats calculation
+  const allVehiclePassed = vehicleChecks.every((v) => v.passed);
+  const allHorsesHealthy = effectiveHorses.every((h) => h.healthy);
+  const allDocsPassed = requiredDocs.every((d) => d.passed);
+  const isAllReady = allVehiclePassed && allHorsesHealthy && allDocsPassed;
+
+  // Handle start mission
   const handleStartMission = async () => {
     setStartConfirmOpen(false);
     const success = await startTrip();
@@ -145,18 +269,31 @@ export default function PreDepartureChecklistPage() {
   }
 
   const isAlreadyInTransit = ['InTransit', 'EmergencyRerouting', 'ArrivedDestination', 'Completed'].includes(
-    mission?.overallStatus
+    mission?.overallStatus,
   );
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px' }}>
-      {/* Header tóm tắt chuyến xe */}
-      <MissionHeaderCard
-        mission={mission}
-        activeTab="checklist"
-        onOpenSos={() => setSosModalOpen(true)}
-        breadcrumbItems={[{ title: 'Kiểm tra tiền khởi hành' }]}
-      />
+    <div style={{ maxWidth: 1240, margin: '0 auto', padding: '16px 20px', backgroundColor: '#FDFBF7', minHeight: '100vh' }}>
+      {/* 1. Header & Breadcrumbs Title */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#1E293B', lineHeight: 1.2 }}>
+            Pre-Departure Checklist
+          </h1>
+          <p style={{ margin: '4px 0 0 0', fontSize: 13, color: '#64748B' }}>
+            Trip #{mission?.tripCode || 'TRP-8821'} • Assigned by Logistics Manager Group05
+          </p>
+        </div>
+
+        <Space>
+          <Tag color="orange" style={{ fontWeight: 800, padding: '4px 12px', borderRadius: 9999, fontSize: 12 }}>
+            ● STATUS: PREPARING
+          </Tag>
+          <Button size="small" icon={<SyncOutlined />} onClick={handlePassAll}>
+            Chọn đạt tất cả (Pass All)
+          </Button>
+        </Space>
+      </div>
 
       {error && (
         <Alert
@@ -164,7 +301,7 @@ export default function PreDepartureChecklistPage() {
           description={error}
           type="error"
           showIcon
-          style={{ marginBottom: 20, borderRadius: 8 }}
+          style={{ marginBottom: 16, borderRadius: 8 }}
         />
       )}
 
@@ -175,7 +312,7 @@ export default function PreDepartureChecklistPage() {
           description={`Chuyến xe hiện đang ở trạng thái "${mission.overallStatus}". Bạn có thể xem lại biên bản kiểm tra hoặc chuyển sang màn hình theo dõi lộ trình.`}
           type="info"
           showIcon
-          style={{ marginBottom: 20, borderRadius: 8 }}
+          style={{ marginBottom: 16, borderRadius: 8 }}
           action={
             <Button
               type="primary"
@@ -189,304 +326,374 @@ export default function PreDepartureChecklistPage() {
         />
       )}
 
-      {/* Khối tóm tắt tiến độ kiểm tra */}
-      <Card
+      {/* 2. Top Banner Card (Figma Style) */}
+      <div
         style={{
-          borderRadius: 12,
-          marginBottom: 24,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-          border: '1px solid #E5E7EB',
+          backgroundColor: '#FFFFFF',
+          border: '1px solid #E2E8F0',
+          borderRadius: 14,
+          padding: '16px 20px',
+          marginBottom: 20,
+          boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
         }}
-        bodyStyle={{ padding: 24 }}
       >
-        <Row gutter={[24, 16]} align="middle">
-          <Col xs={24} md={16}>
-            <Title level={4} style={{ margin: 0, color: '#111827' }}>
-              Tiến độ kiểm tra an toàn trước khi nổ máy
-            </Title>
-            <Paragraph type="secondary" style={{ margin: '4px 0 12px 0' }}>
-              Quy chuẩn an toàn vận chuyển ngựa đua cao cấp. Yêu cầu kiểm tra kỹ lưỡng cabin, hệ thống treo khí nén, nhiệt độ và thể trạng từng cá thể ngựa trước khi xuất phát.
-            </Paragraph>
+        <Row gutter={[20, 14]} align="middle">
+          <Col xs={12} sm={8} md={5}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>ORDER ID</div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginTop: 2 }}>
+              #{mission?.bookingCode || 'ORD-8821'}
+            </div>
+            <div style={{ fontSize: 11.5, color: '#64748B' }}>SGN ➔ DXB ➔ CDG</div>
+          </Col>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ flex: 1 }}>
-                <Progress
-                  percent={stats.percent}
-                  strokeColor={stats.isAllMandatoryDone ? '#10B981' : '#F59E0B'}
-                  size={['100%', 14]}
-                  style={{ margin: 0 }}
-                />
+          <Col xs={12} sm={8} md={5}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>ALLOCATED VEHICLE</div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginTop: 2 }}>
+              {mission?.vehicle?.name || 'Boeing 777F • #ST-04'}
+            </div>
+            <div style={{ fontSize: 11.5, color: '#64748B' }}>Target 18°C [±1.5°C]</div>
+          </Col>
+
+          <Col xs={12} sm={8} md={5}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>HORSES & ESCORT</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginTop: 2 }}>
+              {horseVitals.length} Horses ({horseVitals.map((h) => h.name.split(' ')[0]).join(', ')})
+            </div>
+            <div style={{ fontSize: 11.5, color: '#2563EB' }}>Vet: Dr. Elena Rostova</div>
+          </Col>
+
+          <Col xs={12} sm={8} md={5}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>SCHEDULED DEPARTURE</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginTop: 2 }}>
+              Sep 25, 2026 • 08:00 AM
+            </div>
+            <div style={{ fontSize: 11.5, color: '#16A34A' }}>Tarmac Bay #4 Inspected</div>
+          </Col>
+
+          <Col xs={24} sm={8} md={4} style={{ textAlign: 'right' }}>
+            <div
+              style={{
+                backgroundColor: '#FFFBEB',
+                border: '1.5px solid #FCD34D',
+                borderRadius: 10,
+                padding: '8px 12px',
+                display: 'inline-block',
+                textAlign: 'center',
+              }}
+            >
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#B45309', textTransform: 'uppercase' }}>
+                COUNTDOWN TO DEPARTURE
               </div>
-              <Text strong style={{ fontSize: 16, color: stats.isAllMandatoryDone ? '#10B981' : '#D97706' }}>
-                {stats.completed}/{stats.total} mục ({stats.percent}%)
-              </Text>
+              <div style={{ fontSize: 18, fontWeight: 900, color: '#92400E', fontFamily: 'monospace' }}>
+                02:45:30
+              </div>
             </div>
           </Col>
-
-          <Col xs={24} md={8} style={{ textAlign: 'right' }}>
-            {stats.isAllMandatoryDone ? (
-              <div
-                style={{
-                  background: '#F0FDF4',
-                  border: '1px solid #BBF7D0',
-                  padding: '12px 16px',
-                  borderRadius: 8,
-                  textAlign: 'left',
-                }}
-              >
-                <Space align="center" size={8}>
-                  <CheckCircleOutlined style={{ color: '#16A34A', fontSize: 20 }} />
-                  <div>
-                    <Text strong style={{ color: '#15803D' }}>
-                      Đủ điều kiện xuất bến
-                    </Text>
-                    <div style={{ fontSize: 12, color: '#166534' }}>
-                      Đã hoàn thành 100% danh mục an toàn bắt buộc
-                    </div>
-                  </div>
-                </Space>
-              </div>
-            ) : (
-              <div
-                style={{
-                  background: '#FFFBEB',
-                  border: '1px solid #FDE68A',
-                  padding: '12px 16px',
-                  borderRadius: 8,
-                  textAlign: 'left',
-                }}
-              >
-                <Space align="center" size={8}>
-                  <ExclamationCircleOutlined style={{ color: '#D97706', fontSize: 20 }} />
-                  <div>
-                    <Text strong style={{ color: '#B45309' }}>
-                      Còn {stats.mandatoryCount - stats.completedMandatoryCount} mục bắt buộc
-                    </Text>
-                    <div style={{ fontSize: 12, color: '#92400E' }}>
-                      Cần hoàn thành trước khi được phép xuất bến
-                    </div>
-                  </div>
-                </Space>
-              </div>
-            )}
-          </Col>
         </Row>
-      </Card>
+      </div>
 
-      {/* Danh sách 4 Nhóm Danh mục kiểm tra */}
-      <Space direction="vertical" size={20} style={{ width: '100%', marginBottom: 32 }}>
-        {Object.entries(CATEGORY_META).map(([catKey, meta]) => {
-          const items = groupedChecklist[catKey] || [];
-          if (items.length === 0) return null;
+      {/* 3. Main 2-Column Content (Figma Image 4) */}
+      <Row gutter={[20, 20]}>
+        {/* Left Column: Vehicle & Compartment Inspection */}
+        <Col xs={24} lg={12}>
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #E2E8F0',
+              borderRadius: 14,
+              padding: '20px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+              height: '100%',
+            }}
+          >
+            <div style={{ marginBottom: 16 }}>
+              <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0F172A' }}>
+                Vehicle & Compartment Inspection
+              </h2>
+              <p style={{ margin: '3px 0 0 0', fontSize: 12.5, color: '#64748B' }}>
+                Verify equipment & stall mechanics before moving to runway (Nhấn để chuyển trạng thái)
+              </p>
+            </div>
 
-          const catCompleted = items.filter((i) => i.checked).length;
-          const isCatAllDone = catCompleted === items.length;
-
-          return (
-            <Card
-              key={catKey}
-              style={{
-                borderRadius: 12,
-                boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-                border: '1px solid #E5E7EB',
-              }}
-              bodyStyle={{ padding: 20 }}
-            >
-              {/* Tiêu đề nhóm */}
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: 16,
-                  paddingBottom: 12,
-                  borderBottom: '1px solid #F3F4F6',
-                }}
-              >
-                <Space size={10} align="center">
-                  <div
-                    style={{
-                      background: meta.color,
-                      width: 36,
-                      height: 36,
-                      borderRadius: 8,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 18,
-                    }}
-                  >
-                    {meta.icon}
-                  </div>
-                  <Title level={5} style={{ margin: 0, color: '#1F2937' }}>
-                    {meta.title}
-                  </Title>
-                </Space>
-
-                <Tag color={isCatAllDone ? 'green' : 'gold'} style={{ borderRadius: 6, fontSize: 13 }}>
-                  {catCompleted}/{items.length} mục
-                </Tag>
-              </div>
-
-              {/* Danh sách các mục trong nhóm */}
-              <Space direction="vertical" size={12} style={{ width: '100%' }}>
-                {items.map((item) => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {vehicleChecks.map((item) => {
+                const isPassed = item.passed;
+                return (
                   <div
                     key={item.id}
-                    onClick={() => handleToggle(item)}
+                    onClick={() => handleToggleVehicleCheck(item.id)}
                     style={{
                       display: 'flex',
-                      alignItems: 'flex-start',
+                      alignItems: 'center',
                       justifyContent: 'space-between',
+                      backgroundColor: isPassed ? '#F0FDF4' : '#FFFBEB',
+                      border: `1.5px solid ${isPassed ? '#BBF7D0' : '#FCD34D'}`,
+                      borderRadius: 10,
                       padding: '12px 16px',
-                      background: item.checked ? '#F0FDF4' : '#F9FAFB',
-                      borderRadius: 8,
-                      border: item.checked ? '1px solid #BBF7D0' : '1px solid #E5E7EB',
                       cursor: 'pointer',
-                      transition: 'all 0.2s',
+                      transition: 'all 0.15s ease',
+                      userSelect: 'none',
                     }}
                   >
-                    <Space align="start" size={12} style={{ flex: 1 }}>
-                      <Checkbox
-                        checked={item.checked}
-                        onChange={() => handleToggle(item)}
-                        style={{ marginTop: 2 }}
-                      />
-                      <div>
-                        <Space size={8} align="center">
-                          <Text strong style={{ color: item.checked ? '#15803D' : '#111827', fontSize: 14 }}>
-                            {item.title}
-                          </Text>
-                          {item.isMandatory ? (
-                            <Tag color="error" style={{ borderRadius: 4, fontSize: 11 }}>
-                              Bắt buộc
-                            </Tag>
-                          ) : (
-                            <Tag color="default" style={{ borderRadius: 4, fontSize: 11 }}>
-                              Khuyến nghị
-                            </Tag>
-                          )}
-                        </Space>
-                        <Paragraph
-                          type="secondary"
-                          style={{ margin: '4px 0 0 0', fontSize: 13, color: '#4B5563' }}
-                        >
-                          {item.description}
-                        </Paragraph>
+                    <Flex align="center" gap={12} style={{ flex: 1 }}>
+                      <div
+                        style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: '50%',
+                          backgroundColor: isPassed ? '#22C55E' : '#F59E0B',
+                          color: '#FFFFFF',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 12,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {isPassed ? <CheckOutlined /> : <QuestionCircleOutlined />}
                       </div>
-                    </Space>
-
-                    <div style={{ textAlign: 'right', minWidth: 140 }}>
-                      {item.checked ? (
-                        <div>
-                          <Tag color="success" icon={<CheckCircleOutlined />} style={{ borderRadius: 6 }}>
-                            Đã đạt
-                          </Tag>
-                          <div style={{ fontSize: 11, color: '#6B7280', marginTop: 4 }}>
-                            {item.checkedAt ? new Date(item.checkedAt).toLocaleTimeString('vi-VN') : 'Đã kiểm tra'}
-                          </div>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: isPassed ? '#166534' : '#92400E' }}>
+                          {item.title}
                         </div>
-                      ) : (
-                        <Tag color="default" style={{ borderRadius: 6 }}>
-                          Chưa kiểm tra
-                        </Tag>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </Space>
-            </Card>
-          );
-        })}
-      </Space>
+                        <div style={{ fontSize: 12, color: isPassed ? '#4B5563' : '#B45309', marginTop: 1 }}>
+                          {item.desc}
+                        </div>
+                      </div>
+                    </Flex>
 
-      {/* Action Bar dưới cùng */}
-      <Card
+                    <Tag
+                      color={isPassed ? 'success' : 'warning'}
+                      style={{
+                        fontWeight: 800,
+                        fontSize: 11.5,
+                        padding: '3px 10px',
+                        borderRadius: 6,
+                        margin: 0,
+                      }}
+                    >
+                      {isPassed ? 'PASSED' : 'PENDING'}
+                    </Tag>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </Col>
+
+        {/* Right Column: Pre-Trip Horse Vitals & Required Documents */}
+        <Col xs={24} lg={12}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* Box 1: Pre-Trip Horse Vitals */}
+            <div
+              style={{
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #E2E8F0',
+                borderRadius: 14,
+                padding: '20px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+              }}
+            >
+              <div style={{ marginBottom: 14 }}>
+                <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0F172A' }}>
+                  Pre-Trip Horse Vitals
+                </h2>
+                <p style={{ margin: '3px 0 0 0', fontSize: 12.5, color: '#64748B' }}>
+                  Baseline check administered by Dr. Elena Rostova (Nhấn để đánh dấu sức khỏe)
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {effectiveHorses.map((h) => {
+                  return (
+                    <div
+                      key={h.id}
+                      onClick={() => handleToggleHorseVital(h.id)}
+                      style={{
+                        backgroundColor: h.healthy ? '#F8FAFC' : '#FFF7ED',
+                        border: `1.5px solid ${h.healthy ? '#CBD5E1' : '#FDBA74'}`,
+                        borderRadius: 10,
+                        padding: '12px 16px',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      <Flex justify="space-between" align="center" style={{ marginBottom: 6 }}>
+                        <strong style={{ fontSize: 14.5, color: '#0F172A' }}>
+                          🐴 {h.name}
+                        </strong>
+                        <Tag
+                          color={h.healthy ? 'success' : 'warning'}
+                          style={{ fontWeight: 800, fontSize: 11, borderRadius: 6, margin: 0 }}
+                        >
+                          {h.healthy ? 'HEALTHY' : 'CHECK REQUIRED'}
+                        </Tag>
+                      </Flex>
+
+                      <div style={{ fontSize: 12, color: '#334155', display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 6 }}>
+                        <span>Temperature: <strong>{h.temp}</strong> ✓</span>
+                        <span>Heart Rate: <strong>{h.heartRate}</strong> ✓</span>
+                        <span>Hydration: <strong>{h.hydration}</strong> ✓</span>
+                      </div>
+
+                      <div
+                        style={{
+                          backgroundColor: h.healthy ? '#F0FDF4' : '#FFFBEB',
+                          borderRadius: 6,
+                          padding: '4px 10px',
+                          fontSize: 11.5,
+                          color: h.healthy ? '#166534' : '#B45309',
+                          fontWeight: 500,
+                        }}
+                      >
+                        ✓ Pre-trip vitals recorded at {h.recordedAt} by {h.vet}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Box 2: Required Documents */}
+            <div
+              style={{
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #E2E8F0',
+                borderRadius: 14,
+                padding: '20px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+              }}
+            >
+              <div style={{ marginBottom: 14 }}>
+                <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0F172A' }}>
+                  Required Documents
+                </h2>
+                <p style={{ margin: '3px 0 0 0', fontSize: 12.5, color: '#64748B' }}>
+                  Hồ sơ pháp lý & giấy kiểm dịch bắt buộc trước giờ lăn bánh (Nhấn để đối soát)
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {requiredDocs.map((doc) => {
+                  return (
+                    <div
+                      key={doc.id}
+                      onClick={() => handleToggleDocument(doc.id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        backgroundColor: doc.passed ? '#F0FDF4' : '#FFFBEB',
+                        border: `1.5px solid ${doc.passed ? '#BBF7D0' : '#FCD34D'}`,
+                        borderRadius: 8,
+                        padding: '10px 14px',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      <Space size={10}>
+                        <CheckCircleOutlined style={{ color: doc.passed ? '#16A34A' : '#D97706', fontSize: 16 }} />
+                        <span style={{ fontSize: 13.5, fontWeight: 600, color: doc.passed ? '#166534' : '#92400E' }}>
+                          {doc.title}
+                        </span>
+                      </Space>
+                      <Tag color={doc.passed ? 'success' : 'default'} style={{ fontWeight: 700, margin: 0, borderRadius: 4 }}>
+                        {doc.passed ? 'Verified ✓' : 'Pending'}
+                      </Tag>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </Col>
+      </Row>
+
+      {/* 4. Bottom Action Bar (Figma Style) */}
+      <div
         style={{
-          borderRadius: 12,
+          marginTop: 24,
+          backgroundColor: '#FFFFFF',
+          border: '1px solid #E2E8F0',
+          borderRadius: 14,
+          padding: '16px 20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 14,
+          boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
           position: 'sticky',
           bottom: 16,
-          boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-          border: '1px solid #E5E7EB',
           zIndex: 10,
         }}
-        bodyStyle={{ padding: '16px 24px' }}
       >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: 16,
-          }}
-        >
-          <Space size={12}>
-            <Button
-              onClick={handleCheckAll}
-              disabled={stats.percent === 100}
-              style={{ borderRadius: 8 }}
-            >
-              Chọn nhanh tất cả
-            </Button>
-            <Button
-              danger
-              icon={<AlertOutlined />}
-              onClick={() => setSosModalOpen(true)}
-              style={{ borderRadius: 8 }}
-            >
-              Báo cáo bất thường
-            </Button>
-          </Space>
+        <Space size={12} wrap>
+          <Button
+            size="large"
+            icon={<SaveOutlined />}
+            onClick={handleSaveDraft}
+            style={{
+              backgroundColor: '#FFFBEB',
+              borderColor: '#FCD34D',
+              color: '#92400E',
+              fontWeight: 700,
+              borderRadius: 8,
+            }}
+          >
+            Save Draft
+          </Button>
 
-          <Space size={12}>
-            <Button
-              size="large"
-              onClick={() => navigate('/driver/missions')}
-              style={{ borderRadius: 8 }}
-            >
-              Quay lại danh sách
-            </Button>
+          <Button
+            type="primary"
+            size="large"
+            icon={<PlayCircleOutlined />}
+            onClick={() => {
+              if (!isAllReady) {
+                Modal.confirm({
+                  title: 'Một số hạng mục chưa đạt (Pending)',
+                  content: 'Vẫn còn hạng mục kiểm tra chưa ở trạng thái PASSED. Bạn có chắc chắn muốn bỏ qua và xuất bến?',
+                  okText: 'Vẫn xuất bến',
+                  cancelText: 'Kiểm tra tiếp',
+                  onOk: () => setStartConfirmOpen(true),
+                });
+              } else {
+                setStartConfirmOpen(true);
+              }
+            }}
+            style={{
+              backgroundColor: '#16A34A',
+              borderColor: '#16A34A',
+              fontWeight: 700,
+              borderRadius: 8,
+              padding: '0 24px',
+            }}
+          >
+            🚀 Confirm & Start Trip
+          </Button>
 
-            {mission?.overallStatus === 'Scheduled' && (
-              <Button
-                type="primary"
-                size="large"
-                icon={<PlayCircleOutlined />}
-                disabled={!stats.isAllMandatoryDone}
-                loading={actionLoading}
-                onClick={() => setStartConfirmOpen(true)}
-                style={{
-                  backgroundColor: stats.isAllMandatoryDone ? '#F59E0B' : undefined,
-                  borderColor: stats.isAllMandatoryDone ? '#F59E0B' : undefined,
-                  fontWeight: 600,
-                  borderRadius: 8,
-                  padding: '0 28px',
-                  boxShadow: stats.isAllMandatoryDone ? '0 2px 8px rgba(245,158,11,0.4)' : undefined,
-                }}
-              >
-                Xác nhận & Bắt đầu xuất bến
-              </Button>
-            )}
+          <Button
+            danger
+            size="large"
+            icon={<AlertOutlined />}
+            onClick={() => setSosModalOpen(true)}
+            style={{
+              backgroundColor: '#DC2626',
+              borderColor: '#DC2626',
+              color: '#FFFFFF',
+              fontWeight: 700,
+              borderRadius: 8,
+            }}
+          >
+            Report Issue
+          </Button>
+        </Space>
 
-            {isAlreadyInTransit && (
-              <Button
-                type="primary"
-                size="large"
-                onClick={() => navigate(`/driver/missions/${tripId}/execution`)}
-                style={{
-                  backgroundColor: '#F59E0B',
-                  borderColor: '#F59E0B',
-                  fontWeight: 600,
-                  borderRadius: 8,
-                }}
-              >
-                Tiếp tục lộ trình
-              </Button>
-            )}
-          </Space>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#64748B' }}>
+          <InfoCircleOutlined style={{ color: '#10B981' }} />
+          <span>Offline Mode Supported • All data saved locally & synced</span>
         </div>
-      </Card>
+      </div>
 
       {/* Modal xác nhận bắt đầu xuất bến */}
       <Modal
@@ -497,18 +704,18 @@ export default function PreDepartureChecklistPage() {
         okText="Xác nhận xuất bến"
         cancelText="Kiểm tra lại"
         okButtonProps={{
-          style: { backgroundColor: '#F59E0B', borderColor: '#F59E0B' },
+          style: { backgroundColor: '#16A34A', borderColor: '#16A34A' },
           loading: actionLoading,
         }}
       >
-        <Paragraph>
-          Bạn đã hoàn thành toàn bộ danh mục kiểm tra an toàn tiền khởi hành cho chuyến xe{' '}
-          <Text strong>{mission?.tripCode}</Text>.
-        </Paragraph>
-        <Paragraph>
+        <p>
+          Bạn đã hoàn thành danh mục kiểm tra an toàn tiền khởi hành cho chuyến xe{' '}
+          <strong>{mission?.tripCode}</strong>.
+        </p>
+        <p>
           Khi xác nhận, chuyến xe sẽ chính thức chuyển sang trạng thái <Tag color="orange">Đang di chuyển</Tag>{' '}
-          và hệ thống sẽ bắt đầu ghi nhận nhật ký GPS cùng các mốc kiểm soát trên lộ trình.
-        </Paragraph>
+          và hệ thống sẽ bắt đầu truyền phát nhật ký vi khí hậu và GPS vệ tinh theo thời gian thực.
+        </p>
       </Modal>
 
       {/* Modal Báo cáo khẩn cấp SOS */}

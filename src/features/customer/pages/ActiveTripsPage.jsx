@@ -351,32 +351,32 @@ export default function ActiveTripsPage() {
           <div
             style={{
               backgroundColor: '#FFFDF5',
-              border: '2px solid #FDE68A',
-              borderRadius: 16,
-              padding: '16px 20px',
-              marginBottom: 20,
-              boxShadow: '0 4px 12px rgba(245, 158, 11, 0.08)',
+              border: '1.5px solid #FDE68A',
+              borderRadius: 12,
+              padding: '10px 16px',
+              marginBottom: 16,
+              boxShadow: '0 2px 8px rgba(245, 158, 11, 0.06)',
             }}
           >
-            <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
-              <Space size={12} align="center">
+            <Flex justify="space-between" align="center" wrap="wrap" gap={10}>
+              <Space size={10} align="center">
                 <Badge status="processing" color="#10B981" />
                 <div>
-                  <div style={{ fontSize: 12, color: '#92400E', fontWeight: 700, textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: 11, color: '#92400E', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                     ● LIVE TELEMETRY LINKED • 100% SIGNAL INTEGRITY
                   </div>
-                  <strong style={{ fontSize: 16, color: '#0F172A' }}>
+                  <strong style={{ fontSize: 14.5, color: '#0F172A' }}>
                     Chuyến đi: {activeTrip.tripCode} ({activeTrip.bookingCode}) — {activeTrip.origin.split(',')[0]} ➔ {activeTrip.destination.split(',')[0]}
                   </strong>
                 </div>
               </Space>
 
-              <Space size={10} wrap>
-                <span style={{ fontSize: 13, color: '#64748B', fontWeight: 600 }}>Chọn chuyến theo dõi:</span>
+              <Space size={8} wrap>
+                <span style={{ fontSize: 12.5, color: '#64748B', fontWeight: 600 }}>Chọn chuyến theo dõi:</span>
                 <Select
                   value={selectedTripCode}
                   onChange={setSelectedTripCode}
-                  style={{ width: 260 }}
+                  style={{ width: 250 }}
                   size="middle"
                   options={SAMPLE_CUSTOMER_TRIPS.map((t) => ({
                     value: t.tripCode,
@@ -387,41 +387,42 @@ export default function ActiveTripsPage() {
             </Flex>
           </div>
 
-          {/* NỘI DUNG 2 CỘT CHUẨN FIGMA SCREEN D */}
-          <Row gutter={[20, 20]}>
+          {/* NỘI DUNG 2 CỘT CHUẨN GỌN ĐẸP FIGMA */}
+          <Row gutter={[16, 16]}>
             {/* CỘT TRÁI: LỘ TRÌNH, TRẠM KIỂM SOÁT & THÔNG TIN KÍP LÁI */}
             <Col xs={24} lg={13}>
               {/* Thẻ Lộ trình & Các mốc kiểm soát */}
               <Card
                 bordered
                 style={{
-                  borderRadius: 16,
+                  borderRadius: 14,
                   borderColor: '#E2E8F0',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-                  marginBottom: 20,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                  marginBottom: 16,
                 }}
-                styles={{ body: { padding: 22 } }}
+                styles={{ body: { padding: '16px 18px' } }}
               >
-                <Flex justify="space-between" align="center" style={{ marginBottom: 18 }}>
+                <Flex justify="space-between" align="center" style={{ marginBottom: 12 }}>
                   <div>
-                    <Title level={4} style={{ margin: 0, fontWeight: 800, color: '#0F172A' }}>
+                    <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#0F172A' }}>
                       Itinerary & Milestones (Lộ trình & Trạm dừng)
-                    </Title>
-                    <Text style={{ fontSize: 12.5, color: '#64748B' }}>
+                    </h3>
+                    <span style={{ fontSize: 12, color: '#64748B' }}>
                       Cập nhật trạng thái từng trạm theo quy trình kiểm tra thú y quốc tế
-                    </Text>
+                    </span>
                   </div>
                   <Tag
                     color={activeTrip.status === 'InTransit' ? 'orange' : 'green'}
-                    style={{ fontWeight: 800, fontSize: 12, padding: '3px 10px', borderRadius: 9999 }}
+                    style={{ fontWeight: 700, fontSize: 11.5, padding: '2px 8px', borderRadius: 6 }}
                   >
                     {activeTrip.status === 'InTransit' ? '🚚 Đang trên đường' : '✓ Đã hoàn thành'}
                   </Tag>
                 </Flex>
 
-                {/* Timeline trạm kiểm soát */}
+                {/* Timeline trạm kiểm soát gọn gàng */}
                 <Timeline
                   mode="left"
+                  style={{ marginBottom: -8 }}
                   items={activeTrip.checkpoints.map((cp) => {
                     const isDone = cp.status === 'Departed';
                     const isCurrent = cp.status === 'InTransit' || cp.status === 'Arrived';
@@ -431,8 +432,8 @@ export default function ActiveTripsPage() {
                       dot: (
                         <div
                           style={{
-                            width: 26,
-                            height: 26,
+                            width: 22,
+                            height: 22,
                             borderRadius: '50%',
                             backgroundColor: isDone ? '#10B981' : isCurrent ? '#F59E0B' : '#E2E8F0',
                             color: isDone || isCurrent ? '#FFFFFF' : '#64748B',
@@ -440,7 +441,7 @@ export default function ActiveTripsPage() {
                             alignItems: 'center',
                             justifyContent: 'center',
                             fontWeight: 800,
-                            fontSize: 12,
+                            fontSize: 11,
                           }}
                         >
                           {cp.step}
@@ -451,23 +452,28 @@ export default function ActiveTripsPage() {
                           style={{
                             backgroundColor: isCurrent ? '#FFFBEB' : '#F8FAFC',
                             border: isCurrent ? '1.5px solid #F59E0B' : '1px solid #E2E8F0',
-                            borderRadius: 12,
-                            padding: '12px 16px',
-                            marginBottom: 14,
+                            borderRadius: 10,
+                            padding: '8px 12px',
+                            marginBottom: 8,
                           }}
                         >
-                          <Flex justify="space-between" align="center" wrap="wrap" gap={6}>
-                            <strong style={{ fontSize: 14, color: '#0F172A' }}>{cp.name}</strong>
-                            <Tag color={isDone ? 'green' : isCurrent ? 'gold' : 'default'} style={{ fontWeight: 700 }}>
+                          <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
+                            <strong style={{ fontSize: 13.5, color: '#0F172A' }}>{cp.name}</strong>
+                            <Tag
+                              color={isDone ? 'green' : isCurrent ? 'gold' : 'default'}
+                              style={{ fontWeight: 700, fontSize: 11, margin: 0, padding: '1px 8px', borderRadius: 4 }}
+                            >
                               {isDone ? '✓ Đã hoàn thành' : isCurrent ? '● Đang di chuyển tới' : 'Dự kiến'}
                             </Tag>
                           </Flex>
-                          <div style={{ fontSize: 12, color: '#64748B', marginTop: 4 }}>
+                          <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 2 }}>
                             <ClockCircleOutlined style={{ marginRight: 4 }} /> {cp.time}
                           </div>
-                          <div style={{ fontSize: 12, color: '#334155', marginTop: 4 }}>
-                            {cp.notes}
-                          </div>
+                          {cp.notes && (
+                            <div style={{ fontSize: 11.5, color: '#334155', marginTop: 2 }}>
+                              {cp.notes}
+                            </div>
+                          )}
                         </div>
                       ),
                     };
@@ -479,49 +485,49 @@ export default function ActiveTripsPage() {
               <Card
                 bordered
                 style={{
-                  borderRadius: 16,
+                  borderRadius: 14,
                   borderColor: '#E2E8F0',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
                 }}
-                styles={{ body: { padding: 22 } }}
+                styles={{ body: { padding: '16px 18px' } }}
               >
-                <Title level={4} style={{ margin: '0 0 14px', fontWeight: 800, color: '#0F172A' }}>
+                <h3 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 800, color: '#0F172A' }}>
                   👥 Kíp điều khiển & Phương tiện (Crew & Equipment)
-                </Title>
+                </h3>
 
-                <Row gutter={[16, 16]}>
+                <Row gutter={[12, 12]}>
                   {/* Bác sĩ thú y áp tải */}
                   <Col xs={24} sm={12}>
                     <div
                       style={{
                         backgroundColor: '#F0FDF4',
                         border: '1.5px solid #BBF7D0',
-                        borderRadius: 14,
-                        padding: '14px 16px',
+                        borderRadius: 12,
+                        padding: '10px 14px',
                         height: '100%',
                       }}
                     >
-                      <Flex align="center" gap={10} style={{ marginBottom: 8 }}>
-                        <span style={{ fontSize: 28 }}>{activeTrip.escort?.avatar || '👩‍⚕️'}</span>
+                      <Flex align="center" gap={8} style={{ marginBottom: 6 }}>
+                        <span style={{ fontSize: 24 }}>{activeTrip.escort?.avatar || '👩‍⚕️'}</span>
                         <div>
-                          <strong style={{ fontSize: 14, color: '#166534', display: 'block' }}>
+                          <strong style={{ fontSize: 13.5, color: '#166534', display: 'block' }}>
                             {activeTrip.escort?.name || 'Dr. Elena Rostova'}
                           </strong>
-                          <span style={{ fontSize: 11.5, color: '#15803D' }}>
+                          <span style={{ fontSize: 11, color: '#15803D' }}>
                             {activeTrip.escort?.role || 'Bác sĩ Thú y Áp tải FEI'}
                           </span>
                         </div>
                       </Flex>
-                      <div style={{ fontSize: 11.5, color: '#4B5563', marginBottom: 10 }}>
+                      <div style={{ fontSize: 11, color: '#4B5563', marginBottom: 8 }}>
                         Chứng chỉ: <code>{activeTrip.escort?.cert || 'FEI-VET-8841'}</code>
                       </div>
-                      <Space size={8}>
+                      <Space size={6}>
                         <Button
                           size="small"
                           type="primary"
                           icon={<PhoneOutlined />}
                           onClick={() => handleCall(activeTrip.escort?.name, activeTrip.escort?.phone)}
-                          style={{ backgroundColor: '#16A34A', borderColor: '#16A34A', borderRadius: 6, fontWeight: 600 }}
+                          style={{ backgroundColor: '#16A34A', borderColor: '#16A34A', borderRadius: 6, fontWeight: 600, fontSize: 11.5 }}
                         >
                           Gọi điện
                         </Button>
@@ -529,7 +535,7 @@ export default function ActiveTripsPage() {
                           size="small"
                           icon={<MessageOutlined />}
                           onClick={() => handleMessage(activeTrip.escort?.name)}
-                          style={{ borderRadius: 6 }}
+                          style={{ borderRadius: 6, fontSize: 11.5 }}
                         >
                           Nhắn tin
                         </Button>
@@ -543,33 +549,33 @@ export default function ActiveTripsPage() {
                       style={{
                         backgroundColor: '#EFF6FF',
                         border: '1.5px solid #BFDBFE',
-                        borderRadius: 14,
-                        padding: '14px 16px',
+                        borderRadius: 12,
+                        padding: '10px 14px',
                         height: '100%',
                       }}
                     >
-                      <Flex align="center" gap={10} style={{ marginBottom: 8 }}>
-                        <span style={{ fontSize: 28 }}>{activeTrip.driver?.avatar || '👨‍✈️'}</span>
+                      <Flex align="center" gap={8} style={{ marginBottom: 6 }}>
+                        <span style={{ fontSize: 24 }}>{activeTrip.driver?.avatar || '👨‍✈️'}</span>
                         <div>
-                          <strong style={{ fontSize: 14, color: '#1E40AF', display: 'block' }}>
+                          <strong style={{ fontSize: 13.5, color: '#1E40AF', display: 'block' }}>
                             {activeTrip.driver?.name || 'Chuyên cơ Hàng không'}
                           </strong>
-                          <span style={{ fontSize: 11.5, color: '#2563EB' }}>
-                            {activeTrip.driver?.role || 'Vận tải Hàng không IATA'}
+                          <span style={{ fontSize: 11, color: '#2563EB' }}>
+                            {activeTrip.driver?.role || 'Vận tải Chuyên trách FEI'}
                           </span>
                         </div>
                       </Flex>
-                      <div style={{ fontSize: 11.5, color: '#4B5563', marginBottom: 10 }}>
+                      <div style={{ fontSize: 11, color: '#4B5563', marginBottom: 8 }}>
                         Phương tiện: <strong>{activeTrip.vehicleName}</strong>
                       </div>
                       {activeTrip.driver ? (
-                        <Space size={8}>
+                        <Space size={6}>
                           <Button
                             size="small"
                             type="primary"
                             icon={<PhoneOutlined />}
                             onClick={() => handleCall(activeTrip.driver?.name, activeTrip.driver?.phone)}
-                            style={{ backgroundColor: '#2563EB', borderColor: '#2563EB', borderRadius: 6, fontWeight: 600 }}
+                            style={{ backgroundColor: '#2563EB', borderColor: '#2563EB', borderRadius: 6, fontWeight: 600, fontSize: 11.5 }}
                           >
                             Gọi điện
                           </Button>
@@ -577,14 +583,14 @@ export default function ActiveTripsPage() {
                             size="small"
                             icon={<MessageOutlined />}
                             onClick={() => handleMessage(activeTrip.driver?.name)}
-                            style={{ borderRadius: 6 }}
+                            style={{ borderRadius: 6, fontSize: 11.5 }}
                           >
                             Nhắn tin
                           </Button>
                         </Space>
                       ) : (
-                        <Tag color="blue" style={{ fontWeight: 700 }}>
-                          ✈️ Chuyến chuyên cơ do Phi hành đoàn & Vet Escort đảm trách
+                        <Tag color="blue" style={{ fontWeight: 700, fontSize: 11 }}>
+                          ✈️ Chuyên cơ IATA do Phi hành đoàn & Vet Escort đảm trách
                         </Tag>
                       )}
                     </div>
@@ -599,45 +605,45 @@ export default function ActiveTripsPage() {
               <Card
                 bordered
                 style={{
-                  borderRadius: 16,
+                  borderRadius: 14,
                   borderColor: '#E2E8F0',
                   background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
-                  boxShadow: '0 8px 24px rgba(15, 23, 42, 0.25)',
-                  marginBottom: 20,
+                  boxShadow: '0 4px 16px rgba(15, 23, 42, 0.2)',
+                  marginBottom: 16,
                   color: '#FFFFFF',
                 }}
-                styles={{ body: { padding: 22 } }}
+                styles={{ body: { padding: '16px 18px' } }}
               >
-                <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-                  <Space align="center" size={8}>
-                    <ThunderboltOutlined style={{ fontSize: 20, color: '#F59E0B' }} />
-                    <Title level={4} style={{ margin: 0, color: '#FFFFFF', fontWeight: 800 }}>
+                <Flex justify="space-between" align="center" style={{ marginBottom: 12 }}>
+                  <Space align="center" size={6}>
+                    <ThunderboltOutlined style={{ fontSize: 18, color: '#F59E0B' }} />
+                    <h3 style={{ margin: 0, color: '#FFFFFF', fontWeight: 800, fontSize: 15 }}>
                       Cabin Telemetry (Vi khí hậu)
-                    </Title>
+                    </h3>
                   </Space>
-                  <Tag color="cyan" style={{ fontWeight: 800, margin: 0 }}>
+                  <Tag color="cyan" style={{ fontWeight: 800, margin: 0, fontSize: 11, borderRadius: 4 }}>
                     Chuẩn FEI 16-19°C
                   </Tag>
                 </Flex>
 
-                <Row gutter={[14, 14]}>
+                <Row gutter={[10, 10]}>
                   {/* Gauge 1: Nhiệt độ khoang */}
                   <Col span={12}>
                     <div
                       style={{
                         backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                        borderRadius: 12,
-                        padding: '14px 16px',
+                        borderRadius: 10,
+                        padding: '10px 12px',
                         border: '1px solid rgba(255, 255, 255, 0.12)',
                       }}
                     >
-                      <Text style={{ fontSize: 12, color: '#94A3B8', display: 'block' }}>
+                      <span style={{ fontSize: 11, color: '#94A3B8', display: 'block', fontWeight: 600 }}>
                         NHIỆT ĐỘ CABIN
-                      </Text>
-                      <div style={{ fontSize: 26, fontWeight: 800, color: '#10B981', margin: '4px 0' }}>
+                      </span>
+                      <div style={{ fontSize: 22, fontWeight: 800, color: '#10B981', margin: '2px 0' }}>
                         {activeTrip.cabinTemp}°C
                       </div>
-                      <Tag color="success" style={{ fontWeight: 700, margin: 0 }}>
+                      <Tag color="success" style={{ fontWeight: 700, margin: 0, fontSize: 10.5, borderRadius: 4 }}>
                         ✓ Tối ưu (Chuẩn FEI)
                       </Tag>
                     </div>
@@ -648,18 +654,18 @@ export default function ActiveTripsPage() {
                     <div
                       style={{
                         backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                        borderRadius: 12,
-                        padding: '14px 16px',
+                        borderRadius: 10,
+                        padding: '10px 12px',
                         border: '1px solid rgba(255, 255, 255, 0.12)',
                       }}
                     >
-                      <Text style={{ fontSize: 12, color: '#94A3B8', display: 'block' }}>
+                      <span style={{ fontSize: 11, color: '#94A3B8', display: 'block', fontWeight: 600 }}>
                         ĐỘ ẨM KHÔNG KHÍ
-                      </Text>
-                      <div style={{ fontSize: 26, fontWeight: 800, color: '#38BDF8', margin: '4px 0' }}>
+                      </span>
+                      <div style={{ fontSize: 22, fontWeight: 800, color: '#38BDF8', margin: '2px 0' }}>
                         {activeTrip.humidity}%
                       </div>
-                      <Tag color="blue" style={{ fontWeight: 700, margin: 0 }}>
+                      <Tag color="blue" style={{ fontWeight: 700, margin: 0, fontSize: 10.5, borderRadius: 4 }}>
                         Mức lý tưởng
                       </Tag>
                     </div>
@@ -670,18 +676,18 @@ export default function ActiveTripsPage() {
                     <div
                       style={{
                         backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                        borderRadius: 12,
-                        padding: '14px 16px',
+                        borderRadius: 10,
+                        padding: '10px 12px',
                         border: '1px solid rgba(255, 255, 255, 0.12)',
                       }}
                     >
-                      <Text style={{ fontSize: 12, color: '#94A3B8', display: 'block' }}>
+                      <span style={{ fontSize: 11, color: '#94A3B8', display: 'block', fontWeight: 600 }}>
                         LƯU THÔNG KHÍ TƯƠI
-                      </Text>
-                      <div style={{ fontSize: 24, fontWeight: 800, color: '#F59E0B', margin: '4px 0' }}>
+                      </span>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: '#F59E0B', margin: '2px 0' }}>
                         Cấp {activeTrip.ventilationLevel}
                       </div>
-                      <span style={{ fontSize: 11, color: '#94A3B8' }}>Quạt tuần hoàn liên tục</span>
+                      <span style={{ fontSize: 10.5, color: '#94A3B8' }}>Quạt tuần hoàn liên tục</span>
                     </div>
                   </Col>
 
@@ -690,18 +696,18 @@ export default function ActiveTripsPage() {
                     <div
                       style={{
                         backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                        borderRadius: 12,
-                        padding: '14px 16px',
+                        borderRadius: 10,
+                        padding: '10px 12px',
                         border: '1px solid rgba(255, 255, 255, 0.12)',
                       }}
                     >
-                      <Text style={{ fontSize: 12, color: '#94A3B8', display: 'block' }}>
+                      <span style={{ fontSize: 11, color: '#94A3B8', display: 'block', fontWeight: 600 }}>
                         NỒNG ĐỘ CO2
-                      </Text>
-                      <div style={{ fontSize: 24, fontWeight: 800, color: '#A78BFA', margin: '4px 0' }}>
-                        {activeTrip.co2Ppm} <span style={{ fontSize: 14 }}>ppm</span>
+                      </span>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: '#A78BFA', margin: '2px 0' }}>
+                        {activeTrip.co2Ppm} <span style={{ fontSize: 12 }}>ppm</span>
                       </div>
-                      <span style={{ fontSize: 11, color: '#10B981', fontWeight: 600 }}>Trong lành (&lt;800 ppm)</span>
+                      <span style={{ fontSize: 10.5, color: '#10B981', fontWeight: 600 }}>Trong lành (&lt;800 ppm)</span>
                     </div>
                   </Col>
                 </Row>
@@ -711,25 +717,26 @@ export default function ActiveTripsPage() {
               <Card
                 bordered
                 style={{
-                  borderRadius: 16,
+                  borderRadius: 14,
                   borderColor: '#E2E8F0',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
                 }}
-                styles={{ body: { padding: 22 } }}
+                styles={{ body: { padding: '16px 18px' } }}
               >
-                <Flex justify="space-between" align="center" wrap="wrap" gap={8} style={{ marginBottom: 14 }}>
+                <Flex justify="space-between" align="center" wrap="wrap" gap={6} style={{ marginBottom: 12 }}>
                   <div>
-                    <Title level={4} style={{ margin: 0, fontWeight: 800, color: '#0F172A' }}>
+                    <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#0F172A' }}>
                       🩺 Equine Health Vitals (Sinh trắc học)
-                    </Title>
-                    <Text style={{ fontSize: 12.5, color: '#64748B' }}>
+                    </h3>
+                    <span style={{ fontSize: 11.5, color: '#64748B' }}>
                       Theo dõi cá thể hóa cho từng ngựa trên chuyến
-                    </Text>
+                    </span>
                   </div>
 
                   {/* Segment chọn ngựa */}
                   {activeTrip.horses?.length > 1 && (
                     <Segmented
+                      size="small"
                       value={effectiveHorseId}
                       onChange={setSelectedHorseId}
                       options={activeTrip.horses.map((h) => ({
@@ -744,92 +751,92 @@ export default function ActiveTripsPage() {
                 <div
                   style={{
                     backgroundColor: '#F8FAFC',
-                    borderRadius: 14,
-                    padding: '14px 18px',
+                    borderRadius: 10,
+                    padding: '8px 12px',
                     border: '1px solid #E2E8F0',
-                    marginBottom: 16,
+                    marginBottom: 12,
                   }}
                 >
                   <Flex justify="space-between" align="center">
                     <div>
-                      <strong style={{ fontSize: 16, color: '#0F172A' }}>🐴 {activeHorse.name}</strong>
-                      <span style={{ fontSize: 12.5, color: '#64748B', display: 'block' }}>
+                      <strong style={{ fontSize: 14, color: '#0F172A' }}>🐴 {activeHorse.name}</strong>
+                      <span style={{ fontSize: 11.5, color: '#64748B', display: 'block' }}>
                         {activeHorse.breed} • {activeHorse.gender}
                       </span>
                     </div>
-                    <Tag color="green" style={{ fontWeight: 800, padding: '3px 10px', borderRadius: 9999 }}>
+                    <Tag color="green" style={{ fontWeight: 700, padding: '2px 8px', borderRadius: 6, fontSize: 11 }}>
                       ✓ Sức khỏe Tối ưu
                     </Tag>
                   </Flex>
                 </div>
 
-                {/* 4 chỉ số sinh trắc học */}
-                <Row gutter={[12, 12]}>
+                {/* 4 chỉ số sinh trắc học gọn gàng */}
+                <Row gutter={[8, 8]}>
                   {/* Nhịp tim */}
                   <Col span={12}>
-                    <div style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 12, padding: 12 }}>
-                      <Flex align="center" gap={6}>
-                        <HeartOutlined style={{ color: '#DC2626' }} />
-                        <span style={{ fontSize: 12, color: '#991B1B', fontWeight: 700 }}>NHỊP TIM (RESTING)</span>
+                    <div style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '8px 10px' }}>
+                      <Flex align="center" gap={4}>
+                        <HeartOutlined style={{ color: '#DC2626', fontSize: 12 }} />
+                        <span style={{ fontSize: 11, color: '#991B1B', fontWeight: 700 }}>NHỊP TIM (RESTING)</span>
                       </Flex>
-                      <div style={{ fontSize: 24, fontWeight: 800, color: '#991B1B', margin: '4px 0' }}>
-                        {activeHorse.heartRate} <span style={{ fontSize: 13, fontWeight: 600 }}>BPM</span>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: '#991B1B', margin: '2px 0' }}>
+                        {activeHorse.heartRate} <span style={{ fontSize: 12, fontWeight: 600 }}>BPM</span>
                       </div>
-                      <span style={{ fontSize: 11, color: '#B91C1C' }}>Chuẩn nghỉ: 28-44 BPM</span>
+                      <span style={{ fontSize: 10.5, color: '#B91C1C' }}>Chuẩn nghỉ: 28-44 BPM</span>
                     </div>
                   </Col>
 
                   {/* Thân nhiệt */}
                   <Col span={12}>
-                    <div style={{ backgroundColor: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 12, padding: 12 }}>
-                      <Flex align="center" gap={6}>
-                        <ThunderboltOutlined style={{ color: '#D97706' }} />
-                        <span style={{ fontSize: 12, color: '#92400E', fontWeight: 700 }}>THÂN NHIỆT</span>
+                    <div style={{ backgroundColor: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 10, padding: '8px 10px' }}>
+                      <Flex align="center" gap={4}>
+                        <ThunderboltOutlined style={{ color: '#D97706', fontSize: 12 }} />
+                        <span style={{ fontSize: 11, color: '#92400E', fontWeight: 700 }}>THÂN NHIỆT</span>
                       </Flex>
-                      <div style={{ fontSize: 24, fontWeight: 800, color: '#92400E', margin: '4px 0' }}>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: '#92400E', margin: '2px 0' }}>
                         {activeHorse.bodyTemp}°C
                       </div>
-                      <span style={{ fontSize: 11, color: '#B45309' }}>Ngưỡng sinh lý: 37.2-38.3°C</span>
+                      <span style={{ fontSize: 10.5, color: '#B45309' }}>Ngưỡng: 37.2-38.3°C</span>
                     </div>
                   </Col>
 
                   {/* Mức độ stress */}
                   <Col span={12}>
-                    <div style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 12, padding: 12 }}>
-                      <span style={{ fontSize: 12, color: '#166534', fontWeight: 700 }}>MỨC ĐỘ STRESS</span>
-                      <div style={{ fontSize: 20, fontWeight: 800, color: '#166534', margin: '6px 0 2px' }}>
+                    <div style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '8px 10px' }}>
+                      <span style={{ fontSize: 11, color: '#166534', fontWeight: 700 }}>MỨC ĐỘ STRESS</span>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: '#166534', margin: '4px 0 2px' }}>
                         {activeHorse.stressText}
                       </div>
-                      <span style={{ fontSize: 11, color: '#15803D' }}>Cảm biến tai & hành vi</span>
+                      <span style={{ fontSize: 10.5, color: '#15803D' }}>Cảm biến tai & hành vi</span>
                     </div>
                   </Col>
 
                   {/* Bù nước */}
                   <Col span={12}>
-                    <div style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 12, padding: 12 }}>
-                      <span style={{ fontSize: 12, color: '#1E40AF', fontWeight: 700 }}>LƯỢNG NƯỚC UỐNG</span>
-                      <div style={{ fontSize: 20, fontWeight: 800, color: '#1E40AF', margin: '6px 0 2px' }}>
+                    <div style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10, padding: '8px 10px' }}>
+                      <span style={{ fontSize: 11, color: '#1E40AF', fontWeight: 700 }}>LƯỢNG NƯỚC UỐNG</span>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: '#1E40AF', margin: '4px 0 2px' }}>
                         {activeHorse.waterIntake}
                       </div>
-                      <span style={{ fontSize: 11, color: '#2563EB' }}>Đàn hồi da: &lt; 2 giây</span>
+                      <span style={{ fontSize: 10.5, color: '#2563EB' }}>Đàn hồi da: &lt; 2 giây</span>
                     </div>
                   </Col>
                 </Row>
 
-                {/* Nhật ký bác sĩ thú y ghi nhận */}
+                {/* Ghi nhận bác sĩ thú y */}
                 <div
                   style={{
-                    marginTop: 16,
-                    padding: '12px 14px',
+                    marginTop: 12,
+                    padding: '8px 12px',
                     backgroundColor: '#F1F5F9',
-                    borderRadius: 10,
+                    borderRadius: 8,
                     border: '1px dashed #CBD5E1',
                   }}
                 >
-                  <strong style={{ fontSize: 12.5, color: '#0F172A', display: 'block', marginBottom: 4 }}>
+                  <strong style={{ fontSize: 11.5, color: '#0F172A', display: 'block', marginBottom: 2 }}>
                     📝 Ghi nhận mới nhất từ Bác sĩ Thú y Áp tải:
                   </strong>
-                  <Paragraph style={{ margin: 0, fontSize: 12, color: '#475569', fontStyle: 'italic', lineHeight: 1.45 }}>
+                  <Paragraph style={{ margin: 0, fontSize: 11.5, color: '#475569', fontStyle: 'italic', lineHeight: 1.4 }}>
                     "{activeHorse.vetNotes}"
                   </Paragraph>
                 </div>

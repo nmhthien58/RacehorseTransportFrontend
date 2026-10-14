@@ -19,6 +19,7 @@ import {
   Tooltip,
   DatePicker,
   Dropdown,
+  Alert,
 } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@routes/routes';
@@ -33,6 +34,7 @@ import {
   PrinterOutlined,
   UploadOutlined,
   DeleteOutlined,
+  EditOutlined,
   FileTextOutlined,
   SafetyCertificateOutlined,
   ClockCircleOutlined,
@@ -58,6 +60,7 @@ import {
 import {
   getStoredVetRecords,
   addStoredVetRecord,
+  updateStoredVetRecord,
   deleteStoredVetRecord,
   getStoredReminders,
   addStoredReminder,
@@ -183,6 +186,58 @@ const TEMPLATE_MENU_ITEMS = [
   },
 ];
 
+// Thời hạn hiệu lực chuẩn của từng loại kiểm tra y tế / thú y (Requirement 4)
+const RECORD_TYPE_VALIDITY_DAYS = {
+  'Tiêm phòng Vaccine (Vaccinations / Equine Influenza)': 180, // 6 tháng theo chuẩn FEI
+  'Chứng nhận kiểm dịch thú y xuất khẩu (Health Certificate / CVI)': 30, // 30 ngày
+  'Xét nghiệm máu Coggins EIA (Coggins / Equine Infectious Anemia PCR)': 180, // 6 tháng
+  'Tẩy giun & Phòng ký sinh trùng (Deworming & Parasite Control)': 90, // 3 tháng
+  'Khám nha khoa & Chăm sóc răng miệng (Dental Examination & Floating)': 365, // 1 năm
+  'Chăm sóc móng guốc & Đóng móng (Farrier & Hoof Balance)': 45, // 45 ngày
+  'Khám lâm sàng & Sức khỏe tổng quát (Wellness & Clinical Exam)': 30, // 30 ngày
+  'Hồ sơ điều trị thú y / Khác (General Medical Treatment / Other)': 90,
+};
+
+// Các mục kiểm tra y tế bắt buộc cho xuất hành quốc tế
+const MANDATORY_TRANSPORT_CHECKS = [
+  {
+    key: 'CVI',
+    name: 'Chứng nhận kiểm dịch thú y xuất khẩu (CVI)',
+    recordType: 'Chứng nhận kiểm dịch thú y xuất khẩu (Health Certificate / CVI)',
+    validityDays: 30,
+    required: true,
+  },
+  {
+    key: 'COGGINS',
+    name: 'Xét nghiệm máu Coggins EIA (PCR Âm tính)',
+    recordType: 'Xét nghiệm máu Coggins EIA (Coggins / Equine Infectious Anemia PCR)',
+    validityDays: 180,
+    required: true,
+  },
+  {
+    key: 'VACCINE',
+    name: 'Tiêm phòng Vaccine Cúm Ngựa (Equine Influenza)',
+    recordType: 'Tiêm phòng Vaccine (Vaccinations / Equine Influenza)',
+    validityDays: 180,
+    required: true,
+  },
+  {
+    key: 'DEWORMING',
+    name: 'Sổ theo dõi tẩy giun & Ký sinh trùng',
+    recordType: 'Tẩy giun & Phòng ký sinh trùng (Deworming & Parasite Control)',
+    validityDays: 90,
+    required: false,
+  },
+  {
+    key: 'WELLNESS',
+    name: 'Biên bản khám lâm sàng thể lực (Fit-to-Fly)',
+    recordType: 'Khám lâm sàng & Sức khỏe tổng quát (Wellness & Clinical Exam)',
+    validityDays: 30,
+    required: true,
+  },
+];
+
+
 
 /**
  * Ánh xạ loại hồ sơ thú y sang mã biểu mẫu chuẩn PDF quốc tế
@@ -258,6 +313,7 @@ export default function VetRecordsPage() {
   const [reminderForm] = Form.useForm();
   const [attachmentList, setAttachmentList] = useState([]);
   const [selectedRecordType, setSelectedRecordType] = useState(RECORD_TYPE_OPTIONS[0].value);
+  const [editingRecord, setEditingRecord] = useState(null);
   const [templateModal, setTemplateModal] = useState({
     open: false,
     docType: 'HEALTH_CERT',
@@ -374,6 +430,76 @@ export default function VetRecordsPage() {
     });
   }, [reminders, currentHorse]);
 
+  // Đánh giá thời hạn kiểm tra y tế của ngựa hiện tại (Requirement 4)
+  const horseCheckStatus = useMemo(() => {
+    const today = dayjs();
+    return MANDATORY_TRANSPORT_CHECKS.map((check) => {
+      const matchedRecords = horseRecords.filter((r) => {
+        const typeStr = (r.recordType || '').toLowerCase();
+        const checkTypeStr = check.recordType.toLowerCase();
+        return (
+          typeStr.includes(check.key.toLowerCase()) ||
+          typeStr.includes(checkTypeStr) ||
+          (check.key === 'CVI' && (typeStr.includes('cvi') || typeStr.includes('kiểm dịch'))) ||
+          (check.key === 'COGGINS' && (typeStr.includes('coggins') || typeStr.includes('eia') || typeStr.includes('máu'))) ||
+          (check.key === 'VACCINE' && (typeStr.includes('vaccin') || typeStr.includes('tiêm'))) ||
+          (check.key === 'DEWORMING' && (typeStr.includes('deworm') || typeStr.includes('tẩy giun'))) ||
+          (check.key === 'WELLNESS' && (typeStr.includes('well') || typeStr.includes('lâm sàng') || typeStr.includes('fit')))
+        );
+      });
+
+      matchedRecords.sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
+      const latest = matchedRecords[0];
+
+      if (!latest) {
+        return {
+          ...check,
+          status: 'MISSING',
+          message: 'Chưa có hồ sơ kiểm tra này. Bắt buộc nộp bổ sung!',
+          record: null,
+          expirationDate: null,
+        };
+      }
+
+      let isExpired = false;
+      let expDateStr = latest.expirationDate;
+      if (expDateStr) {
+        isExpired = dayjs(expDateStr).isBefore(today, 'day');
+      } else if (latest.date) {
+        const autoExp = dayjs(latest.date).add(check.validityDays, 'day');
+        expDateStr = autoExp.format('YYYY-MM-DD');
+        isExpired = autoExp.isBefore(today, 'day');
+      }
+
+      if (isExpired) {
+        return {
+          ...check,
+          status: 'EXPIRED',
+          message: `Đã hết hạn vào ngày ${dayjs(expDateStr).format('DD/MM/YYYY')}. Bắt buộc nộp hồ sơ mới!`,
+          record: latest,
+          expirationDate: expDateStr,
+        };
+      }
+
+      return {
+        ...check,
+        status: 'VALID',
+        message: `Còn hiệu lực đến ngày ${dayjs(expDateStr).format('DD/MM/YYYY')} (Miễn nộp lại)`,
+        record: latest,
+        expirationDate: expDateStr,
+      };
+    });
+  }, [horseRecords]);
+
+  const expiredOrMissingChecks = useMemo(() => {
+    return horseCheckStatus.filter((c) => c.status === 'EXPIRED' || c.status === 'MISSING');
+  }, [horseCheckStatus]);
+
+  const validChecks = useMemo(() => {
+    return horseCheckStatus.filter((c) => c.status === 'VALID');
+  }, [horseCheckStatus]);
+
+
   // Markings derived per selected horse
   const markings = useMemo(() => {
     // Reference storageVersion to trigger re-computation when saved
@@ -436,11 +562,12 @@ export default function VetRecordsPage() {
   };
 
   // Open Add Vet Record Modal cleanly
-  const handleOpenAddRecordModal = () => {
+  const handleOpenAddRecordModal = (preselectedType) => {
+    setEditingRecord(null);
     recordForm.resetFields();
     setAttachmentList([]);
-    let defaultType = RECORD_TYPE_OPTIONS[0].value;
-    if (recordCategory && recordCategory !== 'All') {
+    let defaultType = preselectedType || RECORD_TYPE_OPTIONS[0].value;
+    if (!preselectedType && recordCategory && recordCategory !== 'All') {
       const matched = RECORD_TYPE_OPTIONS.find((opt) => {
         const optStr = opt.value.toLowerCase();
         const catStr = recordCategory.toLowerCase();
@@ -455,12 +582,16 @@ export default function VetRecordsPage() {
       if (matched) defaultType = matched.value;
     }
     const cleanSuggestedTitle = defaultType.replace(/\(.*?\)/g, '').trim();
+    const validityDays = RECORD_TYPE_VALIDITY_DAYS[defaultType] || 90;
+    const today = dayjs();
+    const suggestedExp = today.add(validityDays, 'day');
+
     recordForm.setFieldsValue({
       recordType: defaultType,
       title: cleanSuggestedTitle,
-      date: dayjs(),
-      expirationDate: null,
-      nextDueDate: null,
+      date: today,
+      expirationDate: suggestedExp,
+      nextDueDate: suggestedExp,
       providerName: '',
       providerContact: '',
       lotNumber: '',
@@ -473,7 +604,34 @@ export default function VetRecordsPage() {
     setIsRecordModalOpen(true);
   };
 
-  // Add Vet Record handler
+  // Open Edit Vet Record Modal (Requirement 2)
+  const handleOpenEditRecordModal = (rec) => {
+    setEditingRecord(rec);
+    const mappedAttachments = (rec.attachments || []).map((att, idx) => ({
+      uid: `att-${idx}`,
+      name: typeof att === 'string' ? att : att.name,
+      status: 'done',
+    }));
+    setAttachmentList(mappedAttachments);
+    setSelectedRecordType(rec.recordType || RECORD_TYPE_OPTIONS[0].value);
+    recordForm.setFieldsValue({
+      recordType: rec.recordType || RECORD_TYPE_OPTIONS[0].value,
+      title: rec.title,
+      date: rec.date ? dayjs(rec.date) : dayjs(),
+      expirationDate: rec.expirationDate ? dayjs(rec.expirationDate) : null,
+      nextDueDate: rec.nextDueDate ? dayjs(rec.nextDueDate) : null,
+      providerName: rec.providerName || '',
+      providerContact: rec.providerContact || '',
+      lotNumber: rec.lotNumber || '',
+      resultFinding: rec.resultFinding || '',
+      accessionNumber: rec.accessionNumber || '',
+      issuingState: rec.issuingState || '',
+      notes: rec.notes || '',
+    });
+    setIsRecordModalOpen(true);
+  };
+
+  // Add or Edit Vet Record handler
   const handleAddRecord = (values) => {
     const rawTitle = (values.title || '').trim();
     if (!rawTitle) {
@@ -482,7 +640,7 @@ export default function VetRecordsPage() {
     }
     const trimmedTitle = rawTitle.toLowerCase();
     const isDuplicateTitle = horseRecords.some(
-      (r) => (r.title || '').trim().toLowerCase() === trimmedTitle,
+      (r) => (!editingRecord || r.id !== editingRecord.id) && (r.title || '').trim().toLowerCase() === trimmedTitle,
     );
     if (isDuplicateTitle) {
       message.error(
@@ -492,7 +650,9 @@ export default function VetRecordsPage() {
     }
 
     // Check duplicate attachment file names for this horse
-    const existingFileNames = horseRecords.flatMap((r) => r.attachments || []);
+    const existingFileNames = horseRecords
+      .filter((r) => !editingRecord || r.id !== editingRecord.id)
+      .flatMap((r) => r.attachments || []);
     const duplicateAttachment = attachmentList.find((f) => existingFileNames.includes(f.name));
     if (duplicateAttachment) {
       message.error(
@@ -526,6 +686,14 @@ export default function VetRecordsPage() {
       }
     }
 
+    // Ensure there is always a PDF attachment (Requirement 2)
+    let finalAttachments = attachmentList.map((f) => f.name || f);
+    if (finalAttachments.length === 0) {
+      const recType = values.recordType || selectedRecordType || 'Wellness Exam';
+      const mappedDoc = mapRecordTypeToDocType(recType);
+      finalAttachments = [`Mẫu_Chuẩn_${mappedDoc}.pdf`];
+    }
+
     const recordPayload = {
       horseId: currentHorse.HorseID,
       horseName: currentHorse.Name,
@@ -541,15 +709,22 @@ export default function VetRecordsPage() {
       accessionNumber: (values.accessionNumber || '').trim(),
       issuingState: (values.issuingState || '').trim(),
       notes: (values.notes || '').trim(),
-      attachments: attachmentList.map((f) => f.name),
+      attachments: finalAttachments,
       status: calcStatus,
     };
 
-    addStoredVetRecord(recordPayload);
+    if (editingRecord) {
+      updateStoredVetRecord(editingRecord.id, recordPayload);
+      message.success('Hồ sơ thú y đã được cập nhật thành công!');
+    } else {
+      addStoredVetRecord(recordPayload);
+      message.success('Hồ sơ thú y đã được thêm thành công!');
+    }
+
     setIsRecordModalOpen(false);
+    setEditingRecord(null);
     recordForm.resetFields();
     setAttachmentList([]);
-    message.success('Hồ sơ thú y đã được thêm thành công!');
   };
 
   // Delete Record handler
@@ -937,6 +1112,112 @@ export default function VetRecordsPage() {
             </Space>
           </div>
 
+          {/* Validity & Expiration Warning Banner (Requirement 4) */}
+          <div style={{ marginBottom: 16 }}>
+            {expiredOrMissingChecks.length > 0 && (
+              <Alert
+                type="warning"
+                showIcon
+                style={{
+                  borderRadius: 10,
+                  border: '1px solid #FCD34D',
+                  backgroundColor: '#FFFBEB',
+                  marginBottom: 12,
+                }}
+                message={
+                  <span style={{ fontWeight: 700, color: '#92400E', fontSize: 14 }}>
+                    ⚠️ Cảnh báo kiểm tra y tế & kiểm dịch vận chuyển: Ngựa &ldquo;{currentHorse.Name || 'Ngựa đua'}&rdquo; có {expiredOrMissingChecks.length} mục kiểm tra cần nộp hoặc đã hết hạn hiệu lực
+                  </span>
+                }
+                description={
+                  <div style={{ marginTop: 8 }}>
+                    <div style={{ fontSize: 13, color: '#78350F', marginBottom: 8 }}>
+                      Theo quy định IATA / FEI, các mục y tế sau bắt buộc phải còn hạn hiệu lực trước ngày khởi hành. Vui lòng nộp hoặc gia hạn các mục dưới đây:
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {expiredOrMissingChecks.map((check) => (
+                        <div
+                          key={check.key}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            backgroundColor: '#FFFFFF',
+                            border: '1px solid #FED7AA',
+                            padding: '8px 14px',
+                            borderRadius: 8,
+                            flexWrap: 'wrap',
+                            gap: 8,
+                          }}
+                        >
+                          <Space size={8}>
+                            <Tag color={check.status === 'EXPIRED' ? 'error' : 'orange'} style={{ fontWeight: 700, borderRadius: 6 }}>
+                              {check.status === 'EXPIRED' ? '⚠️ Đã hết hạn' : '❗ Chưa có hồ sơ'}
+                            </Tag>
+                            <span style={{ fontWeight: 600, color: '#1E293B', fontSize: 13.5 }}>
+                              {check.name}
+                            </span>
+                            <span style={{ fontSize: 12, color: '#64748B' }}>
+                              ({check.message})
+                            </span>
+                          </Space>
+                          <Button
+                            type="primary"
+                            size="small"
+                            icon={<PlusOutlined />}
+                            onClick={() => handleOpenAddRecordModal(check.recordType)}
+                            style={{
+                              backgroundColor: '#F59E0B',
+                              borderColor: '#F59E0B',
+                              fontWeight: 600,
+                              borderRadius: 6,
+                            }}
+                          >
+                            + Nộp / Cập nhật ngay
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                }
+              />
+            )}
+
+            {validChecks.length > 0 && (
+              <div
+                style={{
+                  backgroundColor: '#F0FDF4',
+                  border: '1px solid #BBF7D0',
+                  borderRadius: 10,
+                  padding: '10px 16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: 10,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <CheckCircleOutlined style={{ color: '#16A34A', fontSize: 16 }} />
+                  <span style={{ fontSize: 13, color: '#166534', fontWeight: 600 }}>
+                    Các mục kiểm tra còn thời hạn hiệu lực (Được miễn nộp lại):
+                  </span>
+                </div>
+                <Space wrap size={6}>
+                  {validChecks.map((v) => (
+                    <Tag
+                      key={v.key}
+                      color="success"
+                      style={{ borderRadius: 6, fontSize: 12, fontWeight: 600, padding: '2px 8px' }}
+                    >
+                      ✓ {v.name}: Hạn đến {v.expirationDate ? dayjs(v.expirationDate).format('DD/MM/YYYY') : 'Hợp lệ'}
+                    </Tag>
+                  ))}
+                </Space>
+              </div>
+            )}
+          </div>
+
           {/* Records List or Empty State */}
           {filteredRecords.length === 0 ? (
             <Card
@@ -1024,12 +1305,7 @@ export default function VetRecordsPage() {
                         </p>
                       )}
 
-                      {/* Kết quả / Đánh giá */}
-                      {r.resultFinding && (
-                        <p style={{ margin: '3px 0', fontSize: 13, color: '#059669' }}>
-                          <strong style={{ color: '#047857' }}>Kết quả / Đánh giá:</strong> {r.resultFinding}
-                        </p>
-                      )}
+                      {/* User Request 3: Bỏ Kết quả / Đánh giá khỏi card */}
 
                       {/* Số lô / Mã lưu trữ / Cơ quan cấp */}
                       {(r.lotNumber || r.accessionNumber || r.issuingState) && (
@@ -1047,18 +1323,56 @@ export default function VetRecordsPage() {
                         </p>
                       )}
 
-                      {/* Tệp đính kèm */}
-                      {r.attachments && r.attachments.length > 0 && (
-                        <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                          {r.attachments.map((att, idx) => (
-                            <Tag key={idx} icon={<FilePdfOutlined />} color="default" style={{ borderRadius: 6, fontSize: 12 }}>
-                              {att}
-                            </Tag>
-                          ))}
-                        </div>
-                      )}
+                      {/* Tệp đính kèm PDF (User Request 2) */}
+                      {(() => {
+                        const atts = (r.attachments && r.attachments.length > 0)
+                          ? r.attachments
+                          : [`Hồ_sơ_${mapRecordTypeToDocType(r.recordType || r.title)}.pdf`];
+                        return (
+                          <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            {atts.map((att, idx) => (
+                              <Tag
+                                key={idx}
+                                icon={<FilePdfOutlined />}
+                                color="processing"
+                                style={{
+                                  borderRadius: 6,
+                                  fontSize: 12,
+                                  cursor: 'pointer',
+                                  padding: '2px 8px',
+                                  fontWeight: 500,
+                                }}
+                                onClick={() => {
+                                  const mappedDocType = mapRecordTypeToDocType(r.recordType || r.title);
+                                  setTemplateModal({
+                                    open: true,
+                                    docType: mappedDocType,
+                                    title: typeof att === 'string' ? att : `Hồ sơ PDF: ${r.title}`,
+                                  });
+                                }}
+                              >
+                                {typeof att === 'string' ? att : att.name} <EyeOutlined style={{ marginLeft: 4 }} />
+                              </Tag>
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </div>
                     <Space>
+                      <Button
+                        size="small"
+                        icon={<EditOutlined />}
+                        onClick={() => handleOpenEditRecordModal(r)}
+                        style={{
+                          borderRadius: 6,
+                          fontSize: 12,
+                          borderColor: '#3B82F6',
+                          color: '#2563EB',
+                          fontWeight: 600,
+                        }}
+                      >
+                        Sửa
+                      </Button>
                       <Button
                         size="small"
                         icon={<FilePdfOutlined />}
@@ -1067,7 +1381,7 @@ export default function VetRecordsPage() {
                           setTemplateModal({
                             open: true,
                             docType: mappedDocType,
-                            title: `Mẫu đơn chuẩn: ${r.recordType || r.title}`,
+                            title: `Hồ sơ PDF: ${r.title || r.recordType}`,
                           });
                         }}
                         style={{
@@ -1078,7 +1392,7 @@ export default function VetRecordsPage() {
                           fontWeight: 600,
                         }}
                       >
-                        Mẫu PDF
+                        Xem PDF
                       </Button>
                       <Popconfirm
                         title="Delete Vet Record?"
@@ -2256,17 +2570,20 @@ export default function VetRecordsPage() {
         </>
       )}
 
-      {/* 6. MODAL: ADD VET RECORD (Matching media_1791474295407_bbfa77ed.png) */}
+      {/* 6. MODAL: ADD / EDIT VET RECORD */}
       <Modal
         title={
           <span style={{ fontSize: 18, fontWeight: 700, color: '#1E293B' }}>
-            Add Vet Record
+            {editingRecord ? 'Chỉnh sửa hồ sơ thú y (Edit Vet Record)' : 'Thêm hồ sơ thú y (Add Vet Record)'}
           </span>
         }
         open={isRecordModalOpen}
-        onCancel={() => setIsRecordModalOpen(false)}
+        onCancel={() => {
+          setIsRecordModalOpen(false);
+          setEditingRecord(null);
+        }}
         footer={null}
-        width={650}
+        width={680}
         destroyOnClose
       >
         <Form
@@ -2275,84 +2592,6 @@ export default function VetRecordsPage() {
           onFinish={handleAddRecord}
           style={{ marginTop: 8 }}
         >
-          {/* BANNER PDF MẪU KHI MỞ ĐƠN (YÊU CẦU 2) */}
-          <div
-            style={{
-              backgroundColor: '#FEF3C7',
-              border: '1px solid #FCD34D',
-              borderRadius: 10,
-              padding: '12px 16px',
-              marginBottom: 18,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: 10,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <FilePdfOutlined style={{ fontSize: 22, color: '#D97706' }} />
-              <div>
-                <div style={{ fontSize: 13.5, fontWeight: 700, color: '#92400E' }}>
-                  Biểu mẫu PDF chuẩn hóa y tế & kiểm dịch quốc tế
-                </div>
-                <div style={{ fontSize: 12, color: '#B45309' }}>
-                  Xem và tải mẫu đơn chuẩn để bác sĩ thú y hoặc cơ sở kiểm dịch ký chứng nhận
-                </div>
-              </div>
-            </div>
-            <Space wrap>
-              <Button
-                type="primary"
-                size="small"
-                icon={<FilePdfOutlined />}
-                onClick={() => {
-                  const curType = recordForm.getFieldValue('recordType') || selectedRecordType;
-                  const mappedDocType = mapRecordTypeToDocType(curType);
-                  setTemplateModal({
-                    open: true,
-                    docType: mappedDocType,
-                    title: `Mẫu đơn chuẩn: ${curType}`,
-                  });
-                }}
-                style={{
-                  backgroundColor: '#D97706',
-                  borderColor: '#D97706',
-                  fontWeight: 600,
-                  borderRadius: 6,
-                }}
-              >
-                Mẫu PDF mục này
-              </Button>
-              <Dropdown
-                menu={{
-                  items: TEMPLATE_MENU_ITEMS.map((item) => ({
-                    key: item.key,
-                    label: item.label,
-                    onClick: () =>
-                      setTemplateModal({
-                        open: true,
-                        docType: item.docType,
-                        title: item.title,
-                      }),
-                  })),
-                }}
-              >
-                <Button
-                  size="small"
-                  style={{
-                    borderColor: '#D97706',
-                    color: '#92400E',
-                    fontWeight: 600,
-                    borderRadius: 6,
-                  }}
-                >
-                  Tất cả biểu mẫu ▼
-                </Button>
-              </Dropdown>
-            </Space>
-          </div>
-
           <Form.Item
             label="Danh mục kiểm tra / Loại hồ sơ thú y (Record Type)"
             name="recordType"
@@ -2368,6 +2607,12 @@ export default function VetRecordsPage() {
                 if (!curTitle || RECORD_TYPE_OPTIONS.some((opt) => opt.value === curTitle || opt.label.includes(curTitle))) {
                   recordForm.setFieldsValue({ title: val.replace(/\(.*?\)/g, '').trim() });
                 }
+                const curDate = recordForm.getFieldValue('date') || dayjs();
+                const validityDays = RECORD_TYPE_VALIDITY_DAYS[val] || 90;
+                recordForm.setFieldsValue({
+                  expirationDate: dayjs(curDate).add(validityDays, 'day'),
+                  nextDueDate: dayjs(curDate).add(validityDays, 'day'),
+                });
               }}
               filterOption={(input, option) =>
                 (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
@@ -2387,7 +2632,7 @@ export default function VetRecordsPage() {
                       if (!value) return Promise.resolve();
                       const trimmed = value.trim().toLowerCase();
                       const exists = horseRecords.some(
-                        (r) => (r.title || '').trim().toLowerCase() === trimmed,
+                        (r) => (!editingRecord || r.id !== editingRecord.id) && (r.title || '').trim().toLowerCase() === trimmed,
                       );
                       if (exists) {
                         return Promise.reject(
@@ -2412,6 +2657,16 @@ export default function VetRecordsPage() {
                   format="DD/MM/YYYY"
                   placeholder="Chọn ngày trên lịch"
                   style={{ width: '100%', borderRadius: 8 }}
+                  onChange={(dateVal) => {
+                    if (dateVal) {
+                      const curType = recordForm.getFieldValue('recordType') || selectedRecordType;
+                      const validityDays = RECORD_TYPE_VALIDITY_DAYS[curType] || 90;
+                      recordForm.setFieldsValue({
+                        expirationDate: dayjs(dateVal).add(validityDays, 'day'),
+                        nextDueDate: dayjs(dateVal).add(validityDays, 'day'),
+                      });
+                    }
+                  }}
                 />
               </Form.Item>
             </Col>
@@ -2481,31 +2736,90 @@ export default function VetRecordsPage() {
             <TextArea rows={3} placeholder="Enter any specific clinical or transport notes..." />
           </Form.Item>
 
-          {/* User Request #13: Tệp đính kèm cho vet record */}
-          <Form.Item label="Attachment (PDF / Image / Scan)">
-            <Upload
-              beforeUpload={(file) => {
-                const existingFileNames = horseRecords.flatMap((r) => r.attachments || []);
-                if (existingFileNames.includes(file.name) || attachmentList.some((f) => f.name === file.name)) {
-                  message.error(
-                    `Tệp "${file.name}" đã tồn tại trong danh mục hồ sơ của ngựa "${currentHorse.Name}". Vui lòng đổi tên tệp để không trùng lặp!`,
-                  );
-                  return Upload.LIST_IGNORE;
-                }
-                setAttachmentList((prev) => [...prev, file]);
-                return false;
-              }}
-              onRemove={(file) => {
-                setAttachmentList((prev) => prev.filter((item) => item.uid !== file.uid));
-              }}
-              fileList={attachmentList}
-            >
-              <Button icon={<UploadOutlined />}>Select Attachment</Button>
-            </Upload>
+          {/* User Request 1: Bỏ cam, để file pdf mẫu kế bên Select Attachment */}
+          <Form.Item label="Attachment (Đính kèm tệp PDF / Ảnh kết quả)">
+            <Space wrap align="center">
+              <Upload
+                beforeUpload={(file) => {
+                  const existingFileNames = horseRecords
+                    .filter((r) => !editingRecord || r.id !== editingRecord.id)
+                    .flatMap((r) => r.attachments || []);
+                  if (existingFileNames.includes(file.name) || attachmentList.some((f) => f.name === file.name)) {
+                    message.error(
+                      `Tệp "${file.name}" đã tồn tại trong danh mục hồ sơ của ngựa "${currentHorse.Name}". Vui lòng đổi tên tệp để không trùng lặp!`,
+                    );
+                    return Upload.LIST_IGNORE;
+                  }
+                  setAttachmentList((prev) => [...prev, file]);
+                  return false;
+                }}
+                onRemove={(file) => {
+                  setAttachmentList((prev) => prev.filter((item) => item.uid !== file.uid));
+                }}
+                fileList={attachmentList}
+              >
+                <Button icon={<UploadOutlined />}>Select Attachment</Button>
+              </Upload>
+
+              <Button
+                icon={<FilePdfOutlined />}
+                onClick={() => {
+                  const curType = recordForm.getFieldValue('recordType') || selectedRecordType;
+                  const mappedDocType = mapRecordTypeToDocType(curType);
+                  setTemplateModal({
+                    open: true,
+                    docType: mappedDocType,
+                    title: `Mẫu đơn chuẩn: ${curType}`,
+                  });
+                }}
+                style={{
+                  borderColor: '#D97706',
+                  color: '#92400E',
+                  backgroundColor: '#FFFBEB',
+                  fontWeight: 600,
+                  borderRadius: 6,
+                }}
+              >
+                Xem/Tải file PDF mẫu
+              </Button>
+
+              <Dropdown
+                menu={{
+                  items: TEMPLATE_MENU_ITEMS.map((item) => ({
+                    key: item.key,
+                    label: item.label,
+                    onClick: () =>
+                      setTemplateModal({
+                        open: true,
+                        docType: item.docType,
+                        title: item.title,
+                      }),
+                  })),
+                }}
+              >
+                <Button
+                  style={{
+                    borderColor: '#D97706',
+                    color: '#92400E',
+                    fontWeight: 600,
+                    borderRadius: 6,
+                  }}
+                >
+                  Tất cả biểu mẫu ▼
+                </Button>
+              </Dropdown>
+            </Space>
           </Form.Item>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-            <Button onClick={() => setIsRecordModalOpen(false)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                setIsRecordModalOpen(false);
+                setEditingRecord(null);
+              }}
+            >
+              Cancel
+            </Button>
             <Button
               type="primary"
               htmlType="submit"
@@ -2515,7 +2829,7 @@ export default function VetRecordsPage() {
                 fontWeight: 600,
               }}
             >
-              Add Record
+              {editingRecord ? 'Lưu thay đổi' : 'Add Record'}
             </Button>
           </div>
         </Form>

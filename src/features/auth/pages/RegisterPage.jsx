@@ -52,6 +52,7 @@ export default function RegisterPage() {
           lastName: values.lastName,
           fullName: fullName || 'New Customer',
           email: values.email,
+          password: values.password,
         }),
       );
 
@@ -83,9 +84,9 @@ export default function RegisterPage() {
         layout="vertical"
         onFinish={handleRegister}
         initialValues={{
-          firstName: savedPending?.firstName || 'Jane',
-          lastName: savedPending?.lastName || 'Smith',
-          email: savedPending?.email || 'jane.smith@example.com',
+          firstName: savedPending?.firstName || '',
+          lastName: savedPending?.lastName || '',
+          email: savedPending?.email || '',
           keepLoggedIn: true,
         }}
         requiredMark={false}

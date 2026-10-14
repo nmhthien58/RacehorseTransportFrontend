@@ -36,7 +36,7 @@ export function getStoredBookings() {
 export function getStoredBookingById(id) {
   const list = getStoredBookings();
   const numId = Number(id);
-  return list.find((b) => Number(b.BookingID) === numId) || null;
+  return list.find((b) => Number(b.BookingID || b.bookingId) === numId) || null;
 }
 
 /**
@@ -172,7 +172,7 @@ export function addStoredBooking(bookingData) {
 export function updateStoredBooking(id, updateData) {
   const currentList = getStoredBookings();
   const numId = Number(id);
-  const index = currentList.findIndex((b) => Number(b.BookingID) === numId);
+  const index = currentList.findIndex((b) => Number(b.BookingID || b.bookingId) === numId);
   if (index === -1) return null;
 
   const updatedBooking = {
@@ -201,7 +201,7 @@ export function updateStoredBooking(id, updateData) {
 export function deleteStoredBooking(id) {
   const currentList = getStoredBookings();
   const numId = Number(id);
-  const filtered = currentList.filter((b) => Number(b.BookingID) !== numId);
+  const filtered = currentList.filter((b) => Number(b.BookingID || b.bookingId) !== numId);
   if (filtered.length === currentList.length) return false;
 
   if (typeof window !== 'undefined') {

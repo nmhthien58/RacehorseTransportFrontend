@@ -10,6 +10,7 @@ import {
   Row,
   Select,
   Space,
+  Table,
   Tag,
   Typography,
   message,
@@ -18,8 +19,14 @@ import {
   CheckCircleFilled,
   RocketOutlined,
   CarOutlined,
+  ArrowLeftOutlined,
+  SearchOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import dayjs from 'dayjs';
 import { ROUTES } from '@routes/routes';
 import {
   getStoredRoutePlans,
@@ -32,7 +39,8 @@ const { TextArea } = Input;
 
 /**
  * Trang Logistic Manager: Route Approvals (Transport Plan Review & Official Dispatch)
- * Tái hiện 100% Figma Image 5 (Logistic Manager_Route manager)
+ * - Mặc định hiển thị danh sách dạng bảng quản lý trực quan giống "Yêu cầu phê duyệt"
+ * - Bấm vào từng kế hoạch để mở Transport Plan Review Studio thẩm định chi tiết và phê duyệt
  */
 export default function RouteApprovalsPage() {
   const navigate = useNavigate();
@@ -40,11 +48,11 @@ export default function RouteApprovalsPage() {
 
   const [plans, setPlans] = useState(() => getStoredRoutePlans());
   const paramCode = searchParams.get('planCode');
-  const [selectedPlanCodeState, setSelectedPlanCodeState] = useState(() => {
-    const loadedPlans = getStoredRoutePlans();
-    return loadedPlans.find((p) => p.status === 'PENDING_APPROVAL')?.planCode || loadedPlans[0]?.planCode || '';
-  });
+  const [selectedPlanCodeState, setSelectedPlanCodeState] = useState(paramCode || null);
   const selectedPlanCode = paramCode || selectedPlanCodeState;
+
+  const [filterStatus, setFilterStatus] = useState('ALL');
+  const [searchKeyword, setSearchKeyword] = useState('');
   const [, setRefreshKey] = useState(0);
 
   // State cho Modal từ chối (Reject Plan Modal)
@@ -63,19 +71,31 @@ export default function RouteApprovalsPage() {
     return () => window.removeEventListener('plans_updated', handleUpdate);
   }, []);
 
+  const handleSelectPlan = (code) => {
+    setSelectedPlanCodeState(code);
+    setSearchParams({ planCode: code });
+  };
+
+  const handleBackToList = () => {
+    setSelectedPlanCodeState(null);
+    setSearchParams({});
+  };
+
   const activePlan = useMemo(() => {
+    if (!selectedPlanCode) return null;
     return (
       plans.find(
         (p) =>
           p.planCode === selectedPlanCode ||
           p.planCode === `#${selectedPlanCode}` ||
           String(p.planId) === String(selectedPlanCode),
-      ) || plans[0] || {}
+      ) || plans[0] || null
     );
   }, [plans, selectedPlanCode]);
 
   // Phê duyệt kế hoạch lộ trình (Approve & Officially Assign)
   const handleApprovePlan = () => {
+    if (!activePlan) return;
     setActionLoading(true);
     setTimeout(() => {
       approveRoutePlan(activePlan.planId || activePlan.planCode, {
@@ -92,6 +112,7 @@ export default function RouteApprovalsPage() {
 
   // Từ chối kế hoạch (Reject Plan)
   const handleConfirmReject = () => {
+    if (!activePlan) return;
     if (selectedReasons.length === 0) {
       message.warning('Vui lòng chọn ít nhất 1 lý do từ chối!');
       return;
@@ -111,25 +132,350 @@ export default function RouteApprovalsPage() {
     }, 400);
   };
 
+  const totalPlans = plans.length;
+  const pendingCount = plans.filter((p) => p.status === 'PENDING_APPROVAL').length;
+  const assignedCount = plans.filter((p) => p.status === 'ASSIGNED').length;
+  const rejectedCount = plans.filter((p) => p.status === 'REJECTED').length;
+
+  const filteredPlans = useMemo(() => {
+    return plans.filter((p) => {
+      if (filterStatus !== 'ALL' && p.status !== filterStatus) return false;
+      if (!searchKeyword.trim()) return true;
+      const kw = searchKeyword.toLowerCase();
+      const code = String(p.planCode || '').toLowerCase();
+      const order = String(p.orderCode || p.bookingCode || '').toLowerCase();
+      const driver = String(p.driverName || '').toLowerCase();
+      const origin = String(p.origin || '').toLowerCase();
+      const dest = String(p.destination || '').toLowerCase();
+      return code.includes(kw) || order.includes(kw) || driver.includes(kw) || origin.includes(kw) || dest.includes(kw);
+    });
+  }, [plans, filterStatus, searchKeyword]);
+
+  const tableColumns = [
+    {
+      title: 'Mã kế hoạch',
+      dataIndex: 'planCode',
+      key: 'planCode',
+      render: (code) => (
+        <Tag color="gold" style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: 13, padding: '3px 8px' }}>
+          {code}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Đơn đặt chuyến',
+      dataIndex: 'orderCode',
+      key: 'orderCode',
+      render: (code, record) => (
+        <span style={{ fontWeight: 700, color: '#2563eb', fontFamily: 'monospace' }}>
+          {code || record.bookingCode || '---'}
+        </span>
+      ),
+    },
+    {
+      title: 'Phương thức',
+      dataIndex: 'transportMode',
+      key: 'transportMode',
+      render: (mode) => {
+        const isAir = String(mode).toLowerCase().includes('air');
+        const isDoor = String(mode).toLowerCase().includes('door');
+        return (
+          <Tag color={isDoor ? 'purple' : isAir ? 'blue' : 'orange'} style={{ fontWeight: 600, borderRadius: 6 }}>
+            {isDoor ? '🌐 Door-to-Door' : isAir ? '✈️ Air Freight' : '🚛 Ground'}
+          </Tag>
+        );
+      },
+    },
+    {
+      title: 'Lộ trình vận chuyển',
+      key: 'route',
+      render: (_, record) => (
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
+            {record.origin || 'Xuất phát'} ➔ {record.destination || 'Đích đến'}
+          </div>
+          <div style={{ fontSize: 11.5, color: '#64748b' }}>
+            {record.distanceKm ? `${record.distanceKm} km • ` : ''}
+            {record.intermediateStops?.length ? `${record.intermediateStops.length} điểm dừng` : 'Bay thẳng'}
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: 'Đội ngũ phụ trách',
+      key: 'crew',
+      render: (_, record) => (
+        <div style={{ fontSize: 12 }}>
+          {record.driverName && (
+            <div>
+              <span style={{ color: '#64748b' }}>Tài xế:</span> <strong>{record.driverName}</strong>
+            </div>
+          )}
+          {record.vetEscortName && (
+            <div>
+              <span style={{ color: '#64748b' }}>Escort:</span> <strong>{record.vetEscortName}</strong>
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: 'Khởi hành',
+      dataIndex: 'departureDate',
+      key: 'departureDate',
+      render: (date) => (
+        <span style={{ fontSize: 12.5, whiteSpace: 'nowrap' }}>
+          {date ? dayjs(date).format('DD/MM/YYYY') : '---'}
+        </span>
+      ),
+    },
+    {
+      title: 'Tổng chi phí',
+      dataIndex: 'totalEstimatedCost',
+      key: 'totalEstimatedCost',
+      align: 'right',
+      render: (val, record) => (
+        <strong style={{ fontSize: 13, color: '#d97706' }}>
+          ${(val || record.totalCost || 0).toLocaleString()}
+        </strong>
+      ),
+    },
+    {
+      title: 'Trạng thái',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status) => {
+        if (status === 'ASSIGNED') {
+          return <Tag color="success" style={{ fontWeight: 700, borderRadius: 6 }}>Đã phân công</Tag>;
+        }
+        if (status === 'REJECTED') {
+          return <Tag color="error" style={{ fontWeight: 700, borderRadius: 6 }}>Cần điều chỉnh</Tag>;
+        }
+        return <Tag color="warning" style={{ fontWeight: 700, borderRadius: 6 }}>Chờ phê duyệt</Tag>;
+      },
+    },
+    {
+      title: 'Thao tác',
+      key: 'action',
+      align: 'center',
+      render: (_, record) => (
+        <Button
+          type="primary"
+          size="middle"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSelectPlan(record.planCode);
+          }}
+          style={{
+            borderRadius: 8,
+            fontWeight: 700,
+            backgroundColor: record.status === 'PENDING_APPROVAL' ? '#f59e0b' : '#2563eb',
+            borderColor: record.status === 'PENDING_APPROVAL' ? '#f59e0b' : '#2563eb',
+          }}
+        >
+          {record.status === 'PENDING_APPROVAL' ? 'Xét duyệt →' : 'Chi tiết →'}
+        </Button>
+      ),
+    },
+  ];
+
+  // VIEW 1: MASTER LIST BẢNG KẾ HOẠCH (GIỐNG YÊU CẦU PHÊ DUYỆT)
+  if (!selectedPlanCode || !activePlan) {
+    return (
+      <div style={{ maxWidth: 1320, margin: '0 auto', paddingBottom: 40 }}>
+        {/* Header trang tương tự Pending Requests */}
+        <div style={{ marginBottom: 24 }}>
+          <Title level={2} style={{ margin: '0 0 6px', fontWeight: 800, color: '#0F172A', fontSize: 26 }}>
+            📋 Yêu Cầu Phê Duyệt Lộ Trình (Route Approvals)
+          </Title>
+          <Text style={{ color: '#64748B', fontSize: 13.5 }}>
+            Kiểm tra kế hoạch điều phối chặng bay & đường bộ, thẩm định trạm dừng trung chuyển và phê duyệt chỉ định xe/bác sĩ thú y
+          </Text>
+        </div>
+
+        {/* 4 THẺ THỐNG KÊ NHỊP SỐNG LOGISTICS */}
+        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+          <Col xs={12} sm={6}>
+            <Card
+              bordered
+              style={{
+                borderRadius: 14,
+                borderColor: '#E2E8F0',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+              }}
+              styles={{ body: { padding: '16px 20px' } }}
+            >
+              <Text type="secondary" style={{ fontSize: 12.5, fontWeight: 600 }}>TỔNG SỐ KẾ HOẠCH</Text>
+              <div style={{ fontSize: 28, fontWeight: 900, color: '#0F172A', marginTop: 4 }}>
+                {totalPlans}
+              </div>
+            </Card>
+          </Col>
+
+          <Col xs={12} sm={6}>
+            <Card
+              bordered
+              style={{
+                borderRadius: 14,
+                borderColor: '#FDE68A',
+                backgroundColor: '#FFFDF5',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+              }}
+              styles={{ body: { padding: '16px 20px' } }}
+            >
+              <Flex align="center" gap={6}>
+                <ClockCircleOutlined style={{ color: '#D97706' }} />
+                <Text style={{ fontSize: 12.5, fontWeight: 700, color: '#92400E' }}>CHỜ PHÊ DUYỆT</Text>
+              </Flex>
+              <div style={{ fontSize: 28, fontWeight: 900, color: '#D97706', marginTop: 4 }}>
+                {pendingCount}
+              </div>
+            </Card>
+          </Col>
+
+          <Col xs={12} sm={6}>
+            <Card
+              bordered
+              style={{
+                borderRadius: 14,
+                borderColor: '#BBF7D0',
+                backgroundColor: '#F0FDF4',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+              }}
+              styles={{ body: { padding: '16px 20px' } }}
+            >
+              <Flex align="center" gap={6}>
+                <CheckCircleOutlined style={{ color: '#16A34A' }} />
+                <Text style={{ fontSize: 12.5, fontWeight: 700, color: '#15803D' }}>ĐÃ PHÂN CÔNG</Text>
+              </Flex>
+              <div style={{ fontSize: 28, fontWeight: 900, color: '#16A34A', marginTop: 4 }}>
+                {assignedCount}
+              </div>
+            </Card>
+          </Col>
+
+          <Col xs={12} sm={6}>
+            <Card
+              bordered
+              style={{
+                borderRadius: 14,
+                borderColor: '#FECACA',
+                backgroundColor: '#FEF2F2',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+              }}
+              styles={{ body: { padding: '16px 20px' } }}
+            >
+              <Flex align="center" gap={6}>
+                <CloseCircleOutlined style={{ color: '#DC2626' }} />
+                <Text style={{ fontSize: 12.5, fontWeight: 700, color: '#991B1B' }}>CẦN ĐIỀU CHỈNH</Text>
+              </Flex>
+              <div style={{ fontSize: 28, fontWeight: 900, color: '#DC2626', marginTop: 4 }}>
+                {rejectedCount}
+              </div>
+            </Card>
+          </Col>
+        </Row>
+
+        {/* BỘ LỌC VÀ TÌM KIẾM */}
+        <Card
+          bordered
+          style={{
+            borderRadius: 14,
+            borderColor: '#E2E8F0',
+            marginBottom: 20,
+          }}
+          styles={{ body: { padding: '16px 20px' } }}
+        >
+          <Row gutter={[16, 12]} align="middle">
+            <Col xs={24} md={12}>
+              <Input
+                size="large"
+                prefix={<SearchOutlined style={{ color: '#94A3B8' }} />}
+                placeholder="Tìm theo mã kế hoạch, đơn đặt chuyến, tài xế, điểm đến..."
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                allowClear
+                style={{ borderRadius: 10 }}
+              />
+            </Col>
+            <Col xs={24} md={12}>
+              <Flex justify="flex-end" align="center" gap={10} wrap="wrap">
+                <Text strong style={{ fontSize: 13, color: '#475569' }}>Trạng thái:</Text>
+                <Select
+                  size="large"
+                  value={filterStatus}
+                  onChange={setFilterStatus}
+                  style={{ width: 200 }}
+                  options={[
+                    { value: 'ALL', label: 'Tất cả trạng thái' },
+                    { value: 'PENDING_APPROVAL', label: '⏳ Chờ phê duyệt' },
+                    { value: 'ASSIGNED', label: '✓ Đã phân công' },
+                    { value: 'REJECTED', label: '✕ Cần điều chỉnh' },
+                  ]}
+                />
+              </Flex>
+            </Col>
+          </Row>
+        </Card>
+
+        {/* BẢNG DANH SÁCH KẾ HOẠCH LỘ TRÌNH */}
+        <Card
+          bordered
+          style={{
+            borderRadius: 16,
+            borderColor: '#E2E8F0',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.02)',
+          }}
+          styles={{ body: { padding: '8px 12px' } }}
+        >
+          <Table
+            dataSource={filteredPlans}
+            columns={tableColumns}
+            rowKey={(r) => r.planId || r.planCode}
+            pagination={{ pageSize: 8, showTotal: (total) => `Tổng cộng ${total} kế hoạch` }}
+            onRow={(record) => ({
+              onClick: () => handleSelectPlan(record.planCode),
+              style: { cursor: 'pointer' },
+            })}
+          />
+        </Card>
+      </div>
+    );
+  }
+
   const isPending = activePlan.status === 'PENDING_APPROVAL';
   const isAssigned = activePlan.status === 'ASSIGNED';
   const isRejected = activePlan.status === 'REJECTED';
 
+  // VIEW 2: TRANSPORT PLAN REVIEW STUDIO (CHI TIẾT VÀ PHÊ DUYỆT)
   return (
     <div style={{ maxWidth: 1320, margin: '0 auto', paddingBottom: 40 }}>
-      {/* THANH SELECTOR CHỌN PLAN */}
+      {/* NÚT QUAY LẠI VÀ SELECTOR NHANH */}
       <Flex justify="space-between" align="center" wrap="wrap" gap="middle" style={{ marginBottom: 20 }}>
-        <div>
-          <Title level={2} style={{ margin: 0, fontWeight: 800, color: '#0F172A', fontSize: 28 }}>
-            Transport Plan Review & Official Dispatch
-          </Title>
-          <Text style={{ color: '#64748B', fontSize: 13.5 }}>
-            Step 7 (Flow 3): Review proposed multimodal routes, audit expenses, detect driver collisions, and grant ASSIGNED status
-          </Text>
-        </div>
+        <Flex align="center" gap={12}>
+          <Button
+            size="large"
+            icon={<ArrowLeftOutlined />}
+            onClick={handleBackToList}
+            style={{
+              borderRadius: 9999,
+              fontWeight: 700,
+              color: '#1E293B',
+              borderColor: '#CBD5E1',
+              height: 40,
+            }}
+          >
+            ← Quay lại danh sách kế hoạch
+          </Button>
+          <div>
+            <Title level={3} style={{ margin: 0, fontWeight: 800, color: '#0F172A', fontSize: 22 }}>
+              Thẩm Định Chi Tiết Kế Hoạch #{activePlan.planCode}
+            </Title>
+          </div>
+        </Flex>
 
         <Space>
-          <Text strong style={{ fontSize: 13, color: '#334155' }}>Chọn kế hoạch xem xét:</Text>
+          <Text strong style={{ fontSize: 13, color: '#334155' }}>Đổi kế hoạch:</Text>
           <Select
             value={activePlan.planCode}
             onChange={(val) => {

@@ -70,7 +70,7 @@ export default function AddHorseForm({
   const [attachedFile, setAttachedFile] = useState(
     initialValues?.vetRecordFileName
       ? { name: initialValues.vetRecordFileName, size: '2.1 MB' }
-      : { name: 'FEI_Equine_Passport_2026.pdf', size: '2.4 MB' }
+      : null
   );
 
   const {
@@ -90,15 +90,15 @@ export default function AddHorseForm({
       photoUrl: initialValues?.photoUrl || '',
       specialCareRequirements: initialValues?.specialCareRequirements || '',
       healthStatus: initialValues?.healthStatus || 'Excellent',
-      vetRecordTitle: initialValues?.vetRecordTitle || 'Hộ chiếu Thú y FEI & Chứng nhận tiêm phòng 2026',
+      vetRecordTitle: initialValues?.vetRecordTitle || '',
       vetRecordType: initialValues?.vetRecordType || 'Passport',
-      vetRecordFileName: initialValues?.vetRecordFileName || 'FEI_Equine_Passport_2026.pdf',
-      veterinarian: initialValues?.veterinarian || 'Dr. Sarah Jenkins (FEI Senior Vet #VN-884)',
-      clinic: initialValues?.clinic || 'Trung tâm Giám định Thú y Hoàng Gia Ba Vì',
+      vetRecordFileName: initialValues?.vetRecordFileName || '',
+      veterinarian: initialValues?.veterinarian || '',
+      clinic: initialValues?.clinic || '',
       issueDate: initialValues?.issueDate || dayjs().format('YYYY-MM-DD'),
       validUntil: initialValues?.validUntil || dayjs().add(6, 'month').format('YYYY-MM-DD'),
-      vetNotes: initialValues?.vetNotes || 'Thể trạng đỉnh cao, tim phổi khỏe mạnh, nhịp tim đều 36 bpm, không có dấu hiệu bệnh truyền nhiễm. Đạt chuẩn Fit to Travel.',
-      hasVetFile: true,
+      vetNotes: initialValues?.vetNotes || '',
+      hasVetFile: Boolean(initialValues?.vetRecordFileName),
     },
     mode: 'onTouched',
   });
@@ -596,10 +596,37 @@ export default function AddHorseForm({
                       </Button>
                     ) : (
                       <>
+                        <input
+                          type="file"
+                          id="horse-vet-file-input"
+                          style={{ display: 'none' }}
+                          accept=".pdf,.png,.jpg,.jpeg"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) {
+                              const sizeMb = (f.size / (1024 * 1024)).toFixed(1);
+                              const fileObj = { name: f.name, size: `${sizeMb} MB` };
+                              setAttachedFile(fileObj);
+                              setValue('vetRecordFileName', f.name);
+                              setValue('hasVetFile', true);
+                              setValue('vetRecordTitle', `Hồ sơ kiểm định thú y - ${f.name.replace(/\.[^/.]+$/, '')}`);
+                              message.success(`Đã đính kèm tệp: ${f.name}`);
+                            }
+                          }}
+                        />
                         <Button
                           type="primary"
                           icon={<UploadOutlined />}
-                          style={{ backgroundColor: '#16a34a', borderColor: '#16a34a' }}
+                          style={{ backgroundColor: '#2563eb', borderColor: '#2563eb' }}
+                          onClick={() => {
+                            document.getElementById('horse-vet-file-input')?.click();
+                          }}
+                        >
+                          Tải tệp từ máy tính
+                        </Button>
+                        <Button
+                          icon={<FilePdfOutlined />}
+                          style={{ backgroundColor: '#16a34a', borderColor: '#16a34a', color: '#fff' }}
                           onClick={() => {
                             const file = {
                               name: 'FEI_Equine_Passport_Dossier_2026.pdf',
@@ -608,13 +635,17 @@ export default function AddHorseForm({
                             setAttachedFile(file);
                             setValue('vetRecordFileName', file.name);
                             setValue('hasVetFile', true);
-                            message.success('Đã đính kèm tệp hồ sơ thú y thành công!');
+                            setValue('vetRecordTitle', 'Hộ chiếu Thú y FEI & Chứng nhận tiêm phòng 2026');
+                            setValue('veterinarian', 'Dr. Sarah Jenkins (FEI Senior Vet #VN-884)');
+                            setValue('clinic', 'Trung tâm Giám định Thú y Hoàng Gia Ba Vì');
+                            setValue('vetNotes', 'Thể trạng tốt, tim phổi khỏe mạnh, nhịp tim đều 36 bpm, không có dấu hiệu bệnh truyền nhiễm. Đạt chuẩn Fit to Travel.');
+                            message.success('Đã đính kèm tệp hồ sơ thú y mẫu thành công!');
                           }}
                         >
-                          Đính kèm file PDF mẫu
+                          Đính kèm FEI Passport mẫu
                         </Button>
                         <Button
-                          icon={<UploadOutlined />}
+                          icon={<SafetyCertificateOutlined />}
                           onClick={() => {
                             const file = {
                               name: 'CVI_Health_Certificate_Quarantine.pdf',
@@ -623,7 +654,11 @@ export default function AddHorseForm({
                             setAttachedFile(file);
                             setValue('vetRecordFileName', file.name);
                             setValue('hasVetFile', true);
-                            message.success('Đã đính kèm chứng nhận kiểm dịch!');
+                            setValue('vetRecordTitle', 'Chứng nhận kiểm dịch xuất nhập cảnh CVI');
+                            setValue('veterinarian', 'Dr. Elena Rostova (FEI Quarantine Vet)');
+                            setValue('clinic', 'Chi cục Thú y Vùng VI Cảng hàng không');
+                            setValue('vetNotes', 'Đầy đủ xét nghiệm máu Coggins âm tính, kiểm dịch an toàn.');
+                            message.success('Đã đính kèm chứng nhận kiểm dịch CVI!');
                           }}
                         >
                           Đính kèm chứng chỉ CVI

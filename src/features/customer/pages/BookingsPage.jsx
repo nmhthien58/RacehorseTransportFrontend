@@ -35,6 +35,7 @@ import StatusTag from '@components/common/StatusTag';
 import BookingCard from '@features/customer/components/BookingCard';
 import bookingService from '@services/bookingService';
 import { useAuthStore } from '@features/auth/store/authStore';
+import { updateStoredBooking, deleteStoredBooking } from '@utils/bookingStorage';
 import { ROUTES } from '@routes/routes';
 
 const { Title, Text } = Typography;
@@ -114,11 +115,20 @@ export default function CustomerBookings() {
   const handleCancelBooking = async (bookingId) => {
     try {
       await bookingService.cancelBooking(bookingId);
+      updateStoredBooking(bookingId, { Status: 'Cancelled', status: 'Cancelled' });
       message.success(t('bookings.cancelSuccess') || 'Đã hủy yêu cầu vận chuyển thành công');
       setRefreshKey((k) => k + 1);
-    } catch (error) {
-      const err = error?.response?.data?.message || t('bookings.cancelFailed') || 'Không thể hủy đơn';
-      message.error(err);
+    } catch {
+      // Fallback: cập nhật trực tiếp vào bộ nhớ cục bộ, hoặc xóa đơn nếu không tồn tại
+      const updated = updateStoredBooking(bookingId, { Status: 'Cancelled', status: 'Cancelled' });
+      if (updated) {
+        message.success(t('bookings.cancelSuccess') || 'Đã hủy yêu cầu vận chuyển thành công');
+        setRefreshKey((k) => k + 1);
+      } else {
+        deleteStoredBooking(bookingId);
+        message.info('Đơn không tồn tại hoặc đã được xóa bỏ khỏi danh sách.');
+        setRefreshKey((k) => k + 1);
+      }
     }
   };
 

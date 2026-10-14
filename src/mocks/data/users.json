@@ -5,6 +5,8 @@
     "email": "manager@test.com",
     "phoneNumber": "+84912000001",
     "role": "LogisticsManager",
+    "department": "Ban Quản lý & Điều phối Vận hành Logistics",
+    "staffId": "STAFF-LM-001",
     "isActive": true,
     "createdAt": "2026-01-01T00:00:00Z"
   },
@@ -14,6 +16,8 @@
     "email": "specialist@test.com",
     "phoneNumber": "+84912000002",
     "role": "TransportSpecialist",
+    "department": "Bộ phận Thú y & Hồ sơ Kiểm dịch Xuất Nhập Cảnh",
+    "staffId": "STAFF-SP-002",
     "isActive": true,
     "createdAt": "2026-01-01T00:00:00Z"
   },
@@ -23,6 +27,8 @@
     "email": "coordinator@test.com",
     "phoneNumber": "+84912000003",
     "role": "FleetCoordinator",
+    "department": "Bộ phận Điều phối Đội xe & Giám sát Lộ trình",
+    "staffId": "STAFF-FC-003",
     "isActive": true,
     "createdAt": "2026-01-01T00:00:00Z"
   },
@@ -32,6 +38,8 @@
     "email": "driver@test.com",
     "phoneNumber": "+84912000004",
     "role": "Driver",
+    "department": "Đội ngũ Tài xế Vận tải Chuyên trách Đạt chuẩn FEI",
+    "staffId": "STAFF-DR-004",
     "isActive": true,
     "createdAt": "2026-01-01T00:00:00Z"
   },
@@ -41,6 +49,7 @@
     "email": "customer@test.com",
     "phoneNumber": "+84988111222",
     "role": "Customer",
+    "department": "Khách hàng cá nhân / Chủ ngựa đua",
     "isActive": true,
     "createdAt": "2026-01-01T00:00:00Z"
   },
@@ -50,6 +59,8 @@
     "email": "escort@test.com",
     "phoneNumber": "+84912000006",
     "role": "Escort",
+    "department": "Đội ngũ Hộ tống & Chăm sóc Thú y Bay Quốc tế",
+    "staffId": "STAFF-ES-006",
     "isActive": true,
     "createdAt": "2026-01-01T00:00:00Z"
   }

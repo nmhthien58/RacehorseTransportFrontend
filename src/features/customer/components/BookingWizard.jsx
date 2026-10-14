@@ -125,6 +125,65 @@ const KNOWN_DESTINATIONS = {
   },
 };
 
+const COUNTRY_HUBS = {
+  VN: {
+    airport: 'Cảng hàng không Quốc tế Nội Bài (HAN) / Tân Sơn Nhất (SGN) - Equine Terminal',
+    ground: 'Trường đua Đại Nam / SVĐ Phú Thọ, TP. Hồ Chí Minh',
+  },
+  HK: {
+    airport: 'Cảng hàng không Quốc tế Hồng Kông (HKG) - SuperTerminal 1 Equine Bay',
+    ground: 'Trường đua Sha Tin Racecourse, Shatin, New Territories, Hong Kong',
+  },
+  JP: {
+    airport: 'Sân bay Quốc tế Tokyo Narita (NRT) - Animal Quarantine Depot',
+    ground: 'Tokyo Racecourse, Fuchu, Tokyo, Japan',
+  },
+  FR: {
+    airport: 'Sân bay Paris Charles de Gaulle (CDG) - Equine Cargo Hub',
+    ground: 'Hippodrome de Longchamp, Route des Tribunes, Paris, France',
+  },
+  GB: {
+    airport: 'Sân bay London Heathrow (LHR) / Stansted (STN) Equine Hub',
+    ground: 'Ascot Racecourse, High St, Ascot, Berkshire, United Kingdom',
+  },
+  US: {
+    airport: 'Sân bay Quốc tế Los Angeles (LAX) / New York (JFK) Animal Port',
+    ground: 'Churchill Downs, Central Ave, Louisville, Kentucky, United States',
+  },
+  AU: {
+    airport: 'Sân bay Melbourne (MEL) / Sydney (SYD) Equine Quarantine Terminal',
+    ground: 'Flemington Racecourse, Flemington VIC 3031, Australia',
+  },
+  TH: {
+    airport: 'Sân bay Quốc tế Suvarnabhumi (BKK) Equine Gate',
+    ground: 'Royal Bangkok Sports Club, Henri Dunant St, Bangkok, Thailand',
+  },
+  SG: {
+    airport: 'Sân bay Quốc tế Changi (SIN) Equine Center',
+    ground: 'Singapore Turf Club, 1 Turf Club Ave, Singapore',
+  },
+  MY: {
+    airport: 'Sân bay Quốc tế Kuala Lumpur (KUL) Animal Lounge',
+    ground: 'Selangor Turf Club, Seri Kembangan, Selangor, Malaysia',
+  },
+  AE: {
+    airport: 'Sân bay Quốc tế Dubai (DXB) Equine Freight Wing',
+    ground: 'Meydan Racecourse, Al Meydan Rd, Nad Al Sheba, Dubai, UAE',
+  },
+  CN: {
+    airport: 'Sân bay Quốc tế Quảng Châu Bạch Vân (CAN) Cargo Station',
+    ground: 'Trường đua Tùng Hóa, TP. Quảng Châu, Trung Quốc',
+  },
+  KH: {
+    airport: 'Sân bay Quốc tế Phnom Penh (PNH) Cargo Depot',
+    ground: 'Phnom Penh Equestrian Center, Phnom Penh, Campuchia',
+  },
+  LA: {
+    airport: 'Sân bay Quốc tế Wattay Vientiane (VTE) Cargo Station',
+    ground: 'Vientiane Equestrian Club, Vientiane, Lào',
+  },
+};
+
 function resolveDestinationInfo(dest) {
   if (!dest) return null;
   const str = String(dest).toLowerCase();
@@ -510,6 +569,8 @@ export default function BookingWizard({
     return 'Air';
   })();
 
+  const userFarmAddress = user?.address || 'Trang trại sinh thái Yên Bài, Ba Vì, Hà Nội';
+
   const initialDropoffCountry =
     initialValues?.dropoffCountryCode ||
     destInfo?.countryCode ||
@@ -518,7 +579,15 @@ export default function BookingWizard({
   const initialDropoffAddress =
     initialValues?.dropoffAddress ||
     destInfo?.address ||
-    (rawDest ? `${rawDest} International Terminal` : 'Sha Tin Racecourse, Shatin, New Territories, Hong Kong (HKG Airport)');
+    (rawDest
+      ? `${rawDest} International Terminal`
+      : initialMode === 'Air'
+      ? COUNTRY_HUBS[initialDropoffCountry]?.airport || `${initialDropoffCountry} International Terminal`
+      : COUNTRY_HUBS[initialDropoffCountry]?.ground || 'Trường đua Sha Tin Racecourse, Hong Kong');
+
+  const initialPickupAddress =
+    initialValues?.pickupAddress ||
+    (initialMode === 'Air' ? COUNTRY_HUBS.VN.airport : userFarmAddress);
 
   // State các ngựa được chọn và cấu hình chuồng
   const [selectedHorseIds, setSelectedHorseIds] = useState([]);
@@ -532,7 +601,7 @@ export default function BookingWizard({
     setValue,
   } = useForm({
     defaultValues: {
-      PickupAddress: initialValues?.pickupAddress || 'Trang trại Yên Bài, Ba Vì, Hà Nội',
+      PickupAddress: initialPickupAddress,
       PickupCountryCode: initialValues?.pickupCountryCode || 'VN',
       DropoffAddress: initialDropoffAddress,
       DropoffCountryCode: initialDropoffCountry,
@@ -567,6 +636,27 @@ export default function BookingWizard({
       setValue('TransportMode', 'Air');
     }
   }, [dropoffCountry, isGroundAvailable, transportMode, setValue]);
+
+  // Tự động đồng bộ và gợi ý địa chỉ chuẩn theo hình thức vận chuyển và quốc gia đến
+  useEffect(() => {
+    if (transportMode === 'Air') {
+      const airportDrop = COUNTRY_HUBS[dropoffCountry]?.airport || `${dropoffCountry} International Equine Terminal`;
+      setValue('DropoffAddress', airportDrop);
+
+      const curPickup = getValues('PickupAddress');
+      if (!curPickup || curPickup === userFarmAddress) {
+        setValue('PickupAddress', COUNTRY_HUBS.VN.airport);
+      }
+    } else {
+      const groundDrop = COUNTRY_HUBS[dropoffCountry]?.ground || `${dropoffCountry} Equine Center / Racecourse`;
+      setValue('DropoffAddress', groundDrop);
+
+      const curPickup = getValues('PickupAddress');
+      if (!curPickup || curPickup === COUNTRY_HUBS.VN.airport) {
+        setValue('PickupAddress', userFarmAddress);
+      }
+    }
+  }, [dropoffCountry, transportMode, setValue, getValues, userFarmAddress]);
 
   // Tải danh sách ngựa của user khi mở wizard, tự động dự phòng dữ liệu nếu API chưa sẵn sàng
   useEffect(() => {
@@ -790,9 +880,34 @@ export default function BookingWizard({
       });
     }
 
+    // 6. Phí thuê xe rơ-moóc / phương tiện chuyên dụng tại nước ngoài (Dành cho Door-to-Door và Ground quốc tế)
+    if (dropoffCountry && dropoffCountry !== 'VN') {
+      if (transportMode === 'DoorToDoor') {
+        const overseasRentalFee = 850;
+        items.push({
+          key: 'overseas_rental',
+          code: 'SUR_OVERSEAS_RENTAL',
+          name: '🚛 Phí thuê xe rơ-moóc chuyên dụng tại nước ngoài (Overseas Van Rental)',
+          qty: 1,
+          unitPrice: overseasRentalFee,
+          amount: overseasRentalFee,
+        });
+      } else if (transportMode === 'Ground') {
+        const transitTrailerFee = 600;
+        items.push({
+          key: 'overseas_rental',
+          code: 'SUR_CROSS_BORDER_RENTAL',
+          name: '🚛 Phí xe rơ-moóc & đầu kéo quá cảnh nước ngoài (Cross-border Trailer)',
+          qty: 1,
+          unitPrice: transitTrailerFee,
+          amount: transitTrailerFee,
+        });
+      }
+    }
+
     const total = items.reduce((sum, item) => sum + item.amount, 0);
     return { quoteItems: items, totalCost: total };
-  }, [selectedHorseIds, stallClasses, transportMode, requiresClimate, isExpress, requiresVetEscort, insurancePackage, routeData]);
+  }, [selectedHorseIds, stallClasses, transportMode, requiresClimate, isExpress, requiresVetEscort, insurancePackage, routeData, dropoffCountry]);
 
   // Cho phép chuyển bước trực tiếp khi click vào các tab Stepper
   const handleStepClick = async (targetStep) => {
@@ -908,6 +1023,10 @@ export default function BookingWizard({
       specialInstructions: (values.SpecialInstructions || values.specialInstructions)?.trim() || null,
       totalHorses: selectedHorseIds.length,
       estimatedCost: totalCost,
+      depositAmount: Math.round(totalCost * 0.4),
+      balanceAmount: Math.round(totalCost * 0.6),
+      depositPaid: false,
+      cancellationPolicy: 'Chính sách cọc 40%: Hoàn 100% trước 72h, hoàn 50% từ 24-72h, không hoàn cọc dưới 24h',
       currencyCode: 'USD',
       quoteLines: quoteItems,
       quoteBreakdown: JSON.stringify(quoteItems),
@@ -2126,6 +2245,18 @@ export default function BookingWizard({
                   {requiresVetEscort && <Tag color="green">🩺 Vet Escort</Tag>}
                 </div>
                 <div style={{ fontSize: 13, marginBottom: 6 }}>
+                  <Text type="secondary">Đội ngũ phục vụ: </Text>
+                  {transportMode === 'Air' ? (
+                    <Tag color="cyan" style={{ fontWeight: 600 }}>
+                      🩺 1 Chuyên viên Hộ tống & Bác sĩ thú y (Escort) trên máy bay
+                    </Tag>
+                  ) : (
+                    <Tag color="gold" style={{ fontWeight: 600 }}>
+                      🚛🩺 1 Tài xế chuyên dụng (Driver) + 1 Chuyên viên Hộ tống (Escort)
+                    </Tag>
+                  )}
+                </div>
+                <div style={{ fontSize: 13, marginBottom: 6 }}>
                   <Text type="secondary">Thời gian khởi hành: </Text>
                   <strong>
                     {getValues('DepartureDate')
@@ -2258,6 +2389,67 @@ export default function BookingWizard({
                     ${totalCost.toLocaleString()}
                   </div>
                 </Flex>
+
+                {/* TIỀN CỌC 40% & THANH TOÁN 60% */}
+                <div
+                  style={{
+                    marginTop: 16,
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    backgroundColor: '#fffbeb',
+                    border: '1px solid #fde68a',
+                  }}
+                >
+                  <Flex justify="space-between" align="center" style={{ marginBottom: 6 }}>
+                    <div>
+                      <strong style={{ fontSize: 13, color: '#92400e' }}>
+                        💳 Đặt cọc giữ chỗ (40% Deposit):
+                      </strong>
+                      <span style={{ fontSize: 11, color: '#b45309', display: 'block' }}>
+                        Thanh toán cọc ngay khi xác nhận đơn
+                      </span>
+                    </div>
+                    <Tag color="orange" style={{ fontSize: 14, fontWeight: 800, padding: '4px 10px', borderRadius: 8 }}>
+                      ${Math.round(totalCost * 0.4).toLocaleString()} USD
+                    </Tag>
+                  </Flex>
+
+                  <Flex justify="space-between" align="center">
+                    <div>
+                      <strong style={{ fontSize: 13, color: '#475569' }}>
+                        🏁 Khoản còn lại khi bàn giao (60% Balance):
+                      </strong>
+                      <span style={{ fontSize: 11, color: '#64748b', display: 'block' }}>
+                        Thanh toán khi ngựa đến nơi an toàn
+                      </span>
+                    </div>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>
+                      ${Math.round(totalCost * 0.6).toLocaleString()} USD
+                    </span>
+                  </Flex>
+                </div>
+
+                {/* CHÍNH SÁCH HỦY & HOÀN CỌC MINH BẠCH */}
+                <div
+                  style={{
+                    marginTop: 14,
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    backgroundColor: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    fontSize: 11.5,
+                    color: '#475569',
+                  }}
+                >
+                  <strong style={{ display: 'block', color: '#0f172a', marginBottom: 4, fontSize: 12 }}>
+                    🛡️ Chính sách hủy chuyến & hoàn cọc minh bạch:
+                  </strong>
+                  <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.5 }}>
+                    <li><strong>Trước 72 giờ:</strong> Hoàn lại <strong>100%</strong> tiền cọc đã đóng.</li>
+                    <li><strong>Từ 24h - 72 giờ:</strong> Hoàn lại <strong>50%</strong> tiền cọc (khấu trừ chi phí giữ slot vận tải).</li>
+                    <li><strong>Dưới 24 giờ:</strong> Không hoàn cọc (0%) do đã điều động phương tiện và nhân sự.</li>
+                  </ul>
+                </div>
               </Card>
             </Col>
           </Row>

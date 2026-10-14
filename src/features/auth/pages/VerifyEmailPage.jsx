@@ -29,8 +29,8 @@ export default function VerifyEmailPage() {
     }
   })();
 
-  const email = pendingData?.email || 'jane.smith@example.com';
-  const fullName = pendingData?.fullName || 'Jane Smith';
+  const email = pendingData?.email || '';
+  const fullName = pendingData?.fullName || 'Khách hàng';
 
   useEffect(() => {
     if (countdown <= 0) return;
@@ -60,6 +60,31 @@ export default function VerifyEmailPage() {
         isActive: true,
       };
       const token = res.token || `mock-token-${user.userId}`;
+
+      // Lưu tài khoản vào localStorage để LoginPage đăng nhập được (Item 17)
+      try {
+        const rawUsers = localStorage.getItem('racehorse_registered_users');
+        const list = rawUsers ? JSON.parse(rawUsers) : [];
+        const existingIdx = list.findIndex((u) => u.email?.toLowerCase() === email.toLowerCase());
+        const registeredUser = {
+          userId: user.userId,
+          fullName,
+          email,
+          password: pendingData?.password || 'Password123!',
+          role: 'Customer',
+          isActive: true,
+          createdAt: new Date().toISOString(),
+        };
+        if (existingIdx >= 0) {
+          list[existingIdx] = registeredUser;
+        } else {
+          list.push(registeredUser);
+        }
+        localStorage.setItem('racehorse_registered_users', JSON.stringify(list));
+      } catch (err) {
+        console.error('Lỗi khi lưu registered user:', err);
+      }
+
       login(user, token);
 
       // Xóa bộ nhớ tạm sau khi kích hoạt thành công

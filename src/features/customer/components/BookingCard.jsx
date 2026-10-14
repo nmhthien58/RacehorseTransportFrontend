@@ -32,7 +32,7 @@ export default function BookingCard({ booking, onCancel, onViewDetail }) {
   const isAir = mode === 'Air';
   const isDoorToDoor = mode === 'DoorToDoor' || mode === 'Door-to-Door';
   const status = booking.status || booking.Status || 'Submitted';
-  const canCancel = status === 'Submitted';
+  const canCancel = ['submitted', 'pending', 'draft'].includes(String(status).toLowerCase());
   const bookingCode = booking.bookingCode || booking.BookingCode || `${booking.bookingId || booking.BookingID || ''}`;
   const createdAt = booking.createdAt || booking.CreatedAt;
   const departureDate = booking.departureDate || booking.DepartureDate;

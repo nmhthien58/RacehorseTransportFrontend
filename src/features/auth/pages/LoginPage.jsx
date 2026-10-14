@@ -49,11 +49,26 @@ export default function LoginPage() {
         token = res.token || res.data?.accessToken || `mock-token-${user?.userId}`;
         refreshToken = res.refreshToken || res.data?.refreshToken || null;
       } catch (apiErr) {
-        // Fallback tự động tìm trong mock data nếu API mạng lỗi
-        console.warn('API login failed, checking mock users fallback:', apiErr);
-        const localUser = usersData.find(
-          (u) => u.email.toLowerCase() === (values.email || '').toLowerCase(),
+        // Fallback tự động tìm trong mock data và tài khoản đã đăng ký (Item 17)
+        console.warn('API login failed, checking local users fallback:', apiErr);
+        const emailLower = (values.email || '').trim().toLowerCase();
+        let localUser = usersData.find(
+          (u) => u.email.toLowerCase() === emailLower,
         );
+
+        if (!localUser) {
+          try {
+            const rawRegistered = localStorage.getItem('racehorse_registered_users');
+            const registeredList = rawRegistered ? JSON.parse(rawRegistered) : [];
+            const foundReg = registeredList.find((u) => u.email?.toLowerCase() === emailLower);
+            if (foundReg) {
+              localUser = foundReg;
+            }
+          } catch (e) {
+            console.error('Lỗi đọc registered users:', e);
+          }
+        }
+
         if (localUser) {
           user = localUser;
           token = `mock-token-${localUser.userId}`;

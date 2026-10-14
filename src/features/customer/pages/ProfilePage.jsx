@@ -197,7 +197,11 @@ export default function ProfilePage() {
           </Descriptions.Item>
 
           <Descriptions.Item label={isCustomer ? (t('profile.club') || 'Câu lạc bộ / Tổ chức') : (t('profile.department') || 'Bộ phận / Phòng ban')}>
-            <strong style={{ color: '#0f172a' }}>{profile?.department || profile?.clubName || profile?.ClubName}</strong>
+            <strong style={{ color: '#0f172a' }}>
+              {isCustomer
+                ? (profile?.clubName || profile?.ClubName || 'CLB Ngựa Đua Vina Equine')
+                : (profile?.department || profile?.Department || 'Phòng Điều hành')}
+            </strong>
           </Descriptions.Item>
 
           <Descriptions.Item label={isCustomer ? (t('profile.feiOwnerId') || 'FEI Owner ID') : (t('profile.staffId') || 'Mã định danh cán bộ (Staff ID)')}>
@@ -213,7 +217,9 @@ export default function ProfilePage() {
                 whiteSpace: 'nowrap',
               }}
             >
-              {profile?.feiOwnerId || profile?.FEIOwnerID || 'VN-OWN-2024-0089'}
+              {isCustomer
+                ? (profile?.feiOwnerId || profile?.FEIOwnerID || 'VN-OWN-2024-0089')
+                : (profile?.staffId || profile?.StaffID || 'STAFF-001')}
             </code>
           </Descriptions.Item>
 

@@ -36,7 +36,7 @@ export default function DashboardPage() {
   const { overview, loading, error, fetchOverview } = useSpecialistDossiers();
 
   useEffect(() => {
-    fetchOverview();
+    void fetchOverview().catch(console.error);
   }, [fetchOverview]);
 
   // Điều hướng đến danh sách hồ sơ với bộ lọc

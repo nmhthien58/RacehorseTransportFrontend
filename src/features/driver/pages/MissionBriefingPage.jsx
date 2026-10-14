@@ -132,93 +132,58 @@ export default function MissionBriefingPage() {
 
       {/* 4 Thẻ thống kê tổng quan: Nền trắng sạch sẽ, viền trung tính */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={12} sm={6}>
-          <Card
-            bordered
-            style={{
-              borderRadius: 12,
-              background: '#FFFFFF',
-              border: '1px solid #E2E8F0',
-              cursor: 'pointer',
-            }}
-            bodyStyle={{ padding: 18 }}
-            onClick={() => setActiveTab('Scheduled')}
-          >
-            <Text type="secondary" style={{ fontSize: 13 }}>
-              {t('driver.missions.status.scheduled', 'Chờ xuất bến')}
-            </Text>
-            <Title level={3} style={{ margin: '6px 0 0 0', color: '#111827' }}>
-              {stats.scheduled}
-            </Title>
-            <Text type="secondary" style={{ fontSize: 11 }}>Cần kiểm tra an toàn</Text>
-          </Card>
-        </Col>
-
-        <Col xs={12} sm={6}>
-          <Card
-            bordered
-            style={{
-              borderRadius: 12,
-              background: '#FFFFFF',
-              border: '1px solid #E2E8F0',
-              cursor: 'pointer',
-            }}
-            bodyStyle={{ padding: 18 }}
-            onClick={() => setActiveTab('InTransit')}
-          >
-            <Text type="secondary" style={{ fontSize: 13 }}>
-              {t('driver.missions.status.inTransit', 'Đang di chuyển')}
-            </Text>
-            <Title level={3} style={{ margin: '6px 0 0 0', color: '#D97706' }}>
-              {stats.inTransit}
-            </Title>
-            <Text type="secondary" style={{ fontSize: 11 }}>Đang trên lộ trình</Text>
-          </Card>
-        </Col>
-
-        <Col xs={12} sm={6}>
-          <Card
-            bordered
-            style={{
-              borderRadius: 12,
-              background: '#FFFFFF',
-              border: '1px solid #E2E8F0',
-              cursor: 'pointer',
-            }}
-            bodyStyle={{ padding: 18 }}
-            onClick={() => setActiveTab('ArrivedDestination')}
-          >
-            <Text type="secondary" style={{ fontSize: 13 }}>
-              {t('driver.missions.status.arrivedDestination', 'Tại điểm đích')}
-            </Text>
-            <Title level={3} style={{ margin: '6px 0 0 0', color: '#7C3AED' }}>
-              {stats.arrived}
-            </Title>
-            <Text type="secondary" style={{ fontSize: 11 }}>Chờ bàn giao e-POD</Text>
-          </Card>
-        </Col>
-
-        <Col xs={12} sm={6}>
-          <Card
-            bordered
-            style={{
-              borderRadius: 12,
-              background: '#FFFFFF',
-              border: '1px solid #E2E8F0',
-              cursor: 'pointer',
-            }}
-            bodyStyle={{ padding: 18 }}
-            onClick={() => setActiveTab('Completed')}
-          >
-            <Text type="secondary" style={{ fontSize: 13 }}>
-              {t('driver.missions.status.completed', 'Đã hoàn thành')}
-            </Text>
-            <Title level={3} style={{ margin: '6px 0 0 0', color: '#16A34A' }}>
-              {stats.completed}
-            </Title>
-            <Text type="secondary" style={{ fontSize: 11 }}>Đã ký nhận e-POD</Text>
-          </Card>
-        </Col>
+        {[
+          {
+            key: 'Scheduled',
+            label: t('driver.missions.status.scheduled', 'Chờ xuất bến'),
+            count: stats.scheduled,
+            color: '#111827',
+            subText: 'Cần kiểm tra an toàn',
+          },
+          {
+            key: 'InTransit',
+            label: t('driver.missions.status.inTransit', 'Đang di chuyển'),
+            count: stats.inTransit,
+            color: '#D97706',
+            subText: 'Đang trên lộ trình',
+          },
+          {
+            key: 'ArrivedDestination',
+            label: t('driver.missions.status.arrivedDestination', 'Tại điểm đích'),
+            count: stats.arrived,
+            color: '#7C3AED',
+            subText: 'Chờ bàn giao e-POD',
+          },
+          {
+            key: 'Completed',
+            label: t('driver.missions.status.completed', 'Đã hoàn thành'),
+            count: stats.completed,
+            color: '#16A34A',
+            subText: 'Đã ký nhận e-POD',
+          },
+        ].map((card) => (
+          <Col xs={12} sm={6} key={card.key}>
+            <Card
+              bordered
+              style={{
+                borderRadius: 12,
+                background: '#FFFFFF',
+                border: '1px solid #E2E8F0',
+                cursor: 'pointer',
+              }}
+              styles={{ body: { padding: 18 } }}
+              onClick={() => setActiveTab(card.key)}
+            >
+              <Text type="secondary" style={{ fontSize: 13 }}>
+                {card.label}
+              </Text>
+              <Title level={3} style={{ margin: '6px 0 0 0', color: card.color }}>
+                {card.count}
+              </Title>
+              <Text type="secondary" style={{ fontSize: 11 }}>{card.subText}</Text>
+            </Card>
+          </Col>
+        ))}
       </Row>
 
       {/* Thanh lọc Tab & Ô tìm kiếm */}

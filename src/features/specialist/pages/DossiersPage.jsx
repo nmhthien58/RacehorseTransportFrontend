@@ -81,10 +81,19 @@ export default function DossiersPage() {
         <div>
           <Text
             strong
+            role="button"
+            tabIndex={0}
             style={{ color: '#0F172A', cursor: 'pointer' }}
             onClick={(e) => {
               e.stopPropagation();
               handleInspect(record.dossierId);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                handleInspect(record.dossierId);
+              }
             }}
           >
             {code}

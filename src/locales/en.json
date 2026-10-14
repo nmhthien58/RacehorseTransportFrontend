@@ -96,7 +96,8 @@
     "escortDashboard": "Dashboard & Active Shift",
     "escortMissions": "Equine Escort Missions",
     "escortMission": "Veterinary Supervision & Escort",
-    "tripHistory": "Trip History"
+    "tripHistory": "Trip History",
+    "ownerPortal": "Owner Portal"
   },
   "status": {
     "submitted": "Submitted",

@@ -569,12 +569,13 @@ export default function BookingWizard({
     return 'Air';
   })();
 
-  const userFarmAddress = user?.address || 'Trang trại sinh thái Yên Bài, Ba Vì, Hà Nội';
+  const userFarmAddress = user?.address || '';
 
+  const initialPickupCountry = initialValues?.pickupCountryCode || 'VN';
   const initialDropoffCountry =
     initialValues?.dropoffCountryCode ||
     destInfo?.countryCode ||
-    'HK';
+    (initialPickupCountry === 'VN' ? 'HK' : 'VN');
 
   const initialDropoffAddress =
     initialValues?.dropoffAddress ||
@@ -587,7 +588,9 @@ export default function BookingWizard({
 
   const initialPickupAddress =
     initialValues?.pickupAddress ||
-    (initialMode === 'Air' ? COUNTRY_HUBS.VN.airport : userFarmAddress);
+    (initialMode === 'Air'
+      ? COUNTRY_HUBS[initialPickupCountry]?.airport || `${initialPickupCountry} International Equine Terminal`
+      : userFarmAddress || COUNTRY_HUBS[initialPickupCountry]?.ground || 'Trang trại xuất phát');
 
   // State các ngựa được chọn và cấu hình chuồng
   const [selectedHorseIds, setSelectedHorseIds] = useState([]);
@@ -602,7 +605,7 @@ export default function BookingWizard({
   } = useForm({
     defaultValues: {
       PickupAddress: initialPickupAddress,
-      PickupCountryCode: initialValues?.pickupCountryCode || 'VN',
+      PickupCountryCode: initialPickupCountry,
       DropoffAddress: initialDropoffAddress,
       DropoffCountryCode: initialDropoffCountry,
       DepartureDate: initialValues?.departureDate || dayjs().add(7, 'day').format('YYYY-MM-DDTHH:mm:ssZ'),
@@ -619,7 +622,10 @@ export default function BookingWizard({
     mode: 'onTouched',
   });
 
+  const pickupCountry = useWatch({ control, name: 'PickupCountryCode' });
   const dropoffCountry = useWatch({ control, name: 'DropoffCountryCode' });
+  const departureDate = useWatch({ control, name: 'DepartureDate' });
+  const deliveryDate = useWatch({ control, name: 'DeliveryDate' });
   const transportMode = useWatch({ control, name: 'TransportMode' });
   const insurancePackage = useWatch({ control, name: 'InsurancePackage' });
   const requiresClimate = useWatch({ control, name: 'RequiresClimateControl' });
@@ -644,19 +650,25 @@ export default function BookingWizard({
       setValue('DropoffAddress', airportDrop);
 
       const curPickup = getValues('PickupAddress');
-      if (!curPickup || curPickup === userFarmAddress) {
-        setValue('PickupAddress', COUNTRY_HUBS.VN.airport);
+      if (!curPickup || curPickup === userFarmAddress || curPickup.includes('Trang trại sinh thái')) {
+        setValue('PickupAddress', COUNTRY_HUBS[pickupCountry]?.airport || `${pickupCountry} Equine Terminal`);
       }
+    } else if (transportMode === 'DoorToDoor') {
+      if (userFarmAddress) {
+        setValue('PickupAddress', userFarmAddress);
+      }
+      const groundDrop = COUNTRY_HUBS[dropoffCountry]?.ground || `${dropoffCountry} Equine Center / Racecourse`;
+      setValue('DropoffAddress', groundDrop);
     } else {
       const groundDrop = COUNTRY_HUBS[dropoffCountry]?.ground || `${dropoffCountry} Equine Center / Racecourse`;
       setValue('DropoffAddress', groundDrop);
 
       const curPickup = getValues('PickupAddress');
-      if (!curPickup || curPickup === COUNTRY_HUBS.VN.airport) {
-        setValue('PickupAddress', userFarmAddress);
+      if (!curPickup || curPickup.includes('Cảng hàng không') || curPickup.includes('Equine Terminal')) {
+        setValue('PickupAddress', userFarmAddress || COUNTRY_HUBS[pickupCountry]?.ground || 'Trang trại xuất phát');
       }
     }
-  }, [dropoffCountry, transportMode, setValue, getValues, userFarmAddress]);
+  }, [dropoffCountry, pickupCountry, transportMode, setValue, getValues, userFarmAddress]);
 
   // Tải danh sách ngựa của user khi mở wizard, tự động dự phòng dữ liệu nếu API chưa sẵn sàng
   useEffect(() => {
@@ -720,18 +732,27 @@ export default function BookingWizard({
     };
   }, [user, initialValues, i18n]);
 
-  // Toggle chọn cá thể ngựa (Chặn nếu ngựa thiếu hồ sơ thú y hoặc nguy cấp)
+  // Toggle chọn cá thể ngựa (Chặn nếu ngựa chấn thương nguy cấp hoặc trùng lịch trình)
   const handleToggleHorse = (horseId) => {
     const targetHorse = availableHorses.find(
       (h) => String(h.horseId || h.HorseID) === String(horseId),
     );
-    if (targetHorse) {
-      const eligibility = checkHorseTransportEligibility(targetHorse, i18n?.language || 'vi');
-      if (!eligibility.eligible) {
-        message.warning(eligibility.message);
-        return;
-      }
+    if (!targetHorse) return;
+
+    const status = (targetHorse.HealthStatus || targetHorse.healthStatus || '').trim().toLowerCase();
+    if (status === 'critical' || status === 'poor') {
+      message.error('Không thể chọn: Chú ngựa này đang gặp chấn thương/tình trạng nguy kịch (Non-Fit-to-Travel), cấm vận chuyển!');
+      return;
     }
+
+    const curDep = getValues('DepartureDate');
+    const curDel = getValues('DeliveryDate');
+    const conflict = checkHorseBookingConflict(horseId, curDep, curDel);
+    if (conflict.hasConflict) {
+      message.error(conflict.reason);
+      return;
+    }
+
     setSelectedHorseIds((prev) => {
       const exists = prev.some((id) => String(id) === String(horseId));
       if (exists) {
@@ -880,34 +901,32 @@ export default function BookingWizard({
       });
     }
 
-    // 6. Phí thuê xe rơ-moóc / phương tiện chuyên dụng tại nước ngoài (Dành cho Door-to-Door và Ground quốc tế)
-    if (dropoffCountry && dropoffCountry !== 'VN') {
-      if (transportMode === 'DoorToDoor') {
-        const overseasRentalFee = 850;
-        items.push({
-          key: 'overseas_rental',
-          code: 'SUR_OVERSEAS_RENTAL',
-          name: '🚛 Phí thuê xe rơ-moóc chuyên dụng tại nước ngoài (Overseas Van Rental)',
-          qty: 1,
-          unitPrice: overseasRentalFee,
-          amount: overseasRentalFee,
-        });
-      } else if (transportMode === 'Ground') {
-        const transitTrailerFee = 600;
-        items.push({
-          key: 'overseas_rental',
-          code: 'SUR_CROSS_BORDER_RENTAL',
-          name: '🚛 Phí xe rơ-moóc & đầu kéo quá cảnh nước ngoài (Cross-border Trailer)',
-          qty: 1,
-          unitPrice: transitTrailerFee,
-          amount: transitTrailerFee,
-        });
-      }
+    // 6. Phí thuê xe bên nước khác (Foreign Charter Truck / Overseas Van Rental)
+    if (transportMode === 'DoorToDoor') {
+      const overseasRentalFee = 1200;
+      items.push({
+        key: 'overseas_rental',
+        code: 'SUR_OVERSEAS_RENTAL',
+        name: '🚛 Phí thuê xe bên nước khác (Overseas Charter Truck / Van Rental)',
+        qty: 1,
+        unitPrice: overseasRentalFee,
+        amount: overseasRentalFee,
+      });
+    } else if (transportMode === 'Ground' && dropoffCountry !== pickupCountry) {
+      const crossBorderFee = 850;
+      items.push({
+        key: 'overseas_rental',
+        code: 'SUR_CROSS_BORDER_RENTAL',
+        name: '🚛 Phí thuê xe bên nước khác (Overseas Truck & Trailer Charter)',
+        qty: 1,
+        unitPrice: crossBorderFee,
+        amount: crossBorderFee,
+      });
     }
 
     const total = items.reduce((sum, item) => sum + item.amount, 0);
     return { quoteItems: items, totalCost: total };
-  }, [selectedHorseIds, stallClasses, transportMode, requiresClimate, isExpress, requiresVetEscort, insurancePackage, routeData, dropoffCountry]);
+  }, [selectedHorseIds, stallClasses, transportMode, requiresClimate, isExpress, requiresVetEscort, insurancePackage, routeData, dropoffCountry, pickupCountry]);
 
   // Cho phép chuyển bước trực tiếp khi click vào các tab Stepper
   const handleStepClick = async (targetStep) => {
@@ -918,6 +937,10 @@ export default function BookingWizard({
     }
     // Khi muốn nhảy tiến lên các bước sau, kiểm tra điều kiện cần thiết
     if (currentStep === 0 || targetStep >= 1) {
+      if (getValues('PickupCountryCode') === getValues('DropoffCountryCode')) {
+        message.error('Quốc gia xuất phát và Quốc gia đến không được trùng nhau!');
+        return;
+      }
       const isWhereValid = await trigger([
         'PickupAddress',
         'PickupCountryCode',
@@ -945,6 +968,16 @@ export default function BookingWizard({
         message.warning('Vui lòng kiểm tra lại ngày vận chuyển (When).');
         return;
       }
+      const depDate = getValues('DepartureDate');
+      const delDate = getValues('DeliveryDate');
+      for (const hId of selectedHorseIds) {
+        const conflict = checkHorseBookingConflict(hId, depDate, delDate);
+        if (conflict.hasConflict) {
+          const horse = availableHorses.find((h) => String(h.horseId || h.HorseID) === String(hId));
+          message.error(`Ngựa "${horse?.name || horse?.Name || hId}" bị trùng lịch: ${conflict.reason}`);
+          return;
+        }
+      }
     }
     setCurrentStep(targetStep);
   };
@@ -952,6 +985,10 @@ export default function BookingWizard({
   // Chuyển sang bước kế tiếp sau khi kiểm tra hợp lệ
   const handleNext = async () => {
     if (currentStep === 0) {
+      if (getValues('PickupCountryCode') === getValues('DropoffCountryCode')) {
+        message.error('Quốc gia xuất phát và Quốc gia đến không được trùng nhau!');
+        return;
+      }
       const isValid = await trigger([
         'PickupAddress',
         'PickupCountryCode',
@@ -1204,7 +1241,18 @@ export default function BookingWizard({
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Form.Item label={t('bookings.fields.pickupCountry') || 'Quốc gia xuất phát'} required style={{ marginBottom: 12 }}>
-                      <Select {...field} size="large" options={COUNTRY_OPTIONS} />
+                      <Select
+                        {...field}
+                        size="large"
+                        options={COUNTRY_OPTIONS.filter((c) => c.value !== dropoffCountry)}
+                        onChange={(val) => {
+                          field.onChange(val);
+                          if (val === dropoffCountry) {
+                            const alternative = COUNTRY_OPTIONS.find((c) => c.value !== val)?.value || 'HK';
+                            setValue('DropoffCountryCode', alternative);
+                          }
+                        }}
+                      />
                     </Form.Item>
                   )}
                 />
@@ -1224,7 +1272,7 @@ export default function BookingWizard({
                       <Input
                         {...field}
                         size="large"
-                        placeholder="Ví dụ: Trang trại Yên Bài, Ba Vì, Hà Nội"
+                        placeholder="Ví dụ: Trang trại ngựa đua, Địa chỉ đón chi tiết..."
                       />
                     </Form.Item>
                   )}
@@ -1254,7 +1302,18 @@ export default function BookingWizard({
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Form.Item label={t('bookings.fields.dropoffCountry') || 'Quốc gia đến'} required style={{ marginBottom: 12 }}>
-                      <Select {...field} size="large" options={COUNTRY_OPTIONS} />
+                      <Select
+                        {...field}
+                        size="large"
+                        options={COUNTRY_OPTIONS.filter((c) => c.value !== pickupCountry)}
+                        onChange={(val) => {
+                          field.onChange(val);
+                          if (val === pickupCountry) {
+                            const alternative = COUNTRY_OPTIONS.find((c) => c.value !== val)?.value || 'VN';
+                            setValue('PickupCountryCode', alternative);
+                          }
+                        }}
+                      />
                     </Form.Item>
                   )}
                 />
@@ -1327,11 +1386,10 @@ export default function BookingWizard({
                   const horseGender = horse.gender || horse.Gender;
                   const horseMicrochip = horse.microchipNumber || horse.MicrochipNumber;
                   const eligibility = checkHorseTransportEligibility(horse, i18n?.language || 'vi');
-                  const conflict = checkHorseBookingConflict(horseId, getValues('DepartureDate'), getValues('DeliveryDate'));
+                  const conflict = checkHorseBookingConflict(horseId, departureDate, deliveryDate);
                   const isConflict = conflict.hasConflict;
-                  const isBlocked = !eligibility.eligible;
-                  const isMissingVet = eligibility.reason === 'MISSING_VET_RECORD';
-                  const isCritical = eligibility.reason === 'CRITICAL_CONDITION';
+                  const isCritical = (horse.HealthStatus || horse.healthStatus || '').trim().toLowerCase() === 'critical';
+                  const isBlocked = isCritical || isConflict;
 
                   return (
                     <Col key={horseId} xs={24} md={12}>
@@ -1340,7 +1398,10 @@ export default function BookingWizard({
                         tabIndex={isBlocked ? -1 : 0}
                         aria-disabled={isBlocked}
                         onClick={(e) => {
-                          if (isBlocked) return;
+                          if (isBlocked) {
+                            if (isConflict) message.error(conflict.reason);
+                            return;
+                          }
                           if (e.target.closest?.('.stall-select-container') || e.target.closest?.('.ant-select')) return;
                           handleToggleHorse(horseId);
                         }}
@@ -1356,15 +1417,13 @@ export default function BookingWizard({
                           borderRadius: 16,
                           border: isCritical
                             ? '1.5px solid #FECACA'
-                            : isMissingVet
-                            ? '1.5px solid #FDE68A'
+                            : isConflict
+                            ? '1.5px solid #FECACA'
                             : isSelected
                             ? '2.5px solid #F59E0B'
                             : '1.5px solid #E2E8F0',
-                          backgroundColor: isCritical
+                          backgroundColor: isCritical || isConflict
                             ? '#FEF2F2'
-                            : isMissingVet
-                            ? '#FFFBEB'
                             : isSelected
                             ? '#FFFBEB'
                             : '#FFFFFF',
@@ -1386,10 +1445,8 @@ export default function BookingWizard({
                             <strong
                               style={{
                                 fontSize: 16,
-                                color: isCritical
+                                color: isCritical || isConflict
                                   ? '#991B1B'
-                                  : isMissingVet
-                                  ? '#92400E'
                                   : isSelected
                                   ? '#92400E'
                                   : '#0F172A',
@@ -1405,6 +1462,11 @@ export default function BookingWizard({
                                 ✓ Đã chọn
                               </Tag>
                             )}
+                            {isConflict && (
+                              <Tag color="error" style={{ fontWeight: 800, borderRadius: 6, margin: 0 }}>
+                                ⛔ TRÙNG LỊCH TRÌNH
+                              </Tag>
+                            )}
                             <Tag
                               color={eligibility.tagColor}
                               style={{ fontWeight: 700, borderRadius: 6, margin: 0 }}
@@ -1415,47 +1477,28 @@ export default function BookingWizard({
                           </Space>
                         </Flex>
 
-                        <div style={{ fontSize: 13, color: isBlocked ? '#92400E' : '#64748b', marginLeft: 28, marginBottom: 8 }}>
+                        <div style={{ fontSize: 13, color: isBlocked ? '#991B1B' : '#64748b', marginLeft: 28, marginBottom: 8 }}>
                           {t(`horses.genderOptions.${horseGender?.toLowerCase()}`) || horseGender} · {t('horses.fields.microchip')}:{' '}
                           <code>{horseMicrochip || '---'}</code>
                         </div>
 
-                        {/* Banner thông báo lưu ý nếu có chuyến đi khác xung quanh ngày dự kiến ban đầu */}
-                        {isConflict && !isBlocked && (
+                        {/* Banner cảnh báo chặn nếu bị trùng lịch trình hoặc trong 1 tuần hạ nhiệt sau chuyến bay */}
+                        {isConflict && (
                           <div
                             style={{
                               marginLeft: 28,
                               marginTop: 6,
                               marginBottom: 8,
-                              padding: '6px 12px',
-                              backgroundColor: '#FEF3C7',
-                              borderRadius: 8,
-                              fontSize: 12,
-                              fontWeight: 600,
-                              color: '#92400E',
-                              border: '1px solid #FDE68A',
-                            }}
-                          >
-                            ℹ️ Ngựa có chuyến đi khác xung quanh ngày dự kiến ban đầu. Bạn sẽ chọn ngày khởi hành chính xác ở Bước 3 (When).
-                          </div>
-                        )}
-
-                        {/* Banner cảnh báo chặn vận chuyển nếu thiếu hồ sơ thú y */}
-                        {isMissingVet && (
-                          <div
-                            style={{
-                              marginLeft: 28,
-                              marginTop: 6,
                               padding: '8px 12px',
-                              backgroundColor: '#FEF3C7',
+                              backgroundColor: '#FEE2E2',
                               borderRadius: 8,
                               fontSize: 12,
                               fontWeight: 700,
-                              color: '#B45309',
-                              border: '1px solid #FDE68A',
+                              color: '#991B1B',
+                              border: '1px solid #FECACA',
                             }}
                           >
-                            ⚠️ Thiếu hồ sơ thú y (Vet Record) bắt buộc — Không được phép vận chuyển! Vui lòng cập nhật hồ sơ thú y cho ngựa trước khi đặt chuyến.
+                            ⛔ {conflict.reason}
                           </div>
                         )}
 
@@ -1479,7 +1522,7 @@ export default function BookingWizard({
                         )}
 
                         {/* Tùy chọn hạng chuồng khi được tick chọn */}
-                        {isSelected && (
+                        {isSelected && !isBlocked && (
                           <div
                             className="stall-select-container"
                             style={{
@@ -1537,64 +1580,133 @@ export default function BookingWizard({
 
           <Divider style={{ margin: '24px 0 20px' }} />
 
-          {/* TÓM TẮT PHƯƠNG THỨC VẬN CHUYỂN ĐÃ CHỌN Ở BƯỚC 1 (TRÁNH TRÙNG LẶP THEO ITEM 2) */}
-          <div
-            style={{
-              backgroundColor: '#F8FAFC',
-              border: '1.5px solid #E2E8F0',
-              borderRadius: 14,
-              padding: '16px 20px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: 12,
-            }}
-          >
-            <Flex align="center" gap={14}>
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 12,
-                  backgroundColor:
-                    transportMode === 'Air'
-                      ? '#EFF6FF'
-                      : transportMode === 'DoorToDoor'
-                      ? '#F5F3FF'
-                      : '#FEF3C7',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 22,
-                }}
-              >
-                {transportMode === 'Air' ? '✈️' : transportMode === 'DoorToDoor' ? '🌐' : '🚛'}
-              </div>
-              <div>
-                <Text style={{ fontSize: 12, color: '#64748B', display: 'block', marginBottom: 2 }}>
-                  Hình thức vận chuyển đã thiết lập ở Bước 1 (Where):
-                </Text>
-                <strong style={{ fontSize: 15, color: '#0F172A' }}>
-                  {transportMode === 'Air'
-                    ? '✈️ Chuyên cơ Hàng không Quốc tế (Air Freight - IATA LAR)'
-                    : transportMode === 'DoorToDoor'
-                    ? '🌐 Trọn gói Door-to-Door (Chuồng - Chuồng đa phương thức)'
-                    : '🚛 Vận chuyển Mặt đất (Ground Transport - Trailer Chuyên dụng)'}
-                </strong>
-                <Text style={{ fontSize: 12, color: '#475569', display: 'block', marginTop: 2 }}>
-                  Tuyến: <strong>{routeData.name}</strong> • Cước cơ bản: <strong>${(transportMode === 'DoorToDoor' ? routeData.doorToDoor?.baseFreight : transportMode === 'Air' ? routeData.air?.baseFreight : routeData.ground?.baseFreight || 2800)?.toLocaleString()}</strong> / ngựa
-                </Text>
-              </div>
-            </Flex>
+          {/* PHẦN 2: HOW WILL YOUR HORSE TRAVEL? (3 HÌNH THỨC VẬN CHUYỂN THEO ITEM 4) */}
+          <div style={{ marginTop: 24 }}>
+            <Title level={4} style={{ margin: '0 0 4px', fontWeight: 800, color: '#0F172A' }}>
+              How will your horse travel? (Hình thức vận chuyển)
+            </Title>
+            <Text style={{ color: '#64748B', fontSize: 13, display: 'block', marginBottom: 18 }}>
+              Chọn 1 trong 3 phương thức: Đường bộ, Chuyên cơ hàng không hoặc Trọn gói Door-to-Door.
+            </Text>
 
-            <Button
-              size="middle"
-              onClick={() => setCurrentStep(0)}
-              style={{ borderRadius: 8, fontSize: 12.5, fontWeight: 700 }}
-            >
-              ← Thay đổi hình thức ở Bước 1
-            </Button>
+            <Row gutter={[16, 16]}>
+              {/* Option 1: Ground Transport */}
+              <Col xs={24} md={8}>
+                <Card
+                  hoverable={isGroundAvailable}
+                  onClick={() => isGroundAvailable && setValue('TransportMode', 'Ground')}
+                  style={{
+                    borderRadius: 16,
+                    cursor: isGroundAvailable ? 'pointer' : 'not-allowed',
+                    opacity: isGroundAvailable ? 1 : 0.6,
+                    border: transportMode === 'Ground' ? '2.5px solid #F59E0B' : '1.5px solid #E2E8F0',
+                    backgroundColor: transportMode === 'Ground' ? '#FFFBEB' : '#FFFFFF',
+                    height: '100%',
+                  }}
+                  styles={{ body: { padding: '18px 20px' } }}
+                >
+                  <Flex justify="space-between" align="center" style={{ marginBottom: 10 }}>
+                    <Tag color="orange" style={{ fontWeight: 800 }}>🚛 ĐƯỜNG BỘ (GROUND)</Tag>
+                    {transportMode === 'Ground' && <Tag color="gold" style={{ fontWeight: 800 }}>✓ Đang chọn</Tag>}
+                  </Flex>
+                  <strong style={{ fontSize: 16, color: '#0F172A', display: 'block', marginBottom: 6 }}>
+                    Ground Transport
+                  </strong>
+                  <p style={{ fontSize: 12.5, color: '#64748B', minHeight: 38 }}>
+                    Xe rơ-moóc chuyên dụng lót đệm rơm, hệ thống treo khí nén giảm xóc đường trường.
+                  </p>
+                  <Divider style={{ margin: '10px 0' }} />
+                  <div style={{ fontSize: 12, color: '#334155' }}>
+                    <div>👥 <strong>Nhân sự:</strong> 1 Tài xế (Driver) + 1 Áp tải (Escort)</div>
+                    <div style={{ marginTop: 4 }}>
+                      🌍 <strong>Thuê xe bên nước khác:</strong> {dropoffCountry !== pickupCountry ? '+$850 USD' : 'Không phát sinh'}
+                    </div>
+                    <div style={{ marginTop: 6, fontWeight: 700, color: '#B45309' }}>
+                      💵 Cước cơ bản: ${(routeData.ground?.baseFreight || 2800).toLocaleString()} USD / con
+                    </div>
+                  </div>
+                  {!isGroundAvailable && (
+                    <div style={{ marginTop: 8, fontSize: 11, color: '#DC2626', fontWeight: 600 }}>
+                      ⚠️ Tuyến đường này không khả dụng đường bộ
+                    </div>
+                  )}
+                </Card>
+              </Col>
+
+              {/* Option 2: Air Flight */}
+              <Col xs={24} md={8}>
+                <Card
+                  hoverable
+                  onClick={() => setValue('TransportMode', 'Air')}
+                  style={{
+                    borderRadius: 16,
+                    cursor: 'pointer',
+                    border: transportMode === 'Air' ? '2.5px solid #2563EB' : '1.5px solid #E2E8F0',
+                    backgroundColor: transportMode === 'Air' ? '#EFF6FF' : '#FFFFFF',
+                    height: '100%',
+                  }}
+                  styles={{ body: { padding: '18px 20px' } }}
+                >
+                  <Flex justify="space-between" align="center" style={{ marginBottom: 10 }}>
+                    <Tag color="blue" style={{ fontWeight: 800 }}>✈️ HÀNG KHÔNG (AIR FLIGHT)</Tag>
+                    {transportMode === 'Air' && <Tag color="blue" style={{ fontWeight: 800 }}>✓ Đang chọn</Tag>}
+                  </Flex>
+                  <strong style={{ fontSize: 16, color: '#0F172A', display: 'block', marginBottom: 6 }}>
+                    Air Flight (IATA LAR)
+                  </strong>
+                  <p style={{ fontSize: 12.5, color: '#64748B', minHeight: 38 }}>
+                    Chuyên cơ hàng không quốc tế, chuồng bay tiêu chuẩn IATA Live Animals Regulations.
+                  </p>
+                  <Divider style={{ margin: '10px 0' }} />
+                  <div style={{ fontSize: 12, color: '#334155' }}>
+                    <div>👥 <strong>Nhân sự:</strong> 1 Nhân viên áp tải bay (Escort only - Không có Tài xế)</div>
+                    <div style={{ marginTop: 4 }}>
+                      📋 <strong>Thủ tục:</strong> Kiểm dịch sân bay & chứng thư CVI quốc tế
+                    </div>
+                    <div style={{ marginTop: 6, fontWeight: 700, color: '#1D4ED8' }}>
+                      💵 Cước cơ bản: ${(routeData.air?.baseFreight || 4800).toLocaleString()} USD / con
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+
+              {/* Option 3: Door-to-Door */}
+              <Col xs={24} md={8}>
+                <Card
+                  hoverable
+                  onClick={() => setValue('TransportMode', 'DoorToDoor')}
+                  style={{
+                    borderRadius: 16,
+                    cursor: 'pointer',
+                    border: transportMode === 'DoorToDoor' ? '2.5px solid #7C3AED' : '1.5px solid #E2E8F0',
+                    backgroundColor: transportMode === 'DoorToDoor' ? '#F5F3FF' : '#FFFFFF',
+                    height: '100%',
+                  }}
+                  styles={{ body: { padding: '18px 20px' } }}
+                >
+                  <Flex justify="space-between" align="center" style={{ marginBottom: 10 }}>
+                    <Tag color="purple" style={{ fontWeight: 800 }}>🌐 TRỌN GÓI (DOOR-TO-DOOR)</Tag>
+                    {transportMode === 'DoorToDoor' && <Tag color="purple" style={{ fontWeight: 800 }}>✓ Đang chọn</Tag>}
+                  </Flex>
+                  <strong style={{ fontSize: 16, color: '#0F172A', display: 'block', marginBottom: 6 }}>
+                    Door-to-Door Multi-modal
+                  </strong>
+                  <p style={{ fontSize: 12.5, color: '#64748B', minHeight: 38 }}>
+                    Trọn gói đón tại chuồng trang trại xuất phát &rarr; Bay quốc tế &rarr; Giao tận chuồng đích.
+                  </p>
+                  <Divider style={{ margin: '10px 0' }} />
+                  <div style={{ fontSize: 12, color: '#334155' }}>
+                    <div>👥 <strong>Nhân sự:</strong> Cả Tài xế (Driver) + Nhân viên áp tải (Escort)</div>
+                    <div style={{ marginTop: 4 }}>
+                      🚛 <strong>Phí thuê xe bên nước khác:</strong> +$1,200 USD (Xe đón giao tại nước đích)
+                    </div>
+                    <div style={{ marginTop: 6, fontWeight: 700, color: '#7C3AED' }}>
+                      💵 Cước trọn gói: ${(routeData.doorToDoor?.baseFreight || 7400).toLocaleString()} USD / con
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+            </Row>
           </div>
         </div>
       )}
@@ -1653,6 +1765,27 @@ export default function BookingWizard({
                 />
               </Col>
             </Row>
+
+            {/* Cảnh báo nếu ngựa đã chọn bị trùng lịch trình với ngày mới chọn */}
+            {selectedHorseIds.some((hId) => checkHorseBookingConflict(hId, departureDate, deliveryDate).hasConflict) && (
+              <div style={{ marginTop: 14 }}>
+                {selectedHorseIds.map((hId) => {
+                  const conf = checkHorseBookingConflict(hId, departureDate, deliveryDate);
+                  if (!conf.hasConflict) return null;
+                  const hFound = availableHorses.find((h) => String(h.horseId || h.HorseID) === String(hId));
+                  return (
+                    <Alert
+                      key={hId}
+                      type="error"
+                      showIcon
+                      style={{ marginBottom: 8, borderRadius: 10 }}
+                      message={`Trùng lịch vận chuyển: Ngựa "${hFound?.name || hFound?.Name || hId}"`}
+                      description={conf.reason}
+                    />
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <Divider style={{ margin: '18px 0' }} />

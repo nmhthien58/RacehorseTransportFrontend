@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import dayjs from 'dayjs';
 import {
   Card,
   Row,
@@ -13,6 +14,7 @@ import {
   Popconfirm,
   message,
   Upload,
+  Steps,
 } from 'antd';
 import {
   MedicineBoxOutlined,
@@ -27,6 +29,8 @@ import {
   SafetyCertificateOutlined,
   ClockCircleOutlined,
   CalendarOutlined,
+  SendOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import {
   getStoredHorses,
@@ -99,6 +103,16 @@ export default function VetRecordsPage() {
   const [recordCategory, setRecordCategory] = useState('All');
   const [reminders, setReminders] = useState(() => getStoredReminders());
   const [storageVersion, setStorageVersion] = useState(0);
+
+  // State nộp Digital Dossier cho Transport Specialist (Flow 2)
+  const [dossierSubmissions, setDossierSubmissions] = useState(() => {
+    try {
+      const raw = localStorage.getItem('racehorse_customer_dossier_submissions');
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  });
 
   // Modal states
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
@@ -737,50 +751,312 @@ export default function VetRecordsPage() {
         </Space>
       )}
 
-      {/* === TAB 3: DIGITAL DOSSIER === */}
-      {activeTab === 'dossier' && (
-        <Space direction="vertical" size={20} style={{ width: '100%' }}>
-          <Card
-            title={
-              <Space>
-                <SafetyCertificateOutlined style={{ color: '#2563EB' }} />
-                <span style={{ fontWeight: 700, color: '#1E293B' }}>
-                  Transport Specialist Dossier & Quarantine Legal Review (Flow 2)
-                </span>
-              </Space>
-            }
-            style={{ borderRadius: 12, border: '1px solid #E2E8F0' }}
-            styles={{ body: { padding: 24 } }}
-          >
-            <p style={{ color: '#475569', fontSize: 13.5, lineHeight: 1.5, margin: 0 }}>
-              The Digital Dossier consolidates all government veterinary health certificates, microchip cross-checks, and import/export clearance permits verified by the IET Quarantine Specialist before route dispatch.
-            </p>
+      {/* === TAB 3: DIGITAL DOSSIER (FIGMA FLOW 2) === */}
+      {activeTab === 'dossier' && (() => {
+        const curSubmission = dossierSubmissions[selectedHorseId];
+        const isSubmitted = Boolean(curSubmission?.submitted);
+        const currentStep = isSubmitted ? (curSubmission.step || 1) : 0;
 
-            <div
-              style={{
-                marginTop: 20,
-                backgroundColor: '#F8FAFC',
-                borderRadius: 10,
-                border: '1px solid #E2E8F0',
-                padding: '16px 20px',
-              }}
+        const handleSubmitDossier = () => {
+          const updated = {
+            ...dossierSubmissions,
+            [selectedHorseId]: {
+              submitted: true,
+              submittedAt: dayjs().format('DD/MM/YYYY HH:mm'),
+              status: 'Reviewing',
+              step: 1,
+              officer: 'Dr. Sarah Jenkins (FEI Senior Vet #VN-884)',
+            },
+          };
+          setDossierSubmissions(updated);
+          try {
+            localStorage.setItem('racehorse_customer_dossier_submissions', JSON.stringify(updated));
+            window.dispatchEvent(new CustomEvent('dossiers_updated'));
+          } catch (err) {
+            console.error(err);
+          }
+          message.success(
+            `Đã nộp thành công bộ hồ sơ Digital Dossier của ngựa "${currentHorse.Name || 'Ngựa đua'}" cho Chuyên viên thủ tục (Transport Specialist) phê duyệt!`,
+          );
+        };
+
+        const handleResetSubmission = () => {
+          const updated = { ...dossierSubmissions };
+          delete updated[selectedHorseId];
+          setDossierSubmissions(updated);
+          try {
+            localStorage.setItem('racehorse_customer_dossier_submissions', JSON.stringify(updated));
+            window.dispatchEvent(new CustomEvent('dossiers_updated'));
+          } catch (err) {
+            console.error(err);
+          }
+          message.info('Đã mở khóa trạng thái để tải thêm tài liệu bổ sung.');
+        };
+
+        const dossierDocs = [
+          {
+            id: 'DOC-01',
+            title: 'FEI Equine Passport & Microchip Registration',
+            type: 'Passport',
+            fileName: 'FEI_Passport_Verified.pdf',
+            size: '2.4 MB',
+            status: 'Verified',
+            authority: 'Fédération Equestre Internationale (FEI)',
+          },
+          {
+            id: 'DOC-02',
+            title: 'Certificate of Veterinary Inspection (CVI)',
+            type: 'HealthCert',
+            fileName: 'CVI_Official_Inspection.pdf',
+            size: '1.8 MB',
+            status: hasCVI ? 'Verified' : 'Pending',
+            authority: 'Cục Thú y / Dept. of Animal Health',
+          },
+          {
+            id: 'DOC-03',
+            title: 'Equine Influenza & Core Vaccinations Log',
+            type: 'Vaccination',
+            fileName: 'Vaccination_Log_2026.pdf',
+            size: '1.2 MB',
+            status: hasVaccines ? 'Verified' : 'Pending',
+            authority: 'Royal Ba Vi Equine Clinic',
+          },
+          {
+            id: 'DOC-04',
+            title: 'Pre-export Blood Test & Lab PCR (Coggins EIA Negative)',
+            type: 'LabTest',
+            fileName: 'Coggins_PCR_Negative.pdf',
+            size: '850 KB',
+            status: hasCoggins ? 'Cleared' : 'Pending',
+            authority: 'Central Veterinary Laboratory',
+          },
+          {
+            id: 'DOC-05',
+            title: 'Official Export / Transit Clearance Permit',
+            type: 'Permit',
+            fileName: 'DAFF_AFCD_Transit_Permit.pdf',
+            size: '3.1 MB',
+            status: isSubmitted ? 'InReview' : 'Draft',
+            authority: 'Border Quarantine & Customs Authority',
+          },
+        ];
+
+        return (
+          <Space direction="vertical" size={20} style={{ width: '100%' }}>
+            {/* CARD 1: CLEARANCE TRACKING STEPPER (KHỚP FIGMA Customers_Clearance Tracking) */}
+            <Card
+              bordered
+              style={{ borderRadius: 16, border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}
+              styles={{ body: { padding: '22px 26px' } }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ fontWeight: 600, color: '#1E293B' }}>Dossier Verification Status:</span>
-                <Tag color={currentHorse.HealthStatus === 'Critical' ? 'error' : 'success'} style={{ borderRadius: 6, fontWeight: 700 }}>
-                  {currentHorse.HealthStatus === 'Critical' ? 'NON-FIT-TO-TRAVEL' : 'SPECIALIST REVIEW COMPLIANT'}
-                </Tag>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
+                <div>
+                  <Space size={8} wrap style={{ marginBottom: 4 }}>
+                    <Tag color="gold" style={{ fontWeight: 800, borderRadius: 6 }}>
+                      🐎 {currentHorse.Name || 'Ngựa đua'}
+                    </Tag>
+                    <Tag color="blue">{currentHorse.Breed || 'Thoroughbred'}</Tag>
+                    <Tag>Microchip: <strong>{currentHorse.MicrochipNumber || '---'}</strong></Tag>
+                    <Tag>Passport: <strong>{currentHorse.PassportNumber || 'FEI-VN-2023-01'}</strong></Tag>
+                  </Space>
+                  <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0F172A' }}>
+                    Quarantine & Digital Dossier Clearance Tracking (Flow 2)
+                  </h3>
+                  <p style={{ margin: '4px 0 0', fontSize: 12.5, color: '#64748B' }}>
+                    Theo dõi tiến độ thẩm định hồ sơ pháp lý, kiểm dịch cửa khẩu và cấp phép xuất cảnh quốc tế
+                  </p>
+                </div>
+
+                <div style={{ textAlign: 'right' }}>
+                  {isSubmitted ? (
+                    <Tag color="processing" style={{ fontSize: 12.5, padding: '4px 12px', fontWeight: 700, borderRadius: 6 }}>
+                      ⏳ ĐANG THẨM ĐỊNH BỞI TRANSPORT SPECIALIST
+                    </Tag>
+                  ) : (
+                    <Tag color="warning" style={{ fontSize: 12.5, padding: '4px 12px', fontWeight: 700, borderRadius: 6 }}>
+                      📝 CHƯA NỘP HỒ SƠ DIGITAL DOSSIER
+                    </Tag>
+                  )}
+                  {isSubmitted && (
+                    <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 4 }}>
+                      Nộp lúc: <strong>{curSubmission.submittedAt}</strong>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div style={{ fontSize: 13, color: '#64748B', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div>• FEI Equine Passport & Microchip: <strong>{currentHorse.MicrochipNumber || '123456789000000'} (Verified)</strong></div>
-                <div>• CVI Health Inspection: <strong>{hasCVI ? 'Completed & Valid' : 'In Review / Pending'}</strong></div>
-                <div>• Coggins EIA Lab Test: <strong>{hasCoggins ? 'Negative (Cleared)' : 'Pending'}</strong></div>
-                <div>• Supervising Quarantine Officer: <strong>Dr. Sarah Jenkins (FEI Senior Vet #VN-884)</strong></div>
+
+              {/* THANH TIẾN TRÌNH STEPPER */}
+              <Steps
+                current={currentStep}
+                items={[
+                  {
+                    title: '1. Nộp hồ sơ',
+                    description: isSubmitted ? 'Đã nộp thành công' : 'Chờ khách nộp',
+                  },
+                  {
+                    title: '2. Thẩm định TS',
+                    description: isSubmitted ? 'Đối soát 3-Point Audit' : 'Chưa xử lý',
+                  },
+                  {
+                    title: '3. Cơ quan cấp phép',
+                    description: 'Hải quan & Cục Thú y',
+                  },
+                  {
+                    title: '4. Đã thông quan',
+                    description: 'Bàn giao cho Manager',
+                  },
+                ]}
+                style={{ marginTop: 10, marginBottom: 10 }}
+              />
+            </Card>
+
+            {/* CARD 2: DIGITAL DOSSIER DOCUMENTS CHECKLIST */}
+            <Card
+              title={
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Space>
+                    <FileTextOutlined style={{ color: '#2563EB' }} />
+                    <span style={{ fontWeight: 800, color: '#1E293B', fontSize: 15 }}>
+                      Bộ hồ sơ pháp lý số hóa (Digital Dossier Documents Checklist)
+                    </span>
+                  </Space>
+                  <Tag color="blue" style={{ fontWeight: 700 }}>
+                    {dossierDocs.filter((d) => d.status === 'Verified' || d.status === 'Cleared').length} / {dossierDocs.length} Tài liệu hợp lệ
+                  </Tag>
+                </div>
+              }
+              bordered
+              style={{ borderRadius: 16, border: '1px solid #E2E8F0' }}
+              styles={{ body: { padding: '16px 20px' } }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {dossierDocs.map((doc) => {
+                  const isVerified = doc.status === 'Verified' || doc.status === 'Cleared';
+                  return (
+                    <div
+                      key={doc.id}
+                      style={{
+                        padding: '12px 16px',
+                        borderRadius: 12,
+                        border: isVerified ? '1.5px solid #BBF7D0' : '1px solid #E2E8F0',
+                        backgroundColor: isVerified ? '#F0FDF4' : '#F8FAFC',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: 12,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div
+                          style={{
+                            width: 38,
+                            height: 38,
+                            borderRadius: 10,
+                            backgroundColor: isVerified ? '#DCFCE7' : '#E2E8F0',
+                            color: isVerified ? '#15803D' : '#64748B',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: 18,
+                          }}
+                        >
+                          📄
+                        </div>
+                        <div>
+                          <strong style={{ fontSize: 13.5, color: '#0F172A', display: 'block' }}>
+                            {doc.title}
+                          </strong>
+                          <span style={{ fontSize: 12, color: '#64748B' }}>
+                            Tệp: <code>{doc.fileName}</code> ({doc.size}) • Cơ quan cấp: <em>{doc.authority}</em>
+                          </span>
+                        </div>
+                      </div>
+
+                      <Space size={8}>
+                        {isVerified ? (
+                          <Tag color="success" style={{ fontWeight: 700, borderRadius: 6 }}>
+                            ✓ ĐÃ XÁC THỰC (VERIFIED)
+                          </Tag>
+                        ) : doc.status === 'InReview' ? (
+                          <Tag color="processing" style={{ fontWeight: 700, borderRadius: 6 }}>
+                            ⏳ ĐANG XEM XÉT
+                          </Tag>
+                        ) : (
+                          <Tag color="default" style={{ fontWeight: 600, borderRadius: 6 }}>
+                            CHỜ KIỂM TRA
+                          </Tag>
+                        )}
+                        <Button
+                          size="small"
+                          icon={<EyeOutlined />}
+                          onClick={() => message.info(`Đang mở bản xem trước tài liệu "${doc.fileName}"`)}
+                          style={{ borderRadius: 6, fontSize: 12 }}
+                        >
+                          Xem tệp
+                        </Button>
+                      </Space>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
-          </Card>
-        </Space>
-      )}
+            </Card>
+
+            {/* CARD 3: ACTION - GỬI HỒ SƠ CHO TRANSPORT SPECIALIST */}
+            <Card
+              bordered
+              style={{
+                borderRadius: 16,
+                border: isSubmitted ? '1.5px solid #86EFAC' : '1.5px solid #BFDBFE',
+                backgroundColor: isSubmitted ? '#F0FDF4' : '#EFF6FF',
+              }}
+              styles={{ body: { padding: '20px 24px' } }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+                <div>
+                  <h4 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 800, color: isSubmitted ? '#166534' : '#1E3A8A' }}>
+                    {isSubmitted ? '✅ Bộ hồ sơ Digital Dossier đã được gửi đi thành công!' : '📤 Nộp hồ sơ Digital Dossier cho Transport Specialist phê duyệt'}
+                  </h4>
+                  <p style={{ margin: 0, fontSize: 13, color: isSubmitted ? '#15803D' : '#1E40AF', maxWidth: 640 }}>
+                    {isSubmitted
+                      ? `Chuyên viên thủ tục (${curSubmission.officer}) đang tiến hành thẩm định đối soát chéo thông tin vi mạch, chứng thư CVI và vaccine để nộp cho Logistics Manager.`
+                      : 'Sau khi gửi, Chuyên viên thủ tục sẽ kiểm tra tính pháp lý của giấy tờ, xử lý thủ tục kiểm dịch hải quan và nộp cho Ban Quản lý điều vận để phê duyệt lộ trình.'}
+                  </p>
+                </div>
+
+                <Space size={10}>
+                  {isSubmitted ? (
+                    <Button
+                      onClick={handleResetSubmission}
+                      style={{ borderRadius: 8, fontWeight: 600 }}
+                    >
+                      Bổ sung thêm tài liệu
+                    </Button>
+                  ) : (
+                    <Button
+                      type="primary"
+                      size="large"
+                      icon={<SendOutlined />}
+                      onClick={handleSubmitDossier}
+                      style={{
+                        backgroundColor: '#2563EB',
+                        borderColor: '#2563EB',
+                        borderRadius: 10,
+                        fontWeight: 800,
+                        height: 44,
+                        padding: '0 24px',
+                        boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
+                      }}
+                    >
+                      Gửi hồ sơ Digital Dossier cho TS phê duyệt
+                    </Button>
+                  )}
+                </Space>
+              </div>
+            </Card>
+          </Space>
+        );
+      })()}
 
       {/* === TAB 4: TRAVEL READY === */}
       {activeTab === 'travelReady' && (

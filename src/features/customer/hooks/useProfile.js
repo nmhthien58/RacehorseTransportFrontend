@@ -92,18 +92,23 @@ export function useProfile() {
         const role = user?.role || user?.Role || 'Customer';
         const meta = ROLE_METADATA[role] || ROLE_METADATA.Customer;
 
+        const isDefaultDemoCustomer = !user || user?.userId === 5 || user?.email === 'customer@test.com';
+
         const merged = {
-          userId: user?.userId || user?.UserID || 5,
-          fullName: user?.fullName || user?.FullName || (role === 'Admin' ? 'Trần Quốc Bảo' : role === 'LogisticsManager' || role === 'Manager' ? 'Trần Quốc Bảo' : role === 'Driver' ? 'Phạm Văn Đức' : role === 'Escort' ? 'Dr. Elena Rostova' : role === 'FleetCoordinator' || role === 'Coordinator' ? 'Lê Hoàng Nam' : role === 'TransportSpecialist' || role === 'Specialist' ? 'Nguyễn Thị Mai' : 'Jane Smith'),
-          email: user?.email || user?.Email || (role === 'Admin' || role === 'LogisticsManager' || role === 'Manager' ? 'manager@test.com' : role === 'Driver' ? 'driver@test.com' : role === 'Escort' ? 'escort@test.com' : role === 'FleetCoordinator' || role === 'Coordinator' ? 'coordinator@test.com' : role === 'TransportSpecialist' || role === 'Specialist' ? 'specialist@test.com' : 'customer@test.com'),
-          phoneNumber: user?.phoneNumber || user?.PhoneNumber || '+84988111222',
+          userId: user?.userId || user?.UserID || (isDefaultDemoCustomer ? 5 : Date.now()),
+          fullName: user?.fullName || user?.FullName || (role === 'Admin' ? 'Trần Quốc Bảo' : role === 'LogisticsManager' || role === 'Manager' ? 'Trần Quốc Bảo' : role === 'Driver' ? 'Phạm Văn Đức' : role === 'Escort' ? 'Dr. Elena Rostova' : role === 'FleetCoordinator' || role === 'Coordinator' ? 'Lê Hoàng Nam' : role === 'TransportSpecialist' || role === 'Specialist' ? 'Nguyễn Thị Mai' : isDefaultDemoCustomer ? 'Jane Smith' : 'Khách hàng mới'),
+          email: user?.email || user?.Email || (role === 'Admin' || role === 'LogisticsManager' || role === 'Manager' ? 'manager@test.com' : role === 'Driver' ? 'driver@test.com' : role === 'Escort' ? 'escort@test.com' : role === 'FleetCoordinator' || role === 'Coordinator' ? 'coordinator@test.com' : role === 'TransportSpecialist' || role === 'Specialist' ? 'specialist@test.com' : isDefaultDemoCustomer ? 'customer@test.com' : ''),
+          phoneNumber: user?.phoneNumber || user?.PhoneNumber || (isDefaultDemoCustomer ? '+84988111222' : ''),
           role: role,
           isActive: true,
-          createdAt: user?.createdAt || user?.CreatedAt || '2025-03-15T08:00:00Z',
-          ...meta,
-          // Ưu tiên dữ liệu thực từ user nếu có
-          ...(user?.department ? { department: user.department } : {}),
-          ...(user?.staffId ? { staffId: user.staffId } : {}),
+          createdAt: user?.createdAt || user?.CreatedAt || new Date().toISOString(),
+          // Với tài khoản mặc định demo lấy từ meta, tài khoản mới tạo để trống
+          clubName: user?.clubName !== undefined ? user.clubName : (isDefaultDemoCustomer ? meta.clubName : ''),
+          address: user?.address !== undefined ? user.address : (isDefaultDemoCustomer ? meta.address : ''),
+          membershipTier: user?.membershipTier !== undefined ? user.membershipTier : (isDefaultDemoCustomer ? meta.membershipTier : 'Thành viên mới (Standard)'),
+          feiOwnerId: user?.feiOwnerId !== undefined ? user.feiOwnerId : (isDefaultDemoCustomer ? meta.feiOwnerId : ''),
+          department: user?.department !== undefined ? user.department : (isDefaultDemoCustomer ? meta.department : 'Khách hàng cá nhân / Chủ ngựa đua'),
+          ...(user?.staffId ? { staffId: user.staffId } : (isDefaultDemoCustomer && meta.staffId ? { staffId: meta.staffId } : {})),
         };
         setData(merged);
       } catch (err) {

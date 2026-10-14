@@ -106,7 +106,7 @@ export default function AppHeader({
     {
       key: 'Customer',
       title: 'Customer (Khách hàng)',
-      subtitle: 'Jane Smith • Tạo yêu cầu vận chuyển ngựa',
+      subtitle: `${userFullName} • Tạo yêu cầu vận chuyển ngựa`,
       role: ROLES.CUSTOMER,
       route: ROUTES.CUSTOMER_DASHBOARD,
       user: usersData.find((u) => u.role === ROLES.CUSTOMER),
@@ -501,7 +501,7 @@ export default function AppHeader({
                 {userFullName}
               </div>
               <div style={{ fontSize: 12, color: '#64748b' }}>
-                {isCustomer ? t('nav.ownerPortal') : userRole || ''}
+                {isCustomer ? t('nav.ownerPortal', 'Owner Portal') : userRole || ''}
               </div>
             </div>
           </Flex>

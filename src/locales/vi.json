@@ -95,7 +95,8 @@
     "escortDashboard": "Bảng điều khiển & Ca trực",
     "escortMissions": "Nhiệm vụ áp tải thú y",
     "escortMission": "Giám sát thú y & Áp tải",
-    "tripHistory": "Lịch sử chuyến đi"
+    "tripHistory": "Lịch sử chuyến đi",
+    "ownerPortal": "Owner Portal"
   },
   "status": {
     "submitted": "Đã gửi",

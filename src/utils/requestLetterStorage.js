@@ -172,7 +172,7 @@ Thông tin tóm tắt lộ trình:
 - Phương thức vận chuyển: ${modeName}
 - Số lượng: ${totalHorses} ngựa
 - Dự kiến khởi hành: ${new Date(departure).toLocaleDateString('vi-VN')}
-- Ước tính cước phí dự kiến: $${cost.toLocaleString()} USD
+- Ước tính cước phí dự kiến: ${cost.toLocaleString()} USD
 ${booking.SpecialInstructions ? `- Yêu cầu đặc biệt từ chủ ngựa: "${booking.SpecialInstructions}"` : ''}
 
 Kính đề nghị Quản lý điều vận kiểm tra tính khả dụng của đội xe/chuyến bay, phân bổ Bác sĩ thú y hoặc Chuyên viên kiểm dịch phụ trách và phê duyệt đơn giúp tôi.
@@ -189,7 +189,7 @@ Trip summary:
 - Transport Method: ${transportMode}
 - Horses count: ${totalHorses}
 - Target Departure: ${new Date(departure).toLocaleDateString('en-US')}
-- Estimated Freight: $${cost.toLocaleString()} USD
+- Estimated Freight: ${cost.toLocaleString()} USD
 ${booking.SpecialInstructions ? `- Special Care Instructions: "${booking.SpecialInstructions}"` : ''}
 
 Please review our request, assign designated specialists/coordinators, and grant approval to proceed with route planning.

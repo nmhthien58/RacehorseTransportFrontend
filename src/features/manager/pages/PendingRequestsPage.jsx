@@ -196,7 +196,7 @@ Thông tin tóm tắt lộ trình:
 - Phương thức vận chuyển: ${activeBooking.transportMode || 'Air'}
 - Số lượng: ${activeBooking.totalHorses || 1} cá thể ngựa
 - Dự kiến khởi hành: ${activeBooking.departureDate ? dayjs(activeBooking.departureDate).format('DD/MM/YYYY') : 'Sớm nhất'}
-- Ước tính cước phí dự kiến: $${Number(activeBooking.estimatedCost || 0).toLocaleString()} USD
+- Ước tính cước phí dự kiến: ${Number(activeBooking.estimatedCost || 0).toLocaleString()} USD
 ${activeBooking.specialInstructions ? `- Yêu cầu chăm sóc đặc biệt: "${activeBooking.specialInstructions}"` : ''}
 
 Kính đề nghị Ban Quản lý kiểm tra hồ sơ, phân bổ chuyên viên kiểm dịch phụ trách và xem xét phê duyệt đơn.
@@ -213,7 +213,7 @@ Trip summary:
 - Transport Method: ${activeBooking.transportMode || 'Air'}
 - Number of horses: ${activeBooking.totalHorses || 1}
 - Target Departure: ${activeBooking.departureDate ? dayjs(activeBooking.departureDate).format('DD/MM/YYYY') : 'Earliest'}
-- Estimated Freight: $${Number(activeBooking.estimatedCost || 0).toLocaleString()} USD
+- Estimated Freight: ${Number(activeBooking.estimatedCost || 0).toLocaleString()} USD
 ${activeBooking.specialInstructions ? `- Special Care: "${activeBooking.specialInstructions}"` : ''}
 
 Please review this request and assign specialist staff to process our transport schedule.

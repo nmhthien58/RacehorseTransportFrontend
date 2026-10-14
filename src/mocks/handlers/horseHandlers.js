@@ -112,9 +112,15 @@ export const horseHandlers = [
     let result = getStoredHorses().map(normalizeHorse);
     if (ownerId) {
       const parsedId = Number(ownerId);
-      result = result.filter(
-        (h) => h.ownerUserId === parsedId || h.ownerUserId === 5 || !h.ownerUserId,
-      );
+      if (parsedId === 5) {
+        result = result.filter(
+          (h) => h.ownerUserId === 5 || !h.ownerUserId,
+        );
+      } else {
+        result = result.filter(
+          (h) => h.ownerUserId === parsedId,
+        );
+      }
     }
 
     return HttpResponse.json({
@@ -156,38 +162,42 @@ export const horseHandlers = [
       );
     }
 
-    const newHorse = addStoredHorse({
-      Name: horseName,
-      Breed: body.breed || body.Breed || 'Thoroughbred',
-      Gender: body.gender || body.Gender || 'Stallion',
-      DateOfBirth: body.dateOfBirth || body.DateOfBirth,
-      Color: body.color || body.Color || '',
-      MicrochipNumber: body.microchipNumber || body.MicrochipNumber || '',
-      PassportNumber: body.passportNumber || body.PassportNumber || '',
-      SpecialCareRequirements: body.specialCareRequirements || body.SpecialCareRequirements || '',
-      HealthStatus: body.healthStatus || body.HealthStatus || 'Good',
-      vetRecordTitle: body.vetRecordTitle,
-      vetRecordType: body.vetRecordType,
-      vetRecordFileName: body.vetRecordFileName,
-      veterinarian: body.veterinarian,
-      clinic: body.clinic,
-      issueDate: body.issueDate,
-      validUntil: body.validUntil,
-      vetNotes: body.vetNotes,
-      vetRecord: body.vetRecord,
-      VetRecords: body.VetRecords || body.vetRecords,
-      hasVetRecord: body.hasVetRecord,
-      OwnerUserID: 5,
-      IsActive: true,
-    });
+    try {
+      const newHorse = addStoredHorse({
+        Name: horseName,
+        Breed: body.breed || body.Breed || 'Thoroughbred',
+        Gender: body.gender || body.Gender || 'Stallion',
+        DateOfBirth: body.dateOfBirth || body.DateOfBirth,
+        Color: body.color || body.Color || '',
+        MicrochipNumber: body.microchipNumber || body.MicrochipNumber || '',
+        PassportNumber: body.passportNumber || body.PassportNumber || '',
+        SpecialCareRequirements: body.specialCareRequirements || body.SpecialCareRequirements || '',
+        HealthStatus: body.healthStatus || body.HealthStatus || 'Good',
+        vetRecordTitle: body.vetRecordTitle,
+        vetRecordType: body.vetRecordType,
+        vetRecordFileName: body.vetRecordFileName,
+        veterinarian: body.veterinarian,
+        clinic: body.clinic,
+        issueDate: body.issueDate,
+        validUntil: body.validUntil,
+        vetNotes: body.vetNotes,
+        vetRecord: body.vetRecord,
+        VetRecords: body.VetRecords || body.vetRecords,
+        hasVetRecord: body.hasVetRecord,
+        OwnerUserID: Number(body.ownerUserId || body.OwnerUserID) || 5,
+        IsActive: true,
+      });
 
-    const normalized = normalizeHorse(newHorse);
-    return HttpResponse.json({
-      success: true,
-      message: 'Tạo hồ sơ ngựa thành công',
-      data: normalized,
-      ...normalized,
-    }, { status: 201 });
+      const normalized = normalizeHorse(newHorse);
+      return HttpResponse.json({
+        success: true,
+        message: 'Tạo hồ sơ ngựa thành công',
+        data: normalized,
+        ...normalized,
+      }, { status: 201 });
+    } catch (err) {
+      return HttpResponse.json({ success: false, message: err.message }, { status: 400 });
+    }
   }),
 
   // PUT /api/horses/:id - Cập nhật thông tin ngựa
@@ -195,29 +205,33 @@ export const horseHandlers = [
     const horseId = Number(params.id);
     const body = await parseHorseRequestBody(request);
 
-    const updated = updateStoredHorse(horseId, {
-      Name: body.name || body.Name,
-      Breed: body.breed || body.Breed,
-      Gender: body.gender || body.Gender,
-      DateOfBirth: body.dateOfBirth || body.DateOfBirth,
-      Color: body.color || body.Color,
-      MicrochipNumber: body.microchipNumber || body.MicrochipNumber,
-      PassportNumber: body.passportNumber || body.PassportNumber,
-      SpecialCareRequirements: body.specialCareRequirements || body.SpecialCareRequirements,
-      HealthStatus: body.healthStatus || body.HealthStatus,
-    });
+    try {
+      const updated = updateStoredHorse(horseId, {
+        Name: body.name || body.Name,
+        Breed: body.breed || body.Breed,
+        Gender: body.gender || body.Gender,
+        DateOfBirth: body.dateOfBirth || body.DateOfBirth,
+        Color: body.color || body.Color,
+        MicrochipNumber: body.microchipNumber || body.MicrochipNumber,
+        PassportNumber: body.passportNumber || body.PassportNumber,
+        SpecialCareRequirements: body.specialCareRequirements || body.SpecialCareRequirements,
+        HealthStatus: body.healthStatus || body.HealthStatus,
+      });
 
-    if (!updated) {
-      return HttpResponse.json({ success: false, message: 'Horse not found' }, { status: 404 });
+      if (!updated) {
+        return HttpResponse.json({ success: false, message: 'Horse not found' }, { status: 404 });
+      }
+
+      const normalized = normalizeHorse(updated);
+      return HttpResponse.json({
+        success: true,
+        message: 'Cập nhật hồ sơ ngựa thành công',
+        data: normalized,
+        ...normalized,
+      });
+    } catch (err) {
+      return HttpResponse.json({ success: false, message: err.message }, { status: 400 });
     }
-
-    const normalized = normalizeHorse(updated);
-    return HttpResponse.json({
-      success: true,
-      message: 'Cập nhật hồ sơ ngựa thành công',
-      data: normalized,
-      ...normalized,
-    });
   }),
 
   // DELETE /api/horses/:id - Xóa hồ sơ ngựa

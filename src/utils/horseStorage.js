@@ -326,23 +326,25 @@ export function addStoredHorse(horseData) {
   const trimmedName = horseData.Name ? horseData.Name.trim() : (horseData.name ? horseData.name.trim() : 'Unnamed Horse');
   const trimmedChip = horseData.MicrochipNumber ? horseData.MicrochipNumber.trim() : (horseData.microchipNumber ? horseData.microchipNumber.trim() : '');
 
-  // Chống Duplicate: Nếu đã có con ngựa trùng Microchip hoặc trùng Name + Breed -> Trả về con đó ngay, không nhân bản
-  const existing = horses.find((h) => {
-    if (trimmedChip && h.MicrochipNumber && h.MicrochipNumber.toLowerCase() === trimmedChip.toLowerCase()) {
-      return true;
-    }
-    if (
-      h.Name &&
-      h.Name.trim().toLowerCase() === trimmedName.toLowerCase() &&
-      h.Breed === (horseData.Breed || horseData.breed)
-    ) {
-      return true;
-    }
-    return false;
-  });
+  const trimmedPassport = horseData.PassportNumber ? horseData.PassportNumber.trim() : (horseData.passportNumber ? horseData.passportNumber.trim() : '');
 
-  if (existing) {
-    return existing;
+  // Kiểm tra trùng Microchip hoặc Passport number
+  if (trimmedChip) {
+    const chipDup = horses.find(
+      (h) => (h.MicrochipNumber || '').trim().toLowerCase() === trimmedChip.toLowerCase()
+    );
+    if (chipDup) {
+      throw new Error(`Mã vi mạch (Microchip Number) "${trimmedChip}" đã tồn tại cho cá thể ngựa "${chipDup.Name}". Không được phép trùng!`);
+    }
+  }
+
+  if (trimmedPassport) {
+    const passDup = horses.find(
+      (h) => (h.PassportNumber || '').trim().toLowerCase() === trimmedPassport.toLowerCase()
+    );
+    if (passDup) {
+      throw new Error(`Số hộ chiếu (Passport Number) "${trimmedPassport}" đã tồn tại cho cá thể ngựa "${passDup.Name}". Không được phép trùng!`);
+    }
   }
 
   const maxId = horses.reduce((max, h) => Math.max(max, Number(h.HorseID) || 0), 0);
@@ -434,6 +436,27 @@ export function updateStoredHorse(id, updateData) {
   if (index === -1) return null;
 
   const current = horses[index];
+  const trimmedChip = (updateData.MicrochipNumber || updateData.microchipNumber || '').trim();
+  const trimmedPassport = (updateData.PassportNumber || updateData.passportNumber || '').trim();
+
+  if (trimmedChip) {
+    const chipDup = horses.find(
+      (h) => String(h.HorseID) !== String(id) && (h.MicrochipNumber || '').trim().toLowerCase() === trimmedChip.toLowerCase()
+    );
+    if (chipDup) {
+      throw new Error(`Mã vi mạch (Microchip Number) "${trimmedChip}" đã tồn tại cho cá thể ngựa "${chipDup.Name}". Không được phép trùng!`);
+    }
+  }
+
+  if (trimmedPassport) {
+    const passDup = horses.find(
+      (h) => String(h.HorseID) !== String(id) && (h.PassportNumber || '').trim().toLowerCase() === trimmedPassport.toLowerCase()
+    );
+    if (passDup) {
+      throw new Error(`Số hộ chiếu (Passport Number) "${trimmedPassport}" đã tồn tại cho cá thể ngựa "${passDup.Name}". Không được phép trùng!`);
+    }
+  }
+
   const healthSt = updateData.HealthStatus || updateData.healthStatus || current.HealthStatus;
   const hasVet = updateData.HasVetRecord !== undefined ? updateData.HasVetRecord : current.HasVetRecord;
   const isEligible = hasVet && healthSt !== 'Critical';

@@ -7,9 +7,11 @@ import {
   DatePicker,
   Row,
   Col,
+  message,
 } from 'antd';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import { getStoredHorses } from '@utils/horseStorage';
 
 const HEALTH_STATUS_OPTIONS = [
   { value: 'Excellent', labelVi: 'Xuất sắc', labelEn: 'Excellent', color: '#16a34a' },
@@ -69,6 +71,33 @@ export default function EditHorseModal({
   }, [open, horse, form]);
 
   const handleFinish = (values) => {
+    const existingHorses = getStoredHorses();
+    const curId = horse?.HorseID || horse?.horseId;
+    const trimmedChip = values.microchipNumber?.trim();
+    const trimmedPassport = values.passportNumber?.trim();
+
+    if (trimmedChip) {
+      const chipDup = existingHorses.find(
+        (h) => String(h.HorseID || h.horseId) !== String(curId) &&
+               (h.MicrochipNumber || h.microchipNumber || '').trim().toLowerCase() === trimmedChip.toLowerCase()
+      );
+      if (chipDup) {
+        message.error(`Mã vi mạch (Microchip Number) "${trimmedChip}" đã tồn tại cho cá thể ngựa "${chipDup.Name || chipDup.name}". Không được phép trùng!`);
+        return;
+      }
+    }
+
+    if (trimmedPassport) {
+      const passDup = existingHorses.find(
+        (h) => String(h.HorseID || h.horseId) !== String(curId) &&
+               (h.PassportNumber || h.passportNumber || '').trim().toLowerCase() === trimmedPassport.toLowerCase()
+      );
+      if (passDup) {
+        message.error(`Số hộ chiếu (Passport Number) "${trimmedPassport}" đã tồn tại cho cá thể ngựa "${passDup.Name || passDup.name}". Không được phép trùng!`);
+        return;
+      }
+    }
+
     const formattedValues = {
       ...values,
       dateOfBirth: values.dateOfBirth ? values.dateOfBirth.format('YYYY-MM-DD') : null,

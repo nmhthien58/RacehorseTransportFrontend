@@ -135,9 +135,11 @@ export const bookingHandlers = [
 
     if (customerId) {
       const parsedId = Number(customerId);
-      list = list.filter(
-        (b) => b.customerUserId === parsedId || b.customerUserId === 5,
-      );
+      if (parsedId === 5) {
+        list = list.filter((b) => b.customerUserId === 5 || !b.customerUserId);
+      } else {
+        list = list.filter((b) => b.customerUserId === parsedId);
+      }
     }
 
     if (status && status !== 'All') {

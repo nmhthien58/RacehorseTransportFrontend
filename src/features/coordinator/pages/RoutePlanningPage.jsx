@@ -209,6 +209,7 @@ export default function RoutePlanningPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const editingPlanId = searchParams.get('planId');
   const paramOrderCode = searchParams.get('orderCode');
+  const paramOrderId = searchParams.get('orderId');
 
   const [orders, setOrders] = useState(() => getOrdersToPlan());
   const [fleetList] = useState(() => getStoredFleet());
@@ -217,7 +218,7 @@ export default function RoutePlanningPage() {
 
   // Chế độ xem: 'orders_list' (danh sách yêu cầu cần lên kế hoạch) hoặc 'studio' (lên kế hoạch cho 1 đơn cụ thể)
   const [viewMode, setViewMode] = useState(() => {
-    return editingPlanId || paramOrderCode ? 'studio' : 'orders_list';
+    return editingPlanId || paramOrderCode || paramOrderId ? 'studio' : 'orders_list';
   });
 
   // Bộ lọc danh sách yêu cầu
@@ -229,13 +230,20 @@ export default function RoutePlanningPage() {
     if (paramOrderCode) {
       return plans.find((p) => p.orderCode === paramOrderCode) || null;
     }
+    if (paramOrderId) {
+      return plans.find((p) => String(p.orderId) === String(paramOrderId)) || null;
+    }
     return null;
-  }, [editingPlanId, paramOrderCode, plans]);
+  }, [editingPlanId, paramOrderCode, paramOrderId, plans]);
 
   const [selectedOrderCode, setSelectedOrderCode] = useState(() => {
     if (existingPlan) return existingPlan.orderCode;
     if (paramOrderCode) return paramOrderCode;
     const initialOrders = getOrdersToPlan();
+    if (paramOrderId) {
+      const match = initialOrders.find((o) => String(o.orderId) === String(paramOrderId));
+      if (match) return match.orderCode;
+    }
     return initialOrders[0]?.orderCode || '';
   });
 
@@ -406,7 +414,7 @@ export default function RoutePlanningPage() {
     setCheckpoints(reindexed);
     setAddStopModalOpen(false);
     newStopForm.resetFields();
-    message.success(`Đã thêm trạm dừng ${values.name} vào lộ trình! (+$${stopFee > 0 ? `$${stopFee.toLocaleString()}` : '$0'})`);
+    message.success(`Đã thêm trạm dừng ${values.name} vào lộ trình! (+${stopFee > 0 ? `$${stopFee.toLocaleString()}` : '$0'})`);
   };
 
   const handleRemoveCheckpoint = (index) => {
@@ -626,7 +634,7 @@ export default function RoutePlanningPage() {
       key: 'customerFeeCap',
       render: (cap) => (
         <strong style={{ color: '#16A34A', fontSize: 14 }}>
-          $${Number(cap || 5000).toLocaleString()}
+          ${Number(cap || 5000).toLocaleString()}
         </strong>
       ),
     },
@@ -1070,7 +1078,7 @@ export default function RoutePlanningPage() {
                                   📍 {stop.location}
                                 </div>
                                 <div style={{ fontSize: 12, color: '#B45309', fontWeight: 700 }}>
-                                  Phí trạm: +$${stop.fee.toLocaleString()} USD
+                                  Phí trạm: +${stop.fee.toLocaleString()} USD
                                 </div>
                                 {!isStopActive && (
                                   <div style={{ fontSize: 11, color: '#DC2626', marginTop: 4, fontStyle: 'italic' }}>
@@ -1230,29 +1238,29 @@ export default function RoutePlanningPage() {
                     {isAirOnly || isDoorToDoor ? (
                       <Flex justify="space-between" align="center">
                         <span style={{ fontSize: 13, color: '#475569' }}>Air Charter Flight</span>
-                        <strong style={{ fontSize: 14 }}>$${charterCost.toLocaleString()}</strong>
+                        <strong style={{ fontSize: 14 }}>${charterCost.toLocaleString()}</strong>
                       </Flex>
                     ) : null}
 
                     <Flex justify="space-between" align="center">
                       <span style={{ fontSize: 13, color: '#475569' }}>Stall Rent / Ground Fleet</span>
-                      <strong style={{ fontSize: 14 }}>$${stallRent.toLocaleString()}</strong>
+                      <strong style={{ fontSize: 14 }}>${stallRent.toLocaleString()}</strong>
                     </Flex>
 
                     <Flex justify="space-between" align="center">
                       <span style={{ fontSize: 13, color: '#475569' }}>Vet Escort Fee</span>
-                      <strong style={{ fontSize: 14 }}>$${vetEscortFees.toLocaleString()}</strong>
+                      <strong style={{ fontSize: 14 }}>${vetEscortFees.toLocaleString()}</strong>
                     </Flex>
 
                     <Flex justify="space-between" align="center">
                       <span style={{ fontSize: 13, color: '#475569' }}>Quarantine & Transit Hubs Fee</span>
-                      <strong style={{ fontSize: 14 }}>$${quarantineFees.toLocaleString()}</strong>
+                      <strong style={{ fontSize: 14 }}>${quarantineFees.toLocaleString()}</strong>
                     </Flex>
 
                     {isDoorToDoor && (
                       <Flex justify="space-between" align="center">
                         <span style={{ fontSize: 13, color: '#7C3AED' }}>Overseas Vehicle Rental</span>
-                        <strong style={{ fontSize: 14, color: '#7C3AED' }}>+$${overseasRentalFee.toLocaleString()}</strong>
+                        <strong style={{ fontSize: 14, color: '#7C3AED' }}>+${overseasRentalFee.toLocaleString()}</strong>
                       </Flex>
                     )}
 
@@ -1261,12 +1269,12 @@ export default function RoutePlanningPage() {
                     <Flex justify="space-between" align="center">
                       <strong style={{ fontSize: 15, color: '#0F172A' }}>Tổng dự toán (Total Estimated):</strong>
                       <strong style={{ fontSize: 18, color: totalEstimatedBudget > customerFeeCap ? '#DC2626' : '#16A34A' }}>
-                        $${totalEstimatedBudget.toLocaleString()}
+                        ${totalEstimatedBudget.toLocaleString()}
                       </strong>
                     </Flex>
                     <Flex justify="space-between" align="center">
                       <span style={{ fontSize: 12, color: '#64748B' }}>Hạn mức khách duyệt (Customer Cap):</span>
-                      <span style={{ fontSize: 13, fontWeight: 600 }}>$${customerFeeCap.toLocaleString()}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>${customerFeeCap.toLocaleString()}</span>
                     </Flex>
                   </Space>
 
@@ -1385,7 +1393,7 @@ export default function RoutePlanningPage() {
           <Divider style={{ margin: '8px 0' }} />
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <Text type="secondary">Tổng dự toán ngân sách:</Text>
-            <strong style={{ color: '#16A34A', fontSize: 16 }}>$${totalEstimatedBudget.toLocaleString()} USD</strong>
+            <strong style={{ color: '#16A34A', fontSize: 16 }}>${totalEstimatedBudget.toLocaleString()} USD</strong>
           </div>
         </div>
 

@@ -1270,5 +1270,138 @@
       "Cleared": "Cleared",
       "Issue": "Issue"
     }
+  },
+  "tripPlan": {
+    "title": "Trip planning",
+    "subtitle": "Group horses of approved bookings into trips: vehicle, crew and route",
+    "newTitle": "New trip",
+    "editTitle": "Edit draft {{code}}",
+    "editorSubtitle": "A draft reserves the vehicle, crew and horses; submit it for manager approval",
+    "queueEmpty": "No horses are waiting to be planned",
+    "tabs": {
+      "queue": "Planning queue",
+      "trips": "Trip plans"
+    },
+    "filters": {
+      "allModes": "All modes",
+      "planning": "Planning / upcoming",
+      "all": "All"
+    },
+    "sections": {
+      "horses": "Horses on this trip",
+      "vehicle": "Schedule & vehicle",
+      "crew": "Crew",
+      "route": "Route",
+      "bookings": "Bookings on this trip"
+    },
+    "fields": {
+      "status": "Status",
+      "vehicle": "Vehicle",
+      "capacity": "{{count}} slots",
+      "plannedStart": "Planned start",
+      "plannedEnd": "Planned arrival",
+      "plannedCost": "Planned operating cost (USD)",
+      "plannedBy": "Planned by",
+      "approvedBy": "Approved by",
+      "rejections": "Times returned",
+      "lead": "Lead",
+      "horseCount": "{{count}} horse(s)",
+      "slot": "Slot",
+      "horse": "Horse",
+      "booking": "Booking",
+      "stallClass": "Stall class",
+      "dossier": "Dossier",
+      "restMinutes": "{{count}} min mandatory rest",
+      "restMinutesShort": "Rest (min)",
+      "mode": "Mode",
+      "route": "Route",
+      "window": "Customer window",
+      "period": "Trip period",
+      "checkpointType": "Type",
+      "checkpointName": "Name",
+      "address": "Address",
+      "plannedTime": "Planned time",
+      "trip": "Trip",
+      "horses": "Horses"
+    },
+    "crewRole": {
+      "Driver": "Driver",
+      "Escort": "Escort"
+    },
+    "checkpointType": {
+      "Origin": "Origin",
+      "RestStop": "Rest stop",
+      "BorderGate": "Border gate",
+      "Destination": "Destination"
+    },
+    "placeholders": {
+      "vehicle": "Choose an available vehicle",
+      "choosePeriod": "Choose the trip period first",
+      "crew": "Choose an available driver / escort",
+      "duty": "Duty (optional)",
+      "noCrew": "No crew yet"
+    },
+    "hints": {
+      "dossier": "Horses whose dossier is not cleared can be planned, but the trip cannot start until every dossier is Cleared.",
+      "crewRule": "Drivers: {{drivers}} (need ≥ 1) · Escorts: {{escorts}} (need ≥ {{needed}}, one per 3 horses)",
+      "route": "First checkpoint must be Origin and the last Destination; times must increase and stay within the trip period."
+    },
+    "actions": {
+      "planSelected": "Plan a trip with {{count}} horse(s)",
+      "refresh": "Refresh",
+      "back": "Back",
+      "edit": "Edit",
+      "submit": "Submit",
+      "addCrew": "Add member",
+      "addStop": "Add checkpoint",
+      "resetRoute": "Rebuild default route",
+      "saveDraft": "Save draft",
+      "saveAndSubmit": "Save & submit"
+    },
+    "confirm": {
+      "cancel": "Cancel trip {{code}}? Its horses go back to the queue."
+    },
+    "summary": {
+      "lastRejection": "Plan returned (time {{count}}/3)",
+      "dossiersPending": "{{count}} horse(s) not cleared yet: the trip cannot start until every dossier is Cleared."
+    },
+    "messages": {
+      "loadFailed": "Could not load trip data",
+      "saveFailed": "Could not save the trip plan",
+      "saved": "Draft {{code}} saved",
+      "submitted": "Trip {{code}} submitted for approval",
+      "cancelled": "Trip {{code}} cancelled",
+      "mixedMode": "Ground and air horses cannot share a trip",
+      "needHorse": "Select at least one horse",
+      "needPeriod": "Choose the trip period (arrival after start)",
+      "needVehicle": "Choose a vehicle",
+      "needDriver": "The crew needs at least one driver",
+      "incompleteCheckpoint": "Fill in name, address and time for every checkpoint",
+      "overCapacity": "Exceeds vehicle capacity ({{capacity}} horses)"
+    }
+  },
+  "routeApproval": {
+    "title": "Trip plan approvals",
+    "subtitle": "Review plans submitted by coordinators, approve or return them with a reason",
+    "empty": "No plans",
+    "filters": {
+      "pending": "Pending",
+      "scheduled": "Approved",
+      "returned": "Draft / returned"
+    },
+    "actions": {
+      "approve": "Approve plan",
+      "reject": "Return"
+    },
+    "rejectTitle": "Return plan {{code}} to the coordinator",
+    "reasonPlaceholder": "Reason (required, up to 500 characters)",
+    "lastChance": "This plan was already returned twice. Returning it again cancels the trip and puts its horses back in the queue.",
+    "messages": {
+      "approved": "Trip {{code}} approved; the crew has been notified",
+      "rejected": "Plan {{code}} returned to the coordinator",
+      "rejectedCancelled": "Trip {{code}} was cancelled after 3 returns",
+      "failed": "The action failed",
+      "reasonRequired": "Please enter a reason"
+    }
   }
 }

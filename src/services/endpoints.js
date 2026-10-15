@@ -16,10 +16,6 @@ export const ENDPOINTS = {
     CHANGE_PASSWORD: '/auth/change-password',
     FORGOT_PASSWORD: '/auth/forgot-password',
     RESET_PASSWORD: '/auth/reset-password',
-    // Giữ tương thích luồng cũ
-    VERIFY_EMAIL: '/auth/verify-email',
-    RESEND_OTP: '/auth/resend-otp',
-    VERIFY_CODE: '/auth/verify-code',
   },
 
   // 2. Quản lý người dùng & Dropdown nhân sự

@@ -18,7 +18,7 @@ export const loginApi = async (credentials) => {
 /**
  * Đăng ký tài khoản khách hàng mới.
  * @param {{ fullName: string, email: string, password?: string, phoneNumber?: string }} data
- * @returns {Promise<any>}
+ * @returns {Promise<{ data: { accessToken: string, refreshToken: string, user: import('@types/database').User } }>}
  */
 export const registerApi = async (data) => {
   return await api.post(ENDPOINTS.AUTH.REGISTER, data);
@@ -78,7 +78,7 @@ export const changePasswordApi = async (data) => {
 };
 
 /**
- * Yêu cầu gửi link hoặc mã OTP đặt lại mật khẩu về email.
+ * Yêu cầu gửi link đặt lại mật khẩu về email (luôn trả 200 dù email có tồn tại hay không).
  * @param {{ email: string }} data
  * @returns {Promise<any>}
  */
@@ -87,25 +87,12 @@ export const forgotPasswordApi = async (data) => {
 };
 
 /**
- * Đặt lại mật khẩu mới bằng token hoặc code.
- * @param {{ token?: string, newPassword: string, code?: string, email?: string }} data
+ * Đặt lại mật khẩu mới bằng token lấy từ link trong email.
+ * @param {{ token: string, newPassword: string }} data
  * @returns {Promise<any>}
  */
 export const resetPasswordApi = async (data) => {
   return await api.post(ENDPOINTS.AUTH.RESET_PASSWORD, data);
-};
-
-// Giữ tương thích ngược cho luồng đăng ký OTP nếu có
-export const verifyEmailApi = async (data) => {
-  return await api.post(ENDPOINTS.AUTH.VERIFY_EMAIL, data);
-};
-
-export const resendOtpApi = async (data) => {
-  return await api.post(ENDPOINTS.AUTH.RESEND_OTP, data);
-};
-
-export const verifyCodeApi = async (data) => {
-  return await api.post(ENDPOINTS.AUTH.VERIFY_CODE, data);
 };
 
 export default {
@@ -119,7 +106,4 @@ export default {
   changePasswordApi,
   forgotPasswordApi,
   resetPasswordApi,
-  verifyEmailApi,
-  resendOtpApi,
-  verifyCodeApi,
 };

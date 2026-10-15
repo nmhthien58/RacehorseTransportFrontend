@@ -10,9 +10,7 @@ import AuthLayout from '@layouts/AuthLayout';
 // Auth pages
 import LoginPage from '@features/auth/pages/LoginPage';
 import RegisterPage from '@features/auth/pages/RegisterPage';
-import VerifyEmailPage from '@features/auth/pages/VerifyEmailPage';
 import ForgotPasswordPage from '@features/auth/pages/ForgotPasswordPage';
-import VerifyCodePage from '@features/auth/pages/VerifyCodePage';
 import ResetPasswordPage from '@features/auth/pages/ResetPasswordPage';
 import ForbiddenPage from '@features/auth/pages/ForbiddenPage';
 import NotFoundPage from '@features/auth/pages/NotFoundPage';
@@ -90,9 +88,7 @@ export default function AppRoutes() {
       <Route element={<AuthLayout />}>
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
         <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
-        <Route path={ROUTES.VERIFY_EMAIL} element={<VerifyEmailPage />} />
         <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
-        <Route path={ROUTES.VERIFY_CODE} element={<VerifyCodePage />} />
         <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
       </Route>
 

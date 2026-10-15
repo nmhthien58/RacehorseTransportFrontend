@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Card, Row, Col, Typography, Tag, Button, Form, Input, Radio, Spin, Alert, Empty, Image, Space, message } from 'antd';
-import { CheckCircleFilled, CloseCircleFilled, FileDoneOutlined } from '@ant-design/icons';
+import { Card, Row, Col, Typography, Tag, Button, Form, Input, Radio, Spin, Alert, Empty, Image, Space, Checkbox, message } from 'antd';
+import { FileDoneOutlined } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
@@ -16,13 +16,11 @@ const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 const formatTime = (value) => (value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—');
-// Bỏ khoảng trắng để so mã vi mạch quét / gõ tay với mã trong hồ sơ
-const normalizeChip = (value) => (value || '').replace(/\s+/g, '');
 
 /**
  * Bước 4 của đoàn xe: bàn giao ngựa tại điểm đến và lập biên bản e-POD.
- * Mỗi đơn trên chuyến một biên bản (POST /trips/{id}/handover, multipart): đối chiếu mã vi mạch từng con,
- * ghi người nhận, tình trạng ngựa và chữ ký tay của người nhận.
+ * Mỗi đơn trên chuyến một biên bản (POST /trips/{id}/handover, multipart). Tài xế cùng người nhận đối chiếu
+ * từng con ngoài thực tế với ảnh và dữ liệu trên hệ thống rồi tích xác nhận; mã vi mạch gửi lên lấy từ hồ sơ.
  */
 export default function ArrivalHandoverPage() {
   const { tripId } = useParams();
@@ -32,7 +30,8 @@ export default function ArrivalHandoverPage() {
 
   const [handovers, setHandovers] = useState([]);
   const [activeBookingId, setActiveBookingId] = useState(null);
-  const [chips, setChips] = useState({});
+  // tripHorseId -> đã đối chiếu con ngựa thật với ảnh / dữ liệu trên hệ thống
+  const [verified, setVerified] = useState({});
   const [signature, setSignature] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [sosModalOpen, setSosModalOpen] = useState(false);
@@ -66,12 +65,11 @@ export default function ArrivalHandoverPage() {
 
   const activeBooking = bookings.find((b) => b.bookingId === activeBookingId);
   const activeHorses = activeBooking ? horsesOf(activeBooking.bookingId) : [];
-  const chipMatches = (horse) => normalizeChip(chips[horse.tripHorseId]) === normalizeChip(horse.microchipNumber);
-  const allChipsMatch = activeHorses.length > 0 && activeHorses.every(chipMatches);
+  const allVerified = activeHorses.length > 0 && activeHorses.every((h) => verified[h.tripHorseId]);
 
   const openForm = (bookingId) => {
     setActiveBookingId(bookingId);
-    setChips({});
+    setVerified({});
     setSignature(null);
     form.resetFields();
   };
@@ -83,8 +81,8 @@ export default function ArrivalHandoverPage() {
     } catch {
       return;
     }
-    if (!allChipsMatch) {
-      message.error(t('handover.form.chipsMismatch'));
+    if (!allVerified) {
+      message.error(t('handover.form.horsesNotVerified'));
       return;
     }
     if (!signature) {
@@ -101,7 +99,8 @@ export default function ArrivalHandoverPage() {
         recipientIdCard: values.recipientIdCard.trim(),
         overallCondition: values.overallCondition,
         remarks: values.remarks?.trim(),
-        microchipNumbers: activeHorses.map((h) => normalizeChip(chips[h.tripHorseId])),
+        // Backend vẫn đối chiếu mã vi mạch với đơn: gửi mã trong hồ sơ của các con vừa được xác nhận
+        microchipNumbers: activeHorses.map((h) => h.microchipNumber),
         signature: blob,
       });
       message.success(t('handover.form.success', { code: activeBooking.bookingCode }));
@@ -226,36 +225,65 @@ export default function ArrivalHandoverPage() {
           }
         >
           <Form form={form} layout="vertical" requiredMark={false} initialValues={{ overallCondition: 'Excellent' }}>
-            <Title level={5} style={{ marginTop: 0 }}>{t('handover.form.chipsTitle')}</Title>
+            <Title level={5} style={{ marginTop: 0 }}>{t('handover.form.verifyTitle')}</Title>
             <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
-              {t('handover.form.chipsHint')}
+              {t('handover.form.verifyHint')}
             </Text>
-            {activeHorses.map((horse) => {
-              const typed = normalizeChip(chips[horse.tripHorseId]);
-              const ok = typed && chipMatches(horse);
-              return (
-                <Row key={horse.tripHorseId} gutter={12} align="middle" style={{ marginBottom: 10 }}>
-                  <Col xs={24} sm={9}>
-                    <Text strong>{horse.horseName}</Text>
-                    <div style={{ fontSize: 12, color: '#6B7280' }}>
-                      {t('customerTrips.stall', { number: horse.stallSlotNumber })}
-                    </div>
-                  </Col>
-                  <Col xs={20} sm={13}>
-                    <Input
-                      inputMode="numeric"
-                      placeholder={t('handover.form.chipPlaceholder')}
-                      value={chips[horse.tripHorseId] || ''}
-                      onChange={(e) => setChips((prev) => ({ ...prev, [horse.tripHorseId]: e.target.value }))}
-                      status={typed && !ok ? 'error' : undefined}
-                    />
-                  </Col>
-                  <Col xs={4} sm={2} style={{ fontSize: 18 }}>
-                    {typed && (ok ? <CheckCircleFilled style={{ color: '#16A34A' }} /> : <CloseCircleFilled style={{ color: '#DC2626' }} />)}
-                  </Col>
-                </Row>
-              );
-            })}
+            {activeHorses.map((horse) => (
+              <div
+                key={horse.tripHorseId}
+                style={{
+                  display: 'flex',
+                  gap: 14,
+                  alignItems: 'center',
+                  padding: 12,
+                  marginBottom: 10,
+                  borderRadius: 8,
+                  border: `1px solid ${verified[horse.tripHorseId] ? '#86EFAC' : '#E7E5E4'}`,
+                  background: verified[horse.tripHorseId] ? '#F0FDF4' : '#FFFFFF',
+                }}
+              >
+                {horse.photoUrl ? (
+                  <Image src={horse.photoUrl} width={72} height={72} style={{ objectFit: 'cover', borderRadius: 6 }} />
+                ) : (
+                  <div
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderRadius: 6,
+                      background: '#F5F5F4',
+                      color: '#A8A29E',
+                      fontSize: 11,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      textAlign: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {t('handover.form.noPhoto')}
+                  </div>
+                )}
+                <div style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 1.6 }}>
+                  <Text strong style={{ fontSize: 14 }}>{horse.horseName}</Text>
+                  <div>
+                    {t('handover.form.microchip')}: <Text code>{horse.microchipNumber || '—'}</Text>
+                  </div>
+                  <div style={{ color: '#57534E' }}>
+                    {[
+                      horse.color,
+                      horse.gender && t(`horses.genderOptions.${horse.gender.toLowerCase()}`, horse.gender),
+                      t('customerTrips.stall', { number: horse.stallSlotNumber })].filter(Boolean).join(' · ')}
+                  </div>
+                </div>
+                <Checkbox
+                  checked={Boolean(verified[horse.tripHorseId])}
+                  onChange={(e) => setVerified((prev) => ({ ...prev, [horse.tripHorseId]: e.target.checked }))}
+                >
+                  {t('handover.form.verified')}
+                </Checkbox>
+              </div>
+            ))}
 
             <Title level={5}>{t('handover.form.recipientTitle')}</Title>
             <Row gutter={16}>
@@ -303,7 +331,7 @@ export default function ArrivalHandoverPage() {
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 20 }}>
               <Button onClick={() => setActiveBookingId(null)}>{t('common.cancel')}</Button>
-              <Button type="primary" loading={submitting} onClick={handleSubmit} disabled={!allChipsMatch || !signature}>
+              <Button type="primary" loading={submitting} onClick={handleSubmit} disabled={!allVerified || !signature}>
                 {t('handover.form.submit')}
               </Button>
             </div>

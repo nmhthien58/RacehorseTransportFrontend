@@ -1402,5 +1402,48 @@
       "failed": "Thao tác không thành công",
       "reasonRequired": "Vui lòng nhập lý do"
     }
+  },
+  "tracking": {
+    "loadFailed": "Không tải được dữ liệu theo dõi",
+    "empty": "Không có chuyến nào đang mở",
+    "notStarted": "Chưa xuất phát",
+    "onTime": "Đúng giờ",
+    "delay": "Trễ {{minutes}} phút",
+    "incidents": "Sự cố chưa xử lý",
+    "welfareAlerts": "Nhật ký cần chú ý",
+    "autoRefresh": "Tự làm mới mỗi 30 giây",
+    "welfareTitle": "Nhật ký thể trạng ({{count}})",
+    "filters": {
+      "open": "Chuyến chưa đóng"
+    },
+    "columns": {
+      "trip": "Chuyến",
+      "status": "Trạng thái",
+      "driver": "Tài xế trưởng",
+      "progress": "Tiến độ mốc",
+      "next": "Mốc kế tiếp",
+      "delay": "Đúng giờ",
+      "alerts": "Sự cố / Cảnh báo"
+    },
+    "log": {
+      "time": "Thời gian",
+      "cabin": "Khoang",
+      "water": "Nước",
+      "feed": "Ăn",
+      "stress": "Stress",
+      "by": "Người ghi"
+    }
+  },
+  "coordinatorHub": {
+    "title": "Trung tâm điều phối",
+    "subtitle": "Hàng chờ xếp chuyến, kế hoạch chuyến và theo dõi các chuyến đang chạy",
+    "planTrip": "Lập chuyến",
+    "trackingTitle": "Theo dõi chuyến",
+    "cards": {
+      "queue": "NGỰA CHỜ XẾP CHUYẾN",
+      "planning": "NHÁP / CHỜ DUYỆT",
+      "scheduled": "ĐÃ LÊN LỊCH",
+      "onTheRoad": "ĐANG CHẠY / ĐÃ TỚI"
+    }
   }
 }

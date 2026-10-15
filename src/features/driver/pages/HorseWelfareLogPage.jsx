@@ -45,7 +45,7 @@ const HEALTH_STATUS_CARDS = [
     description: 'Normal respiration, calm demeanor, alert',
     stressLevel: 'Calm',
     physicalCondition: 'Excellent',
-    hydrationStatus: 'Normal',
+    feedStatus: 'Normal',
   },
   {
     key: 'STRESSED',
@@ -57,7 +57,7 @@ const HEALTH_STATUS_CARDS = [
     description: 'Agitated, head tossing, sweating',
     stressLevel: 'MildStress',
     physicalCondition: 'NormalFatigue',
-    hydrationStatus: 'Normal',
+    feedStatus: 'Normal',
   },
   {
     key: 'NOT_EATING',
@@ -69,7 +69,7 @@ const HEALTH_STATUS_CARDS = [
     description: 'Refused feed, skin pinch > 2s',
     stressLevel: 'MildStress',
     physicalCondition: 'NormalFatigue',
-    hydrationStatus: 'Refused',
+    feedStatus: 'Refused',
   },
   {
     key: 'CLIMATE_AFFECTED',
@@ -81,7 +81,7 @@ const HEALTH_STATUS_CARDS = [
     description: 'Heavy sweating, shivering, rapid breathing',
     stressLevel: 'Agitated',
     physicalCondition: 'Injured',
-    hydrationStatus: 'Reduced',
+    feedStatus: 'Reduced',
   },
 ];
 
@@ -106,23 +106,6 @@ function getStressMeta(level) {
 }
 
 /**
- * Trả về config màu sắc cho thể lực ngựa
- * @param {string} condition
- */
-function getConditionMeta(condition) {
-  switch (condition) {
-    case 'Excellent':
-      return { color: 'green', text: 'Rất tốt' };
-    case 'NormalFatigue':
-      return { color: 'blue', text: 'Mệt mỏi bình thường' };
-    case 'Injured':
-      return { color: 'red', text: 'Chấn thương / Bất thường' };
-    default:
-      return { color: 'default', text: condition || 'Ổn định' };
-  }
-}
-
-/**
  * Màn hình 4: Nhật ký thể trạng sinh trắc & Phúc lợi ngựa (Horse Health & Telemetry Log)
  */
 export default function HorseWelfareLogPage() {
@@ -143,12 +126,13 @@ export default function HorseWelfareLogPage() {
 
   const { user } = useAuthStore();
   const userRole = user?.role || user?.Role;
-  const isEscort = userRole === 'Escort';
-  const isDriver = userRole === 'Driver';
-  // Quyền ghi nhật ký thú y: Cả Driver & Escort đều có thể tương tác và tick chọn
-  const canLogWelfare = isEscort || isDriver || userRole === 'Admin' || userRole === 'LogisticsManager' || userRole === 'FleetCoordinator';
+  // Backend: đoàn xe của chuyến (và Admin) ghi nhật ký, từ lúc xuất phát tới khi bàn giao
+  const isCrewMember = (mission?.crew || []).some((c) => Number(c.userId) === Number(user?.userId));
+  const isOnTheRoad = ['InTransit', 'EmergencyRerouting', 'ArrivedDestination'].includes(mission?.overallStatus);
+  const canLogWelfare = (isCrewMember || userRole === 'Admin') && isOnTheRoad;
 
   const horses = useMemo(() => mission?.horses || [], [mission?.horses]);
+  const currentCheckpointId = (mission?.routeCheckpoints || []).find((c) => c.status === 'Arrived' || c.status === 'Cleared')?.checkpointId;
   const welfareLogs = useMemo(() => mission?.welfareLogs || [], [mission?.welfareLogs]);
 
   // Lọc nhật ký theo ngựa được chọn
@@ -161,21 +145,24 @@ export default function HorseWelfareLogPage() {
   const handleSaveLog = async () => {
     try {
       const values = await form.validateFields();
-      const horse = horses.find((h) => String(h.horseId) === String(values.horseId));
+
+      const extra = [
+        values.heartRate ? `HR ${values.heartRate} bpm` : null,
+        values.temperature ? `Body ${values.temperature}°C` : null,
+        values.physicalCondition ? `Condition: ${values.physicalCondition}` : null,
+        values.feedGiven ? `Feed: ${values.feedGiven}` : null,
+        values.humidity ? `Humidity ${values.humidity}%` : null,
+      ].filter(Boolean).join(' · ');
 
       const payload = {
-        horseId: Number(values.horseId),
-        horseName: horse ? horse.horseName : 'Ngựa đua',
-        heartRate: Number(values.heartRate),
-        temperature: Number(values.temperature),
-        hydrationStatus: values.hydrationStatus,
+        tripHorseId: Number(values.tripHorseId),
+        // Ghi tại mốc đoàn xe đang dừng (đã tới, chưa rời); dọc đường thì bỏ trống
+        checkpointId: currentCheckpointId,
+        cabinTemp: Number(values.cabinTemp),
         waterIntakeLiters: Number(values.waterIntakeLiters || 0),
-        feedGiven: values.feedGiven || '',
+        feedStatus: values.feedStatus,
         stressLevel: values.stressLevel,
-        physicalCondition: values.physicalCondition,
-        ambientTemp: Number(values.ambientTemp || 19.5),
-        humidity: Number(values.humidity || 65),
-        notes: values.notes || '',
+        notes: [values.notes?.trim(), extra].filter(Boolean).join('\n').slice(0, 2000) || null,
       };
 
       const success = await addWelfareLog(payload);
@@ -229,49 +216,29 @@ export default function HorseWelfareLogPage() {
       ),
     },
     {
-      title: 'Sinh trắc (Tim & Nhiệt)',
-      key: 'vitals',
-      width: 180,
+      title: 'Khoang xe',
+      key: 'cabin',
+      width: 130,
       render: (_, record) => (
-        <Space size={12}>
-          <div>
-            <Text type="secondary" style={{ fontSize: 11 }}>
-              Nhịp tim:
-            </Text>
-            <div>
-              <Text strong style={{ color: record.heartRate > 55 ? '#DC2626' : '#16A34A' }}>
-                {record.heartRate} bpm
-              </Text>
-            </div>
-          </div>
-          <div>
-            <Text type="secondary" style={{ fontSize: 11 }}>
-              Thân nhiệt:
-            </Text>
-            <div>
-              <Text strong style={{ color: record.temperature > 38.6 ? '#DC2626' : '#16A34A' }}>
-                {record.temperature}°C
-              </Text>
-            </div>
-          </div>
-        </Space>
+        <div>
+          <Text strong>{record.cabinTemp}°C</Text>
+          {record.checkpointName && <div style={{ fontSize: 11, color: '#6B7280' }}>📍 {record.checkpointName}</div>}
+        </div>
       ),
     },
     {
       title: 'Nước & Thức ăn',
       key: 'hydration',
-      width: 160,
+      width: 170,
       render: (_, record) => (
-        <div>
-          <Tag color={record.hydrationStatus === 'Normal' ? 'green' : 'gold'} style={{ borderRadius: 4 }}>
-            Nước: {record.waterIntakeLiters || 0}L ({record.hydrationStatus || 'Bình thường'})
+        <Space direction="vertical" size={4}>
+          <Tag color="blue" style={{ borderRadius: 4, margin: 0 }}>
+            Nước: {record.waterIntakeLiters || 0}L
           </Tag>
-          {record.feedGiven && (
-            <div style={{ fontSize: 12, color: '#4B5563', marginTop: 4 }}>
-              🌾 {record.feedGiven}
-            </div>
-          )}
-        </div>
+          <Tag color={record.feedStatus === 'Normal' ? 'green' : record.feedStatus === 'Reduced' ? 'gold' : 'red'} style={{ borderRadius: 4, margin: 0 }}>
+            Ăn: {record.feedStatus === 'Normal' ? 'Bình thường' : record.feedStatus === 'Reduced' ? 'Ăn ít' : 'Bỏ ăn'}
+          </Tag>
+        </Space>
       ),
     },
     {
@@ -280,15 +247,16 @@ export default function HorseWelfareLogPage() {
       width: 170,
       render: (_, record) => {
         const stress = getStressMeta(record.stressLevel);
-        const cond = getConditionMeta(record.physicalCondition);
         return (
           <Space direction="vertical" size={4}>
             <Tag color={stress.color} style={{ borderRadius: 4, margin: 0 }}>
               Tâm lý: {stress.text}
             </Tag>
-            <Tag color={cond.color} style={{ borderRadius: 4, margin: 0 }}>
-              Thể lực: {cond.text}
-            </Tag>
+            {record.needsAttention && (
+              <Tag color="red" style={{ borderRadius: 4, margin: 0 }}>
+                Cần chú ý
+              </Tag>
+            )}
           </Space>
         );
       },
@@ -403,15 +371,15 @@ export default function HorseWelfareLogPage() {
           form={form}
           layout="vertical"
           initialValues={{
-            horseId: horses[0]?.horseId,
+            tripHorseId: horses[0]?.tripHorseId,
             heartRate: 38,
             temperature: 38.0,
-            hydrationStatus: 'Normal',
+            feedStatus: 'Normal',
             waterIntakeLiters: 12,
             feedGiven: 'Cỏ khô Timothy + Điện giải',
             stressLevel: 'Calm',
             physicalCondition: 'Excellent',
-            ambientTemp: 19.5,
+            cabinTemp: 19.5,
             humidity: 65,
           }}
         >
@@ -448,7 +416,7 @@ export default function HorseWelfareLogPage() {
                         form.setFieldsValue({
                           stressLevel: status.stressLevel,
                           physicalCondition: status.physicalCondition,
-                          hydrationStatus: status.hydrationStatus,
+                          feedStatus: status.feedStatus,
                         });
                         message.success(`Đã chọn trạng thái: ${status.title}`);
                       }}
@@ -500,14 +468,14 @@ export default function HorseWelfareLogPage() {
             {/* Chọn ngựa */}
             <Col xs={24} md={8}>
               <Form.Item
-                name="horseId"
+                name="tripHorseId"
                 label="Ngựa đua kiểm tra"
                 rules={[{ required: true, message: 'Vui lòng chọn ngựa' }]}
               >
                 <Select
                   size="large"
                   options={horses.map((h) => ({
-                    value: h.horseId,
+                    value: h.tripHorseId,
                     label: `${h.horseName} (Chip: ${h.microchipNumber || 'N/A'})`,
                   }))}
                 />
@@ -519,7 +487,6 @@ export default function HorseWelfareLogPage() {
               <Form.Item
                 name="heartRate"
                 label="Nhịp tim (BPM - Chuẩn: 32-44)"
-                rules={[{ required: true, message: 'Nhập nhịp tim' }]}
               >
                 <InputNumber
                   size="large"
@@ -536,7 +503,6 @@ export default function HorseWelfareLogPage() {
               <Form.Item
                 name="temperature"
                 label="Thân nhiệt (°C - Chuẩn: 37.5-38.5)"
-                rules={[{ required: true, message: 'Nhập thân nhiệt' }]}
               >
                 <InputNumber
                   size="large"
@@ -551,7 +517,7 @@ export default function HorseWelfareLogPage() {
 
             {/* Mức độ stress */}
             <Col xs={24} md={8}>
-              <Form.Item name="stressLevel" label="Mức độ căng thẳng (Stress)">
+              <Form.Item name="stressLevel" label="Mức độ căng thẳng (Stress)" rules={[{ required: true }]}>
                 <Radio.Group buttonStyle="solid" size="middle">
                   <Radio.Button value="Calm">Bình tĩnh</Radio.Button>
                   <Radio.Button value="MildStress">Căng thẳng nhẹ</Radio.Button>
@@ -573,19 +539,19 @@ export default function HorseWelfareLogPage() {
 
             {/* Nhu cầu uống nước */}
             <Col xs={24} md={8}>
-              <Form.Item name="hydrationStatus" label="Tình trạng tiếp nhận nước">
+              <Form.Item name="feedStatus" label="Tình trạng ăn uống (Feed)" rules={[{ required: true }]}>
                 <Radio.Group buttonStyle="solid" size="middle">
-                  <Radio.Button value="Normal">Uống tốt</Radio.Button>
-                  <Radio.Button value="Reduced">Uống ít</Radio.Button>
-                  <Radio.Button value="Refused">Từ chối uống</Radio.Button>
+                  <Radio.Button value="Normal">Ăn uống tốt</Radio.Button>
+                  <Radio.Button value="Reduced">Ăn ít</Radio.Button>
+                  <Radio.Button value="Refused">Bỏ ăn</Radio.Button>
                 </Radio.Group>
               </Form.Item>
             </Col>
 
             {/* Lượng nước đã uống & Khẩu phần ăn */}
             <Col xs={12} md={6}>
-              <Form.Item name="waterIntakeLiters" label="Lượng nước bổ sung">
-                <InputNumber min={0} max={50} addonAfter="Lít" style={{ width: '100%' }} size="large" />
+              <Form.Item name="waterIntakeLiters" label="Lượng nước đã uống" rules={[{ required: true, message: 'Nhập lượng nước' }]}>
+                <InputNumber min={0} max={200} addonAfter="Lít" style={{ width: '100%' }} size="large" />
               </Form.Item>
             </Col>
 
@@ -596,8 +562,8 @@ export default function HorseWelfareLogPage() {
             </Col>
 
             <Col xs={12} md={6}>
-              <Form.Item name="ambientTemp" label="Nhiệt độ thùng xe">
-                <InputNumber step={0.1} addonAfter="°C" style={{ width: '100%' }} size="large" />
+              <Form.Item name="cabinTemp" label="Nhiệt độ thùng xe" rules={[{ required: true, message: 'Nhập nhiệt độ khoang' }]}>
+                <InputNumber min={-30} max={60} step={0.1} addonAfter="°C" style={{ width: '100%' }} size="large" />
               </Form.Item>
             </Col>
 

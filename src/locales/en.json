@@ -1403,5 +1403,48 @@
       "failed": "The action failed",
       "reasonRequired": "Please enter a reason"
     }
+  },
+  "tracking": {
+    "loadFailed": "Could not load tracking data",
+    "empty": "No open trips",
+    "notStarted": "Not departed",
+    "onTime": "On time",
+    "delay": "{{minutes}} min late",
+    "incidents": "Open incidents",
+    "welfareAlerts": "Welfare alerts",
+    "autoRefresh": "Auto refresh every 30 seconds",
+    "welfareTitle": "Welfare logs ({{count}})",
+    "filters": {
+      "open": "Open trips"
+    },
+    "columns": {
+      "trip": "Trip",
+      "status": "Status",
+      "driver": "Lead driver",
+      "progress": "Checkpoints",
+      "next": "Next checkpoint",
+      "delay": "Timing",
+      "alerts": "Incidents / alerts"
+    },
+    "log": {
+      "time": "Time",
+      "cabin": "Cabin",
+      "water": "Water",
+      "feed": "Feed",
+      "stress": "Stress",
+      "by": "Recorded by"
+    }
+  },
+  "coordinatorHub": {
+    "title": "Dispatch hub",
+    "subtitle": "Planning queue, trip plans and live tracking of trips on the road",
+    "planTrip": "Plan a trip",
+    "trackingTitle": "Trip tracking",
+    "cards": {
+      "queue": "HORSES TO PLAN",
+      "planning": "DRAFT / PENDING",
+      "scheduled": "SCHEDULED",
+      "onTheRoad": "ON THE ROAD / ARRIVED"
+    }
   }
 }

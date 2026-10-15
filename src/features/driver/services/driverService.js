@@ -1,5 +1,6 @@
 import api from '@services/api';
 import { ENDPOINTS } from '@services/endpoints';
+import { toFormData } from '@utils/apiHelpers';
 
 /**
  * @file driverService.js
@@ -34,7 +35,8 @@ export const driverService = {
    * @returns {Promise<any>}
    */
   async getMissions(params = {}) {
-    return api.get(ENDPOINTS.TRIPS.LIST, { params });
+    // Backend chỉ trả chuyến có tên tài xế / áp tải đang đăng nhập; mặc định chỉ 10 dòng
+    return api.get(ENDPOINTS.TRIPS.LIST, { params: { size: 100, ...params } });
   },
 
   /**
@@ -53,6 +55,7 @@ export const driverService = {
    * @returns {Promise<any>}
    */
   async updateMission(tripId, payload) {
+    // Lưu ý: PUT /trips/{id} chỉ dành cho điều phối viên sửa bản nháp, đoàn xe gọi sẽ bị 403
     return api.put(ENDPOINTS.TRIPS.UPDATE(tripId), payload);
   },
 
@@ -77,11 +80,11 @@ export const driverService = {
   /**
    * Ghi nhận đã hoàn tất kiểm tra kiểm dịch / thông quan tại trạm kiểm soát (Check-in Clear)
    * @param {number|string} checkpointId
-   * @param {{ clearanceNumber?: string, odometerReading?: number, notes?: string }} [payload]
+   * Backend không nhận body (chỉ áp dụng cho mốc BorderGate)
    * @returns {Promise<any>}
    */
-  async clearCheckpoint(checkpointId, payload = {}) {
-    return api.post(ENDPOINTS.CHECKPOINTS.CLEAR(checkpointId), payload);
+  async clearCheckpoint(checkpointId) {
+    return api.post(ENDPOINTS.CHECKPOINTS.CLEAR(checkpointId));
   },
 
   /**
@@ -103,13 +106,27 @@ export const driverService = {
   },
 
   /**
-   * Ghi nhận một mốc sinh trắc và phúc lợi ngựa (thân nhiệt, nhịp tim, nước uống, stress)
+   * Ghi nhật ký thể trạng một con ngựa (POST /trips/{id}/welfare-logs, multipart/form-data)
    * @param {number|string} tripId
-   * @param {Object} logData
+   * @param {{ tripHorseId: number, checkpointId?: number, cabinTemp: number, waterIntakeLiters: number,
+   *   feedStatus: 'Normal'|'Reduced'|'Refused', stressLevel: 'Calm'|'MildStress'|'Agitated', notes?: string, photo?: File }} logData
    * @returns {Promise<any>}
    */
   async createWelfareLog(tripId, logData) {
-    return api.post(ENDPOINTS.TRIPS.CREATE_WELFARE_LOG(tripId), logData);
+    const form = toFormData({
+      tripHorseId: logData.tripHorseId,
+      checkpointId: logData.checkpointId,
+      cabinTemp: logData.cabinTemp,
+      waterIntakeLiters: logData.waterIntakeLiters,
+      feedStatus: logData.feedStatus,
+      stressLevel: logData.stressLevel,
+      notes: logData.notes,
+      photo: logData.photo instanceof Blob ? logData.photo : null,
+    });
+    // Instance mặc định là JSON: ghi đè để axios gửi đúng multipart
+    return api.post(ENDPOINTS.TRIPS.CREATE_WELFARE_LOG(tripId), form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
   },
 
   /**

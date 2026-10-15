@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Card,
   Row,
@@ -15,6 +15,8 @@ import {
   Segmented,
   message,
   Flex,
+  Empty,
+  Spin,
 } from 'antd';
 import {
   CompassOutlined,
@@ -25,270 +27,166 @@ import {
   ClockCircleOutlined,
   FileDoneOutlined,
   DownloadOutlined,
-  StarFilled,
 } from '@ant-design/icons';
+import dayjs from 'dayjs';
+import bookingService from '@services/bookingService';
+import trackingService from '@services/trackingService';
+import { unwrapData, unwrapList } from '@utils/apiHelpers';
 
 
 const { Title, Text, Paragraph } = Typography;
 
-// Dữ liệu mẫu các chuyến đi thực tế của khách hàng nếu chưa có dữ liệu backend
-const SAMPLE_CUSTOMER_TRIPS = [
-  {
-    tripId: 101,
-    tripCode: 'TRP-2026-0001',
-    bookingCode: 'BKG-2026-0001',
-    status: 'InTransit',
-    origin: 'Trang trại Yên Bài, Ba Vì, Hà Nội',
-    destination: 'Trường đua Quốc tế Tùng Hóa, TP. Quảng Châu',
-    transportMode: 'Ground',
-    vehicleName: 'Mercedes-Benz Actros Equine Van VIP #51D-8921',
-    departureDate: '2026-10-14T06:00:00Z',
-    deliveryDate: '2026-10-16T18:00:00Z',
-    cost: 4500,
-    speed: 62,
-    cabinTemp: 18.2,
-    humidity: 54,
-    ventilationLevel: 3,
-    co2Ppm: 420,
-    driver: {
-      name: 'Phạm Văn Đức',
-      role: 'Tài xế trưởng chuyên trách FEI',
-      phone: '+84 912 000 004',
-      avatar: '👨‍✈️',
-    },
-    escort: {
-      name: 'Dr. Elena Rostova',
-      role: 'Bác sĩ Thú y FEI (Veterinary Escort)',
-      phone: '+84 912 000 006',
-      avatar: '👩‍⚕️',
-      cert: 'FEI-VET-8841',
-    },
-    horses: [
-      {
-        id: 1,
-        name: 'Red Flash (Tia Chớp Đỏ)',
-        breed: 'Thoroughbred',
-        gender: 'Stallion',
-        heartRate: 38,
-        bodyTemp: 37.8,
-        hydration: 'Tốt (Đàn hồi da < 2s)',
-        waterIntake: '18 Liters',
-        stressLevel: 'Calm',
-        stressText: 'Bình tĩnh / Thư giãn',
-        vetNotes: 'Ngựa ăn hết khẩu phần cỏ khô Timothy, uống đủ nước điện giải tại trạm dừng Lạng Sơn. Không có biểu hiện mệt mỏi hay đau bụng (colic).',
-      },
-      {
-        id: 2,
-        name: 'Golden Pegasus (Kim Mã)',
-        breed: 'Arabian',
-        gender: 'Mare',
-        heartRate: 40,
-        bodyTemp: 38.0,
-        hydration: 'Tốt (Độ ẩm niêm mạc hồng hào)',
-        waterIntake: '16 Liters',
-        stressLevel: 'Calm',
-        stressText: 'Bình tĩnh / Thể lực tốt',
-        vetNotes: 'Tâm lý ổn định, quen với nhịp rung lắc của xe rơ-moóc khí nén. Đã kiểm tra nhịp tim sau 4 giờ hành trình.',
-      },
-    ],
-    checkpoints: [
-      {
-        step: 1,
-        name: 'Trang trại Yên Bài, Ba Vì (ORIGIN)',
-        address: 'Yên Bài, Ba Vì, Hà Nội, Việt Nam',
-        status: 'Departed',
-        time: 'Oct 14, 2026 • 06:15 AM',
-        notes: 'Kiểm tra niêm phong khoang xe và đón ngựa lên chuồng',
-      },
-      {
-        step: 2,
-        name: 'Trạm kiểm dịch Thú y Lạng Sơn',
-        address: 'TP. Lạng Sơn, Tỉnh Lạng Sơn',
-        status: 'Departed',
-        time: 'Oct 14, 2026 • 11:30 AM',
-        notes: 'Đo thân nhiệt, bù nước điện giải và kiểm tra vi mạch',
-      },
-      {
-        step: 3,
-        name: 'Cửa khẩu Quốc tế Hữu Nghị (Customs)',
-        address: 'Huyện Cao Lộc, Tỉnh Lạng Sơn',
-        status: 'Departed',
-        time: 'Oct 14, 2026 • 14:00 PM',
-        notes: 'Hoàn tất thủ tục thông quan luồng xanh hải quan & chứng thư CVI',
-      },
-      {
-        step: 4,
-        name: 'Trạm kiểm dịch Bằng Tường (Pingxiang Quarantine)',
-        address: 'TP. Bằng Tường, Sùng Tả, Quảng Tây, Trung Quốc',
-        status: 'InTransit',
-        time: 'Oct 15, 2026 • 08:00 AM (Dự kiến)',
-        notes: 'Nghỉ đêm 90 phút và kiểm tra sinh hiệu chuyên sâu bởi bác sĩ thú y',
-      },
-      {
-        step: 5,
-        name: 'Trường đua Quốc tế Tùng Hóa (DESTINATION)',
-        address: 'Quận Tùng Hóa, TP. Quảng Châu, Trung Quốc',
-        status: 'Scheduled',
-        time: 'Oct 16, 2026 • 18:00 PM (Dự kiến)',
-        notes: 'Bàn giao ngựa cho ban quản lý trường đua và ký e-POD',
-      },
-    ],
-  },
-  {
-    tripId: 102,
-    tripCode: 'TRP-2026-0002',
-    bookingCode: 'BKG-2026-0002',
-    status: 'Completed',
-    origin: 'Cảng HKQT Tân Sơn Nhất (SGN), TP.HCM',
-    destination: 'Sân bay Quốc tế Changi (SIN), Singapore',
-    transportMode: 'Air',
-    vehicleName: 'Boeing 777F SkyCargo #TG-777F-01',
-    departureDate: '2026-10-01T08:00:00Z',
-    deliveryDate: '2026-10-02T16:00:00Z',
-    cost: 18500,
-    speed: 0,
-    cabinTemp: 17.8,
-    humidity: 52,
-    ventilationLevel: 4,
-    co2Ppm: 390,
-    driver: null,
-    escort: {
-      name: 'Dr. Sarah Jenkins',
-      role: 'Bác sĩ Thú y Chuyên cơ (In-Flight Equine Vet)',
-      phone: '+84 912 000 008',
-      avatar: '👩‍⚕️',
-      cert: 'US-9912 (FEI Flying Vet)',
-    },
-    horses: [
-      {
-        id: 3,
-        name: 'Royal Duchess (Công Nương)',
-        breed: 'Thoroughbred',
-        gender: 'Mare',
-        heartRate: 36,
-        bodyTemp: 37.6,
-        hydration: 'Tối ưu',
-        waterIntake: '22 Liters',
-        stressLevel: 'Calm',
-        stressText: 'Hoàn hảo',
-        vetNotes: 'Chuyến bay êm thuận, áp suất buồng khí nén ổn định 840 hPa. Ngựa thích nghi tốt khi cất cánh và hạ cánh tại Changi.',
-      },
-    ],
-    checkpoints: [
-      {
-        step: 1,
-        name: 'Sân bay Tân Sơn Nhất (SGN)',
-        address: 'TP. Hồ Chí Minh, Việt Nam',
-        status: 'Departed',
-        time: 'Oct 01, 2026 • 08:30 AM',
-        notes: 'Bốc xếp thùng chuồng bay IATA lên chuyên cơ Boeing 777F',
-      },
-      {
-        step: 2,
-        name: 'Sân bay Quốc tế Changi (SIN)',
-        address: 'Changi, Singapore',
-        status: 'Departed',
-        time: 'Oct 02, 2026 • 15:30 PM',
-        notes: 'Hạ cánh an toàn, kiểm dịch thú y BCP Singapore và bàn giao chuồng',
-      },
-    ],
-  },
-  {
-    tripId: 98,
-    tripCode: 'TRP-2025-0089',
-    bookingCode: 'BKG-2025-0089',
-    status: 'Completed',
-    origin: 'Trang trại Đại Nam, Bình Dương',
-    destination: 'Bangkok Suvarnabhumi Airport (BKK), Thái Lan',
-    transportMode: 'DoorToDoor',
-    vehicleName: 'Mercedes-Benz Actros Inter-Trans #51D-3312',
-    departureDate: '2026-09-10T06:00:00Z',
-    deliveryDate: '2026-09-12T14:00:00Z',
-    cost: 12400,
-    speed: 0,
-    cabinTemp: 18.0,
-    humidity: 50,
-    ventilationLevel: 3,
-    co2Ppm: 410,
-    driver: {
-      name: 'Trần Văn Hoàng',
-      role: 'Tài xế Quốc tế',
-      phone: '+84 912 000 005',
-      avatar: '👨‍✈️',
-    },
-    escort: {
-      name: 'BS. Nguyễn Minh Trí',
-      role: 'Bác sĩ Thú y Áp tải',
-      phone: '+84 912 000 009',
-      avatar: '👨‍⚕️',
-      cert: 'VN-VET-042',
-    },
-    horses: [
-      {
-        id: 4,
-        name: 'Silver Arrow (Bạch Mã)',
-        breed: 'Warmblood',
-        gender: 'Gelding',
-        heartRate: 37,
-        bodyTemp: 37.7,
-        hydration: 'Tốt',
-        waterIntake: '20 Liters',
-        stressLevel: 'Calm',
-        stressText: 'Ổn định',
-        vetNotes: 'Đã hoàn tất hành trình bàn giao tại Bangkok. e-POD đã ký nhận đầy đủ.',
-      },
-    ],
-    checkpoints: [
-      {
-        step: 1,
-        name: 'Trang trại Đại Nam',
-        address: 'Bình Dương, Việt Nam',
-        status: 'Departed',
-        time: 'Sep 10, 2026 • 06:00 AM',
-        notes: 'Đón ngựa tại chuồng',
-      },
-      {
-        step: 2,
-        name: 'Sân bay Quốc tế Suvarnabhumi (BKK)',
-        address: 'Bangkok, Thái Lan',
-        status: 'Departed',
-        time: 'Sep 12, 2026 • 13:45 PM',
-        notes: 'Bàn giao hoàn tất e-POD cho đối tác Thái Lan',
-      },
-    ],
-  },
-];
+const FEED_TEXT = { Normal: 'Ăn uống bình thường', Reduced: 'Ăn ít', Refused: 'Bỏ ăn' };
+const STRESS_TEXT = { Calm: 'Bình tĩnh', MildStress: 'Hơi căng thẳng', Agitated: 'Kích động' };
+// Làm mới định kỳ theo khuyến nghị của backend (server giữ kết quả 30 giây)
+const POLL_MS = 30000;
+
+const formatTime = (value) => (value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—');
 
 /**
+ * Chuyển một chuyến trong GET /tracking/bookings/{id} sang dạng dữ liệu màn hình theo dõi.
+ * @param {Object} tracking - Dữ liệu theo dõi của một đơn
+ * @param {Object} trip - Một phần tử trong tracking.trips
+ * @param {Object} [booking] - Đơn tương ứng (lấy giá)
+ * @returns {Object}
+ */
+function toTripView(tracking, trip, booking) {
+  const logs = (trip.horses || []).map((h) => h.latestLog).filter(Boolean);
+  const newestLog = [...logs].sort((a, b) => new Date(b.loggedAt) - new Date(a.loggedAt))[0];
+  const checkpoints = [...(trip.checkpoints || [])].sort((a, b) => a.sequenceOrder - b.sequenceOrder);
+  const nextCp = checkpoints.find((c) => !c.actualArrivalTime && c.status !== 'Cancelled');
+  return {
+    tripId: trip.tripId,
+    tripCode: trip.tripCode,
+    bookingCode: tracking.bookingCode,
+    status: trip.overallStatus,
+    origin: tracking.pickupAddress || '',
+    destination: tracking.dropoffAddress || '',
+    transportMode: booking?.transportMode || '',
+    vehicleName: trip.vehicleCode,
+    cost: booking?.estimatedCost,
+    handoverCompleted: trip.handoverCompleted,
+    cabinTemp: newestLog ? newestLog.cabinTemp : null,
+    lastLogAt: newestLog?.loggedAt,
+    delayMinutes: trip.delayMinutes || 0,
+    checkpointsTotal: checkpoints.filter((c) => c.status !== 'Cancelled').length,
+    checkpointsReached: checkpoints.filter((c) => c.actualArrivalTime).length,
+    nextCheckpointName: nextCp?.checkpointName,
+    nextCheckpointTime: nextCp?.plannedTime,
+    driver: trip.leadDriverName ? { name: trip.leadDriverName, role: 'Tài xế trưởng', phone: '' } : null,
+    escort: null,
+    horses: (trip.horses || []).map((h) => ({
+      id: h.horseId,
+      name: h.horseName,
+      breed: `Ô chuồng ${h.stallSlotNumber}`,
+      gender: trip.vehicleCode,
+      feedText: h.latestLog ? FEED_TEXT[h.latestLog.feedStatus] || h.latestLog.feedStatus : '—',
+      lastLogAt: h.latestLog?.loggedAt,
+      stressLevel: h.latestLog?.stressLevel,
+      stressText: h.latestLog ? STRESS_TEXT[h.latestLog.stressLevel] || h.latestLog.stressLevel : '—',
+      waterIntake: h.latestLog ? `${h.latestLog.waterIntakeLiters} L` : '—',
+      needsAttention: h.latestLog?.needsAttention,
+      vetNotes: h.latestLog?.notes || 'Chưa có nhật ký thể trạng cho chuyến này.',
+    })),
+    checkpoints: checkpoints.map((c, _, all) => {
+      const isDone = c.status === 'Departed' || (c.checkpointType === 'Destination' && c.actualArrivalTime);
+      const isHere = c.status === 'Arrived' || c.status === 'Cleared';
+      // Đang dừng tại một mốc thì không đánh dấu mốc kế tiếp là "đang tới"
+      const stoppedSomewhere = all.some((x) => x.status === 'Arrived' || x.status === 'Cleared');
+      const isHeading = !stoppedSomewhere && nextCp && c.checkpointId === nextCp.checkpointId && trip.overallStatus === 'InTransit';
+      return {
+        step: c.sequenceOrder,
+        name: c.checkpointName,
+        address: c.address,
+        // Màn hình dùng: Departed = xong, Arrived/InTransit = đang ở / đang tới, còn lại = dự kiến
+        status: isDone ? 'Departed' : isHere ? 'Arrived' : isHeading ? 'InTransit' : 'Scheduled',
+        time: c.actualArrivalTime ? formatTime(c.actualArrivalTime) : `${formatTime(c.plannedTime)} (Dự kiến)`,
+        notes: [c.address, c.delayMinutes ? `Trễ ${c.delayMinutes} phút` : null, c.status === 'Cancelled' ? 'Mốc đã bị bỏ khi nắn tuyến' : null]
+          .filter(Boolean)
+          .join(' · '),
+      };
+    }),
+  };
+}
+
+/**
+ * Màn hình Active Trips/**
  * Màn hình Active Trips & Trip History dành cho Chủ ngựa đua (Customer)
  * Thiết kế chuẩn hóa theo Figma Screen D (Live Trip & Equine Telemetry Tracker) và Screen E (trip_history 1)
  */
 export default function ActiveTripsPage() {
   const [activeTabKey, setActiveTabKey] = useState('live');
-  const [selectedTripCode, setSelectedTripCode] = useState('TRP-2026-0001');
+  const [selectedTripCode, setSelectedTripCode] = useState(null);
+  const [trips, setTrips] = useState([]);
+  const [awaitingPlanning, setAwaitingPlanning] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Chuyến của khách: GET /bookings rồi GET /tracking/bookings/{id} cho các đơn đã duyệt / đã xong
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      try {
+        const bookings = unwrapList(await bookingService.getBookings({ size: 100, sort: '-createdAt' }));
+        const tracked = bookings.filter((b) => b.status === 'Approved' || b.status === 'Completed');
+        const results = await Promise.all(
+          tracked.map((b) =>
+            trackingService
+              .getBookingTracking(b.bookingId)
+              .then((res) => ({ booking: b, tracking: unwrapData(res) }))
+              .catch(() => null),
+          ),
+        );
+        if (!active) return;
+        const views = [];
+        const waiting = [];
+        results.filter(Boolean).forEach(({ booking, tracking }) => {
+          (tracking.trips || []).forEach((trip) => views.push(toTripView(tracking, trip, booking)));
+          (tracking.horsesAwaitingPlanning || []).forEach((name) => waiting.push(`${name} (${tracking.bookingCode})`));
+        });
+        setTrips(views);
+        setAwaitingPlanning(waiting);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    load();
+    const timer = setInterval(load, POLL_MS);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, []);
   const [selectedHorseId, setSelectedHorseId] = useState(null);
   const [historyFilter, setHistoryFilter] = useState('ALL');
   const [podModalOpen, setPodModalOpen] = useState(false);
   const [selectedPodTrip, setSelectedPodTrip] = useState(null);
 
-  // Lấy các chuyến đi được giao hoặc kế hoạch gộp với mock
+  // Mặc định theo dõi chuyến đang chạy, nếu không có thì chuyến mới nhất
   const activeTrip = useMemo(() => {
-    return SAMPLE_CUSTOMER_TRIPS.find((t) => t.tripCode === selectedTripCode) || SAMPLE_CUSTOMER_TRIPS[0];
-  }, [selectedTripCode]);
+    return (
+      trips.find((t) => t.tripCode === selectedTripCode) ||
+      trips.find((t) => ['InTransit', 'EmergencyRerouting', 'ArrivedDestination'].includes(t.status)) ||
+      trips[0] ||
+      null
+    );
+  }, [trips, selectedTripCode]);
 
-  const effectiveHorseId = selectedHorseId || activeTrip.horses?.[0]?.id || 1;
+  const effectiveHorseId = selectedHorseId || activeTrip?.horses?.[0]?.id || 1;
 
   const activeHorse = useMemo(() => {
-    const list = activeTrip.horses || [];
+    const list = activeTrip?.horses || [];
     return list.find((h) => h.id === Number(effectiveHorseId)) || list[0] || {};
   }, [activeTrip, effectiveHorseId]);
 
 
   // Danh sách lịch sử chuyến đi
   const filteredHistory = useMemo(() => {
-    if (historyFilter === 'ALL') return SAMPLE_CUSTOMER_TRIPS;
-    return SAMPLE_CUSTOMER_TRIPS.filter((t) => t.status === historyFilter);
-  }, [historyFilter]);
+    if (historyFilter === 'ALL') return trips;
+    return trips.filter((t) => t.status === historyFilter);
+  }, [trips, historyFilter]);
+  const countByStatus = (status) => trips.filter((t) => t.status === status).length;
 
   const handleOpenPod = (trip) => {
     setSelectedPodTrip(trip);
@@ -302,6 +200,26 @@ export default function ActiveTripsPage() {
   const handleMessage = (name) => {
     message.info(`Đã mở kênh chat trực tiếp chuyên dụng với ${name}.`);
   };
+
+  if (loading || !activeTrip) {
+    return (
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 16px' }}>
+        <Card style={{ borderRadius: 16, textAlign: 'center', padding: 40 }}>
+          {loading ? (
+            <Spin />
+          ) : (
+            <Empty
+              description={
+                awaitingPlanning.length > 0
+                  ? `Ngựa đang chờ điều phối xếp chuyến: ${awaitingPlanning.join(', ')}`
+                  : 'Chưa có chuyến nào đang chở ngựa của bạn. Chuyến xuất hiện sau khi đơn được duyệt và điều phối viên xếp chuyến.'
+              }
+            />
+          )}
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 16px' }}>
@@ -363,7 +281,7 @@ export default function ActiveTripsPage() {
                 <Badge status="processing" color="#10B981" />
                 <div>
                   <div style={{ fontSize: 11, color: '#92400E', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                    ● LIVE TELEMETRY LINKED • 100% SIGNAL INTEGRITY
+                    ● CẬP NHẬT TỪ ĐOÀN XE • Làm mới mỗi 30 giây
                   </div>
                   <strong style={{ fontSize: 14.5, color: '#0F172A' }}>
                     Chuyến đi: {activeTrip.tripCode} ({activeTrip.bookingCode}) — {activeTrip.origin.split(',')[0]} ➔ {activeTrip.destination.split(',')[0]}
@@ -374,13 +292,13 @@ export default function ActiveTripsPage() {
               <Space size={8} wrap>
                 <span style={{ fontSize: 12.5, color: '#64748B', fontWeight: 600 }}>Chọn chuyến theo dõi:</span>
                 <Select
-                  value={selectedTripCode}
+                  value={activeTrip.tripCode}
                   onChange={setSelectedTripCode}
                   style={{ width: 250 }}
                   size="middle"
-                  options={SAMPLE_CUSTOMER_TRIPS.map((t) => ({
+                  options={trips.map((t) => ({
                     value: t.tripCode,
-                    label: `${t.tripCode} (${t.status === 'InTransit' ? 'Đang chạy' : 'Đã xong'})`,
+                    label: `${t.tripCode} (${t.status})`,
                   }))}
                 />
               </Space>
@@ -463,7 +381,7 @@ export default function ActiveTripsPage() {
                               color={isDone ? 'green' : isCurrent ? 'gold' : 'default'}
                               style={{ fontWeight: 700, fontSize: 11, margin: 0, padding: '1px 8px', borderRadius: 4 }}
                             >
-                              {isDone ? '✓ Đã hoàn thành' : isCurrent ? '● Đang di chuyển tới' : 'Dự kiến'}
+                              {isDone ? '✓ Đã hoàn thành' : cp.status === 'Arrived' ? '● Đang dừng tại đây' : isCurrent ? '● Đang di chuyển tới' : 'Dự kiến'}
                             </Tag>
                           </Flex>
                           <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 2 }}>
@@ -511,7 +429,7 @@ export default function ActiveTripsPage() {
                         <span style={{ fontSize: 24 }}>{activeTrip.escort?.avatar || '👩‍⚕️'}</span>
                         <div>
                           <strong style={{ fontSize: 13.5, color: '#166534', display: 'block' }}>
-                            {activeTrip.escort?.name || 'Dr. Elena Rostova'}
+                            {activeTrip.escort?.name || '—'}
                           </strong>
                           <span style={{ fontSize: 11, color: '#15803D' }}>
                             {activeTrip.escort?.role || 'Bác sĩ Thú y Áp tải FEI'}
@@ -519,7 +437,7 @@ export default function ActiveTripsPage() {
                         </div>
                       </Flex>
                       <div style={{ fontSize: 11, color: '#4B5563', marginBottom: 8 }}>
-                        Chứng chỉ: <code>{activeTrip.escort?.cert || 'FEI-VET-8841'}</code>
+                        Liên hệ qua điều phối viên của chuyến
                       </div>
                       <Space size={6}>
                         <Button
@@ -558,7 +476,7 @@ export default function ActiveTripsPage() {
                         <span style={{ fontSize: 24 }}>{activeTrip.driver?.avatar || '👨‍✈️'}</span>
                         <div>
                           <strong style={{ fontSize: 13.5, color: '#1E40AF', display: 'block' }}>
-                            {activeTrip.driver?.name || 'Chuyên cơ Hàng không'}
+                            {activeTrip.driver?.name || '—'}
                           </strong>
                           <span style={{ fontSize: 11, color: '#2563EB' }}>
                             {activeTrip.driver?.role || 'Vận tải Chuyên trách FEI'}
@@ -641,11 +559,16 @@ export default function ActiveTripsPage() {
                         NHIỆT ĐỘ CABIN
                       </span>
                       <div style={{ fontSize: 22, fontWeight: 800, color: '#10B981', margin: '2px 0' }}>
-                        {activeTrip.cabinTemp}°C
+                        {activeTrip.cabinTemp != null ? `${activeTrip.cabinTemp}°C` : '—'}
                       </div>
-                      <Tag color="success" style={{ fontWeight: 700, margin: 0, fontSize: 10.5, borderRadius: 4 }}>
-                        ✓ Tối ưu (Chuẩn FEI)
-                      </Tag>
+                      {activeTrip.cabinTemp != null && (
+                        <Tag
+                          color={activeTrip.cabinTemp >= 16 && activeTrip.cabinTemp <= 19 ? 'success' : 'warning'}
+                          style={{ fontWeight: 700, margin: 0, fontSize: 10.5, borderRadius: 4 }}
+                        >
+                          {activeTrip.cabinTemp >= 16 && activeTrip.cabinTemp <= 19 ? '✓ Trong chuẩn FEI' : 'Ngoài 16-19°C'}
+                        </Tag>
+                      )}
                     </div>
                   </Col>
 
@@ -660,13 +583,13 @@ export default function ActiveTripsPage() {
                       }}
                     >
                       <span style={{ fontSize: 11, color: '#94A3B8', display: 'block', fontWeight: 600 }}>
-                        ĐỘ ẨM KHÔNG KHÍ
+                        TIẾN ĐỘ CÁC MỐC
                       </span>
                       <div style={{ fontSize: 22, fontWeight: 800, color: '#38BDF8', margin: '2px 0' }}>
-                        {activeTrip.humidity}%
+                        {activeTrip.checkpointsReached}/{activeTrip.checkpointsTotal}
                       </div>
                       <Tag color="blue" style={{ fontWeight: 700, margin: 0, fontSize: 10.5, borderRadius: 4 }}>
-                        Mức lý tưởng
+                        Mốc đã tới
                       </Tag>
                     </div>
                   </Col>
@@ -682,12 +605,12 @@ export default function ActiveTripsPage() {
                       }}
                     >
                       <span style={{ fontSize: 11, color: '#94A3B8', display: 'block', fontWeight: 600 }}>
-                        LƯU THÔNG KHÍ TƯƠI
+                        TRỄ SO VỚI KẾ HOẠCH
                       </span>
-                      <div style={{ fontSize: 20, fontWeight: 800, color: '#F59E0B', margin: '2px 0' }}>
-                        Cấp {activeTrip.ventilationLevel}
+                      <div style={{ fontSize: 20, fontWeight: 800, color: activeTrip.delayMinutes > 0 ? '#F87171' : '#F59E0B', margin: '2px 0' }}>
+                        {activeTrip.delayMinutes} phút
                       </div>
-                      <span style={{ fontSize: 10.5, color: '#94A3B8' }}>Quạt tuần hoàn liên tục</span>
+                      <span style={{ fontSize: 10.5, color: '#94A3B8' }}>{activeTrip.delayMinutes > 0 ? 'Đang trễ' : 'Đúng giờ'}</span>
                     </div>
                   </Col>
 
@@ -702,12 +625,12 @@ export default function ActiveTripsPage() {
                       }}
                     >
                       <span style={{ fontSize: 11, color: '#94A3B8', display: 'block', fontWeight: 600 }}>
-                        NỒNG ĐỘ CO2
+                        MỐC KẾ TIẾP
                       </span>
-                      <div style={{ fontSize: 20, fontWeight: 800, color: '#A78BFA', margin: '2px 0' }}>
-                        {activeTrip.co2Ppm} <span style={{ fontSize: 12 }}>ppm</span>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#A78BFA', margin: '4px 0' }}>
+                        {activeTrip.nextCheckpointName || '—'}
                       </div>
-                      <span style={{ fontSize: 10.5, color: '#10B981', fontWeight: 600 }}>Trong lành (&lt;800 ppm)</span>
+                      <span style={{ fontSize: 10.5, color: '#94A3B8' }}>{activeTrip.nextCheckpointTime ? formatTime(activeTrip.nextCheckpointTime) : ''}</span>
                     </div>
                   </Col>
                 </Row>
@@ -764,8 +687,8 @@ export default function ActiveTripsPage() {
                         {activeHorse.breed} • {activeHorse.gender}
                       </span>
                     </div>
-                    <Tag color="green" style={{ fontWeight: 700, padding: '2px 8px', borderRadius: 6, fontSize: 11 }}>
-                      ✓ Sức khỏe Tối ưu
+                    <Tag color={activeHorse.needsAttention ? 'red' : 'green'} style={{ fontWeight: 700, padding: '2px 8px', borderRadius: 6, fontSize: 11 }}>
+                      {activeHorse.needsAttention ? '⚠ Cần chú ý' : '✓ Bình thường'}
                     </Tag>
                   </Flex>
                 </div>
@@ -777,12 +700,12 @@ export default function ActiveTripsPage() {
                     <div style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '8px 10px' }}>
                       <Flex align="center" gap={4}>
                         <HeartOutlined style={{ color: '#DC2626', fontSize: 12 }} />
-                        <span style={{ fontSize: 11, color: '#991B1B', fontWeight: 700 }}>NHỊP TIM (RESTING)</span>
+                        <span style={{ fontSize: 11, color: '#991B1B', fontWeight: 700 }}>TÌNH TRẠNG ĂN</span>
                       </Flex>
-                      <div style={{ fontSize: 20, fontWeight: 800, color: '#991B1B', margin: '2px 0' }}>
-                        {activeHorse.heartRate} <span style={{ fontSize: 12, fontWeight: 600 }}>BPM</span>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: '#991B1B', margin: '4px 0 2px' }}>
+                        {activeHorse.feedText}
                       </div>
-                      <span style={{ fontSize: 10.5, color: '#B91C1C' }}>Chuẩn nghỉ: 28-44 BPM</span>
+                      <span style={{ fontSize: 10.5, color: '#B91C1C' }}>{activeHorse.needsAttention ? '⚠ Cần chú ý' : 'Theo nhật ký đoàn xe'}</span>
                     </div>
                   </Col>
 
@@ -791,12 +714,12 @@ export default function ActiveTripsPage() {
                     <div style={{ backgroundColor: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 10, padding: '8px 10px' }}>
                       <Flex align="center" gap={4}>
                         <ThunderboltOutlined style={{ color: '#D97706', fontSize: 12 }} />
-                        <span style={{ fontSize: 11, color: '#92400E', fontWeight: 700 }}>THÂN NHIỆT</span>
+                        <span style={{ fontSize: 11, color: '#92400E', fontWeight: 700 }}>LẦN GHI GẦN NHẤT</span>
                       </Flex>
-                      <div style={{ fontSize: 20, fontWeight: 800, color: '#92400E', margin: '2px 0' }}>
-                        {activeHorse.bodyTemp}°C
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#92400E', margin: '4px 0 2px' }}>
+                        {formatTime(activeHorse.lastLogAt)}
                       </div>
-                      <span style={{ fontSize: 10.5, color: '#B45309' }}>Ngưỡng: 37.2-38.3°C</span>
+                      <span style={{ fontSize: 10.5, color: '#B45309' }}>Nhật ký thể trạng</span>
                     </div>
                   </Col>
 
@@ -807,7 +730,7 @@ export default function ActiveTripsPage() {
                       <div style={{ fontSize: 16, fontWeight: 800, color: '#166534', margin: '4px 0 2px' }}>
                         {activeHorse.stressText}
                       </div>
-                      <span style={{ fontSize: 10.5, color: '#15803D' }}>Cảm biến tai & hành vi</span>
+                      <span style={{ fontSize: 10.5, color: '#15803D' }}>Đoàn xe đánh giá</span>
                     </div>
                   </Col>
 
@@ -818,7 +741,7 @@ export default function ActiveTripsPage() {
                       <div style={{ fontSize: 16, fontWeight: 800, color: '#1E40AF', margin: '4px 0 2px' }}>
                         {activeHorse.waterIntake}
                       </div>
-                      <span style={{ fontSize: 10.5, color: '#2563EB' }}>Đàn hồi da: &lt; 2 giây</span>
+                      <span style={{ fontSize: 10.5, color: '#2563EB' }}>Lần ghi gần nhất</span>
                     </div>
                   </Col>
                 </Row>
@@ -834,7 +757,7 @@ export default function ActiveTripsPage() {
                   }}
                 >
                   <strong style={{ fontSize: 11.5, color: '#0F172A', display: 'block', marginBottom: 2 }}>
-                    📝 Ghi nhận mới nhất từ Bác sĩ Thú y Áp tải:
+                    📝 Ghi chú mới nhất của đoàn xe:
                   </strong>
                   <Paragraph style={{ margin: 0, fontSize: 11.5, color: '#475569', fontStyle: 'italic', lineHeight: 1.4 }}>
                     "{activeHorse.vetNotes}"
@@ -852,26 +775,26 @@ export default function ActiveTripsPage() {
             <Col xs={12} sm={6}>
               <Card bordered style={{ borderRadius: 14, textAlign: 'center', borderColor: '#E2E8F0' }}>
                 <Text style={{ fontSize: 13, color: '#64748B', fontWeight: 600 }}>TỔNG SỐ CHUYẾN ĐI</Text>
-                <div style={{ fontSize: 28, fontWeight: 800, color: '#0F172A', marginTop: 4 }}>12</div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: '#0F172A', marginTop: 4 }}>{trips.length}</div>
               </Card>
             </Col>
             <Col xs={12} sm={6}>
               <Card bordered style={{ borderRadius: 14, textAlign: 'center', borderColor: '#E2E8F0' }}>
                 <Text style={{ fontSize: 13, color: '#166534', fontWeight: 600 }}>ĐÃ HOÀN THÀNH</Text>
-                <div style={{ fontSize: 28, fontWeight: 800, color: '#16A34A', marginTop: 4 }}>10</div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: '#16A34A', marginTop: 4 }}>{countByStatus('Completed')}</div>
               </Card>
             </Col>
             <Col xs={12} sm={6}>
               <Card bordered style={{ borderRadius: 14, textAlign: 'center', borderColor: '#E2E8F0' }}>
                 <Text style={{ fontSize: 13, color: '#D97706', fontWeight: 600 }}>ĐANG DI CHUYỂN</Text>
-                <div style={{ fontSize: 28, fontWeight: 800, color: '#D97706', marginTop: 4 }}>1</div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: '#D97706', marginTop: 4 }}>{countByStatus('InTransit')}</div>
               </Card>
             </Col>
             <Col xs={12} sm={6}>
               <Card bordered style={{ borderRadius: 14, textAlign: 'center', borderColor: '#E2E8F0' }}>
-                <Text style={{ fontSize: 13, color: '#2563EB', fontWeight: 600 }}>ĐÁNH GIÁ DỊCH VỤ</Text>
+                <Text style={{ fontSize: 13, color: '#2563EB', fontWeight: 600 }}>NGỰA CHỜ XẾP CHUYẾN</Text>
                 <div style={{ fontSize: 28, fontWeight: 800, color: '#2563EB', marginTop: 4 }}>
-                  4.8 <StarFilled style={{ fontSize: 18, color: '#F59E0B' }} />
+                  {awaitingPlanning.length}
                 </div>
               </Card>
             </Col>
@@ -892,9 +815,9 @@ export default function ActiveTripsPage() {
                 value={historyFilter}
                 onChange={setHistoryFilter}
                 options={[
-                  { label: 'Tất cả (12)', value: 'ALL' },
-                  { label: 'Đang di chuyển (1)', value: 'InTransit' },
-                  { label: 'Đã hoàn thành (10)', value: 'Completed' },
+                  { label: `Tất cả (${trips.length})`, value: 'ALL' },
+                  { label: `Đang di chuyển (${countByStatus('InTransit')})`, value: 'InTransit' },
+                  { label: `Đã hoàn thành (${countByStatus('Completed')})`, value: 'Completed' },
                 ]}
                 style={{ fontWeight: 600 }}
               />
@@ -949,7 +872,7 @@ export default function ActiveTripsPage() {
                   key: 'cost',
                   render: (_, r) => (
                     <strong style={{ color: '#0F172A', fontSize: 14 }}>
-                      ${r.cost?.toLocaleString()} USD
+                      {r.cost != null ? `$${Number(r.cost).toLocaleString()} USD` : '—'}
                     </strong>
                   ),
                 },

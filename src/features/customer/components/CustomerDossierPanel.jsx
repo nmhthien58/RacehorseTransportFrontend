@@ -53,9 +53,11 @@ const CHECKLIST_STATE_COLORS = {
  *
  * @param {Object} props
  * @param {number|string} [props.horseId] - Chỉ hiện hồ sơ của con ngựa này (bỏ trống = tất cả)
+ * @param {number|string} [props.bookingId] - Chỉ hiện hồ sơ thuộc yêu cầu vận chuyển này
+ * @param {string} [props.bookingStatus] - Trạng thái booking để giải thích khi chưa có hồ sơ
  * @returns {JSX.Element}
  */
-export default function CustomerDossierPanel({ horseId }) {
+export default function CustomerDossierPanel({ horseId, bookingId, bookingStatus }) {
   const { t } = useTranslation();
   const [form] = Form.useForm();
 
@@ -73,7 +75,7 @@ export default function CustomerDossierPanel({ horseId }) {
   useEffect(() => {
     let active = true;
     dossierService
-      .getDossiers({ size: 100 })
+      .getDossiers({ size: 100, ...(bookingId ? { bookingId } : {}) })
       .then((res) => {
         if (!active) return;
         const list = unwrapList(res);
@@ -88,11 +90,16 @@ export default function CustomerDossierPanel({ horseId }) {
     return () => {
       active = false;
     };
-  }, [t, refreshKey]);
+  }, [bookingId, t, refreshKey]);
 
   const visibleDossiers = useMemo(
-    () => (horseId ? dossiers.filter((d) => String(d.horseId) === String(horseId)) : dossiers),
-    [dossiers, horseId],
+    () =>
+      dossiers.filter(
+        (d) =>
+          (!horseId || String(d.horseId) === String(horseId)) &&
+          (!bookingId || String(d.bookingId) === String(bookingId)),
+      ),
+    [bookingId, dossiers, horseId],
   );
 
   // Hồ sơ đang chọn: mặc định hồ sơ đầu tiên chưa thông quan
@@ -256,9 +263,17 @@ export default function CustomerDossierPanel({ horseId }) {
   }
 
   if (visibleDossiers.length === 0) {
+    const isAwaitingApproval = bookingStatus === 'Submitted';
+    const isInactive = ['Rejected', 'Cancelled', 'Expired'].includes(bookingStatus);
+    const emptyDescription = isAwaitingApproval
+      ? t('customerDossier.awaitingApproval')
+      : isInactive
+        ? t('customerDossier.inactiveBooking')
+        : t('customerDossier.empty');
+
     return (
       <Card style={{ borderRadius: 14 }}>
-        <Empty description={t('customerDossier.empty')} />
+        <Empty description={emptyDescription} />
       </Card>
     );
   }
@@ -276,7 +291,7 @@ export default function CustomerDossierPanel({ horseId }) {
             onChange={setSelectedId}
             options={visibleDossiers.map((d) => ({
               value: d.dossierId,
-              label: `${d.dossierCode} · ${d.horseName} · ${d.bookingCode}`,
+              label: `${d.horseName} · ${d.dossierCode} · ${t(`customerDossier.status.${d.status}`, d.status)}`,
             }))}
           />
           <Button icon={<ReloadOutlined />} loading={detailLoading} onClick={() => activeId && loadDetail(activeId)} />

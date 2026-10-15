@@ -186,13 +186,6 @@ export function useMissionDetail(tripId) {
     }
   };
 
-  /**
-   * Danh mục kiểm tra trước khởi hành: backend chưa có API lưu checklist,
-   * trạng thái tick được giữ ở màn hình (PreDepartureChecklistPage).
-   * @returns {Promise<boolean>}
-   */
-  const toggleChecklistItem = async () => true;
-
   /** Xuất phát (POST /trips/{id}/start) — backend chặn nếu còn hồ sơ chưa Cleared */
   const startTrip = () => runAction(() => driverService.startMission(tripId), 'Không thể bắt đầu chuyến đi');
 
@@ -270,7 +263,6 @@ export function useMissionDetail(tripId) {
     actionLoading,
     error,
     fetchMission,
-    toggleChecklistItem,
     startTrip,
     arriveCheckpoint,
     clearCheckpoint,

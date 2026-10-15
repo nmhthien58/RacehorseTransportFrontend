@@ -183,7 +183,7 @@ export default function NewBookingPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
               <Text type="secondary">{t('bookings.fields.totalHorses') || 'Số lượng ngựa'}:</Text>
               <Tag color="orange" style={{ margin: 0, fontWeight: 600 }}>
-                🐴 {createdBooking.totalHorses || createdBooking.TotalHorses || 1} {t('bookings.horseUnit') || 'con'}
+                {createdBooking.totalHorses || createdBooking.TotalHorses || 1} {t('bookings.horseUnit') || 'con'}
               </Tag>
             </div>
 
@@ -206,11 +206,11 @@ export default function NewBookingPage() {
             icon={<ArrowLeftOutlined />}
             onClick={handleBackToList}
             style={{
-              height: 48,
-              borderRadius: 10,
-              fontWeight: 700,
-              backgroundColor: '#f59e0b',
-              borderColor: '#f59e0b',
+              height: 44,
+              borderRadius: 8,
+              fontWeight: 600,
+              backgroundColor: '#d97706',
+              borderColor: '#d97706',
             }}
           >
             {t('bookings.backToList') || 'Xem danh sách yêu cầu'}

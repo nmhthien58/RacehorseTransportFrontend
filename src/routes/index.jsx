@@ -20,6 +20,7 @@ import NotFoundPage from '@features/auth/pages/NotFoundPage';
 // Customer pages
 import CustomerDashboard from '@features/customer/pages/DashboardPage';
 import CustomerBookings from '@features/customer/pages/BookingsPage';
+import CustomerBookingDetailPage from '@features/customer/pages/BookingDetailPage';
 import NewBookingPage from '@features/customer/pages/NewBookingPage';
 import MyHorsesPage from '@features/customer/pages/MyHorsesPage';
 import HorseDetailPage from '@features/customer/pages/HorseDetailPage';
@@ -112,6 +113,7 @@ export default function AppRoutes() {
           <Route path="/vet-record" element={<Navigate to={ROUTES.CUSTOMER_VET_RECORDS} replace />} />
           <Route path={ROUTES.CUSTOMER_BOOKINGS} element={<CustomerBookings />} />
           <Route path={ROUTES.CUSTOMER_BOOKING_NEW} element={<NewBookingPage />} />
+          <Route path={ROUTES.CUSTOMER_BOOKING_DETAIL} element={<CustomerBookingDetailPage />} />
           <Route path="/customer/booking" element={<Navigate to={ROUTES.CUSTOMER_BOOKINGS} replace />} />
           <Route path="/customer/booking/new" element={<Navigate to={ROUTES.CUSTOMER_BOOKING_NEW} replace />} />
           <Route path="/customer/request" element={<Navigate to={ROUTES.CUSTOMER_BOOKINGS} replace />} />

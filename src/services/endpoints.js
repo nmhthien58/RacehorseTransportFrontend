@@ -50,6 +50,7 @@ export const ENDPOINTS = {
     DETAIL: (id) => `/bookings/${id}`,
     CREATE: '/bookings',
     QUOTE_PREVIEW: '/bookings/quote-preview',
+    ESTIMATE_DISTANCE: '/bookings/estimate-distance',
     CANCEL: (id) => `/bookings/${id}/cancel`,
     APPROVE: (id) => `/bookings/${id}/approve`,
     REJECT: (id) => `/bookings/${id}/reject`,

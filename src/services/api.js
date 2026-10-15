@@ -137,6 +137,8 @@ api.interceptors.response.use(
       message = error.message;
     }
 
+    // Gắn thông báo đã chuẩn hóa để component hiển thị đúng lý do backend trả về
+    error.userMessage = message;
     console.error('API Error:', message);
     return Promise.reject(error);
   },

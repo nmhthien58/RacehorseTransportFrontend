@@ -82,13 +82,10 @@ export default function TripExecutionPage() {
   const checkpoints = mission?.routeCheckpoints || [];
   const { user } = useAuthStore();
   const userRole = user?.role || user?.Role;
-  const isEscort = userRole === 'Escort';
-  const isDriver = userRole === 'Driver';
   const isAirFlight = mission?.transportMode === 'Air';
-  // Phân quyền Flow 4 theo Figma: Chuyến Air do Escort cập nhật, Ground/Door-to-Door do Driver cập nhật
-  const canUpdateRoute = isAirFlight
-    ? (isEscort || userRole === 'Admin' || userRole === 'LogisticsManager' || userRole === 'FleetCoordinator')
-    : (isDriver || userRole === 'Admin' || userRole === 'LogisticsManager' || userRole === 'FleetCoordinator');
+  // Backend: chỉ người có tên trong đoàn xe của chuyến (Driver hoặc Escort) và Admin được cập nhật hành trình
+  const isCrewMember = (mission?.crew || []).some((c) => Number(c.userId) === Number(user?.userId));
+  const canUpdateRoute = isCrewMember || userRole === 'Admin';
 
   // Mở modal hoàn tất kiểm tra trạm
   const handleOpenClearModal = (cp) => {
@@ -108,7 +105,9 @@ export default function TripExecutionPage() {
       const values = await clearForm.validateFields();
       if (!selectedCp) return;
 
-      const success = await clearCheckpoint(selectedCp.checkpointId, values);
+      // Backend chỉ ghi nhận đã thông quan (không lưu số liệu trong form); form giữ để đoàn xe đối chiếu
+      void values;
+      const success = await clearCheckpoint(selectedCp.checkpointId);
       if (success) {
         message.success(`Đã hoàn tất kiểm tra tại trạm "${selectedCp.locationName}"!`);
         setClearModalOpen(false);
@@ -444,7 +443,7 @@ export default function TripExecutionPage() {
                       <Space size={8} wrap>
                         {/* 1. Nếu Pending -> Có nút Arrive */}
                         {cp.status === 'Pending' && (
-                          <Tooltip title={!canUpdateRoute ? (isAirFlight ? "Chỉ Escort phụ trách cập nhật hành trình chuyến bay" : "Chỉ Driver phụ trách cập nhật trạm dừng & Odometer") : ""}>
+                          <Tooltip title={!canUpdateRoute ? "Chỉ thành viên đoàn xe của chuyến này mới cập nhật được hành trình" : ""}>
                           <Button
                             type="primary"
                             icon={<LoginOutlined />}
@@ -463,9 +462,9 @@ export default function TripExecutionPage() {
                           </Tooltip>
                         )}
 
-                        {/* 2. Nếu Arrived -> Có nút Clear */}
-                        {cp.status === 'Arrived' && (
-                          <Tooltip title={!canUpdateRoute ? (isAirFlight ? "Chỉ Escort phụ trách cập nhật hành trình chuyến bay" : "Chỉ Driver phụ trách cập nhật trạm dừng & Odometer") : ""}>
+                        {/* 2. Cửa khẩu đã tới -> phải thông quan trước khi rời (backend: /checkpoints/{id}/clear chỉ cho BorderGate) */}
+                        {cp.status === 'Arrived' && isBorder && (
+                          <Tooltip title={!canUpdateRoute ? "Chỉ thành viên đoàn xe của chuyến này mới cập nhật được hành trình" : ""}>
                             <Button
                               type="primary"
                               icon={<SafetyCertificateOutlined />}
@@ -483,9 +482,9 @@ export default function TripExecutionPage() {
                           </Tooltip>
                         )}
 
-                        {/* 3. Nếu Cleared -> Có nút Depart */}
-                        {cp.status === 'Cleared' && (
-                          <Tooltip title={!canUpdateRoute ? (isAirFlight ? "Chỉ Escort phụ trách cập nhật hành trình chuyến bay" : "Chỉ Driver phụ trách cập nhật trạm dừng & Odometer") : ""}>
+                        {/* 3. Rời mốc: cửa khẩu sau khi Cleared, mốc khác ngay sau khi Arrived; điểm giao không có bước rời */}
+                        {!isDestination && (cp.status === 'Cleared' || (cp.status === 'Arrived' && !isBorder)) && (
+                          <Tooltip title={!canUpdateRoute ? "Chỉ thành viên đoàn xe của chuyến này mới cập nhật được hành trình" : ""}>
                             <Popconfirm
                               title="Xác nhận rời trạm kiểm soát?"
                               description="Đảm bảo ngựa đã ổn định và toàn bộ giấy tờ đã được bàn giao lại cho kíp lái."

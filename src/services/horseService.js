@@ -1,5 +1,34 @@
+import dayjs from 'dayjs';
 import api from './api';
 import { ENDPOINTS } from './endpoints';
+import { toFormData } from '@utils/apiHelpers';
+
+// Instance mặc định là JSON: phải ghi đè để axios gửi FormData đúng dạng multipart (có boundary)
+const MULTIPART = { headers: { 'Content-Type': 'multipart/form-data' } };
+
+/**
+ * Chuyển dữ liệu form ngựa thành FormData đúng các trường backend nhận
+ * (POST/PUT /api/horses chỉ nhận multipart/form-data, gửi JSON sẽ bị 415).
+ * @param {FormData|Record<string, any>} horseData
+ * @returns {FormData}
+ */
+function buildHorseForm(horseData) {
+  if (typeof FormData !== 'undefined' && horseData instanceof FormData) return horseData;
+  const dob = horseData.dateOfBirth || horseData.DateOfBirth;
+  return toFormData({
+    name: (horseData.name || horseData.Name || '').trim(),
+    microchipNumber: (horseData.microchipNumber || horseData.MicrochipNumber || '').trim(),
+    passportNumber: (horseData.passportNumber || horseData.PassportNumber || '').trim(),
+    breed: horseData.breed || horseData.Breed,
+    gender: horseData.gender || horseData.Gender,
+    dateOfBirth: dob ? dayjs(dob).format('YYYY-MM-DD') : null,
+    color: horseData.color || horseData.Color,
+    specialCareRequirements: horseData.specialCareRequirements || horseData.SpecialCareRequirements,
+    // Ảnh phải là file (jpg/png); link ảnh dạng text không được backend nhận
+    photo: horseData.photo instanceof Blob ? horseData.photo : null,
+    removePhoto: horseData.removePhoto ? 'true' : null,
+  });
+}
 
 /**
  * @file horseService.js
@@ -26,15 +55,12 @@ export const horseService = {
   },
 
   /**
-   * Khai báo hồ sơ ngựa đua mới (hỗ trợ FormData kèm file ảnh hoặc JSON)
+   * Khai báo hồ sơ ngựa đua mới (multipart/form-data, ảnh ở trường `photo`)
    * @param {FormData|Partial<import('../types/database').Horse>} horseData - Dữ liệu hồ sơ ngựa
    * @returns {Promise<import('../types/database').Horse>}
    */
   async createHorse(horseData) {
-    const isFormData = typeof FormData !== 'undefined' && horseData instanceof FormData;
-    return api.post(ENDPOINTS.HORSES.CREATE, horseData, {
-      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
-    });
+    return api.post(ENDPOINTS.HORSES.CREATE, buildHorseForm(horseData), MULTIPART);
   },
 
   /**
@@ -44,10 +70,8 @@ export const horseService = {
    * @returns {Promise<import('../types/database').Horse>}
    */
   async updateHorse(id, horseData) {
-    const isFormData = typeof FormData !== 'undefined' && horseData instanceof FormData;
-    return api.put(ENDPOINTS.HORSES.UPDATE(id), horseData, {
-      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
-    });
+    // PUT phải gửi lại đủ các trường bắt buộc
+    return api.put(ENDPOINTS.HORSES.UPDATE(id), buildHorseForm(horseData), MULTIPART);
   },
 
   /**

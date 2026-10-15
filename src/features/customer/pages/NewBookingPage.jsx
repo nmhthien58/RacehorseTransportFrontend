@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button, Modal, Space, Typography, Tag, Divider, message } from 'antd';
 import {
   CheckCircleFilled,
@@ -13,7 +13,7 @@ import dayjs from 'dayjs';
 import PageHeader from '@components/layout/PageHeader';
 import BookingWizard from '@features/customer/components/BookingWizard';
 import bookingService from '@services/bookingService';
-import { useAuthStore } from '@features/auth/store/authStore';
+import { unwrapData, getErrorMessage } from '@utils/apiHelpers';
 import { ROUTES } from '@routes/routes';
 
 const { Title, Text } = Typography;
@@ -29,7 +29,8 @@ export default function NewBookingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuthStore();
+  // Giữ nguyên object giữa các lần render; nếu không wizard sẽ tải lại ngựa và mất lựa chọn
+  const wizardInitialValues = useMemo(() => location.state || {}, [location.state]);
 
   const [submitting, setSubmitting] = useState(false);
   const [createdBooking, setCreatedBooking] = useState(null);
@@ -43,26 +44,15 @@ export default function NewBookingPage() {
   const handleCreateBooking = async (payload) => {
     try {
       setSubmitting(true);
-      const fullPayload = {
-        ...payload,
-        customerUserId: user?.userId || user?.UserID || undefined,
-        customerName: user?.fullName || user?.FullName || 'Chủ ngựa',
-        customerEmail: user?.email || user?.Email || 'customer@test.com',
-        customerPhone: user?.phoneNumber || user?.Phone || '',
-      };
-
-      const res = await bookingService.createBooking(fullPayload);
-      const newBookingData = res?.data || res || fullPayload;
+      // Khách hàng được backend lấy từ token, không gửi kèm thông tin khách
+      const res = await bookingService.createBooking(payload);
+      const newBookingData = unwrapData(res) || payload;
 
       setCreatedBooking(newBookingData);
       setSuccessModalVisible(true);
       message.success(t('bookings.createSuccess') || 'Tạo yêu cầu vận chuyển thành công!');
     } catch (error) {
-      const errorMsg =
-        error?.response?.data?.message ||
-        t('bookings.createFailed') ||
-        'Có lỗi xảy ra khi gửi yêu cầu vận chuyển';
-      message.error(errorMsg);
+      message.error(getErrorMessage(error, t('bookings.createFailed') || 'Có lỗi xảy ra khi gửi yêu cầu vận chuyển'));
     } finally {
       setSubmitting(false);
     }
@@ -105,7 +95,7 @@ export default function NewBookingPage() {
         onSubmit={handleCreateBooking}
         onCancel={handleBackToList}
         loading={submitting}
-        initialValues={location.state || {}}
+        initialValues={wizardInitialValues}
       />
 
       {/* POPUP XÁC NHẬN "REQUEST POSTED!" THEO FIGMA FRAME 77:8195 */}

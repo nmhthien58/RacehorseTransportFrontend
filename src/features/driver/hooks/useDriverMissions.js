@@ -1,8 +1,53 @@
 import { useState, useEffect, useCallback } from 'react';
 import driverService from '../services/driverService';
+import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 
 /**
- * Hook lấy danh sách nhiệm vụ / chuyến đi cho Role Driver
+ * Chuẩn hóa chi tiết chuyến (GET /trips/{id}) sang các trường mà màn hình tài xế đang dùng.
+ * Giữ nguyên mọi trường gốc của backend, chỉ bổ sung trường suy ra.
+ * @param {Object} trip - Chi tiết chuyến từ backend
+ * @param {Array<Object>} [welfareLogs] - GET /trips/{id}/welfare-logs
+ * @returns {Object}
+ */
+export function normalizeMission(trip, welfareLogs) {
+  if (!trip) return trip;
+  const checkpoints = [...(trip.checkpoints || [])]
+    .filter((c) => c.isActive !== false)
+    .sort((a, b) => a.sequenceOrder - b.sequenceOrder);
+  const bookings = trip.bookings || [];
+  const firstBooking = bookings[0] || {};
+  const origin = checkpoints.find((c) => c.checkpointType === 'Origin');
+  const destination = [...checkpoints].reverse().find((c) => c.checkpointType === 'Destination');
+
+  return {
+    ...trip,
+    transportMode: trip.vehicleType === 'AirStall' ? 'Air' : 'Ground',
+    vehicleName: trip.vehicleType,
+    origin: origin?.address || firstBooking.pickupAddress || '',
+    destination: destination?.address || firstBooking.dropoffAddress || '',
+    bookingCode: bookings.map((b) => b.bookingCode).join(', '),
+    customerName: bookings.map((b) => b.customerName).join(', '),
+    customerPhone: firstBooking.customerPhone || '',
+    coordinatorName: trip.plannedByName,
+    horses: (trip.horses || []).map((h) => ({ ...h, id: h.horseId, name: h.horseName })),
+    // Tên trường cũ của màn hình lộ trình
+    routeCheckpoints: checkpoints.map((c) => ({
+      ...c,
+      orderIndex: c.sequenceOrder,
+      locationName: c.checkpointName,
+      locationType: c.checkpointType,
+      plannedArrivalTime: c.plannedTime,
+    })),
+    welfareLogs: (welfareLogs || trip.welfareLogs || []).map((log) => ({
+      ...log,
+      timestamp: log.loggedAt,
+      loggedBy: log.recordedByName,
+    })),
+  };
+}
+
+/**
+ * Hook lấy danh sách nhiệm vụ / chuyến đi của tài xế, áp tải đang đăng nhập
  * @param {Object} [initialParams]
  * @returns {Object}
  */
@@ -17,39 +62,31 @@ export function useDriverMissions(initialParams = {}) {
     setRefreshKey((prev) => prev + 1);
   }, []);
 
-  // Lắng nghe sự kiện khi Manager phê duyệt kế hoạch lộ trình và giao cho Driver/Escort
-  useEffect(() => {
-    const handleUpdate = () => {
-      refresh();
-    };
-    window.addEventListener('plan_assigned_to_driver', handleUpdate);
-    window.addEventListener('plans_updated', handleUpdate);
-    window.addEventListener('storage', handleUpdate);
-    return () => {
-      window.removeEventListener('plan_assigned_to_driver', handleUpdate);
-      window.removeEventListener('plans_updated', handleUpdate);
-      window.removeEventListener('storage', handleUpdate);
-    };
-  }, [refresh]);
-
   useEffect(() => {
     let isSubscribed = true;
 
     async function loadData() {
-      setLoading(true);
-      setError(null);
       try {
         const params = {
           status: filterStatus === 'All' ? undefined : filterStatus,
         };
-        const res = await driverService.getMissions(params);
+        const list = unwrapList(await driverService.getMissions(params));
+        // Danh sách chỉ có tóm tắt -> tải chi tiết từng chuyến (ngựa, lộ trình, các đơn)
+        const details = await Promise.all(
+          list.map((trip) =>
+            driverService
+              .getMissionById(trip.tripId)
+              .then((res) => normalizeMission(unwrapData(res)))
+              .catch(() => normalizeMission(trip)),
+          ),
+        );
         if (isSubscribed) {
-          const list = res?.data || (Array.isArray(res) ? res : []);
-          setMissions(list);
+          setMissions(details);
+          setError(null);
         }
       } catch (err) {
         if (isSubscribed) {
-          setError(err?.message || 'Không thể tải danh sách chuyến đi của tài xế');
+          setError(getErrorMessage(err, 'Không thể tải danh sách chuyến đi của tài xế'));
         }
       } finally {
         if (isSubscribed) {
@@ -76,7 +113,7 @@ export function useDriverMissions(initialParams = {}) {
 }
 
 /**
- * Hook quản lý chi tiết một nhiệm vụ và các thao tác cập nhật lộ trình của Driver
+ * Hook quản lý chi tiết một nhiệm vụ và các thao tác cập nhật lộ trình của đoàn xe
  * @param {number|string} tripId - ID của chuyến đi
  * @returns {Object}
  */
@@ -96,16 +133,18 @@ export function useMissionDetail(tripId) {
 
     async function loadDetail() {
       if (!tripId) return;
-      setLoading(true);
-      setError(null);
       try {
-        const res = await driverService.getMissionById(tripId);
+        const [tripRes, logsRes] = await Promise.all([
+          driverService.getMissionById(tripId),
+          driverService.getWelfareLogs(tripId).catch(() => null),
+        ]);
         if (isSubscribed) {
-          setMission(res?.data || res);
+          setMission(normalizeMission(unwrapData(tripRes), unwrapList(logsRes)));
+          setError(null);
         }
       } catch (err) {
         if (isSubscribed) {
-          setError(err?.message || 'Không thể tải chi tiết nhiệm vụ');
+          setError(getErrorMessage(err, 'Không thể tải chi tiết nhiệm vụ'));
         }
       } finally {
         if (isSubscribed) {
@@ -122,21 +161,24 @@ export function useMissionDetail(tripId) {
   }, [tripId, refreshKey]);
 
   /**
-   * Cập nhật một mục trong Pre-departure checklist
-   * @param {string} itemId
-   * @param {boolean} checked
-   * @param {string} [notes]
+   * Chạy một thao tác ghi; các API xuất phát / check-in trả về chi tiết chuyến mới nhất.
+   * @param {() => Promise<any>} call
+   * @param {string} fallbackError
+   * @returns {Promise<boolean>}
    */
-  const toggleChecklistItem = async (itemId, checked, notes) => {
+  const runAction = async (call, fallbackError) => {
     setActionLoading(true);
     try {
-      await driverService.updateMission(tripId, {
-        checklistItem: { itemId, checked, notes },
-      });
-      fetchMission();
+      const detail = unwrapData(await call());
+      if (detail?.tripId) {
+        setMission((prev) => normalizeMission(detail, prev?.welfareLogs));
+      } else {
+        fetchMission();
+      }
+      setError(null);
       return true;
     } catch (err) {
-      setError(err?.message || 'Không thể cập nhật danh mục kiểm tra');
+      setError(getErrorMessage(err, fallbackError));
       return false;
     } finally {
       setActionLoading(false);
@@ -144,89 +186,40 @@ export function useMissionDetail(tripId) {
   };
 
   /**
-   * Bắt đầu chuyến đi (Start Trip)
+   * Danh mục kiểm tra trước khởi hành: backend chưa có API lưu checklist,
+   * trạng thái tick được giữ ở màn hình (PreDepartureChecklistPage).
+   * @returns {Promise<boolean>}
    */
-  const startTrip = async () => {
-    setActionLoading(true);
-    try {
-      await driverService.startMission(tripId);
-      fetchMission();
-      return true;
-    } catch (err) {
-      setError(err?.message || 'Không thể bắt đầu chuyến đi');
-      return false;
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  const toggleChecklistItem = async () => true;
+
+  /** Xuất phát (POST /trips/{id}/start) — backend chặn nếu còn hồ sơ chưa Cleared */
+  const startTrip = () => runAction(() => driverService.startMission(tripId), 'Không thể bắt đầu chuyến đi');
+
+  /** Đã tới mốc (POST /checkpoints/{id}/arrive) */
+  const arriveCheckpoint = (checkpointId) =>
+    runAction(() => driverService.arriveCheckpoint(checkpointId), 'Không thể check-in đến trạm');
+
+  /** Đã thông quan tại cửa khẩu (POST /checkpoints/{id}/clear), không cần body */
+  const clearCheckpoint = (checkpointId) =>
+    runAction(() => driverService.clearCheckpoint(checkpointId), 'Không thể hoàn tất kiểm tra trạm');
+
+  /** Rời mốc (POST /checkpoints/{id}/depart) */
+  const departCheckpoint = (checkpointId) =>
+    runAction(() => driverService.departCheckpoint(checkpointId), 'Không thể cập nhật rời trạm');
 
   /**
-   * Check-in Arrive tại một mốc kiểm soát
-   * @param {number|string} checkpointId
-   */
-  const arriveCheckpoint = async (checkpointId) => {
-    setActionLoading(true);
-    try {
-      await driverService.arriveCheckpoint(checkpointId);
-      fetchMission();
-      return true;
-    } catch (err) {
-      setError(err?.message || 'Không thể check-in đến trạm');
-      return false;
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  /**
-   * Check-in Clear tại một mốc kiểm soát
-   * @param {number|string} checkpointId
-   * @param {{ clearanceNumber?: string, odometerReading?: number, notes?: string }} payload
-   */
-  const clearCheckpoint = async (checkpointId, payload) => {
-    setActionLoading(true);
-    try {
-      await driverService.clearCheckpoint(checkpointId, payload);
-      fetchMission();
-      return true;
-    } catch (err) {
-      setError(err?.message || 'Không thể hoàn tất kiểm tra trạm');
-      return false;
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  /**
-   * Check-in Depart rời một mốc kiểm soát
-   * @param {number|string} checkpointId
-   */
-  const departCheckpoint = async (checkpointId) => {
-    setActionLoading(true);
-    try {
-      await driverService.departCheckpoint(checkpointId);
-      fetchMission();
-      return true;
-    } catch (err) {
-      setError(err?.message || 'Không thể cập nhật rời trạm');
-      return false;
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  /**
-   * Thêm nhật ký thể trạng và phúc lợi ngựa
-   * @param {Object} logData
+   * Ghi nhật ký thể trạng một con ngựa (multipart)
+   * @param {Object} logData - xem driverService.createWelfareLog
    */
   const addWelfareLog = async (logData) => {
     setActionLoading(true);
     try {
       await driverService.createWelfareLog(tripId, logData);
       fetchMission();
+      setError(null);
       return true;
     } catch (err) {
-      setError(err?.message || 'Không thể ghi nhận nhật ký chăm sóc');
+      setError(getErrorMessage(err, 'Không thể ghi nhận nhật ký chăm sóc'));
       return false;
     } finally {
       setActionLoading(false);
@@ -244,7 +237,7 @@ export function useMissionDetail(tripId) {
       fetchMission();
       return true;
     } catch (err) {
-      setError(err?.message || 'Không thể gửi báo cáo khẩn cấp');
+      setError(getErrorMessage(err, 'Không thể gửi báo cáo khẩn cấp'));
       return false;
     } finally {
       setActionLoading(false);
@@ -262,7 +255,7 @@ export function useMissionDetail(tripId) {
       fetchMission();
       return true;
     } catch (err) {
-      setError(err?.message || 'Không thể nộp biên bản nghiệm thu bàn giao');
+      setError(getErrorMessage(err, 'Không thể nộp biên bản nghiệm thu bàn giao'));
       return false;
     } finally {
       setActionLoading(false);

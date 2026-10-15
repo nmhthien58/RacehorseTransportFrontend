@@ -22,6 +22,7 @@ import {
   InfoCircleOutlined,
 } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
+import dayjs from 'dayjs';
 import { useMissionDetail } from '../hooks/useDriverMissions';
 import EmergencyReportModal from '../components/EmergencyReportModal';
 
@@ -158,7 +159,9 @@ export default function PreDepartureChecklistPage() {
 
   // Derived effective horses
   const missionHorses = mission?.horses;
-  const missionVet = mission?.vetEscortName;
+  // Áp tải trưởng của chuyến (crew[].crewRole = Escort)
+  const missionVet = (mission?.crew || []).find((c) => c.crewRole === 'Escort' && c.isLead)?.fullName
+    || (mission?.crew || []).find((c) => c.crewRole === 'Escort')?.fullName;
   const effectiveHorses = useMemo(() => {
     if (missionHorses && missionHorses.length > 0) {
       return missionHorses.map((mh, idx) => {
@@ -174,7 +177,7 @@ export default function PreDepartureChecklistPage() {
             heartRate: '40 bpm',
             hydration: 'Normal',
             recordedAt: '05:15 AM',
-            vet: missionVet || 'Dr. Elena Rostova',
+            vet: missionVet || '—',
           }
         );
       });
@@ -250,6 +253,15 @@ export default function PreDepartureChecklistPage() {
   const allDocsPassed = requiredDocs.every((d) => d.passed);
   const isAllReady = allVehiclePassed && allHorsesHealthy && allDocsPassed;
 
+  // Thời gian còn lại tới giờ khởi hành dự kiến của chuyến (HH:mm)
+  const minutesToStart = mission?.plannedStartDate ? dayjs(mission.plannedStartDate).diff(dayjs(), 'minute') : null;
+  const countdown =
+    minutesToStart == null
+      ? '—'
+      : minutesToStart <= 0
+      ? '00:00'
+      : `${String(Math.floor(minutesToStart / 60)).padStart(2, '0')}:${String(minutesToStart % 60).padStart(2, '0')}`;
+
   // Handle start mission
   const handleStartMission = async () => {
     setStartConfirmOpen(false);
@@ -281,7 +293,7 @@ export default function PreDepartureChecklistPage() {
             Pre-Departure Checklist
           </h1>
           <p style={{ margin: '4px 0 0 0', fontSize: 13, color: '#64748B' }}>
-            Trip #{mission?.tripCode || 'TRP-8821'} • Assigned by Logistics Manager Group05
+            Trip #{mission?.tripCode || '—'} • {mission?.approvedByName ? `Approved by ${mission.approvedByName}` : `Planned by ${mission?.plannedByName || '—'}`}
           </p>
         </div>
 
@@ -341,33 +353,35 @@ export default function PreDepartureChecklistPage() {
           <Col xs={12} sm={8} md={5}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>ORDER ID</div>
             <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginTop: 2 }}>
-              #{mission?.bookingCode || 'ORD-8821'}
+              #{mission?.bookingCode || '—'}
             </div>
-            <div style={{ fontSize: 11.5, color: '#64748B' }}>SGN ➔ DXB ➔ CDG</div>
+            <div style={{ fontSize: 11.5, color: '#64748B' }}>
+              {(mission?.routeCheckpoints || []).map((c) => c.checkpointName.split(',')[0]).join(' ➔ ')}
+            </div>
           </Col>
 
           <Col xs={12} sm={8} md={5}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>ALLOCATED VEHICLE</div>
             <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginTop: 2 }}>
-              {mission?.vehicle?.name || 'Boeing 777F • #ST-04'}
+              {mission?.vehicleCode || '—'}
             </div>
-            <div style={{ fontSize: 11.5, color: '#64748B' }}>Target 18°C [±1.5°C]</div>
+            <div style={{ fontSize: 11.5, color: '#64748B' }}>{mission?.vehicleType}</div>
           </Col>
 
           <Col xs={12} sm={8} md={5}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>HORSES & ESCORT</div>
             <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginTop: 2 }}>
-              {horseVitals.length} Horses ({horseVitals.map((h) => h.name.split(' ')[0]).join(', ')})
+              {effectiveHorses.length} Horses ({effectiveHorses.map((h) => h.name.split(' ')[0]).join(', ')})
             </div>
-            <div style={{ fontSize: 11.5, color: '#2563EB' }}>Vet: Dr. Elena Rostova</div>
+            <div style={{ fontSize: 11.5, color: '#2563EB' }}>Escort: {missionVet || '—'}</div>
           </Col>
 
           <Col xs={12} sm={8} md={5}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>SCHEDULED DEPARTURE</div>
             <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A', marginTop: 2 }}>
-              Sep 25, 2026 • 08:00 AM
+              {mission?.plannedStartDate ? dayjs(mission.plannedStartDate).format('MMM DD, YYYY • HH:mm') : '—'}
             </div>
-            <div style={{ fontSize: 11.5, color: '#16A34A' }}>Tarmac Bay #4 Inspected</div>
+            <div style={{ fontSize: 11.5, color: '#16A34A' }}>{mission?.routeCheckpoints?.[0]?.address || ''}</div>
           </Col>
 
           <Col xs={24} sm={8} md={4} style={{ textAlign: 'right' }}>
@@ -385,7 +399,7 @@ export default function PreDepartureChecklistPage() {
                 COUNTDOWN TO DEPARTURE
               </div>
               <div style={{ fontSize: 18, fontWeight: 900, color: '#92400E', fontFamily: 'monospace' }}>
-                02:45:30
+                {countdown}
               </div>
             </div>
           </Col>
@@ -499,7 +513,7 @@ export default function PreDepartureChecklistPage() {
                   Pre-Trip Horse Vitals
                 </h2>
                 <p style={{ margin: '3px 0 0 0', fontSize: 12.5, color: '#64748B' }}>
-                  Baseline check administered by Dr. Elena Rostova (Nhấn để đánh dấu sức khỏe)
+                  Baseline check by {missionVet || 'the escort'} (Nhấn để đánh dấu sức khỏe)
                 </p>
               </div>
 

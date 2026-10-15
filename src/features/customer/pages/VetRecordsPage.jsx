@@ -14,9 +14,7 @@ import {
   Popconfirm,
   message,
   Upload,
-  Steps,
   Empty,
-  Tooltip,
   DatePicker,
   Dropdown,
   Alert,
@@ -24,7 +22,9 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@routes/routes';
 import { useAuthStore } from '@features/auth/store/authStore';
-import { getStoredBookings } from '@utils/bookingStorage';
+import horseService from '@services/horseService';
+import { unwrapList } from '@utils/apiHelpers';
+import CustomerDossierPanel from '@features/customer/components/CustomerDossierPanel';
 import {
   MedicineBoxOutlined,
   AlertOutlined,
@@ -39,17 +39,12 @@ import {
   SafetyCertificateOutlined,
   ClockCircleOutlined,
   CalendarOutlined,
-  SendOutlined,
   FilePdfOutlined,
   BellOutlined,
   EyeOutlined,
 } from '@ant-design/icons';
 import StandardFormTemplateModal from '@components/common/StandardFormTemplateModal';
 import {
-  syncCustomerDossierSubmission,
-} from '@utils/dossierStorage';
-import {
-  getStoredHorses,
   calculateHorseRisk,
   RiskBadge,
   saveHorseMarkings,
@@ -276,35 +271,43 @@ export default function VetRecordsPage() {
   const { user } = useAuthStore();
   const currentUserId = user?.userId || user?.UserID;
 
-  const [horses, setHorses] = useState(() => {
-    const list = getStoredHorses();
-    if (!currentUserId) return list;
-    return list.filter((h) => Number(h.OwnerUserID || h.ownerUserId) === Number(currentUserId));
-  });
+  const [horses, setHorses] = useState([]);
+  const [selectedHorseId, setSelectedHorseId] = useState(null);
 
-  const [selectedHorseId, setSelectedHorseId] = useState(() => {
-    const list = getStoredHorses();
-    const filtered = currentUserId
-      ? list.filter((h) => Number(h.OwnerUserID || h.ownerUserId) === Number(currentUserId))
-      : list;
-    return filtered[0]?.HorseID || null;
-  });
+  useEffect(() => {
+    let active = true;
+    horseService
+      .getHorses({ size: 100 })
+      .then((res) => {
+        if (!active) return;
+        const list = unwrapList(res).map((h) => ({
+          ...h,
+          HorseID: h.horseId,
+          OwnerUserID: h.ownerUserId,
+          Name: h.name,
+          Breed: h.breed,
+          Gender: h.gender,
+          DateOfBirth: h.dateOfBirth,
+          Color: h.color,
+          MicrochipNumber: h.microchipNumber,
+          PassportNumber: h.passportNumber,
+          PhotoUrl: h.photoUrl,
+          SpecialCareRequirements: h.specialCareRequirements,
+        }));
+        setHorses(list);
+        setSelectedHorseId((prev) => prev ?? list[0]?.HorseID ?? null);
+      })
+      .catch((err) => console.error(err));
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const [activeTab, setActiveTab] = useState('overview');
   const [records, setRecords] = useState(() => getStoredVetRecords());
   const [recordCategory, setRecordCategory] = useState('All');
   const [reminders, setReminders] = useState(() => getStoredReminders());
   const [storageVersion, setStorageVersion] = useState(0);
-
-  // State nộp Digital Dossier cho Transport Specialist (Flow 2)
-  const [dossierSubmissions, setDossierSubmissions] = useState(() => {
-    try {
-      const raw = localStorage.getItem('racehorse_customer_dossier_submissions');
-      return raw ? JSON.parse(raw) : {};
-    } catch {
-      return {};
-    }
-  });
 
   // Modal states
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
@@ -1413,519 +1416,7 @@ export default function VetRecordsPage() {
       )}
 
       {/* === TAB 3: DIGITAL DOSSIER (FIGMA FLOW 2) === */}
-      {activeTab === 'dossier' && (() => {
-        const curSubmission = dossierSubmissions[selectedHorseId];
-        const isSubmitted = Boolean(curSubmission?.submitted);
-        const currentStep = isSubmitted ? (curSubmission.step || 1) : 0;
-
-        // Lấy danh sách bookings để kiểm tra điều kiện phê duyệt của Manager (Requirement 1)
-        const allBookings = getStoredBookings();
-        const customerBookings = currentUserId
-          ? allBookings.filter((b) => Number(b.customerUserId || b.CustomerUserID) === Number(currentUserId))
-          : allBookings;
-
-        // Tìm đơn đặt chuyến chứa chú ngựa này
-        const horseBooking = customerBookings.find((b) => {
-          const horseList = b.horses || b.bookingHorses || [];
-          return horseList.some(
-            (h) =>
-              String(h.horseId || h.HorseID) === String(selectedHorseId) ||
-              (h.name && String(h.name).toLowerCase() === String(currentHorse.Name || '').toLowerCase()),
-          );
-        }) || customerBookings[0] || null;
-
-        // Kiểm tra xem đơn đã được Logistics Manager duyệt hay chưa
-        const isBookingApproved = Boolean(
-          horseBooking &&
-            ['APPROVED', 'CONFIRMED', 'IN_PLANNING', 'ASSIGNED', 'INTRANSIT', 'COMPLETED'].includes(
-              String(horseBooking.status || horseBooking.Status).toUpperCase(),
-            ),
-        );
-
-        const handleSubmitDossier = () => {
-          if (!isBookingApproved) {
-            message.warning(
-              'Yêu cầu vận chuyển ngựa chưa được Logistics Manager phê duyệt! Chỉ được nộp hồ sơ Digital Dossier sau khi Manager phê duyệt đơn.',
-            );
-            return;
-          }
-          const updated = {
-            ...dossierSubmissions,
-            [selectedHorseId]: {
-              submitted: true,
-              submittedAt: dayjs().format('DD/MM/YYYY HH:mm'),
-              status: 'Reviewing',
-              step: 1,
-              officer: 'Nguyễn Thị Mai (Chuyên viên Thủ tục & Kiểm dịch)',
-            },
-          };
-          setDossierSubmissions(updated);
-          try {
-            localStorage.setItem('racehorse_customer_dossier_submissions', JSON.stringify(updated));
-            syncCustomerDossierSubmission({ horse: currentHorse, customerUser: user });
-          } catch (err) {
-            console.error(err);
-          }
-          message.success(
-            `Đã nộp thành công bộ hồ sơ Digital Dossier của ngựa "${currentHorse.Name || 'Ngựa đua'}" cho Chuyên viên thủ tục (Transport Specialist) phê duyệt!`,
-          );
-        };
-
-        const handleResetSubmission = () => {
-          const updated = { ...dossierSubmissions };
-          delete updated[selectedHorseId];
-          setDossierSubmissions(updated);
-          try {
-            localStorage.setItem('racehorse_customer_dossier_submissions', JSON.stringify(updated));
-            window.dispatchEvent(new CustomEvent('dossiers_updated'));
-          } catch (err) {
-            console.error(err);
-          }
-          message.info('Đã mở khóa trạng thái để tải thêm tài liệu bổ sung.');
-        };
-
-        const isCustomsCleared = curSubmission?.status === 'Cleared';
-
-        const dossierDocs = [
-          {
-            id: 'DOC-01',
-            title: 'FEI Equine Passport & Microchip Registration',
-            type: 'HORSE_PASSPORT',
-            fileName: 'FEI_Passport_Verified.pdf',
-            size: '2.4 MB',
-            status: 'Verified',
-            authority: 'Fédération Equestre Internationale (FEI)',
-            category: 'Khách hàng nộp',
-          },
-          {
-            id: 'DOC-02',
-            title: 'Certificate of Veterinary Inspection (CVI)',
-            type: 'HEALTH_CERT',
-            fileName: 'CVI_Official_Inspection.pdf',
-            size: '1.8 MB',
-            status: hasCVI ? 'Verified' : 'Pending',
-            authority: 'Cục Thú y / Dept. of Animal Health',
-            category: 'Khách hàng nộp',
-          },
-          {
-            id: 'DOC-03',
-            title: 'Equine Influenza & Core Vaccinations Log',
-            type: 'VACCINE_RECORD',
-            fileName: 'Vaccination_Log_2026.pdf',
-            size: '1.2 MB',
-            status: hasVaccines ? 'Verified' : 'Pending',
-            authority: 'Royal Ba Vi Equine Clinic',
-            category: 'Khách hàng nộp',
-          },
-          {
-            id: 'DOC-04',
-            title: 'Pre-export Blood Test & Lab PCR (Coggins EIA Negative)',
-            type: 'COGGINS_EIA',
-            fileName: 'Coggins_PCR_Negative.pdf',
-            size: '850 KB',
-            status: hasCoggins ? 'Cleared' : 'Pending',
-            authority: 'Central Veterinary Laboratory',
-            category: 'Khách hàng nộp',
-          },
-          {
-            id: 'DOC-05',
-            title: 'Official Export / Transit Clearance Permit (Giấy phép xuất nhập cảnh)',
-            type: 'IMPORT_PERMIT',
-            fileName: curSubmission?.clearanceNumber ? `Customs_Permit_${curSubmission.clearanceNumber}.pdf` : 'DAFF_AFCD_Transit_Permit.pdf',
-            size: '3.1 MB',
-            status: isCustomsCleared ? 'Cleared' : (isSubmitted ? 'InReview' : 'Draft'),
-            authority: 'Border Quarantine & Customs Authority (Cơ quan Hải quan & Cục Thú y)',
-            category: 'Do ST đảm nhiệm',
-            isSpecialistResponsibility: true,
-          },
-        ];
-
-        return (
-          <Space direction="vertical" size={20} style={{ width: '100%' }}>
-            {/* CARD 1: CLEARANCE TRACKING STEPPER (KHỚP FIGMA Customers_Clearance Tracking) */}
-            <Card
-              bordered
-              style={{ borderRadius: 16, border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}
-              styles={{ body: { padding: '22px 26px' } }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
-                <div>
-                  <Space size={8} wrap style={{ marginBottom: 4 }}>
-                    <Tag color="gold" style={{ fontWeight: 800, borderRadius: 6 }}>
-                      🐎 {currentHorse.Name || 'Ngựa đua'}
-                    </Tag>
-                    <Tag color="blue">{currentHorse.Breed || 'Thoroughbred'}</Tag>
-                    <Tag>Microchip: <strong>{currentHorse.MicrochipNumber || '---'}</strong></Tag>
-                    <Tag>Passport: <strong>{currentHorse.PassportNumber || 'FEI-VN-2023-01'}</strong></Tag>
-                  </Space>
-                  <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0F172A' }}>
-                    Quarantine & Digital Dossier Clearance Tracking (Flow 2)
-                  </h3>
-                  <p style={{ margin: '4px 0 0', fontSize: 12.5, color: '#64748B' }}>
-                    Theo dõi tiến độ thẩm định hồ sơ pháp lý, kiểm dịch cửa khẩu và cấp phép xuất cảnh quốc tế
-                  </p>
-                </div>
-
-                <div style={{ textAlign: 'right' }}>
-                  {isCustomsCleared ? (
-                    <Tag color="success" style={{ fontSize: 12.5, padding: '4px 12px', fontWeight: 800, borderRadius: 6 }}>
-                      ✓ ĐÃ THÔNG QUAN BỞI HẢI QUAN & CỤC THÚ Y
-                    </Tag>
-                  ) : isSubmitted ? (
-                    <Tag color="processing" style={{ fontSize: 12.5, padding: '4px 12px', fontWeight: 700, borderRadius: 6 }}>
-                      ⏳ ĐANG THẨM ĐỊNH BỞI TRANSPORT SPECIALIST
-                    </Tag>
-                  ) : (
-                    <Tag color="warning" style={{ fontSize: 12.5, padding: '4px 12px', fontWeight: 700, borderRadius: 6 }}>
-                      📝 CHƯA NỘP HỒ SƠ DIGITAL DOSSIER
-                    </Tag>
-                  )}
-                  {isSubmitted && (
-                    <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 4 }}>
-                      Nộp lúc: <strong>{curSubmission.submittedAt}</strong>
-                      {curSubmission?.clearanceNumber && (
-                        <div style={{ color: '#166534', fontWeight: 700 }}>
-                          Số cấp phép: <code>{curSubmission.clearanceNumber}</code>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* THANH TIẾN TRÌNH STEPPER */}
-              <Steps
-                current={currentStep}
-                items={[
-                  {
-                    title: '1. Nộp hồ sơ',
-                    description: isSubmitted ? 'Đã nộp thành công' : 'Chờ khách nộp',
-                  },
-                  {
-                    title: '2. Thẩm định TS',
-                    description: isSubmitted ? 'Đối soát 3-Point Audit' : 'Chưa xử lý',
-                  },
-                  {
-                    title: '3. Cơ quan cấp phép',
-                    description: isCustomsCleared ? 'Đã duyệt cấp phép' : 'Hải quan & Cục Thú y',
-                  },
-                  {
-                    title: '4. Đã thông quan',
-                    description: isCustomsCleared ? 'Hoàn tất bàn giao' : 'Bàn giao cho Manager',
-                  },
-                ]}
-                style={{ marginTop: 10, marginBottom: 10 }}
-              />
-            </Card>
-
-            {/* BẢNG HƯỚNG DẪN CÁC MỤC KIỂM TRA THÚ Y CẦN NỘP CHO ST & NGHIỆP VỤ GIẤY PHÉP XUẤT NHẬP CẢNH CỦA ST (REQUIREMENT 2) */}
-            <Card
-              bordered
-              style={{
-                borderRadius: 16,
-                border: '1.5px solid #BFDBFE',
-                backgroundColor: '#F8FAFC',
-              }}
-              styles={{ body: { padding: '18px 22px' } }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                <span style={{ fontSize: 22 }}>📋</span>
-                <div>
-                  <h4 style={{ margin: 0, fontSize: 15.5, fontWeight: 800, color: '#1E3A8A' }}>
-                    Danh mục Kiểm tra Y tế & Giấy tờ cần nộp cho Chuyên viên Thủ tục (ST)
-                  </h4>
-                  <span style={{ fontSize: 12.5, color: '#64748B' }}>
-                    Khách hàng chỉ cần chuẩn bị 4 hạng mục y tế cơ sở do Bác sĩ Thú y / Phòng khám thực hiện. Giấy phép xuất nhập cảnh cửa khẩu là nghiệp vụ của ST.
-                  </span>
-                </div>
-              </div>
-
-              <Row gutter={[16, 12]}>
-                {/* Phần A: Khách hàng nộp */}
-                <Col xs={24} md={14}>
-                  <div style={{ padding: '12px 14px', backgroundColor: '#FFFFFF', borderRadius: 10, border: '1.5px solid #E2E8F0', height: '100%' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                      <strong style={{ fontSize: 13, color: '#0F172A' }}>
-                        A. 4 Hạng mục Khách hàng cần thực hiện & nộp cho ST:
-                      </strong>
-                      <Tag color="blue" style={{ fontWeight: 700 }}>Khách hàng chuẩn bị</Tag>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: '#334155' }}>
-                      <div>
-                        1. 🐎 <strong>Hộ chiếu ngựa FEI Quốc tế & Vi mạch:</strong> Còn hạn hiệu lực, đối chiếu mã chip 15 số ISO 11784/11785.
-                      </div>
-                      <div>
-                        2. 💉 <strong>Chứng nhận tiêm phòng Cúm ngựa (Equine Influenza):</strong> Đủ 2 mũi cơ bản + mũi nhắc lại trong 6 tháng (cách ngày bay ≥ 14 ngày).
-                      </div>
-                      <div>
-                        3. 🩸 <strong>Xét nghiệm máu Coggins EIA âm tính & EVA / Glanders:</strong> Phiếu xét nghiệm âm tính trong vòng 30 ngày từ Viện xét nghiệm chỉ định.
-                      </div>
-                      <div>
-                        4. 🩺 <strong>Giấy chứng nhận Khám Lâm sàng (CVI Health Cert):</strong> Khám tổng quát xác nhận ngựa khỏe mạnh, đủ điều kiện bay (Fit-to-Fly).
-                      </div>
-                    </div>
-                  </div>
-                </Col>
-
-                {/* Phần B: ST đảm nhiệm */}
-                <Col xs={24} md={10}>
-                  <div style={{ padding: '12px 14px', backgroundColor: '#EFF6FF', borderRadius: 10, border: '1.5px solid #93C5FD', height: '100%' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                      <strong style={{ fontSize: 13, color: '#1E40AF' }}>
-                        B. Nghiệp vụ của Transport Specialist (ST):
-                      </strong>
-                      <Tag color="purple" style={{ fontWeight: 700 }}>Do ST đảm nhiệm</Tag>
-                    </div>
-                    <div style={{ fontSize: 12, color: '#1E3A8A', lineHeight: 1.5 }}>
-                      🏛️ <strong>Giấy phép Xuất Nhập Cảnh & Quá Cảnh Quốc Tế (Import/Export Permit):</strong>
-                      <p style={{ margin: '4px 0 8px 0', fontSize: 11.5, color: '#3B82F6' }}>
-                        Khách hàng <strong>KHÔNG cần tự xin giấy phép này</strong>. Sau khi tiếp nhận 4 hồ sơ y tế từ bạn, ST sẽ đại diện nộp hồ sơ xin cấp phép đến Cục Thú y Nông nghiệp (USDA / DAFF / GACC) và làm thủ tục thông quan hải quan.
-                      </p>
-                      {!isCustomsCleared ? (
-                        <div style={{ padding: '8px 12px', backgroundColor: '#FEF3C7', border: '1px solid #FCD34D', borderRadius: 6, fontSize: 11.5, color: '#92400E', fontWeight: 600 }}>
-                          ⏳ Đang được Transport Specialist xử lý thẩm định với Cục Thú y & Hải quan cửa khẩu
-                        </div>
-                      ) : (
-                        <div style={{ padding: '6px 10px', backgroundColor: '#DCFCE7', borderRadius: 6, border: '1px solid #86EFAC', color: '#15803D', fontWeight: 700, fontSize: 12, textAlign: 'center' }}>
-                          ✓ Hải quan đã cấp Giấy phép #{curSubmission?.clearanceNumber}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Col>
-              </Row>
-            </Card>
-
-            {/* CARD 2: DIGITAL DOSSIER DOCUMENTS CHECKLIST */}
-            <Card
-              title={
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Space>
-                    <FileTextOutlined style={{ color: '#2563EB' }} />
-                    <span style={{ fontWeight: 800, color: '#1E293B', fontSize: 15 }}>
-                      Bộ hồ sơ pháp lý số hóa (Digital Dossier Documents Checklist)
-                    </span>
-                  </Space>
-                  <Tag color="blue" style={{ fontWeight: 700 }}>
-                    {dossierDocs.filter((d) => d.status === 'Verified' || d.status === 'Cleared').length} / {dossierDocs.length} Tài liệu hợp lệ
-                  </Tag>
-                </div>
-              }
-              bordered
-              style={{ borderRadius: 16, border: '1px solid #E2E8F0' }}
-              styles={{ body: { padding: '16px 20px' } }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {dossierDocs.map((doc) => {
-                  const isVerified = doc.status === 'Verified' || doc.status === 'Cleared';
-                  return (
-                    <div
-                      key={doc.id}
-                      style={{
-                        padding: '12px 16px',
-                        borderRadius: 12,
-                        border: isVerified ? '1.5px solid #BBF7D0' : '1px solid #E2E8F0',
-                        backgroundColor: isVerified ? '#F0FDF4' : '#F8FAFC',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        flexWrap: 'wrap',
-                        gap: 12,
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div
-                          style={{
-                            width: 38,
-                            height: 38,
-                            borderRadius: 10,
-                            backgroundColor: isVerified ? '#DCFCE7' : '#E2E8F0',
-                            color: isVerified ? '#15803D' : '#64748B',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: 18,
-                          }}
-                        >
-                          📄
-                        </div>
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                            <strong style={{ fontSize: 13.5, color: '#0F172A' }}>
-                              {doc.title}
-                            </strong>
-                            {doc.isSpecialistResponsibility && (
-                              <Tag color="purple" style={{ fontSize: 11, fontWeight: 700, margin: 0 }}>
-                                🛡️ Do Transport Specialist đảm nhiệm
-                              </Tag>
-                            )}
-                          </div>
-                          <span style={{ fontSize: 12, color: '#64748B' }}>
-                            Tệp: <code>{doc.fileName}</code> ({doc.size}) • Cơ quan cấp: <em>{doc.authority}</em>
-                          </span>
-                        </div>
-                      </div>
-
-                      <Space size={8} wrap>
-                        {isVerified ? (
-                          <Tag color="success" style={{ fontWeight: 700, borderRadius: 6 }}>
-                            ✓ ĐÃ XÁC THỰC (VERIFIED)
-                          </Tag>
-                        ) : doc.status === 'InReview' ? (
-                          <Tag color="processing" style={{ fontWeight: 700, borderRadius: 6 }}>
-                            ⏳ ĐANG XEM XÉT
-                          </Tag>
-                        ) : (
-                          <Tag color="default" style={{ fontWeight: 600, borderRadius: 6 }}>
-                            CHỜ KIỂM TRA
-                          </Tag>
-                        )}
-                        <Button
-                          size="small"
-                          icon={<FilePdfOutlined />}
-                          onClick={() =>
-                            setTemplateModal({
-                              open: true,
-                              docType: doc.type,
-                              title: doc.title,
-                            })
-                          }
-                          style={{ borderRadius: 6, fontSize: 12, borderColor: '#F59E0B', color: '#B45309', fontWeight: 600 }}
-                        >
-                          Mẫu đơn
-                        </Button>
-                        <Button
-                          size="small"
-                          icon={<EyeOutlined />}
-                          onClick={() => message.info(`Đang mở bản xem trước tài liệu "${doc.fileName}"`)}
-                          style={{ borderRadius: 6, fontSize: 12 }}
-                        >
-                          Xem tệp
-                        </Button>
-                        {doc.isSpecialistResponsibility && !isCustomsCleared && (
-                          <Tag style={{ borderRadius: 6, fontSize: 11, backgroundColor: '#F1F5F9', borderColor: '#CBD5E1', color: '#475569', fontWeight: 600 }}>
-                            Đang xử lý tại Cục Thú y / Hải quan
-                          </Tag>
-                        )}
-                      </Space>
-                    </div>
-                  );
-                })}
-              </div>
-            </Card>
-
-            {/* CARD 3: ACTION - GỬI HỒ SƠ CHO TRANSPORT SPECIALIST */}
-            <Card
-              bordered
-              style={{
-                borderRadius: 16,
-                border: isSubmitted ? '1.5px solid #86EFAC' : !isBookingApproved ? '1.5px solid #FCD34D' : '1.5px solid #BFDBFE',
-                backgroundColor: isSubmitted ? '#F0FDF4' : !isBookingApproved ? '#FFFDF5' : '#EFF6FF',
-              }}
-              styles={{ body: { padding: '20px 24px' } }}
-            >
-              {!isBookingApproved && !isSubmitted && (
-                <div
-                  style={{
-                    backgroundColor: '#FEF3C7',
-                    border: '1px solid #FDE68A',
-                    borderRadius: 10,
-                    padding: '12px 16px',
-                    marginBottom: 16,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                  }}
-                >
-                  <ClockCircleOutlined style={{ color: '#D97706', fontSize: 20, flexShrink: 0 }} />
-                  <div>
-                    <strong style={{ color: '#92400E', fontSize: 13.5 }}>
-                      ⏳ Chờ Logistics Manager phê duyệt yêu cầu vận chuyển
-                    </strong>
-                    <div style={{ color: '#B45309', fontSize: 12.5, marginTop: 2 }}>
-                      {horseBooking ? (
-                        <>
-                          Yêu cầu vận chuyển <strong>#{horseBooking.bookingCode}</strong> hiện đang ở trạng thái{' '}
-                          <Tag color="orange" style={{ fontWeight: 700 }}>{horseBooking.status || 'Pending'}</Tag>. Theo quy trình nghiệp vụ (Flow 2), khách hàng chỉ được gửi bộ hồ sơ Digital Dossier cho Chuyên viên thủ tục sau khi Logistics Manager đã phê duyệt đơn vận chuyển!
-                        </>
-                      ) : (
-                        <>
-                          Bạn chưa có yêu cầu vận chuyển nào cho chú ngựa này được Logistics Manager phê duyệt. Vui lòng tạo yêu cầu tại mục <strong>Đơn đặt chuyến</strong> và chờ Manager phê duyệt trước.
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {isBookingApproved && !isSubmitted && (
-                <div
-                  style={{
-                    backgroundColor: '#DCFCE7',
-                    border: '1px solid #86EFAC',
-                    borderRadius: 10,
-                    padding: '10px 14px',
-                    marginBottom: 16,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                  }}
-                >
-                  <CheckCircleOutlined style={{ color: '#16A34A', fontSize: 18 }} />
-                  <span style={{ color: '#15803D', fontSize: 13, fontWeight: 600 }}>
-                    ✓ Yêu cầu vận chuyển #{horseBooking?.bookingCode} đã được Logistics Manager phê duyệt. Bạn đã đủ điều kiện nộp bộ hồ sơ Digital Dossier cho Chuyên viên thủ tục (ST).
-                  </span>
-                </div>
-              )}
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-                <div>
-                  <h4 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 800, color: isSubmitted ? '#166534' : !isBookingApproved ? '#92400E' : '#1E3A8A' }}>
-                    {isSubmitted ? '✅ Bộ hồ sơ Digital Dossier đã được gửi đi thành công!' : '📤 Nộp hồ sơ Digital Dossier cho Transport Specialist phê duyệt'}
-                  </h4>
-                  <p style={{ margin: 0, fontSize: 13, color: isSubmitted ? '#15803D' : '#475569', maxWidth: 640 }}>
-                    {isSubmitted
-                      ? `Chuyên viên thủ tục (${curSubmission.officer}) đang tiến hành thẩm định đối soát chéo thông tin vi mạch, chứng thư CVI và vaccine để nộp cho Logistics Manager.`
-                      : 'Sau khi gửi, Chuyên viên thủ tục sẽ kiểm tra tính pháp lý của giấy tờ, xử lý thủ tục kiểm dịch hải quan và nộp cho Ban Quản lý điều vận để phê duyệt lộ trình.'}
-                  </p>
-                </div>
-
-                <Space size={10}>
-                  {isSubmitted ? (
-                    <Button
-                      onClick={handleResetSubmission}
-                      style={{ borderRadius: 8, fontWeight: 600 }}
-                    >
-                      Bổ sung thêm tài liệu
-                    </Button>
-                  ) : (
-                    <Tooltip title={!isBookingApproved ? 'Chỉ được nộp hồ sơ sau khi Logistics Manager phê duyệt yêu cầu vận chuyển' : ''}>
-                      <Button
-                        type="primary"
-                        size="large"
-                        icon={<SendOutlined />}
-                        disabled={!isBookingApproved}
-                        onClick={handleSubmitDossier}
-                        style={{
-                          backgroundColor: isBookingApproved ? '#2563EB' : undefined,
-                          borderColor: isBookingApproved ? '#2563EB' : undefined,
-                          borderRadius: 10,
-                          fontWeight: 800,
-                          height: 44,
-                          padding: '0 24px',
-                          boxShadow: isBookingApproved ? '0 4px 12px rgba(37, 99, 235, 0.25)' : 'none',
-                        }}
-                      >
-                        Gửi hồ sơ Digital Dossier cho TS phê duyệt
-                      </Button>
-                    </Tooltip>
-                  )}
-                </Space>
-              </div>
-            </Card>
-          </Space>
-        );
-      })()}
+      {activeTab === 'dossier' && <CustomerDossierPanel horseId={selectedHorseId} />}
 
       {/* === TAB 4: TRAVEL READY === */}
       {activeTab === 'travelReady' && (

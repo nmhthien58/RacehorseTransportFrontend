@@ -103,6 +103,8 @@ export default function LoginPage() {
         'Driver': ROUTES.DRIVER_DASHBOARD,
         [ROLES.ESCORT]: ROUTES.DRIVER_DASHBOARD,
         'Escort': ROUTES.DRIVER_DASHBOARD,
+        // Vai trò thật của backend cho tài xế / áp tải
+        'DriverEscort': ROUTES.DRIVER_DASHBOARD,
       };
 
       const userRole = user?.role || user?.Role;

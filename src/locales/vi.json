@@ -920,8 +920,8 @@
       "missing": "Chưa nộp",
       "rejectionCount": "Số lần từ chối: {{count}}/3",
       "notes": "Ghi chú điều kiện",
-      "returnToAuthorityBtn": "Nộp lại cho cơ quan (Return to Authority)",
-      "returnSuccess": "Đã nộp lại hồ sơ cho cơ quan chức năng sau khi xử lý sự cố",
+      "returnToAuthorityBtn": "Mở lại hồ sơ (yêu cầu nộp bổ sung)",
+      "returnSuccess": "Đã mở lại hồ sơ, khách hàng được yêu cầu nộp bổ sung giấy tờ",
       "reportIssueBtn": "Từ chối / Báo vướng mắc kiểm dịch"
     },
     "status": {
@@ -1028,7 +1028,7 @@
       "step2Desc": "Ghi nhận số hiệu giấy phép kiểm dịch sau khi Cơ quan chức năng phê duyệt chính thức.",
       "submittedWaiting": "Đã nộp cơ quan chức năng • Đang chờ xét duyệt",
       "resolveIssueTitle": "Xử lý sự cố kiểm dịch",
-      "resolveIssueDesc": "Hồ sơ đang vướng mắc. Sau khi xử lý bổ sung, bấm nộp lại cho cơ quan."
+      "resolveIssueDesc": "Hồ sơ đang vướng mắc. Bấm mở lại để khách nộp bổ sung giấy tờ, sau đó nộp lại cho cơ quan."
     },
     "statusBar": {
       "title": "Tiến trình thẩm định & thông quan",
@@ -1222,6 +1222,228 @@
       "viewEPod": "Xem Biên bản e-POD",
       "submitBtn": "Gửi hồ sơ lên Quản lý vận hành",
       "resubmitBtn": "Cập nhật lại hồ sơ gửi QLVH"
+    }
+  },
+  "customerDossier": {
+    "title": "Hồ sơ kiểm dịch (Digital Dossier)",
+    "empty": "Chưa có hồ sơ kiểm dịch. Hồ sơ được tạo tự động cho từng con ngựa khi đơn vận chuyển được duyệt.",
+    "loadFailed": "Không tải được hồ sơ kiểm dịch",
+    "uploadSuccess": "Đã nộp giấy tờ, chuyên viên sẽ thẩm định",
+    "uploadFailed": "Không nộp được giấy tờ",
+    "fileRequired": "Vui lòng chọn file giấy tờ",
+    "optional": "Không bắt buộc",
+    "validityDays": "hiệu lực {{days}} ngày",
+    "viewFile": "Xem file",
+    "expires": "hết hạn",
+    "correctionNote": "Cần sửa",
+    "submit": "Nộp",
+    "resubmit": "Nộp lại",
+    "departure": "khởi hành",
+    "specialist": "Chuyên viên",
+    "progress": "Đã duyệt {{approved}}/{{required}} giấy bắt buộc",
+    "issue": "Hồ sơ đang có vấn đề",
+    "cleared": "Đã thông quan · Số giấy phép: {{number}}",
+    "locked": "Hồ sơ đã nộp cơ quan chức năng, tạm thời không nhận thêm giấy tờ.",
+    "uploadTitle": "Nộp giấy tờ",
+    "documentNumber": "Số hiệu giấy tờ",
+    "expiryDate": "Ngày hết hạn",
+    "file": "File giấy tờ",
+    "chooseFile": "Chọn file",
+    "fileHint": "PDF, JPG, PNG, tối đa 10 MB",
+    "columns": {
+      "document": "Giấy tờ",
+      "state": "Trạng thái",
+      "submitted": "Đã nộp"
+    },
+    "state": {
+      "Missing": "Chưa nộp",
+      "Pending": "Chờ duyệt",
+      "Approved": "Đã duyệt",
+      "Rejected": "Bị từ chối"
+    },
+    "status": {
+      "Draft": "Mới mở",
+      "AwaitingDocs": "Chờ nộp giấy",
+      "Reviewing": "Đang thẩm định",
+      "SubmittedToAuthorities": "Đã nộp cơ quan",
+      "Cleared": "Đã thông quan",
+      "Issue": "Có vấn đề"
+    }
+  },
+  "tripPlan": {
+    "title": "Lập kế hoạch chuyến",
+    "subtitle": "Gom ngựa của các đơn đã duyệt thành chuyến, chọn xe, đoàn xe và lộ trình",
+    "newTitle": "Lập chuyến mới",
+    "editTitle": "Sửa bản nháp {{code}}",
+    "editorSubtitle": "Bản nháp được giữ chỗ xe, người và ngựa; trình duyệt để quản lý phê duyệt",
+    "queueEmpty": "Không có ngựa nào đang chờ xếp chuyến",
+    "tabs": {
+      "queue": "Hàng chờ xếp chuyến",
+      "trips": "Kế hoạch chuyến"
+    },
+    "filters": {
+      "allModes": "Mọi phương thức",
+      "planning": "Đang lập / chờ chạy",
+      "all": "Tất cả"
+    },
+    "sections": {
+      "horses": "Ngựa trên chuyến",
+      "vehicle": "Thời gian & phương tiện",
+      "crew": "Đoàn xe",
+      "route": "Lộ trình",
+      "bookings": "Các đơn trên chuyến"
+    },
+    "fields": {
+      "status": "Trạng thái",
+      "vehicle": "Xe",
+      "capacity": "{{count}} chỗ",
+      "plannedStart": "Khởi hành dự kiến",
+      "plannedEnd": "Tới đích dự kiến",
+      "plannedCost": "Chi phí vận hành dự kiến (USD)",
+      "plannedBy": "Người lập",
+      "approvedBy": "Người duyệt",
+      "rejections": "Số lần bị trả về",
+      "lead": "Trưởng nhóm",
+      "horseCount": "{{count}} ngựa",
+      "slot": "Ô chuồng",
+      "horse": "Ngựa",
+      "booking": "Đơn",
+      "stallClass": "Hạng chuồng",
+      "dossier": "Hồ sơ",
+      "restMinutes": "nghỉ bắt buộc {{count}} phút",
+      "restMinutesShort": "Nghỉ (phút)",
+      "mode": "Phương thức",
+      "route": "Tuyến",
+      "window": "Thời gian khách yêu cầu",
+      "period": "Thời gian chuyến",
+      "checkpointType": "Loại mốc",
+      "checkpointName": "Tên mốc",
+      "address": "Địa chỉ",
+      "plannedTime": "Giờ dự kiến",
+      "trip": "Chuyến",
+      "horses": "Số ngựa"
+    },
+    "crewRole": {
+      "Driver": "Lái xe",
+      "Escort": "Áp tải"
+    },
+    "checkpointType": {
+      "Origin": "Điểm đi",
+      "RestStop": "Trạm nghỉ",
+      "BorderGate": "Cửa khẩu",
+      "Destination": "Điểm giao"
+    },
+    "placeholders": {
+      "vehicle": "Chọn xe còn rảnh",
+      "choosePeriod": "Chọn thời gian chuyến trước",
+      "crew": "Chọn tài xế / áp tải còn rảnh",
+      "duty": "Nhiệm vụ (không bắt buộc)",
+      "noCrew": "Chưa có ai trong đoàn xe"
+    },
+    "hints": {
+      "dossier": "Vẫn xếp được ngựa có hồ sơ chưa thông quan, nhưng chuyến chỉ xuất phát khi mọi hồ sơ đã Cleared.",
+      "crewRule": "Lái xe: {{drivers}} (cần ≥ 1) · Áp tải: {{escorts}} (cần ≥ {{needed}}, cứ 3 ngựa 1 người)",
+      "route": "Mốc đầu phải là Điểm đi, mốc cuối là Điểm giao; giờ các mốc tăng dần và nằm trong thời gian chuyến."
+    },
+    "actions": {
+      "planSelected": "Lập chuyến với {{count}} ngựa",
+      "refresh": "Làm mới",
+      "back": "Quay lại",
+      "edit": "Sửa",
+      "submit": "Trình duyệt",
+      "addCrew": "Thêm người",
+      "addStop": "Thêm mốc",
+      "resetRoute": "Tạo lại mốc mặc định",
+      "saveDraft": "Lưu nháp",
+      "saveAndSubmit": "Lưu & trình duyệt"
+    },
+    "confirm": {
+      "cancel": "Hủy chuyến {{code}}? Ngựa sẽ quay lại hàng chờ."
+    },
+    "summary": {
+      "lastRejection": "Kế hoạch bị trả về (lần {{count}}/3)",
+      "dossiersPending": "{{count}} ngựa chưa thông quan hồ sơ: chuyến chưa xuất phát được cho tới khi hồ sơ Cleared."
+    },
+    "messages": {
+      "loadFailed": "Không tải được dữ liệu chuyến",
+      "saveFailed": "Không lưu được kế hoạch chuyến",
+      "saved": "Đã lưu bản nháp {{code}}",
+      "submitted": "Đã trình duyệt chuyến {{code}}",
+      "cancelled": "Đã hủy chuyến {{code}}",
+      "mixedMode": "Không gộp ngựa đường bộ và hàng không trên cùng một chuyến",
+      "needHorse": "Chọn ít nhất 1 con ngựa",
+      "needPeriod": "Chọn thời gian chuyến (giờ tới đích sau giờ khởi hành)",
+      "needVehicle": "Chọn xe cho chuyến",
+      "needDriver": "Đoàn xe cần ít nhất 1 lái xe",
+      "incompleteCheckpoint": "Điền đủ tên, địa chỉ và giờ cho mọi mốc lộ trình",
+      "overCapacity": "Vượt sức chứa của xe ({{capacity}} ngựa)"
+    }
+  },
+  "routeApproval": {
+    "title": "Duyệt kế hoạch chuyến",
+    "subtitle": "Xem kế hoạch điều phối viên trình lên và duyệt hoặc trả về kèm lý do",
+    "empty": "Không có kế hoạch nào",
+    "filters": {
+      "pending": "Chờ duyệt",
+      "scheduled": "Đã duyệt",
+      "returned": "Bản nháp / bị trả về"
+    },
+    "actions": {
+      "approve": "Duyệt kế hoạch",
+      "reject": "Trả về"
+    },
+    "rejectTitle": "Trả kế hoạch {{code}} về cho điều phối",
+    "reasonPlaceholder": "Lý do (bắt buộc, tối đa 500 ký tự)",
+    "lastChance": "Kế hoạch này đã bị trả về 2 lần. Trả về lần nữa sẽ hủy chuyến và đưa ngựa về hàng chờ.",
+    "messages": {
+      "approved": "Đã duyệt chuyến {{code}}, đoàn xe được thông báo",
+      "rejected": "Đã trả kế hoạch {{code}} về cho điều phối",
+      "rejectedCancelled": "Chuyến {{code}} đã bị hủy sau 3 lần trả về",
+      "failed": "Thao tác không thành công",
+      "reasonRequired": "Vui lòng nhập lý do"
+    }
+  },
+  "tracking": {
+    "loadFailed": "Không tải được dữ liệu theo dõi",
+    "empty": "Không có chuyến nào đang mở",
+    "notStarted": "Chưa xuất phát",
+    "onTime": "Đúng giờ",
+    "delay": "Trễ {{minutes}} phút",
+    "incidents": "Sự cố chưa xử lý",
+    "welfareAlerts": "Nhật ký cần chú ý",
+    "autoRefresh": "Tự làm mới mỗi 30 giây",
+    "welfareTitle": "Nhật ký thể trạng ({{count}})",
+    "filters": {
+      "open": "Chuyến chưa đóng"
+    },
+    "columns": {
+      "trip": "Chuyến",
+      "status": "Trạng thái",
+      "driver": "Tài xế trưởng",
+      "progress": "Tiến độ mốc",
+      "next": "Mốc kế tiếp",
+      "delay": "Đúng giờ",
+      "alerts": "Sự cố / Cảnh báo"
+    },
+    "log": {
+      "time": "Thời gian",
+      "cabin": "Khoang",
+      "water": "Nước",
+      "feed": "Ăn",
+      "stress": "Stress",
+      "by": "Người ghi"
+    }
+  },
+  "coordinatorHub": {
+    "title": "Trung tâm điều phối",
+    "subtitle": "Hàng chờ xếp chuyến, kế hoạch chuyến và theo dõi các chuyến đang chạy",
+    "planTrip": "Lập chuyến",
+    "trackingTitle": "Theo dõi chuyến",
+    "cards": {
+      "queue": "NGỰA CHỜ XẾP CHUYẾN",
+      "planning": "NHÁP / CHỜ DUYỆT",
+      "scheduled": "ĐÃ LÊN LỊCH",
+      "onTheRoad": "ĐANG CHẠY / ĐÃ TỚI"
     }
   }
 }

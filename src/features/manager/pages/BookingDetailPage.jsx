@@ -32,6 +32,7 @@ import bookingService from '@services/bookingService';
 import userService from '@services/userService';
 import { ROUTES } from '@routes/routes';
 import { BOOKING_STATUS } from '@utils/constants';
+import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import RejectBookingModal from '@features/manager/components/RejectBookingModal';
 import ApproveBookingModal from '@features/manager/components/ApproveBookingModal';
 import BookingDecisionButtons from '@features/manager/components/BookingDecisionButtons';
@@ -52,7 +53,6 @@ export default function BookingDetailPage() {
 
   const [booking, setBooking] = useState(null);
   const [specialists, setSpecialists] = useState([]);
-  const [coordinators, setCoordinators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -74,20 +74,13 @@ export default function BookingDetailPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [bookingRes, staffRes, coordRes] = await Promise.all([
+        const [bookingRes, staffRes] = await Promise.all([
           bookingService.getBookingById(id),
           userService.getStaff('TransportSpecialist').catch(() => null),
-          userService.getStaff('FleetCoordinator').catch(() => null),
         ]);
         if (active) {
-          const bookingData = bookingRes?.data || bookingRes;
-          setBooking(bookingData);
-
-          const staffList = staffRes?.data?.data || staffRes?.data || [];
-          setSpecialists(Array.isArray(staffList) ? staffList : []);
-
-          const coordList = coordRes?.data?.data || coordRes?.data || [];
-          setCoordinators(Array.isArray(coordList) ? coordList : []);
+          setBooking(unwrapData(bookingRes));
+          setSpecialists(unwrapList(staffRes));
         }
       } catch {
         if (active) {
@@ -107,22 +100,18 @@ export default function BookingDetailPage() {
     };
   }, [id, t, refreshKey]);
 
-  // Tìm tên chuyên viên từ specialist ID
+  // Tên chuyên viên: backend trả sẵn assignedSpecialistName
   const specialistName = useMemo(() => {
+    if (booking?.assignedSpecialistName) return booking.assignedSpecialistName;
     if (!booking?.assignedSpecialistId) return null;
     const found = specialists.find((s) => s.userId === Number(booking.assignedSpecialistId));
     return found ? found.fullName : `Specialist #${booking.assignedSpecialistId}`;
   }, [booking, specialists]);
 
-  // Tìm tên điều phối viên từ coordinator ID
-  const coordinatorName = useMemo(() => {
-    if (!booking?.assignedCoordinatorId) return null;
-    const found = coordinators.find((c) => c.userId === Number(booking.assignedCoordinatorId));
-    return found ? found.fullName : `Coordinator #${booking.assignedCoordinatorId}`;
-  }, [booking, coordinators]);
-
   // Parse bảng chiết tính chi phí
   const quoteLines = useMemo(() => {
+    // GET /bookings/{id} trả quoteLines[] (code, name, quantity, unitPrice, amount)
+    if (Array.isArray(booking?.quoteLines)) return booking.quoteLines;
     if (!booking?.quoteBreakdown) return [];
     if (Array.isArray(booking.quoteBreakdown)) return booking.quoteBreakdown;
     try {
@@ -154,13 +143,12 @@ export default function BookingDetailPage() {
       setActionLoading(true);
       await bookingService.approveBooking(booking.bookingId, {
         specialistUserId: values.specialistUserId,
-        coordinatorUserId: values.coordinatorUserId,
       });
       message.success(t('manager.bookings.messages.approveSuccess'));
       setApproveModalOpen(false);
       handleRefresh();
-    } catch {
-      message.error(t('manager.bookings.messages.actionFailed'));
+    } catch (err) {
+      message.error(getErrorMessage(err, t('manager.bookings.messages.actionFailed')));
     } finally {
       setActionLoading(false);
     }
@@ -181,8 +169,8 @@ export default function BookingDetailPage() {
       message.success(t('manager.bookings.messages.rejectSuccess'));
       setRejectModalOpen(false);
       handleRefresh();
-    } catch {
-      message.error(t('manager.bookings.messages.actionFailed'));
+    } catch (err) {
+      message.error(getErrorMessage(err, t('manager.bookings.messages.actionFailed')));
     } finally {
       setActionLoading(false);
     }
@@ -210,7 +198,7 @@ export default function BookingDetailPage() {
       handleRefresh();
     } catch (err) {
       if (err?.errorFields) return;
-      message.error(t('manager.bookings.messages.actionFailed'));
+      message.error(getErrorMessage(err, t('manager.bookings.messages.actionFailed')));
     } finally {
       setActionLoading(false);
     }
@@ -451,16 +439,18 @@ export default function BookingDetailPage() {
                       render: (chip) => <Text style={{ fontFamily: 'monospace' }}>{chip || '—'}</Text>,
                     },
                     {
-                      title: t('manager.bookings.modals.breed'),
-                      dataIndex: 'breed',
-                      key: 'breed',
-                      render: (b) => b || '—',
-                    },
-                    {
-                      title: t('manager.bookings.modals.gender'),
-                      dataIndex: 'gender',
-                      key: 'gender',
-                      render: (g) => g || '—',
+                      title: t('manager.bookings.modals.dossier'),
+                      dataIndex: 'dossierCode',
+                      key: 'dossier',
+                      render: (code, h) =>
+                        code ? (
+                          <Space size={4}>
+                            <Text style={{ fontFamily: 'monospace', fontSize: 12 }}>{code}</Text>
+                            <Tag style={{ margin: 0 }}>{h.dossierStatus}</Tag>
+                          </Space>
+                        ) : (
+                          '—'
+                        ),
                     },
                     {
                       title: t('manager.bookings.modals.stallClass'),
@@ -546,8 +536,8 @@ export default function BookingDetailPage() {
                     },
                     {
                       title: t('manager.bookings.modals.quoteQty'),
-                      dataIndex: 'qty',
-                      key: 'qty',
+                      dataIndex: 'quantity',
+                      key: 'quantity',
                       align: 'center',
                       width: 50,
                       render: (q) => <span style={{ fontSize: 12 }}>{q}</span>,
@@ -606,15 +596,6 @@ export default function BookingDetailPage() {
                 </Text>
                 <Text strong style={{ fontSize: 14, color: '#0f172a' }}>
                   {specialistName || t('manager.bookings.unassigned')}
-                </Text>
-              </div>
-
-              <div style={{ marginBottom: 12 }}>
-                <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
-                  🚚 Fleet & Route Coordinator (Điều phối lộ trình):
-                </Text>
-                <Text strong style={{ fontSize: 14, color: '#0f172a' }}>
-                  {coordinatorName || t('manager.bookings.unassigned')}
                 </Text>
               </div>
 
@@ -692,7 +673,6 @@ export default function BookingDetailPage() {
         open={approveModalOpen}
         bookingCode={booking.bookingCode}
         specialists={specialists}
-        coordinators={coordinators}
         confirmLoading={actionLoading}
         onConfirm={handleConfirmApprove}
         onCancel={() => setApproveModalOpen(false)}

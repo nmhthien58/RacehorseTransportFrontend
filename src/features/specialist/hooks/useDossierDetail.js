@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import api from '@services/api';
 import specialistDossierService from '../services/specialistDossierService';
+import { unwrapData, getErrorMessage } from '@utils/apiHelpers';
 
 /**
- * Hook quản lý chi tiết một bộ hồ sơ kiểm dịch và các thao tác thẩm định giấy tờ
+ * Hook quản lý chi tiết một bộ hồ sơ kiểm dịch và các thao tác thẩm định giấy tờ.
+ * Mọi API ghi của Flow 2 trả về chi tiết hồ sơ mới nhất -> dùng luôn response để cập nhật màn hình.
  * @param {number|string} dossierId - ID của hồ sơ
  * @returns {Object}
  */
@@ -18,19 +19,6 @@ export function useDossierDetail(dossierId) {
     setRefreshKey((prev) => prev + 1);
   }, []);
 
-  // Lắng nghe cập nhật khi khách hàng nộp hồ sơ hoặc mô phỏng phê duyệt
-  useEffect(() => {
-    const handleUpdate = () => {
-      fetchDossier();
-    };
-    window.addEventListener('dossiers_updated', handleUpdate);
-    window.addEventListener('storage', handleUpdate);
-    return () => {
-      window.removeEventListener('dossiers_updated', handleUpdate);
-      window.removeEventListener('storage', handleUpdate);
-    };
-  }, [fetchDossier]);
-
   useEffect(() => {
     let isSubscribed = true;
 
@@ -38,11 +26,12 @@ export function useDossierDetail(dossierId) {
       try {
         const res = await specialistDossierService.getDossierById(dossierId);
         if (isSubscribed) {
-          setDossier(res?.data || res);
+          setDossier(unwrapData(res));
+          setError(null);
         }
       } catch (err) {
         if (isSubscribed) {
-          setError(err?.message || 'Không thể tải thông tin hồ sơ kiểm dịch');
+          setError(getErrorMessage(err, 'Không thể tải thông tin hồ sơ kiểm dịch'));
         }
       } finally {
         if (isSubscribed) {
@@ -61,17 +50,25 @@ export function useDossierDetail(dossierId) {
   }, [dossierId, refreshKey]);
 
   /**
-   * Phê duyệt một tài liệu
-   * @param {number|string} docId
+   * Chạy một thao tác ghi, cập nhật hồ sơ từ response và trả về true/false.
+   * @param {() => Promise<any>} call
+   * @param {string} fallbackError
+   * @returns {Promise<boolean>}
    */
-  const approveDocument = async (docId) => {
+  const runAction = async (call, fallbackError) => {
     setActionLoading(true);
     try {
-      await specialistDossierService.approveDocument(docId);
-      fetchDossier();
+      const res = await call();
+      const detail = unwrapData(res);
+      if (detail && typeof detail === 'object' && detail.dossierId) {
+        setDossier(detail);
+      } else {
+        fetchDossier();
+      }
+      setError(null);
       return true;
     } catch (err) {
-      setError(err?.message || 'Lỗi khi phê duyệt tài liệu');
+      setError(getErrorMessage(err, fallbackError));
       return false;
     } finally {
       setActionLoading(false);
@@ -79,159 +76,74 @@ export function useDossierDetail(dossierId) {
   };
 
   /**
-   * Từ chối một tài liệu kèm lý do
+   * Phê duyệt một giấy tờ (POST /documents/{id}/approve)
+   * @param {number|string} docId
+   */
+  const approveDocument = (docId) =>
+    runAction(() => specialistDossierService.approveDocument(docId), 'Lỗi khi phê duyệt tài liệu');
+
+  /**
+   * Từ chối một giấy tờ kèm hướng dẫn sửa (backend nhận trường correctionNote)
    * @param {number|string} docId
    * @param {string} reason
    */
-  const rejectDocument = async (docId, reason) => {
-    setActionLoading(true);
-    try {
-      await specialistDossierService.rejectDocument(docId, { reason });
-      fetchDossier();
-      return true;
-    } catch (err) {
-      setError(err?.message || 'Lỗi khi từ chối tài liệu');
-      return false;
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  const rejectDocument = (docId, reason) =>
+    runAction(
+      () => specialistDossierService.rejectDocument(docId, { correctionNote: reason }),
+      'Lỗi khi từ chối tài liệu',
+    );
 
   /**
-   * Yêu cầu khách hàng nộp bổ sung giấy tờ
-   * @param {string|{ notes?: string, documentTypes?: string[] }} [payload]
+   * Yêu cầu khách nộp giấy tờ (Draft/Issue/Reviewing -> AwaitingDocs); backend nhận trường note
+   * @param {string|{ note?: string, notes?: string, documentTypes?: string[] }} [payload]
    */
-  const requestDocuments = async (payload) => {
-    setActionLoading(true);
-    try {
-      const data = typeof payload === 'string' ? { notes: payload } : (payload || {});
-      await specialistDossierService.requestDocuments(dossierId, data);
-      fetchDossier();
-      return true;
-    } catch (err) {
-      setError(err?.message || 'Lỗi khi gửi yêu cầu bổ sung tài liệu');
-      return false;
-    } finally {
-      setActionLoading(false);
-    }
+  const requestDocuments = (payload) => {
+    // Backend không nhận danh sách loại giấy (checklist theo quy định nước đi/đến) -> ghi vào ghi chú cho khách
+    const docTypes = Array.isArray(payload?.documentTypes) && payload.documentTypes.length > 0
+      ? `Cần nộp: ${payload.documentTypes.join(', ')}`
+      : '';
+    const text = typeof payload === 'string' ? payload : payload?.note || payload?.notes;
+    const note = [docTypes, text].filter(Boolean).join('. ');
+    return runAction(
+      () => specialistDossierService.requestDocuments(dossierId, { note: note?.slice(0, 500) || null }),
+      'Lỗi khi gửi yêu cầu bổ sung tài liệu',
+    );
   };
 
   /**
-   * Nộp bộ hồ sơ đã hoàn chỉnh lên Cơ quan chức năng (Reviewing -> SubmittedToAuthorities)
+   * Nộp hồ sơ cho cơ quan chức năng (cần mọi giấy bắt buộc đã Approved)
    */
-  const submitToAuthorities = async () => {
-    setActionLoading(true);
-    try {
-      try {
-        await api.post(`/dossiers/${dossierId}/submit`);
-      } catch {
-        await specialistDossierService.submitToAuthorities(dossierId);
-      }
-      setDossier((prev) =>
-        prev
-          ? {
-              ...prev,
-              status: 'SubmittedToAuthorities',
-              issueReason: null,
-            }
-          : prev
-      );
-      return true;
-    } catch (err) {
-      setError(err?.message || 'Lỗi khi nộp hồ sơ lên cơ quan chức năng');
-      return false;
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  const submitToAuthorities = () =>
+    runAction(
+      () => specialistDossierService.submitToAuthorities(dossierId),
+      'Lỗi khi nộp hồ sơ lên cơ quan chức năng',
+    );
 
   /**
-   * Xác nhận thông quan thành công (SubmittedToAuthorities -> Cleared)
-   * @param {string} [clearanceNumber]
+   * Ghi nhận thông quan (SubmittedToAuthorities -> Cleared); số giấy thông quan là bắt buộc
+   * @param {string} clearanceNumber
    */
-  const clearDossier = async (clearanceNumber) => {
-    setActionLoading(true);
-    try {
-      try {
-        await api.post(`/dossiers/${dossierId}/approve`, { clearanceNumber });
-      } catch {
-        await specialistDossierService.clearDossier(dossierId, { clearanceNumber });
-      }
-      const finalNumber = clearanceNumber || `VET-CERT-${new Date().getFullYear()}-${String(dossierId).padStart(4, '0')}`;
-      setDossier((prev) =>
-        prev
-          ? {
-              ...prev,
-              status: 'Cleared',
-              clearanceNumber: finalNumber,
-              clearedAt: new Date().toISOString(),
-              issueReason: null,
-            }
-          : prev
-      );
-      return true;
-    } catch (err) {
-      setError(err?.message || 'Lỗi khi ghi nhận thông quan hồ sơ');
-      return false;
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  const clearDossier = (clearanceNumber) =>
+    runAction(
+      () => specialistDossierService.clearDossier(dossierId, { clearanceNumber: clearanceNumber?.trim() }),
+      'Lỗi khi ghi nhận thông quan hồ sơ',
+    );
 
   /**
-   * Nộp lại hồ sơ cho Cơ quan chức năng sau khi xử lý vướng mắc (Issue -> SubmittedToAuthorities)
+   * Mở lại hồ sơ đang Issue: backend dùng request-documents để chuyển về AwaitingDocs cho khách nộp lại
    */
-  const returnToAuthority = async () => {
-    setActionLoading(true);
-    try {
-      try {
-        await api.post(`/dossiers/${dossierId}/submit`);
-      } catch {
-        await specialistDossierService.submitToAuthorities(dossierId);
-      }
-      setDossier((prev) =>
-        prev
-          ? {
-              ...prev,
-              status: 'SubmittedToAuthorities',
-              issueReason: null,
-            }
-          : prev
-      );
-      return true;
-    } catch (err) {
-      setError(err?.message || 'Lỗi khi nộp lại hồ sơ cho cơ quan chức năng');
-      return false;
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  const returnToAuthority = () =>
+    runAction(
+      () => specialistDossierService.requestDocuments(dossierId, { note: 'Hồ sơ được mở lại sau khi xử lý vướng mắc' }),
+      'Lỗi khi mở lại hồ sơ',
+    );
 
   /**
-   * Báo cáo sự cố hoặc vướng mắc hồ sơ (Issue)
+   * Báo hồ sơ có vấn đề (-> Issue)
    * @param {string} reason
    */
-  const reportIssue = async (reason) => {
-    setActionLoading(true);
-    try {
-      await specialistDossierService.reportIssue(dossierId, { reason });
-      setDossier((prev) =>
-        prev
-          ? {
-              ...prev,
-              status: 'Issue',
-              issueReason: reason,
-            }
-          : prev
-      );
-      return true;
-    } catch (err) {
-      setError(err?.message || 'Lỗi khi báo sự cố hồ sơ');
-      return false;
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  const reportIssue = (reason) =>
+    runAction(() => specialistDossierService.reportIssue(dossierId, { reason }), 'Lỗi khi báo sự cố hồ sơ');
 
   return {
     dossier,

@@ -8,16 +8,17 @@ import { ENDPOINTS } from './endpoints';
 
 export const tripService = {
   /**
-   * Lấy danh sách ngựa đã thông quan đang chờ xếp chuyến
+   * Hàng chờ xếp chuyến: ngựa của các đơn đã duyệt chưa nằm trên chuyến nào
+   * @param {{ transportMode?: 'Ground'|'Air', bookingId?: number }} [params]
    * @returns {Promise<Array<any>>}
    */
-  async getUnplannedHorses() {
-    return api.get(ENDPOINTS.TRIPS.UNPLANNED_HORSES);
+  async getUnplannedHorses(params) {
+    return api.get(ENDPOINTS.TRIPS.UNPLANNED_HORSES, { params });
   },
 
   /**
    * Lấy danh sách phương tiện chuyên dụng còn rảnh trong khoảng thời gian dự kiến
-   * @param {{ startDate?: string, endDate?: string }} [params]
+   * @param {{ from: string, to: string, transportMode?: 'Ground'|'Air' }} params
    * @returns {Promise<Array<any>>}
    */
   async getAvailableVehicles(params) {
@@ -26,7 +27,7 @@ export const tripService = {
 
   /**
    * Lấy danh sách tài xế và nhân sự áp tải còn rảnh trong khoảng thời gian
-   * @param {{ startDate?: string, endDate?: string, role?: string }} [params]
+   * @param {{ from: string, to: string }} params
    * @returns {Promise<Array<any>>}
    */
   async getAvailableCrew(params) {
@@ -35,7 +36,7 @@ export const tripService = {
 
   /**
    * Lấy danh sách các chuyến vận chuyển (hỗ trợ lọc theo trạng thái, xe, tài xế, phân trang)
-   * @param {{ overallStatus?: string, vehicleId?: number, search?: string, sort?: string, page?: number, size?: number }} [params]
+   * @param {{ status?: string, startFrom?: string, startTo?: string, search?: string, sort?: string, page?: number, size?: number }} [params]
    * @returns {Promise<{ data: import('../types/database').Trip[], pagination?: any }>}
    */
   async getTrips(params) {
@@ -140,13 +141,12 @@ export const tripService = {
   },
 
   /**
-   * Hủy chuyến đi trước khi khởi hành
+   * Hủy chuyến chưa khởi hành (Draft / PendingApproval / Scheduled); backend không cần body
    * @param {number|string} id - TripID
-   * @param {{ reason?: string }} [payload]
    * @returns {Promise<any>}
    */
-  async cancelTrip(id, payload = {}) {
-    return api.post(ENDPOINTS.TRIPS.CANCEL(id), payload);
+  async cancelTrip(id) {
+    return api.post(ENDPOINTS.TRIPS.CANCEL(id));
   },
 
   /**

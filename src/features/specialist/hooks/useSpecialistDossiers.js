@@ -52,7 +52,7 @@ export function useSpecialistDossiers(initialParams = {}) {
           status: filterStatus === 'All' ? undefined : filterStatus,
           search: searchQuery ? searchQuery.trim() : undefined,
           page: pagination.page,
-          pageSize: pagination.pageSize,
+          size: pagination.pageSize,
         };
         const res = await specialistDossierService.getDossiers(params);
         if (isSubscribed) {

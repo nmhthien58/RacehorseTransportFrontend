@@ -920,8 +920,8 @@
       "missing": "Chưa nộp",
       "rejectionCount": "Số lần từ chối: {{count}}/3",
       "notes": "Ghi chú điều kiện",
-      "returnToAuthorityBtn": "Nộp lại cho cơ quan (Return to Authority)",
-      "returnSuccess": "Đã nộp lại hồ sơ cho cơ quan chức năng sau khi xử lý sự cố",
+      "returnToAuthorityBtn": "Mở lại hồ sơ (yêu cầu nộp bổ sung)",
+      "returnSuccess": "Đã mở lại hồ sơ, khách hàng được yêu cầu nộp bổ sung giấy tờ",
       "reportIssueBtn": "Từ chối / Báo vướng mắc kiểm dịch"
     },
     "status": {
@@ -1028,7 +1028,7 @@
       "step2Desc": "Ghi nhận số hiệu giấy phép kiểm dịch sau khi Cơ quan chức năng phê duyệt chính thức.",
       "submittedWaiting": "Đã nộp cơ quan chức năng • Đang chờ xét duyệt",
       "resolveIssueTitle": "Xử lý sự cố kiểm dịch",
-      "resolveIssueDesc": "Hồ sơ đang vướng mắc. Sau khi xử lý bổ sung, bấm nộp lại cho cơ quan."
+      "resolveIssueDesc": "Hồ sơ đang vướng mắc. Bấm mở lại để khách nộp bổ sung giấy tờ, sau đó nộp lại cho cơ quan."
     },
     "statusBar": {
       "title": "Tiến trình thẩm định & thông quan",
@@ -1222,6 +1222,52 @@
       "viewEPod": "Xem Biên bản e-POD",
       "submitBtn": "Gửi hồ sơ lên Quản lý vận hành",
       "resubmitBtn": "Cập nhật lại hồ sơ gửi QLVH"
+    }
+  },
+  "customerDossier": {
+    "title": "Hồ sơ kiểm dịch (Digital Dossier)",
+    "empty": "Chưa có hồ sơ kiểm dịch. Hồ sơ được tạo tự động cho từng con ngựa khi đơn vận chuyển được duyệt.",
+    "loadFailed": "Không tải được hồ sơ kiểm dịch",
+    "uploadSuccess": "Đã nộp giấy tờ, chuyên viên sẽ thẩm định",
+    "uploadFailed": "Không nộp được giấy tờ",
+    "fileRequired": "Vui lòng chọn file giấy tờ",
+    "optional": "Không bắt buộc",
+    "validityDays": "hiệu lực {{days}} ngày",
+    "viewFile": "Xem file",
+    "expires": "hết hạn",
+    "correctionNote": "Cần sửa",
+    "submit": "Nộp",
+    "resubmit": "Nộp lại",
+    "departure": "khởi hành",
+    "specialist": "Chuyên viên",
+    "progress": "Đã duyệt {{approved}}/{{required}} giấy bắt buộc",
+    "issue": "Hồ sơ đang có vấn đề",
+    "cleared": "Đã thông quan · Số giấy phép: {{number}}",
+    "locked": "Hồ sơ đã nộp cơ quan chức năng, tạm thời không nhận thêm giấy tờ.",
+    "uploadTitle": "Nộp giấy tờ",
+    "documentNumber": "Số hiệu giấy tờ",
+    "expiryDate": "Ngày hết hạn",
+    "file": "File giấy tờ",
+    "chooseFile": "Chọn file",
+    "fileHint": "PDF, JPG, PNG, tối đa 10 MB",
+    "columns": {
+      "document": "Giấy tờ",
+      "state": "Trạng thái",
+      "submitted": "Đã nộp"
+    },
+    "state": {
+      "Missing": "Chưa nộp",
+      "Pending": "Chờ duyệt",
+      "Approved": "Đã duyệt",
+      "Rejected": "Bị từ chối"
+    },
+    "status": {
+      "Draft": "Mới mở",
+      "AwaitingDocs": "Chờ nộp giấy",
+      "Reviewing": "Đang thẩm định",
+      "SubmittedToAuthorities": "Đã nộp cơ quan",
+      "Cleared": "Đã thông quan",
+      "Issue": "Có vấn đề"
     }
   }
 }

@@ -921,8 +921,8 @@
       "missing": "Missing",
       "rejectionCount": "Rejection count: {{count}}/3",
       "notes": "Condition Notes",
-      "returnToAuthorityBtn": "Return to Authority",
-      "returnSuccess": "Successfully resubmitted dossier to authorities",
+      "returnToAuthorityBtn": "Reopen dossier (request documents)",
+      "returnSuccess": "Dossier reopened; the customer has been asked to resubmit documents",
       "reportIssueBtn": "Reject / Report Issue"
     },
     "status": {
@@ -1029,7 +1029,7 @@
       "step2Desc": "Record official clearance permit number once authorized by statutory agencies.",
       "submittedWaiting": "Submitted to Authorities • Awaiting Formal Inspection",
       "resolveIssueTitle": "Resolve Quarantine Issue",
-      "resolveIssueDesc": "The dossier is currently held on an issue. Once rectified, click return to submit back to authorities."
+      "resolveIssueDesc": "The dossier is on hold with an issue. Reopen it so the customer can resubmit documents, then submit to the authorities again."
     },
     "statusBar": {
       "title": "Inspection & Clearance Lifecycle",
@@ -1223,6 +1223,52 @@
       "viewEPod": "View Signed e-POD",
       "submitBtn": "Submit Trip Packet to Operations Manager",
       "resubmitBtn": "Update & Resubmit Packet"
+    }
+  },
+  "customerDossier": {
+    "title": "Quarantine dossier (Digital Dossier)",
+    "empty": "No dossiers yet. A dossier is created for each horse once the booking is approved.",
+    "loadFailed": "Could not load dossiers",
+    "uploadSuccess": "Document submitted for review",
+    "uploadFailed": "Could not submit the document",
+    "fileRequired": "Please choose a file",
+    "optional": "Optional",
+    "validityDays": "valid {{days}} days",
+    "viewFile": "View file",
+    "expires": "expires",
+    "correctionNote": "Fix needed",
+    "submit": "Submit",
+    "resubmit": "Resubmit",
+    "departure": "departure",
+    "specialist": "Specialist",
+    "progress": "{{approved}}/{{required}} mandatory documents approved",
+    "issue": "This dossier has an issue",
+    "cleared": "Cleared · Permit no. {{number}}",
+    "locked": "The dossier has been submitted to the authorities and does not accept documents now.",
+    "uploadTitle": "Submit document",
+    "documentNumber": "Document number",
+    "expiryDate": "Expiry date",
+    "file": "Document file",
+    "chooseFile": "Choose file",
+    "fileHint": "PDF, JPG, PNG, up to 10 MB",
+    "columns": {
+      "document": "Document",
+      "state": "State",
+      "submitted": "Submitted"
+    },
+    "state": {
+      "Missing": "Missing",
+      "Pending": "Pending",
+      "Approved": "Approved",
+      "Rejected": "Rejected"
+    },
+    "status": {
+      "Draft": "Draft",
+      "AwaitingDocs": "Awaiting documents",
+      "Reviewing": "Reviewing",
+      "SubmittedToAuthorities": "Submitted to authorities",
+      "Cleared": "Cleared",
+      "Issue": "Issue"
     }
   }
 }

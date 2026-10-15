@@ -88,8 +88,9 @@ export const specialistDossierService = {
    * @param {{ countryCode?: string, direction?: string, search?: string }} [params]
    * @returns {Promise<{ data: import('@types/database').CountryDocRequirement[], total?: number }>}
    */
-  async getQuarantineRules(params = {}) {
-    return api.get(ENDPOINTS.DOSSIERS.REQUIREMENTS, { params });
+  async getQuarantineRules() {
+    // Backend chưa có API đọc quy định giấy tờ theo quốc gia (API.md mục 14) -> hook dùng dữ liệu tham khảo
+    throw new Error('Quarantine rules API is not available yet');
   },
 
   /**
@@ -103,25 +104,29 @@ export const specialistDossierService = {
    * }>}
    */
   async getOverview() {
-    const res = await api.get(ENDPOINTS.DOSSIERS.LIST);
-    const dossiers = res?.data || (Array.isArray(res) ? res : []);
+    // Lấy tối đa 100 hồ sơ (mặc định backend chỉ trả 10)
+    const res = await api.get(ENDPOINTS.DOSSIERS.LIST, { params: { size: 100 } });
+    const dossiers = Array.isArray(res?.data) ? res.data : [];
 
-    const overdueCount = dossiers.filter((d) => d.slaStatus === 'Overdue').length;
+    // "Quá hạn": chưa thông quan mà còn dưới 3 ngày là tới ngày khởi hành (backend không có trường SLA riêng)
+    const isOverdue = (d) =>
+      d.status !== 'Cleared' && d.departureDate && new Date(d.departureDate).getTime() - Date.now() < 3 * 24 * 3600 * 1000;
+    const overdueCount = dossiers.filter(isOverdue).length;
     const pendingCount = dossiers.filter((d) => d.status === 'Reviewing' || d.status === 'AwaitingDocs').length;
     const activeQuarantineCount = dossiers.filter((d) => ['Reviewing', 'SubmittedToAuthorities', 'Draft'].includes(d.status)).length;
     const exceptionsCount = dossiers.filter((d) => d.status === 'Issue').length;
 
     const priorityActionQueue = dossiers
-      .filter((d) => d.status === 'Issue' || d.slaStatus === 'Overdue' || d.status === 'Reviewing')
+      .filter((d) => d.status === 'Issue' || isOverdue(d) || d.status === 'Reviewing')
       .slice(0, 5);
 
+    // Danh sách không kèm giấy tờ; hồ sơ Reviewing là hồ sơ khách đã nộp giấy chờ thẩm định
     const customerUploadedDossiers = dossiers
-      .filter((d) => d.documents && d.documents.length > 0)
+      .filter((d) => d.status === 'Reviewing')
       .slice(0, 5);
 
     const clearedCount = dossiers.filter((d) => d.status === 'Cleared').length;
-    const totalCount = dossiers.length || 1;
-    const complianceRate = Math.round((clearedCount / totalCount) * 1000) / 10;
+    const complianceRate = dossiers.length ? Math.round((clearedCount / dossiers.length) * 1000) / 10 : 0;
 
     return {
       stats: {
@@ -139,7 +144,7 @@ export const specialistDossierService = {
         reviewing: dossiers.filter((d) => d.status === 'Reviewing').length,
         awaitingDocs: dossiers.filter((d) => d.status === 'AwaitingDocs').length,
         issue: exceptionsCount,
-        complianceRate: complianceRate > 0 ? complianceRate : 92.5,
+        complianceRate,
       },
     };
   },

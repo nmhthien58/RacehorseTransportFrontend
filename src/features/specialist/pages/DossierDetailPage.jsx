@@ -38,7 +38,6 @@ import SubmitAuthorityModal from '../components/SubmitAuthorityModal';
 import RequestDocumentsModal from '../components/RequestDocumentsModal';
 import ClearDossierModal from '../components/ClearDossierModal';
 import StandardFormTemplateModal from '@components/common/StandardFormTemplateModal';
-import { simulateCustomsClearance } from '@utils/dossierStorage';
 import { ROUTES } from '@routes/routes';
 
 const { Title, Text } = Typography;
@@ -59,7 +58,6 @@ export default function DossierDetailPage() {
     loading,
     actionLoading,
     error,
-    fetchDossier,
     approveDocument,
     rejectDocument,
     requestDocuments,
@@ -84,21 +82,6 @@ export default function DossierDetailPage() {
     title: '',
     horse: null,
   });
-
-  const handleSimulateCustomsQuickApproval = () => {
-    try {
-      const res = simulateCustomsClearance(dossier?.dossierId || id);
-      message.success({
-        content: `🏛️ Mô phỏng Cơ quan Thẩm quyền & Hải quan phê duyệt thành công! Mã số kiểm dịch: ${res.clearanceNumber}`,
-        duration: 5,
-      });
-      if (typeof fetchDossier === 'function') {
-        fetchDossier();
-      }
-    } catch (err) {
-      message.error('Không thể thực hiện phê duyệt tự động: ' + (err?.message || 'Lỗi hệ thống'));
-    }
-  };
 
   const handleOpenTemplateModal = (item, doc) => {
     const docTypeCode = item?.docTypeCode || doc?.docTypeCode || 'HEALTH_CERT';
@@ -221,11 +204,11 @@ export default function DossierDetailPage() {
     }
   };
 
-  // Nộp lại cho cơ quan chức năng khi đang có sự cố Issue
+  // Hồ sơ Issue: mở lại (về AwaitingDocs) để khách nộp bổ sung, sau đó nộp lại cơ quan như bình thường
   const handleReturnToAuthority = async () => {
     const ok = await returnToAuthority();
     if (ok) {
-      message.success(t('specialist.detail.returnSuccess', 'Đã nộp lại hồ sơ cho cơ quan chức năng sau khi xử lý sự cố'));
+      message.success(t('specialist.detail.returnSuccess', 'Đã mở lại hồ sơ, khách hàng được yêu cầu nộp bổ sung giấy tờ'));
     }
   };
 
@@ -889,24 +872,6 @@ export default function DossierDetailPage() {
                     </Tooltip>
                   )}
 
-                  {/* Nút mô phỏng Hải quan phê duyệt nhanh (One-Click) */}
-                  {dossier?.status !== 'Cleared' && (
-                    <Button
-                      type="primary"
-                      block
-                      icon={<SafetyCertificateOutlined />}
-                      style={{
-                        backgroundColor: '#059669',
-                        borderColor: '#059669',
-                        borderRadius: 4,
-                        fontWeight: 600,
-                        marginTop: 8,
-                      }}
-                      onClick={handleSimulateCustomsQuickApproval}
-                    >
-                      🏛️ Mô phỏng Hải quan duyệt nhanh
-                    </Button>
-                  )}
                 </div>
 
                 <Divider style={{ margin: '4px 0' }} />

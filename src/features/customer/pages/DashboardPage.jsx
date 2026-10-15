@@ -21,10 +21,11 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '@components/layout/PageHeader';
-import { useAuthStore } from '@features/auth/store/authStore';
 import { horseService } from '@services/horseService';
+import { getErrorMessage } from '@utils/apiHelpers';
 import { bookingService } from '@services/bookingService';
-import { tripService } from '@services/tripService';
+import { trackingService } from '@services/trackingService';
+import { unwrapData, unwrapList } from '@utils/apiHelpers';
 import { ROUTES } from '@routes/routes';
 import {
   calculateHorseRisk,
@@ -45,7 +46,6 @@ const formatTempRange = (min, max) => `${min}°C - ${max}°C`;
 export default function CustomerDashboard() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
 
   const isEn = (i18n.language || 'vi').toLowerCase().startsWith('en');
 
@@ -78,22 +78,31 @@ export default function CustomerDashboard() {
       loadData();
     } catch (err) {
       console.error(err);
-      message.error(t('horses.updateHorseError'));
+      message.error(getErrorMessage(err, t('horses.updateHorseError')));
     } finally {
       setEditSubmitting(false);
     }
   };
 
   const loadData = useCallback(() => {
-    const ownerId = user?.userId || user?.UserID;
-    const userEmail = user?.email || user?.Email;
+    // Customer không được gọi GET /trips (403) -> lấy chuyến qua GET /tracking/bookings/{id} của từng đơn đã duyệt
     Promise.all([
-      horseService.getHorses({ ownerId: ownerId || undefined }),
-      bookingService.getBookings({ customerId: ownerId || undefined }),
-      tripService.getTrips({ customerId: ownerId || undefined, customerEmail: userEmail || undefined }),
+      horseService.getHorses({ size: 100 }),
+      bookingService.getBookings({ sort: '-createdAt', size: 100 }),
     ])
-      .then(([horseRes, bookingRes, tripRes]) => {
-        const rawHorses = horseRes.data?.data || horseRes.data || [];
+      .then(async ([horseRes, bookingRes]) => {
+        const bookingList = unwrapList(bookingRes);
+        const approved = bookingList.filter((b) => b.status === 'Approved');
+        const trackings = await Promise.all(
+          approved.map((b) => trackingService.getBookingTracking(b.bookingId).then(unwrapData).catch(() => null)),
+        );
+        const tripList = trackings
+          .filter(Boolean)
+          .flatMap((tr) => (tr.trips || []).map((trip) => ({ ...trip, bookingCode: tr.bookingCode })));
+        return [horseRes, bookingList, tripList];
+      })
+      .then(([horseRes, bookingList, tripList]) => {
+        const rawHorses = unwrapList(horseRes);
         // Khử trùng lặp ngựa theo ID
         const horseMap = new Map();
         rawHorses.forEach((h) => {
@@ -103,8 +112,8 @@ export default function CustomerDashboard() {
           }
         });
         setHorses(Array.from(horseMap.values()));
-        setBookings(bookingRes.data?.data || bookingRes.data || []);
-        setTrips(tripRes.data?.data || tripRes.data || []);
+        setBookings(bookingList);
+        setTrips(tripList);
       })
       .catch((err) => {
         console.error(err);
@@ -112,31 +121,14 @@ export default function CustomerDashboard() {
       .finally(() => {
         setLoading(false);
       });
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // Chỉ tính active trip thuộc về các đơn hàng thực tế của khách hàng này
-  const customerEmail = (user?.email || user?.Email || '').toLowerCase();
-  const customerId = user?.userId || user?.UserID;
-  const userBookingCodes = new Set(
-    (bookings || []).map((b) => b.bookingCode || b.BookingCode).filter(Boolean)
-  );
-
-  const customerTrips = trips.filter((tr) => {
-    if (userBookingCodes.size > 0 && tr.bookingCode && userBookingCodes.has(tr.bookingCode)) {
-      return true;
-    }
-    if (tr.customerId && customerId && Number(tr.customerId) === Number(customerId)) {
-      return true;
-    }
-    if (tr.customerEmail && customerEmail && tr.customerEmail.toLowerCase() === customerEmail) {
-      return userBookingCodes.has(tr.bookingCode);
-    }
-    return false;
-  });
+  // Chuyến đã lấy theo từng đơn của khách nên đều thuộc về khách này
+  const customerTrips = trips;
 
   const activeTripsCount = customerTrips.filter((tr) => {
     const status = tr.overallStatus || tr.status || tr.Status;

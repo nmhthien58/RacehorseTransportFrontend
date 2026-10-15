@@ -3,23 +3,23 @@ import { Modal, Alert, Form, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
 
 /**
- * Modal phê duyệt yêu cầu vận chuyển và chỉ định Chuyên viên kiểm dịch + Điều phối viên.
+ * Modal phê duyệt yêu cầu vận chuyển và chỉ định Chuyên viên kiểm dịch.
+ * Backend (POST /bookings/{id}/approve) chỉ nhận specialistUserId — đơn không gán điều phối viên,
+ * điều phối viên nhận ngựa từ hàng chờ xếp chuyến (GET /trips/unplanned-horses).
  * Dùng chung cho BookingDetailPage và PendingRequestsPage.
  *
  * @param {Object} props
  * @param {boolean} props.open - Trạng thái hiển thị modal
  * @param {string} props.bookingCode - Mã booking hiển thị trên Alert
  * @param {Array} [props.specialists=[]] - Danh sách chuyên viên kiểm dịch
- * @param {Array} [props.coordinators=[]] - Danh sách điều phối viên đội xe
  * @param {boolean} [props.confirmLoading=false] - Trạng thái loading khi submit
- * @param {Function} props.onConfirm - Callback khi submit form hợp lệ (values: { specialistUserId, coordinatorUserId })
+ * @param {Function} props.onConfirm - Callback khi submit form hợp lệ (values: { specialistUserId })
  * @param {Function} props.onCancel - Callback đóng modal
  */
 export default function ApproveBookingModal({
   open,
   bookingCode,
   specialists = [],
-  coordinators = [],
   confirmLoading = false,
   onConfirm,
   onCancel,
@@ -33,11 +33,8 @@ export default function ApproveBookingModal({
       if (specialists.length > 0) {
         form.setFieldValue('specialistUserId', specialists[0].userId);
       }
-      if (coordinators.length > 0) {
-        form.setFieldValue('coordinatorUserId', coordinators[0].userId);
-      }
     }
-  }, [open, specialists, coordinators, form]);
+  }, [open, specialists, form]);
 
   const handleOk = async () => {
     try {
@@ -92,24 +89,6 @@ export default function ApproveBookingModal({
             />
           </Form.Item>
 
-          <Form.Item
-            name="coordinatorUserId"
-            label="Điều phối viên đội xe & lộ trình (Fleet & Route Coordinator)"
-            rules={[
-              {
-                required: true,
-                message: 'Vui lòng chỉ định Điều phối viên đội xe & lộ trình!',
-              },
-            ]}
-          >
-            <Select
-              placeholder="Chọn Điều phối viên lộ trình..."
-              options={coordinators.map((c) => ({
-                value: c.userId,
-                label: `🚚 ${c.fullName} (${c.email})`,
-              }))}
-            />
-          </Form.Item>
         </Form>
       </div>
     </Modal>

@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import PageHeader from '@components/layout/PageHeader';
 import AddHorseForm from '@features/customer/components/AddHorseForm';
 import horseService from '@services/horseService';
+import { getErrorMessage } from '@utils/apiHelpers';
 import { useAuthStore } from '@features/auth/store/authStore';
 import { ROUTES } from '@routes/routes';
 
@@ -50,8 +51,7 @@ export default function AddHorsePage() {
       setSuccessModalVisible(true);
       message.success(t('horses.createSuccess'));
     } catch (error) {
-      const errorMsg =
-        error?.response?.data?.message || t('horses.createFailed') || t('common.save');
+      const errorMsg = getErrorMessage(error, t('horses.createFailed'));
       message.error(errorMsg);
     } finally {
       setSubmitting(false);

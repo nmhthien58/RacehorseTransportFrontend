@@ -34,15 +34,27 @@ import PageHeader from '@components/layout/PageHeader';
 import bookingService from '@services/bookingService';
 import userService from '@services/userService';
 import { BOOKING_STATUS } from '@utils/constants';
-import {
-  getStoredRequestLetters,
-  markLetterAsRead,
-} from '@utils/requestLetterStorage';
+import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import RejectBookingModal from '@features/manager/components/RejectBookingModal';
 import ApproveBookingModal from '@features/manager/components/ApproveBookingModal';
 import BookingDecisionButtons from '@features/manager/components/BookingDecisionButtons';
 
 const { Text, Title } = Typography;
+
+// Đơn Submitted quá 48 giờ không ai duyệt sẽ bị backend chuyển sang Expired
+const EXPIRY_HOURS = 48;
+
+/**
+ * Tính thời gian còn lại trước khi đơn tự hết hạn.
+ * @param {string} createdAt
+ * @returns {string}
+ */
+function getExpiryText(createdAt) {
+  if (!createdAt) return '—';
+  const minutesLeft = dayjs(createdAt).add(EXPIRY_HOURS, 'hour').diff(dayjs(), 'minute');
+  if (minutesLeft <= 0) return 'Expired';
+  return `Expires in ${Math.floor(minutesLeft / 60)}h ${minutesLeft % 60}m`;
+}
 
 /**
  * Trang Pending Requests dành cho Quản lý / Admin
@@ -64,7 +76,8 @@ export default function PendingRequestsPage() {
 
   const [bookings, setBookings] = useState([]);
   const [specialists, setSpecialists] = useState([]);
-  const [coordinators, setCoordinators] = useState([]);
+  // Chi tiết đơn đang mở (GET /bookings/{id}: có horses, liên hệ khách, ghi chú)
+  const [bookingDetail, setBookingDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -93,21 +106,15 @@ export default function PendingRequestsPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [bookingsRes, staffRes, coordRes] = await Promise.all([
-          bookingService.getBookings(),
+        // Chỉ lấy đơn chờ duyệt; size tối đa 100 (mặc định backend chỉ trả 10)
+        const [bookingsRes, staffRes] = await Promise.all([
+          bookingService.getBookings({ status: BOOKING_STATUS.SUBMITTED, sort: '-createdAt', size: 100 }),
           userService.getStaff('TransportSpecialist').catch(() => null),
-          userService.getStaff('FleetCoordinator').catch(() => null),
         ]);
 
         if (active) {
-          const list = bookingsRes?.data?.data || bookingsRes?.data || bookingsRes || [];
-          setBookings(Array.isArray(list) ? list : []);
-
-          const staffList = staffRes?.data?.data || staffRes?.data || [];
-          setSpecialists(Array.isArray(staffList) ? staffList : []);
-
-          const coordList = coordRes?.data?.data || coordRes?.data || [];
-          setCoordinators(Array.isArray(coordList) ? coordList : []);
+          setBookings(unwrapList(bookingsRes));
+          setSpecialists(unwrapList(staffRes));
         }
       } catch {
         if (active) {
@@ -158,11 +165,32 @@ export default function PendingRequestsPage() {
     });
   }, [pendingList, searchText]);
 
+  // Tải chi tiết đơn khi chọn (danh sách chỉ có thông tin tóm tắt)
+  useEffect(() => {
+    // Không có đơn được chọn: activeBooking tự bỏ qua bookingDetail cũ (so khớp bookingId)
+    if (!selectedBookingId) return undefined;
+    let active = true;
+    bookingService
+      .getBookingById(selectedBookingId)
+      .then((res) => {
+        if (active) setBookingDetail(unwrapData(res));
+      })
+      .catch((err) => {
+        if (active) message.error(getErrorMessage(err, t('manager.bookings.messages.loadFailed')));
+      });
+    return () => {
+      active = false;
+    };
+  }, [selectedBookingId, refreshKey, t]);
+
   // Chi tiết đơn đang được chọn
   const activeBooking = useMemo(() => {
     if (!selectedBookingId) return null;
-    return bookings.find((b) => b.bookingId === selectedBookingId) || null;
-  }, [bookings, selectedBookingId]);
+    const summary = bookings.find((b) => b.bookingId === selectedBookingId) || null;
+    const detail = bookingDetail?.bookingId === selectedBookingId ? bookingDetail : null;
+    if (!summary && !detail) return null;
+    return { ...(summary || {}), ...(detail || {}) };
+  }, [bookings, bookingDetail, selectedBookingId]);
 
   // Tên viết tắt Avatar của khách hàng (ví dụ: SA cho Sheikh Al-Maktoum)
   const customerInitials = useMemo(() => {
@@ -175,13 +203,8 @@ export default function PendingRequestsPage() {
   // Thư đề nghị vận chuyển chính thức từ khách hàng gửi tới Ban Quản lý
   const activeLetter = useMemo(() => {
     if (!activeBooking) return null;
-    const letters = getStoredRequestLetters();
-    const found = letters.find(
-      (l) => Number(l.bookingId) === Number(activeBooking.bookingId) || l.bookingCode === activeBooking.bookingCode,
-    );
-    if (found) return found;
 
-    // Tự động tạo thư tương ứng nếu đơn chưa có bản ghi thư
+    // Thư được dựng từ dữ liệu đơn thật (backend không lưu thư riêng)
     return {
       id: `LTR-${activeBooking.bookingCode}`,
       bookingId: activeBooking.bookingId,
@@ -189,8 +212,8 @@ export default function PendingRequestsPage() {
       title: `Thư yêu cầu vận chuyển: ${activeBooking.bookingCode}`,
       titleEn: `Transport Request Letter: ${activeBooking.bookingCode}`,
       customerName: activeBooking.customerName || 'Khách hàng',
-      customerEmail: activeBooking.customerEmail || 'customer@test.com',
-      customerPhone: activeBooking.customerPhone || '+84988111222',
+      customerEmail: activeBooking.customerEmail || '—',
+      customerPhone: activeBooking.customerPhone || '—',
       pickupAddress: activeBooking.pickupAddress || 'Việt Nam',
       dropoffAddress: activeBooking.dropoffAddress || 'Điểm đến quốc tế',
       transportMode: activeBooking.transportMode || 'Air',
@@ -236,11 +259,6 @@ ${activeBooking.customerName || 'Customer'}`,
     };
   }, [activeBooking]);
 
-  useEffect(() => {
-    if (activeLetter && !activeLetter.isRead) {
-      markLetterAsRead(activeLetter.id);
-    }
-  }, [activeLetter]);
 
   // Xử lý phê duyệt
   const handleOpenApprove = () => {
@@ -252,15 +270,14 @@ ${activeBooking.customerName || 'Customer'}`,
       setActionLoading(true);
       await bookingService.approveBooking(activeBooking.bookingId, {
         specialistUserId: values.specialistUserId,
-        coordinatorUserId: values.coordinatorUserId,
       });
       message.success(t('manager.bookings.messages.approveSuccess'));
       setApproveModalOpen(false);
       handleRefresh();
       // Quay lại danh sách sau khi duyệt xong
       handleSelectBooking(null);
-    } catch {
-      message.error(t('manager.bookings.messages.actionFailed'));
+    } catch (err) {
+      message.error(getErrorMessage(err, t('manager.bookings.messages.actionFailed')));
     } finally {
       setActionLoading(false);
     }
@@ -281,8 +298,8 @@ ${activeBooking.customerName || 'Customer'}`,
       setRejectModalOpen(false);
       handleRefresh();
       handleSelectBooking(null);
-    } catch {
-      message.error(t('manager.bookings.messages.actionFailed'));
+    } catch (err) {
+      message.error(getErrorMessage(err, t('manager.bookings.messages.actionFailed')));
     } finally {
       setActionLoading(false);
     }
@@ -361,7 +378,7 @@ ${activeBooking.customerName || 'Customer'}`,
                 }}
               >
                 <ClockCircleOutlined style={{ marginRight: 4 }} />
-                {activeBooking.expiresInText || 'Expires in 9h 12m'}
+                {getExpiryText(activeBooking.createdAt)}
               </Tag>
             </Flex>
 
@@ -369,8 +386,8 @@ ${activeBooking.customerName || 'Customer'}`,
               {t('manager.pendingRequests.submittedDate', {
                 date: activeBooking.createdAt
                   ? dayjs(activeBooking.createdAt).format('MMM DD, YYYY · HH:mm')
-                  : 'Nov 12, 2025 · 09:24',
-                source: activeBooking.submissionSource || 'via Customer Web Portal',
+                  : '—',
+                source: 'via Customer Web Portal',
               })}
             </Text>
           </Flex>
@@ -467,19 +484,19 @@ ${activeBooking.customerName || 'Customer'}`,
 
                   <div style={{ flex: 1, minWidth: 200 }}>
                     <Text strong style={{ fontSize: 16, color: '#0f172a', display: 'block' }}>
-                      {activeBooking.customerName || 'Sheikh Al-Maktoum'}
+                      {activeBooking.customerName || '—'}
                     </Text>
                     <Text type="secondary" style={{ fontSize: 13 }}>
-                      {activeBooking.customerClub || 'Al-Maktoum Racing Club · Dubai, UAE'}
+                      {`${activeBooking.pickupCountryCode || ''} → ${activeBooking.dropoffCountryCode || ''}`}
                     </Text>
                   </div>
 
                   <div style={{ minWidth: 200 }}>
                     <div style={{ fontSize: 13, color: '#334155', marginBottom: 4 }}>
-                      📞 {activeBooking.customerPhone || '+971 50 123 4567'}
+                      📞 {activeBooking.customerPhone || '—'}
                     </div>
                     <div style={{ fontSize: 13, color: '#334155' }}>
-                      ✉️ {activeBooking.customerEmail || 'sheikh.almaktoum@rc.ae'}
+                      ✉️ {activeBooking.customerEmail || '—'}
                     </div>
                   </div>
                 </Flex>
@@ -522,7 +539,7 @@ ${activeBooking.customerName || 'Customer'}`,
                     <Flex align="center" gap={8}>
                       <span style={{ color: '#16a34a', fontSize: 16 }}>●</span>
                       <Text strong style={{ fontSize: 15, color: '#0f172a' }}>
-                        {activeBooking.pickupAddress || 'Paris (CDG)'}
+                        {activeBooking.pickupAddress || '—'}
                       </Text>
                     </Flex>
 
@@ -539,19 +556,16 @@ ${activeBooking.customerName || 'Customer'}`,
                     <Flex align="center" gap={8}>
                       <span style={{ color: '#2563eb', fontSize: 16 }}>●</span>
                       <Text strong style={{ fontSize: 15, color: '#0f172a' }}>
-                        {activeBooking.dropoffAddress || 'Dubai (DXB)'}
+                        {activeBooking.dropoffAddress || '—'}
                       </Text>
                     </Flex>
                   </Flex>
 
                   <div style={{ textAlign: 'center', marginTop: 10, fontSize: 12, color: '#64748b' }}>
-                    {activeBooking.flightDuration
-                      ? `${t('manager.pendingRequests.estimatedFlight')} ${activeBooking.flightDuration} · `
-                      : ''}
-                    {t('manager.pendingRequests.distance')} ={' '}
+                    {activeBooking.transportMode}
                     {activeBooking.distanceKm
-                      ? `${activeBooking.distanceKm.toLocaleString()} km`
-                      : '4,980 km'}
+                      ? ` · ${t('manager.pendingRequests.distance')} = ${activeBooking.distanceKm.toLocaleString()} km`
+                      : ''}
                   </div>
                 </div>
 
@@ -564,7 +578,7 @@ ${activeBooking.customerName || 'Customer'}`,
                     <Text strong style={{ fontSize: 14, color: '#0f172a' }}>
                       {activeBooking.departureDate
                         ? dayjs(activeBooking.departureDate).format('DD MMM YYYY')
-                        : '15 Nov 2025'}
+                        : '—'}
                     </Text>
                   </Col>
                   <Col span={8}>
@@ -580,7 +594,7 @@ ${activeBooking.customerName || 'Customer'}`,
                       {t('manager.pendingRequests.handling')}
                     </Text>
                     <Text strong style={{ fontSize: 14, color: '#0f172a' }}>
-                      {activeBooking.handling || 'Climate-controlled'}
+                      {activeBooking.requiresClimateControl ? 'Climate-controlled' : 'Standard'}
                     </Text>
                   </Col>
                 </Row>
@@ -631,33 +645,20 @@ ${activeBooking.customerName || 'Customer'}`,
                           <Text strong style={{ fontSize: 13, color: '#0f172a' }}>
                             {name}
                           </Text>
-                          <Tag
-                            style={{
-                              backgroundColor: '#DCFCE7',
-                              color: '#15803D',
-                              borderColor: '#BBF7D0',
-                              fontSize: 10,
-                              fontWeight: 700,
-                              borderRadius: 4,
-                              margin: 0,
-                            }}
-                          >
-                            HEALTHY
-                          </Tag>
                         </Flex>
                       ),
                     },
                     {
-                      title: 'BREED',
-                      dataIndex: 'breed',
-                      key: 'breed',
-                      render: (b) => <span style={{ fontSize: 13, color: '#475569' }}>{b || '—'}</span>,
+                      title: 'STALL',
+                      dataIndex: 'stallClass',
+                      key: 'stallClass',
+                      render: (s) => <Tag style={{ margin: 0 }}>{s || '—'}</Tag>,
                     },
                     {
-                      title: 'AGE',
-                      dataIndex: 'age',
-                      key: 'age',
-                      render: (a) => <span style={{ fontSize: 13, color: '#475569' }}>{a || '—'}</span>,
+                      title: 'NOTES',
+                      dataIndex: 'notes',
+                      key: 'notes',
+                      render: (n) => <span style={{ fontSize: 13, color: '#475569' }}>{n || '—'}</span>,
                     },
                     {
                       title: 'MICROCHIP',
@@ -724,32 +725,22 @@ ${activeBooking.customerName || 'Customer'}`,
                 </Flex>
 
                 <div style={{ paddingLeft: 8 }}>
-                  {(activeBooking.statusHistory || [
+                  {[
                     {
-                      time: 'Nov 12, 2025 · 09:24',
+                      time: activeBooking.createdAt ? dayjs(activeBooking.createdAt).format('MMM DD, YYYY · HH:mm') : '—',
                       actor: 'by Customer',
-                      title: 'Request submitted — status PENDING',
+                      title: `Request submitted — ${activeBooking.totalHorses || 0} horse(s), status ${activeBooking.status}`,
                       status: 'pending',
                     },
                     {
-                      time: 'Nov 12, 2025 · 09:25',
-                      actor: 'microchip + FEI passport matched',
-                      title: '2 horses attached · passports pre-checked',
-                      status: 'info',
-                    },
-                    {
-                      time: 'Nov 13, 2025 · 09:24',
-                      actor: 'system notification',
-                      title: '24h auto-reminder sent to Logistics Manager',
-                      status: 'reminder',
-                    },
-                    {
-                      time: 'Nov 14, 2025 · remaining 9h 12m',
+                      time: activeBooking.createdAt
+                        ? dayjs(activeBooking.createdAt).add(EXPIRY_HOURS, 'hour').format('MMM DD, YYYY · HH:mm')
+                        : '—',
                       actor: 'auto-expire if no action',
-                      title: '48h deadline — action required',
+                      title: `${EXPIRY_HOURS}h deadline — ${getExpiryText(activeBooking.createdAt)}`,
                       status: 'warning',
                     },
-                  ]).map((item, idx) => (
+                  ].map((item, idx) => (
                     <div
                       key={idx}
                       style={{
@@ -827,7 +818,7 @@ ${activeBooking.customerName || 'Customer'}`,
                   <Flex align="center" gap={8} style={{ marginBottom: 4 }}>
                     <ClockCircleOutlined style={{ color: '#d97706', fontSize: 14 }} />
                     <Text strong style={{ fontSize: 13, color: '#b45309' }}>
-                      {activeBooking.expiresInText || 'Auto-expire in 9h 12m'}
+                      {getExpiryText(activeBooking.createdAt)}
                     </Text>
                   </Flex>
                   <Text type="secondary" style={{ fontSize: 11, color: '#92400e', display: 'block' }}>
@@ -876,23 +867,23 @@ ${activeBooking.customerName || 'Customer'}`,
                 </Text>
 
                 <Space orientation="vertical" size={14} orientationMargin={0} style={{ width: '100%' }}>
-                  {(activeBooking.checklist || [
+                  {[
                     {
                       id: '1',
                       title: 'Schedule conflict check',
-                      desc: 'No overlapping trips on this route & date',
+                      desc: 'Hệ thống đã kiểm tra ngựa không nằm trong đơn khác cùng thời gian',
                     },
                     {
                       id: '2',
-                      title: 'Vehicle capability',
-                      desc: '3 vehicles match capacity for 2 horses',
+                      title: 'Horses verified',
+                      desc: `${activeBooking.totalHorses || 0} ngựa đang hoạt động thuộc tài khoản khách`,
                     },
                     {
                       id: '3',
-                      title: 'Route permitted',
-                      desc: 'CDG → DXB is an approved export corridor',
+                      title: 'Route priced',
+                      desc: `${activeBooking.pickupCountryCode || ''} → ${activeBooking.dropoffCountryCode || ''} (${activeBooking.transportMode}) có trong bảng giá`,
                     },
-                  ]).map((item) => (
+                  ].map((item) => (
                     <Flex key={item.id} align="flex-start" gap={10}>
                       <CheckCircleFilled style={{ color: '#22c55e', fontSize: 18, marginTop: 2 }} />
                       <div>
@@ -923,56 +914,15 @@ ${activeBooking.customerName || 'Customer'}`,
                     {t('manager.pendingRequests.attachments')}
                   </Text>
                   <Badge
-                    count={activeBooking.attachments ? activeBooking.attachments.length : 3}
+                    count={0}
+                    showZero
                     style={{ backgroundColor: '#f1f5f9', color: '#475569', boxShadow: 'none' }}
                   />
                 </Flex>
 
-                <Space orientation="vertical" size={10} orientationMargin={0} style={{ width: '100%' }}>
-                  {(activeBooking.attachments || [
-                    { id: 1, name: 'FEI_Passport_Duchess.pdf', size: '1.2 MB' },
-                    { id: 2, name: 'FEI_Passport_GoldenArrow.pdf', size: '1.1 MB' },
-                    { id: 3, name: 'Vaccination_Log_2025.pdf', size: '640 KB' },
-                  ]).map((file) => (
-                    <div
-                      key={file.id}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '8px 12px',
-                        backgroundColor: '#f8fafc',
-                        borderRadius: 8,
-                        border: '1px solid #f1f5f9',
-                      }}
-                    >
-                      <Flex align="center" gap={8} style={{ overflow: 'hidden' }}>
-                        <FilePdfOutlined style={{ color: '#0284c7', fontSize: 16 }} />
-                        <Text
-                          style={{
-                            fontSize: 12,
-                            fontWeight: 600,
-                            color: '#0369a1',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                          }}
-                        >
-                          {file.name}
-                        </Text>
-                      </Flex>
-                      <Text type="secondary" style={{ fontSize: 11, flexShrink: 0 }}>
-                        {file.size}
-                      </Text>
-                    </div>
-                  ))}
-                </Space>
-
-                <Text
-                  type="secondary"
-                  style={{ fontSize: 11, display: 'block', marginTop: 12, color: '#94a3b8' }}
-                >
-                  {t('manager.pendingRequests.uploadedByCustomer')}
+                <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
+                  <FilePdfOutlined style={{ marginRight: 6 }} />
+                  Giấy tờ thú y được khách nộp vào hồ sơ kiểm dịch (Flow 2) sau khi đơn được duyệt.
                 </Text>
               </Card>
             </Space>
@@ -984,7 +934,6 @@ ${activeBooking.customerName || 'Customer'}`,
           open={approveModalOpen}
           bookingCode={activeBooking.bookingCode}
           specialists={specialists}
-          coordinators={coordinators}
           confirmLoading={actionLoading}
           onConfirm={handleConfirmApprove}
           onCancel={() => setApproveModalOpen(false)}
@@ -1100,7 +1049,7 @@ ${activeBooking.customerName || 'Customer'}`,
                       {name || `Customer #${rec.customerUserId}`}
                     </Text>
                     <Text type="secondary" style={{ fontSize: 12 }}>
-                      {rec.customerClub || rec.customerEmail}
+                      {rec.bookingCode}
                     </Text>
                   </div>
                 ),
@@ -1110,9 +1059,9 @@ ${activeBooking.customerName || 'Customer'}`,
                 key: 'route',
                 render: (_, rec) => (
                   <div style={{ fontSize: 13, color: '#334155' }}>
-                    <span style={{ fontWeight: 600 }}>{rec.pickupCountryCode || 'FR'}</span>
+                    <span style={{ fontWeight: 600 }}>{rec.pickupCountryCode || '—'}</span>
                     <span style={{ color: '#94a3b8', margin: '0 6px' }}>→</span>
-                    <span style={{ fontWeight: 600 }}>{rec.dropoffCountryCode || 'AE'}</span>
+                    <span style={{ fontWeight: 600 }}>{rec.dropoffCountryCode || '—'}</span>
                     <div style={{ fontSize: 11, color: '#64748b' }}>
                       {rec.transportMode} {rec.isExpress && '• Express'}
                     </div>
@@ -1155,7 +1104,7 @@ ${activeBooking.customerName || 'Customer'}`,
                     }}
                   >
                     <ClockCircleOutlined style={{ marginRight: 4 }} />
-                    {rec.expiresInText || 'Expires in 9h 12m'}
+                    {getExpiryText(rec.createdAt)}
                   </Tag>
                 ),
               },

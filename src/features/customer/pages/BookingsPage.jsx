@@ -35,7 +35,7 @@ import StatusTag from '@components/common/StatusTag';
 import BookingCard from '@features/customer/components/BookingCard';
 import bookingService from '@services/bookingService';
 import { useAuthStore } from '@features/auth/store/authStore';
-import { updateStoredBooking, deleteStoredBooking } from '@utils/bookingStorage';
+import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import { ROUTES } from '@routes/routes';
 
 const { Title, Text } = Typography;
@@ -68,25 +68,15 @@ export default function CustomerBookings() {
   useEffect(() => {
     let isSubscribed = true;
 
+    // Backend tự lọc đơn của khách đang đăng nhập; size 100 vì mặc định chỉ trả 10 đơn
     bookingService
-      .getBookings({
-        customerId: user?.userId || user?.UserID || undefined,
-      })
+      .getBookings({ sort: '-createdAt', size: 100 })
       .then((res) => {
-        if (isSubscribed) {
-          const list = Array.isArray(res?.data)
-            ? res.data
-            : Array.isArray(res?.data?.data)
-            ? res.data.data
-            : Array.isArray(res)
-            ? res
-            : [];
-          setBookings(list);
-        }
+        if (isSubscribed) setBookings(unwrapList(res));
       })
-      .catch(() => {
+      .catch((err) => {
         if (isSubscribed) {
-          message.error(t('common.loading') || 'Không thể tải danh sách yêu cầu');
+          message.error(getErrorMessage(err, 'Không thể tải danh sách yêu cầu'));
           setBookings([]);
         }
       })
@@ -114,21 +104,12 @@ export default function CustomerBookings() {
    */
   const handleCancelBooking = async (bookingId) => {
     try {
+      // Backend chỉ cho hủy khi đơn còn Submitted
       await bookingService.cancelBooking(bookingId);
-      updateStoredBooking(bookingId, { Status: 'Cancelled', status: 'Cancelled' });
       message.success(t('bookings.cancelSuccess') || 'Đã hủy yêu cầu vận chuyển thành công');
       setRefreshKey((k) => k + 1);
-    } catch {
-      // Fallback: cập nhật trực tiếp vào bộ nhớ cục bộ, hoặc xóa đơn nếu không tồn tại
-      const updated = updateStoredBooking(bookingId, { Status: 'Cancelled', status: 'Cancelled' });
-      if (updated) {
-        message.success(t('bookings.cancelSuccess') || 'Đã hủy yêu cầu vận chuyển thành công');
-        setRefreshKey((k) => k + 1);
-      } else {
-        deleteStoredBooking(bookingId);
-        message.info('Đơn không tồn tại hoặc đã được xóa bỏ khỏi danh sách.');
-        setRefreshKey((k) => k + 1);
-      }
+    } catch (err) {
+      message.error(getErrorMessage(err, 'Không hủy được yêu cầu vận chuyển'));
     }
   };
 
@@ -139,6 +120,16 @@ export default function CustomerBookings() {
   const handleOpenDetail = (record) => {
     setSelectedBooking(record);
     setDetailModalVisible(true);
+    // Danh sách chỉ có tóm tắt -> tải chi tiết (quoteLines, horses, ghi chú) từ GET /bookings/{id}
+    const id = record?.bookingId || record?.BookingID;
+    if (!id) return;
+    bookingService
+      .getBookingById(id)
+      .then((res) => {
+        const detail = unwrapData(res);
+        setSelectedBooking((prev) => (prev && (prev.bookingId || prev.BookingID) === id ? { ...prev, ...detail } : prev));
+      })
+      .catch((err) => message.error(getErrorMessage(err, 'Không tải được chi tiết đơn')));
   };
 
   // Thống kê số lượng theo 3 chỉ số chính (Figma Frame 75:5337)

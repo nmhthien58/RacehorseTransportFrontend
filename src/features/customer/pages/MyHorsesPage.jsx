@@ -21,6 +21,7 @@ import dayjs from 'dayjs';
 import PageHeader from '@components/layout/PageHeader';
 import useMyHorses from '@features/customer/hooks/useMyHorses';
 import horseService from '@services/horseService';
+import { getErrorMessage } from '@utils/apiHelpers';
 import { ROUTES } from '@routes/routes';
 import {
   calculateHorseRisk,
@@ -60,8 +61,8 @@ export default function MyHorsesPage() {
       message.success(t('horses.updateHorseSuccess'));
       setEditModalVisible(false);
       refetch?.();
-    } catch {
-      message.error(t('horses.updateHorseError'));
+    } catch (err) {
+      message.error(getErrorMessage(err, t('horses.updateHorseError')));
     } finally {
       setEditSubmitting(false);
     }

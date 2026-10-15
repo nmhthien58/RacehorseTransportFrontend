@@ -28,7 +28,6 @@ import {
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
-import { getStoredHorses } from '@utils/horseStorage';
 
 const getUniqueRecordId = () => Date.now();
 
@@ -122,33 +121,7 @@ export default function AddHorseForm({
       return;
     }
 
-    const existingHorses = getStoredHorses();
-    const curId = initialValues?.HorseID || initialValues?.horseId;
-    const trimmedChip = data.microchipNumber?.trim();
-    const trimmedPassport = data.passportNumber?.trim();
-
-    if (trimmedChip) {
-      const chipDup = existingHorses.find(
-        (h) => (!curId || String(h.HorseID || h.horseId) !== String(curId)) &&
-               (h.MicrochipNumber || h.microchipNumber || '').trim().toLowerCase() === trimmedChip.toLowerCase()
-      );
-      if (chipDup) {
-        message.error(`Mã vi mạch (Microchip Number) "${trimmedChip}" đã tồn tại cho cá thể ngựa "${chipDup.Name || chipDup.name}". Không được phép trùng!`);
-        return;
-      }
-    }
-
-    if (trimmedPassport) {
-      const passDup = existingHorses.find(
-        (h) => (!curId || String(h.HorseID || h.horseId) !== String(curId)) &&
-               (h.PassportNumber || h.passportNumber || '').trim().toLowerCase() === trimmedPassport.toLowerCase()
-      );
-      if (passDup) {
-        message.error(`Số hộ chiếu (Passport Number) "${trimmedPassport}" đã tồn tại cho cá thể ngựa "${passDup.Name || passDup.name}". Không được phép trùng!`);
-        return;
-      }
-    }
-
+    // Trùng mã vi mạch / số hộ chiếu do backend kiểm tra và trả lỗi 400 kèm lý do
     const payload = {
       ...data,
       name: data.name?.trim(),

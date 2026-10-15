@@ -36,6 +36,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import horseService from '@services/horseService';
+import { getErrorMessage } from '@utils/apiHelpers';
 import PageHeader from '@components/layout/PageHeader';
 import useHorseDetail from '@features/customer/hooks/useHorseDetail';
 import { checkHorseTransportEligibility } from '@utils/horseHealth';
@@ -154,7 +155,7 @@ export default function HorseDetailPage() {
       refetch?.();
     } catch (err) {
       console.error(err);
-      message.error(t('horses.updateHorseError'));
+      message.error(getErrorMessage(err, t('horses.updateHorseError')));
     } finally {
       setEditSubmitting(false);
     }

@@ -39,8 +39,8 @@ import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import horseService from '@services/horseService';
 import { useAuthStore } from '@features/auth/store/authStore';
-import { getStoredHorses } from '@utils/horseStorage';
-import { checkHorseBookingConflict } from '@utils/bookingStorage';
+import bookingService from '@services/bookingService';
+import { unwrapData, unwrapList, getErrorMessage, toIsoString } from '@utils/apiHelpers';
 import { checkHorseTransportEligibility } from '@utils/horseHealth';
 import { ROUTES } from '@routes/routes';
 
@@ -632,8 +632,8 @@ export default function BookingWizard({
       destInfo?.defaultMode ||
       'Air'
     ).toLowerCase();
-    if (rawMode.includes('door')) return 'DoorToDoor';
-    if (rawMode.includes('ground') || rawMode.includes('road')) return 'Ground';
+    // Backend chỉ hỗ trợ Ground / Air; "door-to-door" cũ quy về đường bộ
+    if (rawMode.includes('ground') || rawMode.includes('road') || rawMode.includes('door')) return 'Ground';
     return 'Air';
   })();
 
@@ -681,11 +681,11 @@ export default function BookingWizard({
       DepartureDate: initialValues?.departureDate || dayjs().add(7, 'day').format('YYYY-MM-DDTHH:mm:ssZ'),
       DeliveryDate: initialValues?.deliveryDate || dayjs().add(9, 'day').format('YYYY-MM-DDTHH:mm:ssZ'),
       TransportMode: initialMode,
-      InsurancePackage: initialValues?.insurancePackage || 'comprehensive',
+      // 'transit' = mua bảo hiểm hành trình (backend tính % trên giá trị khai báo), 'none' = không mua
+      InsurancePackage: initialValues?.declaredValue === null ? 'none' : 'transit',
       DeclaredValue: initialValues?.declaredValue || 50000,
-      RequiresClimateControl: true,
-      IsExpress: initialValues?.optExpress !== undefined ? initialValues.optExpress : false,
-      RequiresVetEscort: true,
+      DistanceKm: initialValues?.distanceKm || null,
+      RequiresClimateControl: initialValues?.requiresClimateControl ?? true,
       FeedingCarePlan: initialValues?.feedingCarePlan || 'Timothy hay 3x daily, electrolyte bucket & hydration checks every 4 hours.',
       SpecialInstructions: initialValues?.specialInstructions || '',
     },
@@ -700,7 +700,9 @@ export default function BookingWizard({
   const deliveryDate = useWatch({ control, name: 'DeliveryDate' });
   const transportMode = useWatch({ control, name: 'TransportMode' });
   const insurancePackage = useWatch({ control, name: 'InsurancePackage' });
-  const isExpress = useWatch({ control, name: 'IsExpress' });
+  const declaredValue = useWatch({ control, name: 'DeclaredValue' });
+  const distanceKm = useWatch({ control, name: 'DistanceKm' });
+  const requiresClimateControl = useWatch({ control, name: 'RequiresClimateControl' });
 
   // Thông tin cước & độ khả dụng tuyến đường theo quốc gia đến
   const routeData = ROUTE_DATA[dropoffCountry] || ROUTE_DATA.DEFAULT;
@@ -731,17 +733,6 @@ export default function BookingWizard({
       } else {
         setValue('DropoffAddress', `${dropoffCountry} International Equine Terminal`);
       }
-    } else if (transportMode === 'DoorToDoor') {
-      if (userFarmAddress) {
-        setValue('PickupAddress', userFarmAddress);
-      } else {
-        const cur = getValues('PickupAddress');
-        if (!cur || cur.includes('Cảng hàng không') || cur.includes('Equine') || cur.includes('Sân bay')) {
-          setValue('PickupAddress', 'Trang trại xuất phát');
-        }
-      }
-      const groundDrop = COUNTRY_HUBS[dropoffCountry]?.ground || `${dropoffCountry} Equine Center / Racecourse`;
-      setValue('DropoffAddress', groundDrop);
     } else {
       const groundDrop = COUNTRY_HUBS[dropoffCountry]?.ground || `${dropoffCountry} Equine Center / Racecourse`;
       setValue('DropoffAddress', groundDrop);
@@ -756,25 +747,16 @@ export default function BookingWizard({
   // Tải danh sách ngựa của user khi mở wizard, đảm bảo chỉ tải ngựa thuộc tài khoản hiện tại
   useEffect(() => {
     let isSubscribed = true;
-    const ownerId = user?.userId || user?.UserID;
 
     const loadHorsesData = async () => {
       setLoadingHorses(true);
       let horsesList = [];
       try {
-        const res = await horseService.getHorses({ ownerId: ownerId || undefined });
-        const fetched = res?.data?.data || res?.data;
-        if (Array.isArray(fetched)) {
-          horsesList = ownerId
-            ? fetched.filter((h) => Number(h.ownerUserId || h.OwnerUserID) === Number(ownerId))
-            : fetched;
-        }
+        // Backend chỉ trả ngựa của khách đang đăng nhập
+        const res = await horseService.getHorses({ size: 100 });
+        horsesList = unwrapList(res).filter((h) => h.isActive !== false);
       } catch (err) {
-        console.warn('Lỗi kết nối horseService, tải hồ sơ ngựa từ bộ nhớ cục bộ:', err);
-        const stored = getStoredHorses();
-        horsesList = ownerId
-          ? stored.filter((h) => Number(h.ownerUserId || h.OwnerUserID) === Number(ownerId))
-          : [];
+        message.error(getErrorMessage(err, 'Không tải được danh sách ngựa'));
       }
 
       if (!isSubscribed) return;
@@ -818,15 +800,6 @@ export default function BookingWizard({
       return;
     }
 
-    const curDep = getValues('DepartureDate');
-    const curDel = getValues('DeliveryDate');
-    const customerId = user?.userId || user?.UserID;
-    const conflict = checkHorseBookingConflict(horseId, curDep, curDel, null, customerId);
-    if (conflict.hasConflict) {
-      message.error(conflict.reason);
-      return;
-    }
-
     setSelectedHorseIds((prev) => {
       const exists = prev.some((id) => String(id) === String(horseId));
       if (exists) {
@@ -837,156 +810,54 @@ export default function BookingWizard({
     });
   };
 
-  // Tính toán bảng phân tích chi phí dự kiến minh bạch
-  const { quoteItems, totalCost } = useMemo(() => {
-    const horseCount = selectedHorseIds.length || 1;
-    const items = [];
+  // Báo giá do backend tính (POST /bookings/quote-preview) — không tự tính giá ở client
+  const [quote, setQuote] = useState(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteError, setQuoteError] = useState(null);
 
-    // 1. Cước vận chuyển chính theo phương thức & điểm đến
-    let baseFreightRate;
-    let freightName;
-    let freightCode;
+  const quoteRequest = useMemo(() => {
+    if (selectedHorseIds.length === 0 || !departureDate || !deliveryDate || !dropoffCountry) return null;
+    if (transportMode === 'Ground' && !(Number(distanceKm) > 0)) return null;
+    return {
+      transportMode,
+      dropoffCountryCode: dropoffCountry,
+      distanceKm: transportMode === 'Ground' ? Number(distanceKm) : null,
+      requiresClimateControl: Boolean(requiresClimateControl),
+      declaredValue: insurancePackage === 'none' ? null : Number(declaredValue) || null,
+      departureDate: toIsoString(departureDate),
+      deliveryDate: toIsoString(deliveryDate),
+      horses: selectedHorseIds.map((hId) => ({ stallClass: stallClasses[hId] || 'Comfort' })),
+    };
+  }, [selectedHorseIds, stallClasses, transportMode, dropoffCountry, distanceKm, requiresClimateControl, insurancePackage, declaredValue, departureDate, deliveryDate]);
 
-    if (transportMode === 'DoorToDoor') {
-      baseFreightRate = routeData.doorToDoor?.baseFreight || 7500;
-      freightName = 'Cước Trọn gói Door-to-Door (Chuồng - Chuồng đa phương thức)';
-      freightCode = 'FREIGHT_DOOR_TO_DOOR';
-    } else if (transportMode === 'Air') {
-      baseFreightRate = routeData.air?.baseFreight || 4800;
-      freightName = 'Cước Chuyên cơ Hàng không Quốc tế (Air Freight - IATA LAR)';
-      freightCode = 'FREIGHT_AIR';
-    } else {
-      baseFreightRate = routeData.ground?.baseFreight || 2800;
-      freightName = 'Cước Vận chuyển Mặt đất (Ground Transport - Trailer Chuyên dụng)';
-      freightCode = 'FREIGHT_GROUND';
-    }
-
-    items.push({
-      key: 'freight',
-      code: freightCode,
-      name: freightName,
-      qty: horseCount,
-      unitPrice: baseFreightRate,
-      amount: horseCount * baseFreightRate,
-    });
-
-    // 2. Phụ phí hạng chuồng (Stall Class)
-    let stallSurcharge = 0;
-    selectedHorseIds.forEach((id) => {
-      const cls = stallClasses[id] || 'Shared';
-      if (cls === 'Comfort') stallSurcharge += 200;
-      if (cls === 'Private') stallSurcharge += 500;
-    });
-    if (stallSurcharge > 0) {
-      items.push({
-        key: 'stall',
-        code: 'SUR_STALL_CLASS',
-        name: 'Phụ phí nâng hạng chuồng vận chuyển (Comfort / Private)',
-        qty: 1,
-        unitPrice: stallSurcharge,
-        amount: stallSurcharge,
-      });
-    }
-
-    // 3. Bảo hiểm hành trình theo gói (Trip Insurance Packages)
-    if (insurancePackage && insurancePackage !== 'none') {
-      let insPricePerHorse = 0;
-      let insName = 'Bảo hiểm hành trình';
-      if (insurancePackage === 'trip') {
-        insPricePerHorse = 10;
-        insName = 'Bảo hiểm Gián đoạn & Trì hoãn (Trip Protection - $10/ngựa)';
-      } else if (insurancePackage === 'cargo') {
-        insPricePerHorse = 5;
-        insName = 'Bảo hiểm Trang thiết bị & Hàng hóa (Cargo Coverage - $5/ngựa)';
-      } else if (insurancePackage === 'mortality') {
-        insPricePerHorse = 25;
-        insName = 'Bảo hiểm Tử vong & Thương tật (Mortality Coverage - $25/ngựa)';
-      } else if (insurancePackage === 'comprehensive') {
-        insPricePerHorse = 36; // ($10 + $5 + $25) - 10% bundle discount
-        insName = 'Gói Bảo hiểm Toàn diện Siêu tiết kiệm (Comprehensive - $36/ngựa)';
+  useEffect(() => {
+    if (currentStep !== 3 || !quoteRequest) return undefined;
+    let cancelled = false;
+    // Debounce nhẹ để không gọi API liên tục khi khách đang gõ
+    const timer = setTimeout(async () => {
+      setQuoteLoading(true);
+      setQuoteError(null);
+      try {
+        const res = await bookingService.previewQuote(quoteRequest);
+        if (!cancelled) setQuote(unwrapData(res));
+      } catch (err) {
+        if (!cancelled) {
+          setQuote(null);
+          setQuoteError(getErrorMessage(err, 'Không tính được báo giá cho tuyến này'));
+        }
+      } finally {
+        if (!cancelled) setQuoteLoading(false);
       }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [currentStep, quoteRequest]);
 
-      items.push({
-        key: 'insurance',
-        code: `INS_${insurancePackage.toUpperCase()}`,
-        name: insName,
-        qty: horseCount,
-        unitPrice: insPricePerHorse,
-        amount: horseCount * insPricePerHorse,
-      });
-    }
-
-    // 4. Tiện ích Bác sĩ thú y áp tải hành trình (Đồng bộ với chi phí khi lên plan: $1,400 Air / $1,600 Door-to-Door / $600 Ground)
-    const escortFee = transportMode === 'DoorToDoor' ? 1600 : transportMode === 'Air' ? 1400 : 600;
-    items.push({
-      key: 'vetEscort',
-      code: 'SUR_VET_ESCORT',
-      name: `🩺 Bác sĩ thú y FEI chuyên trách áp tải hành trình (${transportMode === 'Air' ? 'In-Flight Escort' : 'Ground / Door-to-Door Escort'})`,
-      qty: 1,
-      unitPrice: escortFee,
-      amount: escortFee,
-    });
-
-    if (isExpress) {
-      const expressFee = 650;
-      items.push({
-        key: 'express',
-        code: 'SUR_EXPRESS',
-        name: '⚡ Dịch vụ Vận chuyển Hỏa tốc & Luồng xanh Hải quan (Express Dispatch)',
-        qty: 1,
-        unitPrice: expressFee,
-        amount: expressFee,
-      });
-    }
-
-    // 5. Phí thủ tục kiểm dịch & thông quan hải quan quốc tế
-    if (transportMode !== 'DoorToDoor') {
-      const clearanceFeePerHorse = transportMode === 'Air' ? 350 : 250;
-      items.push({
-        key: 'clearance',
-        code: 'FEE_CLEARANCE',
-        name: 'Phí thủ tục kiểm dịch & chứng thư CVI quốc tế',
-        qty: horseCount,
-        unitPrice: clearanceFeePerHorse,
-        amount: horseCount * clearanceFeePerHorse,
-      });
-    } else {
-      items.push({
-        key: 'clearance_included',
-        code: 'FEE_CLEARANCE_INCLUDED',
-        name: 'Thủ tục hải quan & Giấy phép CVI (Đã bao gồm trọn gói trong Door-to-Door)',
-        qty: horseCount,
-        unitPrice: 0,
-        amount: 0,
-      });
-    }
-
-    // 6. Phí thuê xe bên nước khác (Foreign Charter Truck / Overseas Van Rental)
-    if (transportMode === 'DoorToDoor') {
-      const overseasRentalFee = 1200;
-      items.push({
-        key: 'overseas_rental',
-        code: 'SUR_OVERSEAS_RENTAL',
-        name: '🚛 Phí thuê xe bên nước khác (Overseas Charter Truck / Van Rental)',
-        qty: 1,
-        unitPrice: overseasRentalFee,
-        amount: overseasRentalFee,
-      });
-    } else if (transportMode === 'Ground' && dropoffCountry !== pickupCountry) {
-      const crossBorderFee = 850;
-      items.push({
-        key: 'overseas_rental',
-        code: 'SUR_CROSS_BORDER_RENTAL',
-        name: '🚛 Phí thuê xe bên nước khác (Overseas Truck & Trailer Charter)',
-        qty: 1,
-        unitPrice: crossBorderFee,
-        amount: crossBorderFee,
-      });
-    }
-
-    const total = items.reduce((sum, item) => sum + item.amount, 0);
-    return { quoteItems: items, totalCost: total };
-  }, [selectedHorseIds, stallClasses, transportMode, isExpress, insurancePackage, routeData, dropoffCountry, pickupCountry]);
+  const quoteItems = (quote?.lines || []).map((line, idx) => ({ key: `${line.code}-${idx}`, ...line }));
+  const totalCost = Number(quote?.total || 0);
+  const currencyCode = quote?.currencyCode || 'USD';
 
   // Cho phép chuyển bước trực tiếp khi click vào các tab Stepper
   const handleStepClick = async (targetStep) => {
@@ -1021,10 +892,10 @@ export default function BookingWizard({
         return;
       }
       if (transportMode === 'Ground' && !isGroundAvailable) {
-        message.warning('Tuyến đường này không hỗ trợ vận chuyển đường bộ (Ground). Vui lòng chọn Air Freight hoặc Door-to-Door.');
+        message.warning('Tuyến đường này không hỗ trợ vận chuyển đường bộ (Ground). Vui lòng chọn Air Freight.');
         return;
       }
-      if (transportMode === 'DoorToDoor' || transportMode === 'Ground') {
+      if (transportMode === 'Ground') {
         const pAddr = getValues('PickupAddress');
         const dAddr = getValues('DropoffAddress');
         if (!pAddr || !pAddr.trim()) {
@@ -1035,15 +906,9 @@ export default function BookingWizard({
           message.warning('Vui lòng nhập địa chỉ giao chi tiết (trang trại / trường đua đích).');
           return;
         }
-      }
-      const depDate = getValues('DepartureDate');
-      const delDate = getValues('DeliveryDate');
-      const customerId = user?.userId || user?.UserID;
-      for (const hId of selectedHorseIds) {
-        const conflict = checkHorseBookingConflict(hId, depDate, delDate, null, customerId);
-        if (conflict.hasConflict) {
-          const horse = availableHorses.find((h) => String(h.horseId || h.HorseID) === String(hId));
-          message.error(`Ngựa "${horse?.name || horse?.Name || hId}" bị trùng lịch: ${conflict.reason}`);
+        const km = Number(getValues('DistanceKm'));
+        if (!(km >= 1 && km <= 50000)) {
+          message.warning('Vui lòng nhập quãng đường dự kiến (1 - 50.000 km) cho chuyến đường bộ.');
           return;
         }
       }
@@ -1097,10 +962,10 @@ export default function BookingWizard({
         return;
       }
       if (transportMode === 'Ground' && !isGroundAvailable) {
-        message.warning('Tuyến đường này không hỗ trợ vận chuyển đường bộ (Ground). Vui lòng chọn Air Freight hoặc Door-to-Door.');
+        message.warning('Tuyến đường này không hỗ trợ vận chuyển đường bộ (Ground). Vui lòng chọn Air Freight.');
         return;
       }
-      if (transportMode === 'DoorToDoor' || transportMode === 'Ground') {
+      if (transportMode === 'Ground') {
         const pAddr = getValues('PickupAddress');
         const dAddr = getValues('DropoffAddress');
         if (!pAddr || !pAddr.trim()) {
@@ -1111,21 +976,13 @@ export default function BookingWizard({
           message.warning('Vui lòng nhập địa chỉ giao chi tiết (trang trại / trường đua đích).');
           return;
         }
-      }
-      // Kiểm tra trùng lịch của các ngựa đã chọn với ngày thực tế khách hàng chọn
-      const depDate = getValues('DepartureDate');
-      const delDate = getValues('DeliveryDate');
-      const customerId = user?.userId || user?.UserID;
-      for (const hId of selectedHorseIds) {
-        const conflict = checkHorseBookingConflict(hId, depDate, delDate, null, customerId);
-        if (conflict.hasConflict) {
-          const horse = availableHorses.find((h) => String(h.horseId || h.HorseID) === String(hId));
-          message.error(
-            `Ngựa "${horse?.name || horse?.Name || hId}" bị trùng lịch: ${conflict.reason}`,
-          );
+        const km = Number(getValues('DistanceKm'));
+        if (!(km >= 1 && km <= 50000)) {
+          message.warning('Vui lòng nhập quãng đường dự kiến (1 - 50.000 km) cho chuyến đường bộ.');
           return;
         }
       }
+      // Trùng lịch ngựa do backend kiểm tra khi gửi đơn (POST /bookings)
     }
 
     setCurrentStep((prev) => Math.min(prev + 1, 3));
@@ -1156,56 +1013,31 @@ export default function BookingWizard({
       finalDropoff = chosenD?.name || COUNTRY_HUBS[dCode]?.airport || `${dCode} International Terminal`;
     }
 
+    // Kế hoạch dinh dưỡng chưa có trường riêng ở backend -> gộp vào ghi chú cho công ty
+    const feedingPlan = (values.FeedingCarePlan || '').trim();
+    const instructions = (values.SpecialInstructions || '').trim();
+    const specialInstructions = [feedingPlan && `Feeding & care plan: ${feedingPlan}`, instructions]
+      .filter(Boolean)
+      .join('\n')
+      .slice(0, 2000);
+
     const payload = {
       pickupAddress: finalPickup,
       pickupCountryCode: pCode,
       dropoffAddress: finalDropoff,
       dropoffCountryCode: dCode,
-      departureDate: values.DepartureDate || values.departureDate,
-      deliveryDate: values.DeliveryDate || values.deliveryDate || values.DepartureDate || values.departureDate,
+      departureDate: toIsoString(values.DepartureDate),
+      deliveryDate: toIsoString(values.DeliveryDate),
       transportMode: mode,
-      insurancePackage: values.InsurancePackage || values.insurancePackage,
-      requiresClimateControl: true,
-      isExpress: Boolean(values.IsExpress ?? values.isExpress),
-      requiresVetEscort: true,
-      feedingCarePlan: (values.FeedingCarePlan || values.feedingCarePlan)?.trim() || null,
-      declaredValue: Number(values.DeclaredValue || values.declaredValue) || null,
-      specialInstructions: (values.SpecialInstructions || values.specialInstructions)?.trim() || null,
-      totalHorses: selectedHorseIds.length,
-      estimatedCost: totalCost,
-      depositAmount: Math.round(totalCost * 0.4),
-      balanceAmount: Math.round(totalCost * 0.6),
-      depositPaid: false,
-      cancellationPolicy: 'Chính sách cọc 40%: Hoàn 100% trước 72h, hoàn 50% từ 24-72h, không hoàn cọc dưới 24h',
-      currencyCode: 'USD',
-      quoteLines: quoteItems,
-      quoteBreakdown: JSON.stringify(quoteItems),
-      horses: selectedHorseIds.map((hId) => {
-        const found = availableHorses.find((h) => Number(h.HorseID || h.horseId) === Number(hId));
-        return {
-          horseId: Number(hId),
-          horseName: found?.Name || found?.name || `Ngựa #${hId}`,
-          name: found?.Name || found?.name || `Ngựa #${hId}`,
-          breed: found?.Breed || found?.breed,
-          microchipNumber: found?.MicrochipNumber || found?.microchipNumber,
-          gender: found?.Gender || found?.gender,
-          stallClass: stallClasses[hId] || 'Shared',
-          notes: horseNotes[hId]?.trim() || null,
-        };
-      }),
-      bookingHorses: selectedHorseIds.map((hId) => {
-        const found = availableHorses.find((h) => Number(h.HorseID || h.horseId) === Number(hId));
-        return {
-          horseId: Number(hId),
-          horseName: found?.Name || found?.name || `Ngựa #${hId}`,
-          name: found?.Name || found?.name || `Ngựa #${hId}`,
-          breed: found?.Breed || found?.breed,
-          microchipNumber: found?.MicrochipNumber || found?.microchipNumber,
-          gender: found?.Gender || found?.gender,
-          stallClass: stallClasses[hId] || 'Shared',
-          notes: horseNotes[hId]?.trim() || null,
-        };
-      }),
+      distanceKm: mode === 'Ground' ? Number(values.DistanceKm) : null,
+      requiresClimateControl: Boolean(values.RequiresClimateControl),
+      declaredValue: values.InsurancePackage === 'none' ? null : Number(values.DeclaredValue) || null,
+      specialInstructions: specialInstructions || null,
+      horses: selectedHorseIds.map((hId) => ({
+        horseId: Number(hId),
+        stallClass: stallClasses[hId] || 'Comfort',
+        notes: horseNotes[hId]?.trim().slice(0, 300) || null,
+      })),
     };
 
     await onSubmit(payload);
@@ -1283,9 +1115,7 @@ export default function BookingWizard({
                 ✨ Thông tin chuyến đi đã được tự động điền sẵn:
               </span>
               <Tag color="blue" style={{ fontWeight: 700, margin: 0 }}>
-                {initialMode === 'DoorToDoor'
-                  ? '🌐 Trọn gói Door-to-Door'
-                  : initialMode === 'Air'
+                {initialMode === 'Air'
                   ? '✈️ Hàng không (Air Flight)'
                   : '🚛 Đường bộ (Ground Truck)'}
               </Tag>
@@ -1766,10 +1596,8 @@ export default function BookingWizard({
                   const horseGender = horse.gender || horse.Gender;
                   const horseMicrochip = horse.microchipNumber || horse.MicrochipNumber;
                   const eligibility = checkHorseTransportEligibility(horse, i18n?.language || 'vi');
-                  const conflict = checkHorseBookingConflict(horseId, departureDate, deliveryDate, null, user?.userId || user?.UserID);
-                  const isConflict = conflict.hasConflict;
                   const isCritical = (horse.HealthStatus || horse.healthStatus || '').trim().toLowerCase() === 'critical';
-                  const isBlocked = isCritical || isConflict;
+                  const isBlocked = isCritical;
 
                   return (
                     <Col key={horseId} xs={24} md={12}>
@@ -1778,10 +1606,7 @@ export default function BookingWizard({
                         tabIndex={isBlocked ? -1 : 0}
                         aria-disabled={isBlocked}
                         onClick={(e) => {
-                          if (isBlocked) {
-                            if (isConflict) message.error(conflict.reason);
-                            return;
-                          }
+                          if (isBlocked) return;
                           if (e.target.closest?.('.stall-select-container') || e.target.closest?.('.ant-select') || e.target.closest?.('input')) return;
                           handleToggleHorse(horseId);
                         }}
@@ -1797,12 +1622,10 @@ export default function BookingWizard({
                           borderRadius: 16,
                           border: isCritical
                             ? '1.5px solid #FECACA'
-                            : isConflict
-                            ? '1.5px solid #FECACA'
                             : isSelected
                             ? '2.5px solid #F59E0B'
                             : '1.5px solid #E2E8F0',
-                          backgroundColor: isCritical || isConflict
+                          backgroundColor: isCritical
                             ? '#FEF2F2'
                             : isSelected
                             ? '#FFFBEB'
@@ -1825,7 +1648,7 @@ export default function BookingWizard({
                             <strong
                               style={{
                                 fontSize: 16,
-                                color: isCritical || isConflict
+                                color: isCritical
                                   ? '#991B1B'
                                   : isSelected
                                   ? '#92400E'
@@ -1842,11 +1665,6 @@ export default function BookingWizard({
                                 ✓ Đã chọn
                               </Tag>
                             )}
-                            {isConflict && (
-                              <Tag color="error" style={{ fontWeight: 800, borderRadius: 6, margin: 0 }}>
-                                ⛔ TRÙNG LỊCH TRÌNH
-                              </Tag>
-                            )}
                             <Tag
                               color={eligibility.tagColor}
                               style={{ fontWeight: 700, borderRadius: 6, margin: 0 }}
@@ -1861,26 +1679,6 @@ export default function BookingWizard({
                           {t(`horses.genderOptions.${horseGender?.toLowerCase()}`) || horseGender} · {t('horses.fields.microchip')}:{' '}
                           <code>{horseMicrochip || '---'}</code>
                         </div>
-
-                        {/* Banner cảnh báo chặn nếu bị trùng lịch trình hoặc trong 1 tuần hạ nhiệt sau chuyến bay */}
-                        {isConflict && (
-                          <div
-                            style={{
-                              marginLeft: 28,
-                              marginTop: 6,
-                              marginBottom: 8,
-                              padding: '8px 12px',
-                              backgroundColor: '#FEE2E2',
-                              borderRadius: 8,
-                              fontSize: 12,
-                              fontWeight: 700,
-                              color: '#991B1B',
-                              border: '1px solid #FECACA',
-                            }}
-                          >
-                            ⛔ {conflict.reason}
-                          </div>
-                        )}
 
                         {/* Banner cảnh báo chặn vận chuyển nếu chấn thương nguy cấp */}
                         {isCritical && (
@@ -1938,10 +1736,10 @@ export default function BookingWizard({
                                 >
                                   <Flex justify="space-between" align="center">
                                     <strong style={{ fontSize: 12, color: '#0f172a' }}>Shared</strong>
-                                    <Tag color="default" style={{ margin: 0, fontSize: 11 }}>+$0</Tag>
+                                    <Tag color="default" style={{ margin: 0, fontSize: 11 }}>3 / pallet</Tag>
                                   </Flex>
                                   <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-                                    Chuồng tiêu chuẩn (Tích hợp kiểm soát nhiệt độ FEI 16-19°C)
+                                    Chuồng ghép — 3 ngựa / pallet, cước cơ bản
                                   </div>
                                 </div>
                               </Col>
@@ -1966,10 +1764,10 @@ export default function BookingWizard({
                                 >
                                   <Flex justify="space-between" align="center">
                                     <strong style={{ fontSize: 12, color: '#0f172a' }}>Comfort</strong>
-                                    <Tag color="gold" style={{ margin: 0, fontSize: 11, fontWeight: 700 }}>+$200</Tag>
+                                    <Tag color="gold" style={{ margin: 0, fontSize: 11, fontWeight: 700 }}>2 / pallet</Tag>
                                   </Flex>
                                   <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-                                    Khoang rộng 1.5x (Điều hòa FEI 16-19°C & đệm chống rung)
+                                    Chuồng rưỡi — 2 ngựa / pallet, cước cao hơn Shared
                                   </div>
                                 </div>
                               </Col>
@@ -1994,10 +1792,10 @@ export default function BookingWizard({
                                 >
                                   <Flex justify="space-between" align="center">
                                     <strong style={{ fontSize: 12, color: '#0f172a' }}>Private</strong>
-                                    <Tag color="purple" style={{ margin: 0, fontSize: 11, fontWeight: 700 }}>+$500</Tag>
+                                    <Tag color="purple" style={{ margin: 0, fontSize: 11, fontWeight: 700 }}>1 / pallet</Tag>
                                   </Flex>
                                   <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-                                    Khoang riêng VIP (Vi khí hậu độc lập & buồng cách âm)
+                                    Chuồng riêng — 1 ngựa / pallet, cước cao nhất
                                   </div>
                                 </div>
                               </Col>
@@ -2037,7 +1835,7 @@ export default function BookingWizard({
               </Title>
             </Flex>
             <Text style={{ color: '#64748b', fontSize: 12.5, display: 'block', marginBottom: 12 }}>
-              Các gói bảo hiểm chuyên biệt bảo vệ tối đa cho ngựa đua và tài sản suốt lộ trình.
+              Bảo hiểm hành trình tính theo % giá trị khai báo của ngựa (theo bảng giá hệ thống).
             </Text>
 
             {/* Banner bảo vệ */}
@@ -2063,178 +1861,51 @@ export default function BookingWizard({
               </Flex>
             </div>
 
-            {/* 4 Gói bảo hiểm dạng lưới gọn gàng */}
-            <Controller
-              name="InsurancePackage"
-              control={control}
-              render={({ field }) => {
-                const currentPackage = field.value;
-
-                return (
-                  <Row gutter={[12, 12]}>
-                    {/* Gói 1: Trip Protection */}
-                    <Col xs={24} sm={12}>
+            {/* Bật / tắt bảo hiểm hành trình + khai báo giá trị (POST /bookings: declaredValue, null = không mua) */}
+            <Row gutter={[16, 12]}>
+              <Col xs={24} md={12}>
+                <Controller
+                  name="InsurancePackage"
+                  control={control}
+                  render={({ field }) => {
+                    const isOn = field.value !== 'none';
+                    const toggle = () => field.onChange(isOn ? 'none' : 'transit');
+                    return (
                       <div
                         role="button"
                         tabIndex={0}
-                        onClick={() => field.onChange('trip')}
+                        onClick={toggle}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
-                            field.onChange('trip');
+                            toggle();
                           }
                         }}
                         style={{
-                          backgroundColor: currentPackage === 'trip' ? '#FFFBEB' : '#FFFFFF',
-                          border: currentPackage === 'trip' ? '2px solid #F59E0B' : '1.5px solid #E2E8F0',
+                          backgroundColor: isOn ? '#FFFBEB' : '#FFFFFF',
+                          border: isOn ? '2px solid #F59E0B' : '1.5px solid #E2E8F0',
                           borderRadius: 12,
                           padding: '12px 14px',
                           cursor: 'pointer',
-                          transform: currentPackage === 'trip' ? 'scale(1.01)' : 'scale(1)',
-                          boxShadow: currentPackage === 'trip' ? '0 4px 14px rgba(245, 158, 11, 0.15)' : 'none',
-                          transition: 'all 0.2s ease',
                           height: '100%',
                         }}
                       >
                         <Flex justify="space-between" align="center" style={{ marginBottom: 4 }}>
-                          <strong style={{ color: currentPackage === 'trip' ? '#92400E' : '#0F172A', fontSize: 14 }}>
-                            🛡️ Trip Protection
+                          <strong style={{ color: isOn ? '#92400E' : '#0F172A', fontSize: 13.5 }}>
+                            🛡️ Transit Insurance (Bảo hiểm hành trình)
                           </strong>
-                          <span style={{ fontWeight: 800, color: '#D97706', fontSize: 14 }}>
-                            $10 / con
-                          </span>
+                          <Tag color={isOn ? 'gold' : 'default'} style={{ fontWeight: 800, margin: 0 }}>
+                            {isOn ? '✓ Đã chọn' : 'Không mua'}
+                          </Tag>
                         </Flex>
                         <Text style={{ fontSize: 12, color: '#64748B', display: 'block', lineHeight: 1.4 }}>
-                          Bồi hoàn đến 100% chi phí chuyến đi; bảo vệ trước thời tiết xấu, hoãn hủy hoặc đổi lộ trình khẩn cấp.
+                          Phí bảo hiểm = % giá trị khai báo. Số tiền cụ thể hiện ở dòng bảo hiểm trong báo giá (bước Review).
                         </Text>
                       </div>
-                    </Col>
-
-                    {/* Gói 2: Cargo Coverage */}
-                    <Col xs={24} sm={12}>
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => field.onChange('cargo')}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange('cargo');
-                          }
-                        }}
-                        style={{
-                          backgroundColor: currentPackage === 'cargo' ? '#FFFBEB' : '#FFFFFF',
-                          border: currentPackage === 'cargo' ? '2px solid #F59E0B' : '1.5px solid #E2E8F0',
-                          borderRadius: 12,
-                          padding: '12px 14px',
-                          cursor: 'pointer',
-                          transform: currentPackage === 'cargo' ? 'scale(1.01)' : 'scale(1)',
-                          boxShadow: currentPackage === 'cargo' ? '0 4px 14px rgba(245, 158, 11, 0.15)' : 'none',
-                          transition: 'all 0.2s ease',
-                          height: '100%',
-                        }}
-                      >
-                        <Flex justify="space-between" align="center" style={{ marginBottom: 4 }}>
-                          <strong style={{ color: currentPackage === 'cargo' ? '#92400E' : '#0F172A', fontSize: 14 }}>
-                            📦 Cargo Coverage
-                          </strong>
-                          <span style={{ fontWeight: 800, color: '#D97706', fontSize: 14 }}>
-                            $5 / con
-                          </span>
-                        </Flex>
-                        <Text style={{ fontSize: 12, color: '#64748B', display: 'block', lineHeight: 1.4 }}>
-                          Bảo hiểm toàn bộ trang thiết bị trên xe (hạn mức $15,000), phụ kiện yên cương & chi phí cấp cứu.
-                        </Text>
-                      </div>
-                    </Col>
-
-                    {/* Gói 3: Mortality Coverage */}
-                    <Col xs={24} sm={12}>
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => field.onChange('mortality')}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange('mortality');
-                          }
-                        }}
-                        style={{
-                          backgroundColor: currentPackage === 'mortality' ? '#FFFBEB' : '#FFFFFF',
-                          border: currentPackage === 'mortality' ? '2px solid #F59E0B' : '1.5px solid #E2E8F0',
-                          borderRadius: 12,
-                          padding: '12px 14px',
-                          cursor: 'pointer',
-                          transform: currentPackage === 'mortality' ? 'scale(1.01)' : 'scale(1)',
-                          boxShadow: currentPackage === 'mortality' ? '0 4px 14px rgba(245, 158, 11, 0.15)' : 'none',
-                          transition: 'all 0.2s ease',
-                          height: '100%',
-                        }}
-                      >
-                        <Flex justify="space-between" align="center" style={{ marginBottom: 4 }}>
-                          <strong style={{ color: currentPackage === 'mortality' ? '#92400E' : '#0F172A', fontSize: 14 }}>
-                            🏥 Mortality Coverage
-                          </strong>
-                          <span style={{ fontWeight: 800, color: '#D97706', fontSize: 14 }}>
-                            $25 / con
-                          </span>
-                        </Flex>
-                        <Text style={{ fontSize: 12, color: '#64748B', display: 'block', lineHeight: 1.4 }}>
-                          Bảo hiểm sinh mạng và rủi ro chấn thương cấp tính / đau bụng ngựa (colic) có chứng nhận thú y.
-                        </Text>
-                      </div>
-                    </Col>
-
-                    {/* Gói 4: Comprehensive (TỔNG HỢP TIẾT KIỆM 10%) */}
-                    <Col xs={24} sm={12}>
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => field.onChange('comprehensive')}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            field.onChange('comprehensive');
-                          }
-                        }}
-                        style={{
-                          backgroundColor: currentPackage === 'comprehensive' ? '#FFFBEB' : '#FFFFFF',
-                          border: currentPackage === 'comprehensive' ? '2px solid #F59E0B' : '1.5px solid #E2E8F0',
-                          borderRadius: 12,
-                          padding: '12px 14px',
-                          cursor: 'pointer',
-                          transform: currentPackage === 'comprehensive' ? 'scale(1.01)' : 'scale(1)',
-                          boxShadow: currentPackage === 'comprehensive' ? '0 4px 14px rgba(245, 158, 11, 0.15)' : 'none',
-                          transition: 'all 0.2s ease',
-                          height: '100%',
-                        }}
-                      >
-                        <Flex justify="space-between" align="center" style={{ marginBottom: 4 }}>
-                          <Flex align="center" gap={6}>
-                            <strong style={{ color: currentPackage === 'comprehensive' ? '#92400E' : '#0F172A', fontSize: 14 }}>
-                              ⭐ Comprehensive
-                            </strong>
-                            <Tag color="gold" style={{ fontWeight: 800, fontSize: 11, borderRadius: 9999, margin: 0 }}>
-                              Save 10%
-                            </Tag>
-                          </Flex>
-                          <span style={{ fontWeight: 800, color: '#D97706', fontSize: 14 }}>
-                            $36 / con
-                          </span>
-                        </Flex>
-                        <Text style={{ fontSize: 12, color: '#64748B', display: 'block', lineHeight: 1.4 }}>
-                          Trọn bộ 3 gói (Trip + Cargo + Mortality) với mức chiết khấu 10% gói toàn diện tối ưu ngân sách.
-                        </Text>
-                      </div>
-                    </Col>
-                  </Row>
-                );
-              }}
-            />
-
-            {/* Khối khai báo giá trị ngựa (Declared Value) & Bảng phân tích phí bảo hiểm (Premium Breakdown) */}
-            <Row gutter={16} style={{ marginTop: 14 }}>
+                    );
+                  }}
+                />
+              </Col>
               <Col xs={24} md={12}>
                 <Controller
                   name="DeclaredValue"
@@ -2245,7 +1916,7 @@ export default function BookingWizard({
                         <div>
                           <strong>Khai báo giá trị ngựa (USD)</strong>
                           <span style={{ fontSize: 12, color: '#64748B', display: 'block' }}>
-                            Căn cứ tính hạn mức bồi thường hàng hóa & rủi ro
+                            Căn cứ tính phí bảo hiểm & hạn mức bồi thường
                           </span>
                         </div>
                       }
@@ -2254,9 +1925,10 @@ export default function BookingWizard({
                       <InputNumber
                         {...field}
                         size="large"
+                        disabled={insurancePackage === 'none'}
                         style={{ width: '100%', borderRadius: 10 }}
-                        min={5000}
-                        max={2000000}
+                        min={0}
+                        max={1000000000}
                         step={5000}
                         formatter={(val) => (val ? `$ ${Number(val).toLocaleString('en-US')}` : '')}
                         parser={(val) => (val ? String(val).replace(/[^\d.]/g, '') : '')}
@@ -2264,97 +1936,6 @@ export default function BookingWizard({
                     </Form.Item>
                   )}
                 />
-              </Col>
-
-              <Col xs={24} md={12}>
-                {/* BẢNG TÍNH PHÍ BẢO HIỂM MINH BẠCH (PREMIUM BREAKDOWN) */}
-                <div
-                  style={{
-                    backgroundColor: '#F8FAFC',
-                    border: '1px solid #E2E8F0',
-                    borderRadius: 12,
-                    padding: '12px 16px',
-                  }}
-                >
-                  <strong style={{ fontSize: 13, color: '#0F172A', display: 'block', marginBottom: 8 }}>
-                    Premium Breakdown ({selectedHorseIds.length} ngựa)
-                  </strong>
-
-                  {insurancePackage === 'none' ? (
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      Không chọn gói bảo hiểm hành trình.
-                    </Text>
-                  ) : (
-                    <div style={{ fontSize: 12, color: '#334155', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      {(insurancePackage === 'trip' || insurancePackage === 'comprehensive') && (
-                        <Flex justify="space-between">
-                          <span>Trip Protection ($10 × {selectedHorseIds.length}):</span>
-                          <strong>${(10 * selectedHorseIds.length).toFixed(2)}</strong>
-                        </Flex>
-                      )}
-                      {(insurancePackage === 'cargo' || insurancePackage === 'comprehensive') && (
-                        <Flex justify="space-between">
-                          <span>Cargo Coverage ($5 × {selectedHorseIds.length}):</span>
-                          <strong>${(5 * selectedHorseIds.length).toFixed(2)}</strong>
-                        </Flex>
-                      )}
-                      {(insurancePackage === 'mortality' || insurancePackage === 'comprehensive') && (
-                        <Flex justify="space-between">
-                          <span>Mortality Coverage ($25 × {selectedHorseIds.length}):</span>
-                          <strong>${(25 * selectedHorseIds.length).toFixed(2)}</strong>
-                        </Flex>
-                      )}
-                      {insurancePackage === 'comprehensive' && (
-                        <Flex justify="space-between" style={{ color: '#16a34a' }}>
-                          <span>Ưu đãi gói toàn diện (10%):</span>
-                          <strong>-${(4 * selectedHorseIds.length).toFixed(2)}</strong>
-                        </Flex>
-                      )}
-                      <Divider style={{ margin: '6px 0' }} />
-                      <Flex justify="space-between" style={{ fontSize: 13.5, fontWeight: 800, color: '#0F172A' }}>
-                        <span>Tổng phí bảo hiểm:</span>
-                        <span style={{ color: '#D97706' }}>
-                          $
-                          {(
-                            (insurancePackage === 'trip'
-                              ? 10
-                              : insurancePackage === 'cargo'
-                              ? 5
-                              : insurancePackage === 'mortality'
-                              ? 25
-                              : 36) * selectedHorseIds.length
-                          ).toFixed(2)}
-                        </span>
-                      </Flex>
-                    </div>
-                  )}
-
-                  <Flex gap={8} style={{ marginTop: 10 }}>
-                    <Button
-                      size="small"
-                      type={insurancePackage !== 'none' ? 'primary' : 'default'}
-                      onClick={() => setValue('InsurancePackage', 'comprehensive')}
-                      style={{
-                        backgroundColor: insurancePackage !== 'none' ? '#F59E0B' : undefined,
-                        borderColor: insurancePackage !== 'none' ? '#F59E0B' : undefined,
-                        fontWeight: 700,
-                        borderRadius: 6,
-                        fontSize: 12,
-                      }}
-                    >
-                      {insurancePackage !== 'none' ? 'Bảo hiểm đã bật ✓' : 'Thêm gói Comprehensive'}
-                    </Button>
-                    {insurancePackage !== 'none' && (
-                      <Button
-                        size="small"
-                        onClick={() => setValue('InsurancePackage', 'none')}
-                        style={{ borderRadius: 6, fontSize: 12 }}
-                      >
-                        Bỏ chọn (Skip)
-                      </Button>
-                    )}
-                  </Flex>
-                </div>
               </Col>
             </Row>
           </div>
@@ -2391,64 +1972,14 @@ export default function BookingWizard({
               Additional Amenities & Special Care
             </Title>
             <Text style={{ color: '#64748b', fontSize: 12, display: 'block', marginBottom: 12 }}>
-              Bảng giá tiện ích bổ sung niêm yết minh bạch giúp bạn cân đối ngân sách.
+              Các tùy chọn dưới đây ảnh hưởng tới báo giá; số tiền do hệ thống tính ở bước Review.
             </Text>
 
             <Row gutter={[12, 12]}>
-              {/* Tiện ích 1: Điều hòa buồng lái - Tiêu chuẩn FEI đã bao gồm */}
-              <Col xs={24} md={8}>
-                <div
-                  style={{
-                    backgroundColor: '#F8FAFC',
-                    border: '1.5px solid #E2E8F0',
-                    borderRadius: 12,
-                    padding: '12px 14px',
-                    height: '100%',
-                  }}
-                >
-                  <Flex justify="space-between" align="center" style={{ marginBottom: 4 }}>
-                    <strong style={{ color: '#0F172A', fontSize: 13.5 }}>
-                      ❄️ Climate Control (16-19°C)
-                    </strong>
-                    <Tag color="cyan" style={{ fontWeight: 800, margin: 0, fontSize: 11.5 }}>
-                      Tích hợp trong chuồng ($0 thêm)
-                    </Tag>
-                  </Flex>
-                  <Text style={{ fontSize: 11.5, color: '#64748B', display: 'block', lineHeight: 1.35 }}>
-                    Nhiệt độ buồng nuôi duy trì nghiêm ngặt 16-19°C theo chuẩn FEI, đã tích hợp trọn gói trong cấu hình chuồng bạn đã chọn.
-                  </Text>
-                </div>
-              </Col>
-
-              {/* Tiện ích 2: Bác sĩ thú y áp tải - Tiêu chuẩn bắt buộc FEI đã bao gồm */}
-              <Col xs={24} md={8}>
-                <div
-                  style={{
-                    backgroundColor: '#F8FAFC',
-                    border: '1.5px solid #E2E8F0',
-                    borderRadius: 12,
-                    padding: '12px 14px',
-                    height: '100%',
-                  }}
-                >
-                  <Flex justify="space-between" align="center" style={{ marginBottom: 4 }}>
-                    <strong style={{ color: '#0F172A', fontSize: 13.5 }}>
-                      🩺 Equine Vet Escort
-                    </strong>
-                    <Tag color="green" style={{ fontWeight: 800, margin: 0, fontSize: 11.5 }}>
-                      +${transportMode === 'DoorToDoor' ? '1,600' : transportMode === 'Air' ? '1,400' : '600'} USD
-                    </Tag>
-                  </Flex>
-                  <Text style={{ fontSize: 11.5, color: '#64748B', display: 'block', lineHeight: 1.35 }}>
-                    Bác sĩ thú y chuyên trách áp tải theo dõi sinh hiệu suốt hành trình, bắt buộc theo chuẩn FEI (Đồng bộ với chi phí Route Plan).
-                  </Text>
-                </div>
-              </Col>
-
-              {/* Tiện ích 3: Hỏa tốc & Luồng xanh - Tùy chọn */}
+              {/* Tiện ích 1: Khoang điều hòa (requiresClimateControl, có phụ phí) */}
               <Col xs={24} md={8}>
                 <Controller
-                  name="IsExpress"
+                  name="RequiresClimateControl"
                   control={control}
                   render={({ field }) => {
                     const isChecked = Boolean(field.value);
@@ -2469,27 +2000,74 @@ export default function BookingWizard({
                           borderRadius: 12,
                           padding: '12px 14px',
                           cursor: 'pointer',
-                          transform: isChecked ? 'scale(1.01)' : 'scale(1)',
-                          boxShadow: isChecked ? '0 4px 14px rgba(245, 158, 11, 0.15)' : 'none',
-                          transition: 'all 0.2s ease',
                           height: '100%',
                         }}
                       >
                         <Flex justify="space-between" align="center" style={{ marginBottom: 4 }}>
                           <strong style={{ color: isChecked ? '#92400E' : '#0F172A', fontSize: 13.5 }}>
-                            ⚡ Express Dispatch
+                            ❄️ Climate Control
                           </strong>
-                          <Tag color="gold" style={{ fontWeight: 800, margin: 0, fontSize: 11.5 }}>
-                            +$650
+                          <Tag color={isChecked ? 'gold' : 'default'} style={{ fontWeight: 800, margin: 0, fontSize: 11.5 }}>
+                            {isChecked ? '✓ Đã chọn' : 'Tùy chọn'}
                           </Tag>
                         </Flex>
                         <Text style={{ fontSize: 11.5, color: isChecked ? '#B45309' : '#64748B', display: 'block', lineHeight: 1.35 }}>
-                          Khởi hành ưu tiên dưới 7 ngày, thông quan luồng xanh hải quan nhanh.
+                          Khoang điều hòa / chăm sóc đặc biệt, có phụ phí theo % cước vận chuyển.
                         </Text>
                       </div>
                     );
                   }}
                 />
+              </Col>
+
+              {/* Tiện ích 2: Nhân viên áp tải — hệ thống tự tính số người theo số ngựa */}
+              <Col xs={24} md={8}>
+                <div
+                  style={{
+                    backgroundColor: '#F8FAFC',
+                    border: '1.5px solid #E2E8F0',
+                    borderRadius: 12,
+                    padding: '12px 14px',
+                    height: '100%',
+                  }}
+                >
+                  <Flex justify="space-between" align="center" style={{ marginBottom: 4 }}>
+                    <strong style={{ color: '#0F172A', fontSize: 13.5 }}>
+                      🩺 Groom / Escort
+                    </strong>
+                    <Tag color="green" style={{ fontWeight: 800, margin: 0, fontSize: 11.5 }}>
+                      Tự động
+                    </Tag>
+                  </Flex>
+                  <Text style={{ fontSize: 11.5, color: '#64748B', display: 'block', lineHeight: 1.35 }}>
+                    Số nhân viên áp tải được hệ thống tính theo số ngựa; phí nằm trong báo giá.
+                  </Text>
+                </div>
+              </Col>
+
+              {/* Tiện ích 3: Phụ phí gấp — server tự xác định khi khởi hành trong vòng 7 ngày */}
+              <Col xs={24} md={8}>
+                <div
+                  style={{
+                    backgroundColor: '#F8FAFC',
+                    border: '1.5px solid #E2E8F0',
+                    borderRadius: 12,
+                    padding: '12px 14px',
+                    height: '100%',
+                  }}
+                >
+                  <Flex justify="space-between" align="center" style={{ marginBottom: 4 }}>
+                    <strong style={{ color: '#0F172A', fontSize: 13.5 }}>
+                      ⚡ Express
+                    </strong>
+                    <Tag color={dayjs(departureDate).diff(dayjs(), 'day') < 7 ? 'volcano' : 'default'} style={{ fontWeight: 800, margin: 0, fontSize: 11.5 }}>
+                      {dayjs(departureDate).diff(dayjs(), 'day') < 7 ? 'Áp dụng' : 'Không áp dụng'}
+                    </Tag>
+                  </Flex>
+                  <Text style={{ fontSize: 11.5, color: '#64748B', display: 'block', lineHeight: 1.35 }}>
+                    Khởi hành trong vòng 7 ngày tới sẽ tự động có phụ phí gấp.
+                  </Text>
+                </div>
               </Col>
             </Row>
           </div>
@@ -2522,12 +2100,12 @@ export default function BookingWizard({
               How will your horse travel? (Hình thức vận chuyển)
             </Title>
             <Text style={{ color: '#64748B', fontSize: 13, display: 'block', marginBottom: 18 }}>
-              Chọn 1 trong 3 phương thức: Đường bộ, Chuyên cơ hàng không hoặc Trọn gói Door-to-Door.
+              Chọn Đường bộ hoặc Hàng không. Đường bộ chỉ có ở các tuyến hệ thống hỗ trợ.
             </Text>
 
             <Row gutter={[16, 16]}>
               {/* Option 1: Ground Transport */}
-              <Col xs={24} md={8}>
+              <Col xs={24} md={12}>
                 <Card
                   hoverable={isGroundAvailable}
                   onClick={() => isGroundAvailable && setValue('TransportMode', 'Ground')}
@@ -2553,12 +2131,9 @@ export default function BookingWizard({
                   </p>
                   <Divider style={{ margin: '10px 0' }} />
                   <div style={{ fontSize: 12, color: '#334155' }}>
-                    <div>👥 <strong>Nhân sự:</strong> 1 Tài xế (Driver) + 1 Áp tải (Escort)</div>
-                    <div style={{ marginTop: 4 }}>
-                      🌍 <strong>Thuê xe bên nước khác:</strong> {dropoffCountry !== pickupCountry ? '+$850 USD' : 'Không phát sinh'}
-                    </div>
+                    <div>👥 <strong>Nhân sự:</strong> Tài xế (Driver) + Áp tải (Escort)</div>
                     <div style={{ marginTop: 6, fontWeight: 700, color: '#B45309' }}>
-                      💵 Cước cơ bản: ${(routeData.ground?.baseFreight || 2800).toLocaleString()} USD / con
+                      💵 Cước tính theo quãng đường (km) và số ngựa
                     </div>
                   </div>
                   {!isGroundAvailable && (
@@ -2570,7 +2145,7 @@ export default function BookingWizard({
               </Col>
 
               {/* Option 2: Air Flight */}
-              <Col xs={24} md={8}>
+              <Col xs={24} md={12}>
                 <Card
                   hoverable
                   onClick={() => setValue('TransportMode', 'Air')}
@@ -2595,49 +2170,12 @@ export default function BookingWizard({
                   </p>
                   <Divider style={{ margin: '10px 0' }} />
                   <div style={{ fontSize: 12, color: '#334155' }}>
-                    <div>👥 <strong>Nhân sự:</strong> 1 Nhân viên áp tải bay (Escort only - Không có Tài xế)</div>
+                    <div>👥 <strong>Nhân sự:</strong> Nhân viên áp tải bay (Escort)</div>
                     <div style={{ marginTop: 4 }}>
-                      📋 <strong>Thủ tục:</strong> Kiểm dịch sân bay & chứng thư CVI quốc tế
+                      📋 <strong>Thủ tục:</strong> Kiểm dịch sân bay & chứng thư quốc tế
                     </div>
                     <div style={{ marginTop: 6, fontWeight: 700, color: '#1D4ED8' }}>
-                      💵 Cước cơ bản: ${(routeData.air?.baseFreight || 4800).toLocaleString()} USD / con
-                    </div>
-                  </div>
-                </Card>
-              </Col>
-
-              {/* Option 3: Door-to-Door */}
-              <Col xs={24} md={8}>
-                <Card
-                  hoverable
-                  onClick={() => setValue('TransportMode', 'DoorToDoor')}
-                  style={{
-                    borderRadius: 16,
-                    cursor: 'pointer',
-                    border: transportMode === 'DoorToDoor' ? '2.5px solid #7C3AED' : '1.5px solid #E2E8F0',
-                    backgroundColor: transportMode === 'DoorToDoor' ? '#F5F3FF' : '#FFFFFF',
-                    height: '100%',
-                  }}
-                  styles={{ body: { padding: '18px 20px' } }}
-                >
-                  <Flex justify="space-between" align="center" style={{ marginBottom: 10 }}>
-                    <Tag color="purple" style={{ fontWeight: 800 }}>🌐 TRỌN GÓI (DOOR-TO-DOOR)</Tag>
-                    {transportMode === 'DoorToDoor' && <Tag color="purple" style={{ fontWeight: 800 }}>✓ Đang chọn</Tag>}
-                  </Flex>
-                  <strong style={{ fontSize: 16, color: '#0F172A', display: 'block', marginBottom: 6 }}>
-                    Door-to-Door Multi-modal
-                  </strong>
-                  <p style={{ fontSize: 12.5, color: '#64748B', minHeight: 38 }}>
-                    Trọn gói đón tại chuồng trang trại xuất phát &rarr; Bay quốc tế &rarr; Giao tận chuồng đích.
-                  </p>
-                  <Divider style={{ margin: '10px 0' }} />
-                  <div style={{ fontSize: 12, color: '#334155' }}>
-                    <div>👥 <strong>Nhân sự:</strong> Cả Tài xế (Driver) + Nhân viên áp tải (Escort)</div>
-                    <div style={{ marginTop: 4 }}>
-                      🚛 <strong>Phí thuê xe bên nước khác:</strong> +$1,200 USD (Xe đón giao tại nước đích)
-                    </div>
-                    <div style={{ marginTop: 6, fontWeight: 700, color: '#7C3AED' }}>
-                      💵 Cước trọn gói: ${(routeData.doorToDoor?.baseFreight || 7400).toLocaleString()} USD / con
+                      💵 Cước tính theo nước đến và số ngựa
                     </div>
                   </div>
                 </Card>
@@ -2698,90 +2236,8 @@ export default function BookingWizard({
                   </Col>
                 </Row>
                 <div style={{ fontSize: 12, color: '#2563eb', marginTop: 8, padding: '8px 12px', backgroundColor: '#ffffff', borderRadius: 8, border: '1px solid #dbeafe' }}>
-                  💡 <em>Lưu ý: Dịch vụ hàng không (Air Flight) giao nhận ngựa trực tiếp tại khu kiểm dịch sân bay quốc tế. Quý khách tự túc chuyển ngựa tới sân bay. Nếu quý khách muốn đơn vị vận chuyển đón tận chuồng trang trại ở Việt Nam và giao tận chuồng ở nước ngoài, vui lòng chọn hình thức <strong>Door-to-Door</strong> ở trên.</em>
+                  💡 <em>Lưu ý: Dịch vụ hàng không (Air Flight) giao nhận ngựa trực tiếp tại khu kiểm dịch sân bay quốc tế. Quý khách tự túc chuyển ngựa tới sân bay. Nếu muốn đón / giao tận trang trại, vui lòng chọn hình thức <strong>Đường bộ</strong> (khi tuyến hỗ trợ).</em>
                 </div>
-              </Card>
-            ) : transportMode === 'DoorToDoor' ? (
-              <Card
-                bordered
-                style={{
-                  borderRadius: 14,
-                  backgroundColor: '#faf5ff',
-                  border: '1.5px solid #e9d5ff',
-                }}
-                styles={{ body: { padding: '16px 20px' } }}
-              >
-                <Flex align="center" gap={8} style={{ marginBottom: 14 }}>
-                  <Tag color="purple" style={{ fontWeight: 800, fontSize: 12 }}>
-                    🌐 TRỌN GÓI DOOR-TO-DOOR (CHUỒNG TRANG TRẠI - CHUỒNG ĐÍCH)
-                  </Tag>
-                  <span style={{ fontSize: 12.5, color: '#6b21a8', fontWeight: 600 }}>
-                    Đón tận trang trại cá nhân & giao tận trường đua / chuồng nước bạn
-                  </span>
-                </Flex>
-
-                <Row gutter={16}>
-                  <Col xs={24} md={12}>
-                    <Controller
-                      name="PickupAddress"
-                      control={control}
-                      rules={{ required: 'Vui lòng nhập địa chỉ trang trại xuất phát' }}
-                      render={({ field, fieldState: { error } }) => (
-                        <Form.Item
-                          label={
-                            <div>
-                              <strong style={{ fontSize: 13 }}>Địa chỉ đón chi tiết (Detailed Pickup Address) *</strong>
-                              <span style={{ fontSize: 11, color: '#6b7280', display: 'block' }}>
-                                (Đã tự động điền từ thông tin tài khoản trang trại của bạn)
-                              </span>
-                            </div>
-                          }
-                          required
-                          validateStatus={error ? 'error' : ''}
-                          help={error?.message}
-                          style={{ marginBottom: 0 }}
-                        >
-                          <Input
-                            {...field}
-                            size="large"
-                            placeholder="Ví dụ: Trang trại ngựa đua Ba Vì, Hà Nội..."
-                            style={{ borderRadius: 10 }}
-                          />
-                        </Form.Item>
-                      )}
-                    />
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Controller
-                      name="DropoffAddress"
-                      control={control}
-                      rules={{ required: 'Vui lòng nhập địa chỉ trang trại / trường đua đích' }}
-                      render={({ field, fieldState: { error } }) => (
-                        <Form.Item
-                          label={
-                            <div>
-                              <strong style={{ fontSize: 13 }}>Địa chỉ giao chi tiết (Detailed Dropoff Address) *</strong>
-                              <span style={{ fontSize: 11, color: '#6b7280', display: 'block' }}>
-                                (Trường đua, chuồng trại hoặc cơ sở huấn luyện tại nước đích)
-                              </span>
-                            </div>
-                          }
-                          required
-                          validateStatus={error ? 'error' : ''}
-                          help={error?.message}
-                          style={{ marginBottom: 0 }}
-                        >
-                          <Input
-                            {...field}
-                            size="large"
-                            placeholder="Ví dụ: Tokyo Racecourse, Fuchu, Tokyo, Japan..."
-                            style={{ borderRadius: 10 }}
-                          />
-                        </Form.Item>
-                      )}
-                    />
-                  </Col>
-                </Row>
               </Card>
             ) : (
               <Card
@@ -2849,6 +2305,30 @@ export default function BookingWizard({
                       )}
                     />
                   </Col>
+                  <Col xs={24} md={12} style={{ marginTop: 12 }}>
+                    <Controller
+                      name="DistanceKm"
+                      control={control}
+                      render={({ field }) => (
+                        <Form.Item
+                          label={<strong style={{ fontSize: 13 }}>Quãng đường dự kiến (km) *</strong>}
+                          required
+                          help="Dùng để tính cước đường bộ (1 - 50.000 km)"
+                          style={{ marginBottom: 0 }}
+                        >
+                          <InputNumber
+                            {...field}
+                            size="large"
+                            min={1}
+                            max={50000}
+                            precision={0}
+                            placeholder="Ví dụ: 900"
+                            style={{ width: '100%', borderRadius: 10 }}
+                          />
+                        </Form.Item>
+                      )}
+                    />
+                  </Col>
                 </Row>
               </Card>
             )}
@@ -2891,25 +2371,16 @@ export default function BookingWizard({
                 >
                   <Flex align="center" justify="space-between" wrap="wrap" gap={8} style={{ marginBottom: 14 }}>
                     <Tag
-                      color={
-                        transportMode === 'DoorToDoor'
-                          ? 'purple'
-                          : transportMode === 'Air'
-                          ? 'blue'
-                          : 'orange'
-                      }
+                      color={transportMode === 'Air' ? 'blue' : 'orange'}
                       style={{ fontWeight: 800, fontSize: 12.5, padding: '3px 10px' }}
                     >
-                      {transportMode === 'DoorToDoor'
-                        ? '🌐 TRỌN GÓI DOOR-TO-DOOR (CHUỒNG TẬN NƠI)'
-                        : transportMode === 'Air'
+                      {transportMode === 'Air'
                         ? '✈️ HÀNG KHÔNG QUỐC TẾ (AIR FREIGHT)'
-                        : '🚛 ĐƯỜNG BỘ CHUYÊN DỤNG (GROUND TRAILER)'}
+                        : `🚛 ĐƯỜNG BỘ CHUYÊN DỤNG (GROUND) · ${distanceKm || '?'} km`}
                     </Tag>
                     <Space size={6} wrap>
-                      <Tag color="cyan" style={{ fontWeight: 700, margin: 0 }}>❄ FEI Climate Control (Tích hợp chuồng)</Tag>
-                      <Tag color="green" style={{ fontWeight: 700, margin: 0 }}>🩺 Equine Vet Escort (+${transportMode === 'DoorToDoor' ? '1,600' : transportMode === 'Air' ? '1,400' : '600'})</Tag>
-                      {isExpress && <Tag color="volcano" style={{ fontWeight: 700, margin: 0 }}>⚡ Express (+$650)</Tag>}
+                      {requiresClimateControl && <Tag color="cyan" style={{ fontWeight: 700, margin: 0 }}>❄ Climate Control</Tag>}
+                      {quote?.isExpress && <Tag color="volcano" style={{ fontWeight: 700, margin: 0 }}>⚡ Express</Tag>}
                     </Space>
                   </Flex>
 
@@ -2975,28 +2446,19 @@ export default function BookingWizard({
                   <div style={{ marginTop: 12, padding: '10px 14px', backgroundColor: '#F1F5F9', borderRadius: 8, fontSize: 12.5, color: '#334155' }}>
                     👥 <strong>Đội ngũ vận hành chuyên trách:</strong>{' '}
                     {transportMode === 'Air'
-                      ? '🩺 1 Chuyên viên Áp tải Hàng không kiêm Bác sĩ thú y (Vet Escort) xuyên suốt chuyến bay (Không có tài xế).'
-                      : '🚛🩺 1 Tài xế chuyên dụng (Driver) + 1 Chuyên viên Hộ tống & Bác sĩ thú y (Vet Escort) đi kèm.'}
-                    {dropoffCountry !== pickupCountry && transportMode !== 'Air' && (
-                      <span style={{ marginLeft: 6, color: '#B45309', fontWeight: 600 }}>
-                        (Bao gồm phí thuê xe chuyên dụng trung chuyển tại nước sở tại)
-                      </span>
-                    )}
+                      ? 'Nhân viên áp tải bay (Escort) đi cùng ngựa suốt chuyến bay.'
+                      : 'Tài xế (Driver) + nhân viên áp tải (Escort) đi kèm.'}
+                    {quote?.groomCount ? ` Số groom tính giá: ${quote.groomCount}.` : ''}
+                    {quote?.transitDays ? ` Thời gian vận chuyển: ${quote.transitDays} ngày.` : ''}
                   </div>
                 </div>
 
                 <div style={{ fontSize: 13, marginBottom: 6 }}>
-                  <Text type="secondary">Gói bảo hiểm: </Text>
-                  <Tag color="gold" style={{ fontWeight: 700 }}>
-                    {insurancePackage === 'comprehensive'
-                      ? '⭐ Comprehensive ($36/ngựa)'
-                      : insurancePackage === 'trip'
-                      ? 'Trip Protection ($10/ngựa)'
-                      : insurancePackage === 'cargo'
-                      ? 'Cargo Coverage ($5/ngựa)'
-                      : insurancePackage === 'mortality'
-                      ? 'Mortality ($25/ngựa)'
-                      : 'None'}
+                  <Text type="secondary">Bảo hiểm hành trình: </Text>
+                  <Tag color={insurancePackage === 'none' ? 'default' : 'gold'} style={{ fontWeight: 700 }}>
+                    {insurancePackage === 'none'
+                      ? 'Không mua'
+                      : `Giá trị khai báo $${Number(declaredValue || 0).toLocaleString('en-US')}`}
                   </Tag>
                 </div>
 
@@ -3056,8 +2518,16 @@ export default function BookingWizard({
                   </Title>
                 </Flex>
 
+                {quoteError && (
+                  <Alert type="error" showIcon message={quoteError} style={{ marginBottom: 12, borderRadius: 10 }} />
+                )}
+                {!quoteRequest && (
+                  <Alert type="warning" showIcon message="Chưa đủ thông tin để tính giá (cần chọn ngựa, ngày đi/đến và quãng đường nếu đi đường bộ)." style={{ marginBottom: 12, borderRadius: 10 }} />
+                )}
+
                 <Table
                   dataSource={quoteItems}
+                  loading={quoteLoading}
                   pagination={false}
                   size="small"
                   columns={[
@@ -3069,8 +2539,8 @@ export default function BookingWizard({
                     },
                     {
                       title: 'SL',
-                      dataIndex: 'qty',
-                      key: 'qty',
+                      dataIndex: 'quantity',
+                      key: 'quantity',
                       align: 'center',
                       render: (q) => <span style={{ fontSize: 12 }}>{q}</span>,
                     },
@@ -3080,8 +2550,8 @@ export default function BookingWizard({
                       key: 'amount',
                       align: 'right',
                       render: (val) => (
-                        <strong style={{ fontSize: 12.5, color: '#0F172A' }}>
-                          ${val.toLocaleString()}
+                        <strong style={{ fontSize: 12.5, color: Number(val) < 0 ? '#16A34A' : '#0F172A' }}>
+                          {Number(val).toLocaleString('en-US', { maximumFractionDigits: 2 })}
                         </strong>
                       ),
                     },
@@ -3096,74 +2566,14 @@ export default function BookingWizard({
                       Tổng chi phí dự tính
                     </Text>
                     <Text style={{ fontSize: 11, color: '#94a3b8' }}>
-                      Đã bao gồm cước vận chuyển, bảo hiểm & thủ tục CVI
+                      Giá do hệ thống tính theo bảng giá hiện hành, được chốt khi gửi đơn
                     </Text>
                   </div>
                   <div style={{ fontSize: 24, fontWeight: 900, color: '#d97706' }}>
-                    ${totalCost.toLocaleString()}
+                    {totalCost.toLocaleString('en-US', { maximumFractionDigits: 2 })} {currencyCode}
                   </div>
                 </Flex>
 
-                {/* TIỀN CỌC 40% & THANH TOÁN 60% */}
-                <div
-                  style={{
-                    marginTop: 16,
-                    padding: '12px 14px',
-                    borderRadius: 10,
-                    backgroundColor: '#fffbeb',
-                    border: '1px solid #fde68a',
-                  }}
-                >
-                  <Flex justify="space-between" align="center" style={{ marginBottom: 6 }}>
-                    <div>
-                      <strong style={{ fontSize: 13, color: '#92400e' }}>
-                        💳 Đặt cọc giữ chỗ (40% Deposit):
-                      </strong>
-                      <span style={{ fontSize: 11, color: '#b45309', display: 'block' }}>
-                        Thanh toán cọc ngay khi xác nhận đơn
-                      </span>
-                    </div>
-                    <Tag color="orange" style={{ fontSize: 14, fontWeight: 800, padding: '4px 10px', borderRadius: 8 }}>
-                      ${Math.round(totalCost * 0.4).toLocaleString()} USD
-                    </Tag>
-                  </Flex>
-
-                  <Flex justify="space-between" align="center">
-                    <div>
-                      <strong style={{ fontSize: 13, color: '#475569' }}>
-                        🏁 Khoản còn lại khi bàn giao (60% Balance):
-                      </strong>
-                      <span style={{ fontSize: 11, color: '#64748b', display: 'block' }}>
-                        Thanh toán khi ngựa đến nơi an toàn
-                      </span>
-                    </div>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>
-                      ${Math.round(totalCost * 0.6).toLocaleString()} USD
-                    </span>
-                  </Flex>
-                </div>
-
-                {/* CHÍNH SÁCH HỦY & HOÀN CỌC MINH BẠCH */}
-                <div
-                  style={{
-                    marginTop: 14,
-                    padding: '10px 14px',
-                    borderRadius: 8,
-                    backgroundColor: '#f8fafc',
-                    border: '1px solid #e2e8f0',
-                    fontSize: 11.5,
-                    color: '#475569',
-                  }}
-                >
-                  <strong style={{ display: 'block', color: '#0f172a', marginBottom: 4, fontSize: 12 }}>
-                    🛡️ Chính sách hủy chuyến & hoàn cọc minh bạch:
-                  </strong>
-                  <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.5 }}>
-                    <li><strong>Trước 72 giờ:</strong> Hoàn lại <strong>100%</strong> tiền cọc đã đóng.</li>
-                    <li><strong>Từ 24h - 72 giờ:</strong> Hoàn lại <strong>50%</strong> tiền cọc (khấu trừ chi phí giữ slot vận tải).</li>
-                    <li><strong>Dưới 24 giờ:</strong> Không hoàn cọc (0%) do đã điều động phương tiện và nhân sự.</li>
-                  </ul>
-                </div>
               </Card>
             </Col>
           </Row>
@@ -3208,6 +2618,7 @@ export default function BookingWizard({
             size="large"
             icon={<SendOutlined />}
             loading={loading}
+            disabled={!quote || quoteLoading}
             onClick={handleFinalSubmit}
             style={{
               minWidth: 190,

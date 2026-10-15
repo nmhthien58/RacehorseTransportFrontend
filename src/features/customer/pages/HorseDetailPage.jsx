@@ -1,19 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  Alert,
   Button,
   Card,
-  Col,
-  DatePicker,
   Descriptions,
   Empty,
   Flex,
-  Form,
-  Input,
-  Modal,
-  Popconfirm,
-  Row,
-  Select,
   Spin,
   Space,
   Table,
@@ -24,22 +15,20 @@ import {
 } from 'antd';
 import {
   ArrowLeftOutlined,
-  CheckCircleOutlined,
   MedicineBoxOutlined,
   CarOutlined,
   InfoCircleOutlined,
   EditOutlined,
-  DeleteOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import horseService from '@services/horseService';
-import { getErrorMessage } from '@utils/apiHelpers';
+import { getErrorMessage, unwrapList } from '@utils/apiHelpers';
 import PageHeader from '@components/layout/PageHeader';
 import useHorseDetail from '@features/customer/hooks/useHorseDetail';
-import { checkHorseTransportEligibility } from '@utils/horseHealth';
+import HorseDocumentTable from '@features/customer/components/HorseDocumentTable';
 import { ROUTES } from '@routes/routes';
 import EditHorseModal from '@features/customer/components/EditHorseModal';
 
@@ -53,7 +42,7 @@ const { Title, Text } = Typography;
  * @returns {JSX.Element}
  */
 export default function HorseDetailPage() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const { data: horse, loading, error, refetch } = useHorseDetail(id);
@@ -61,84 +50,23 @@ export default function HorseDetailPage() {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
 
-  const [vetModalVisible, setVetModalVisible] = useState(false);
-  const [vetSubmitting, setVetSubmitting] = useState(false);
-  const [editingVetRecord, setEditingVetRecord] = useState(null);
-  const [vetForm] = Form.useForm();
+  const [documents, setDocuments] = useState([]);
+  const [docsLoading, setDocsLoading] = useState(true);
 
-  const handleOpenAddVetRecord = () => {
-    setEditingVetRecord(null);
-    vetForm.resetFields();
-    vetForm.setFieldsValue({
-      recordType: 'GeneralCheckup',
-      status: 'Valid',
-      date: dayjs(),
-      validUntil: dayjs().add(6, 'month'),
-      veterinarian: 'Dr. Sarah Jenkins (FEI Accredited)',
-      clinic: 'Bệnh viện Thú y Quốc tế IET',
-    });
-    setVetModalVisible(true);
-  };
+  useEffect(() => {
+    let active = true;
+    horseService
+      .getHorseDocuments(id)
+      .then((res) => active && setDocuments(unwrapList(res)))
+      .catch(() => active && setDocuments([]))
+      .finally(() => active && setDocsLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
-  const handleOpenEditVetRecord = (record) => {
-    setEditingVetRecord(record);
-    const recDate = record.date || record.Date;
-    const recValidUntil = record.validUntil || record.ValidUntil;
-    vetForm.setFieldsValue({
-      title: record.title || record.Title || '',
-      recordType: record.recordType || record.RecordType || 'GeneralCheckup',
-      veterinarian: record.veterinarian || record.Veterinarian || '',
-      clinic: record.clinic || record.Clinic || '',
-      date: recDate ? dayjs(recDate) : null,
-      validUntil: recValidUntil ? dayjs(recValidUntil) : null,
-      status: record.status || record.Status || 'Valid',
-      notes: record.notes || record.Notes || '',
-    });
-    setVetModalVisible(true);
-  };
-
-  const handleSaveVetRecord = async (values) => {
-    try {
-      setVetSubmitting(true);
-      const payload = {
-        title: values.title?.trim(),
-        recordType: values.recordType,
-        veterinarian: values.veterinarian?.trim(),
-        clinic: values.clinic?.trim(),
-        date: values.date ? values.date.format('YYYY-MM-DD') : null,
-        validUntil: values.validUntil ? values.validUntil.format('YYYY-MM-DD') : null,
-        status: values.status,
-        notes: values.notes?.trim() || '',
-      };
-      const horseId = horse.horseId || horse.HorseID;
-      if (editingVetRecord) {
-        const recId = editingVetRecord.recordId || editingVetRecord.RecordID;
-        await horseService.updateVetRecord(horseId, recId, payload);
-        message.success(t('horses.updateSuccess') || 'Cập nhật hồ sơ thú y thành công');
-      } else {
-        await horseService.addVetRecord(horseId, payload);
-        message.success(t('horses.addSuccess') || 'Bổ sung hồ sơ thú y thành công');
-      }
-      setVetModalVisible(false);
-      refetch?.();
-    } catch (err) {
-      console.error(err);
-      message.error('Thao tác hồ sơ thú y thất bại');
-    } finally {
-      setVetSubmitting(false);
-    }
-  };
-
-  const handleDeleteVetRecord = async (recordId) => {
-    try {
-      const horseId = horse.horseId || horse.HorseID;
-      await horseService.deleteVetRecord(horseId, recordId);
-      message.success(t('horses.deleteSuccess') || 'Đã xóa hồ sơ thú y');
-      refetch?.();
-    } catch (err) {
-      console.error(err);
-      message.error('Không thể xóa hồ sơ thú y');
-    }
+  const goToAddDocuments = () => {
+    navigate(`${ROUTES.CUSTOMER_VET_RECORDS}?horseId=${id}&add=1`);
   };
 
   const handleOpenEdit = () => {
@@ -201,105 +129,7 @@ export default function HorseDetailPage() {
 
   const horseDob = horse.dateOfBirth || horse.DateOfBirth;
   const age = horseDob ? dayjs().diff(dayjs(horseDob), 'year') : null;
-  const eligibility = checkHorseTransportEligibility(horse, i18n?.language);
 
-  // Cấu hình bảng Hồ sơ thú y
-  const vetColumns = [
-    {
-      title: t('horses.vetItem'),
-      dataIndex: 'title',
-      key: 'title',
-      render: (text, record) => {
-        const itemTitle = text || record.Title || record.title;
-        const vet = record.veterinarian || record.Veterinarian;
-        const clinic = record.clinic || record.Clinic;
-        return (
-          <div>
-            <strong style={{ color: '#0f172a' }}>{itemTitle}</strong>
-            <div style={{ fontSize: 12, color: '#64748b' }}>
-              {t('horses.assignedVet', { vet, clinic })}
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      title: t('horses.issueDate'),
-      dataIndex: 'date',
-      key: 'date',
-      render: (d, record) => {
-        const val = d || record.Date;
-        return val ? dayjs(val).format('DD/MM/YYYY') : '-';
-      },
-    },
-    {
-      title: t('horses.validUntil'),
-      dataIndex: 'validUntil',
-      key: 'validUntil',
-      render: (d, record) => {
-        const val = d || record.ValidUntil;
-        return val ? (
-          <span style={{ color: '#059669', fontWeight: 500 }}>
-            {dayjs(val).format('DD/MM/YYYY')}
-          </span>
-        ) : '-';
-      },
-    },
-    {
-      title: t('horses.recordStatus'),
-      dataIndex: 'status',
-      key: 'status',
-      render: (st, record) => {
-        const val = st || record.Status;
-        return (
-          <Tag color="success" icon={<CheckCircleOutlined />}>
-            {val === 'Valid' ? t('horses.statusValid') : val}
-          </Tag>
-        );
-      },
-    },
-    {
-      title: t('horses.notes'),
-      dataIndex: 'notes',
-      key: 'notes',
-      render: (notes, record) => <span style={{ fontSize: 12 }}>{notes || record.Notes || '-'}</span>,
-    },
-    {
-      title: t('horses.columns.action') || 'Thao tác',
-      key: 'actions',
-      width: 140,
-      align: 'right',
-      render: (_, record) => {
-        const recId = record.recordId || record.RecordID;
-        return (
-          <Space size="small">
-            <Button
-              type="link"
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => handleOpenEditVetRecord(record)}
-            >
-              {t('common.edit') || 'Sửa'}
-            </Button>
-            <Popconfirm
-              title={t('horses.confirmDeleteVetRecord') || 'Xóa hồ sơ thú y?'}
-              description={t('horses.confirmDeleteVetRecordDesc') || 'Hồ sơ sẽ bị gỡ bỏ khỏi dữ liệu cá thể.'}
-              onConfirm={() => handleDeleteVetRecord(recId)}
-              okText={t('common.delete') || 'Xóa'}
-              cancelText={t('common.cancel') || 'Hủy'}
-              okButtonProps={{ danger: true }}
-            >
-              <Button type="link" danger size="small" icon={<DeleteOutlined />}>
-                {t('common.delete') || 'Xóa'}
-              </Button>
-            </Popconfirm>
-          </Space>
-        );
-      },
-    },
-  ];
-
-  // Cấu hình bảng Lịch sử vận chuyển
   const tripColumns = [
     {
       title: t('horses.tripCode'),
@@ -381,6 +211,7 @@ export default function HorseDetailPage() {
   const horseColor = horse.color || horse.Color;
   const horseCare = horse.specialCareRequirements || horse.SpecialCareRequirements;
   const horseActive = horse.isActive ?? horse.IsActive ?? true;
+  const horsePhoto = horse.photoUrl || horse.PhotoUrl;
   const horseCreated = horse.createdAt || horse.CreatedAt;
 
   // Danh sách các Tabs
@@ -408,14 +239,6 @@ export default function HorseDetailPage() {
 
           <Descriptions bordered size="small" column={{ xs: 1, sm: 2, md: 3 }} styles={{ label: { fontWeight: 600, color: '#475569' } }}>
             <Descriptions.Item label={t('horses.fields.color')}>{horseColor || '-'}</Descriptions.Item>
-            <Descriptions.Item label={t('horses.vaccineStatus')}>
-              <Tag color="success">{t('horses.vaccineCompleted')}</Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label={t('horses.fitCertificate')}>
-              <Tag color={eligibility.tagColor} style={{ fontWeight: 600 }}>
-                {eligibility.tagText}
-              </Tag>
-            </Descriptions.Item>
             <Descriptions.Item label={t('horses.registrationDate')}>
               {horseCreated ? dayjs(horseCreated).format('DD/MM/YYYY') : '-'}
             </Descriptions.Item>
@@ -437,34 +260,15 @@ export default function HorseDetailPage() {
       ),
       children: (
         <Card bordered style={{ borderRadius: 12, borderColor: '#e2e8f0', marginTop: 12 }}>
-          <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-            <div>
-              <Title level={5} style={{ margin: 0, color: '#0f172a' }}>
-                {t('horses.vetHistory')}
-              </Title>
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                {t('horses.vetSupervised')}
-              </Text>
-            </div>
-            <Space>
-              <Tag color="blue">{t('horses.totalRecords', { count: (horse.vetRecords || horse.VetRecords || []).length })}</Tag>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                size="small"
-                onClick={handleOpenAddVetRecord}
-              >
-                + Bổ sung hồ sơ thú y
-              </Button>
-            </Space>
+          <Flex justify="space-between" align="center" wrap gap={8} style={{ marginBottom: 16 }}>
+            <Title level={5} style={{ margin: 0, color: '#0f172a' }}>
+              {t('horseDocs.tabs.documents')}
+            </Title>
+            <Button type="primary" ghost icon={<PlusOutlined />} onClick={goToAddDocuments}>
+              {t('horseDocs.addButton')}
+            </Button>
           </Flex>
-
-          <Table
-            columns={vetColumns}
-            dataSource={horse.vetRecords || horse.VetRecords || []}
-            rowKey={(r, idx) => r.recordId || r.RecordID || r.title || r.Title || `vet-${idx}`}
-            pagination={false}
-          />
+          <HorseDocumentTable documents={documents} loading={docsLoading} />
         </Card>
       ),
     },
@@ -549,10 +353,16 @@ export default function HorseDetailPage() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 28,
+                fontSize: 24,
+                fontWeight: 700,
+                overflow: 'hidden',
               }}
             >
-              🐴
+              {horsePhoto ? (
+                <img src={horsePhoto} alt={horseName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                horseName?.charAt(0)?.toUpperCase()
+              )}
             </div>
             <div>
               <Title level={3} style={{ margin: 0, fontWeight: 700, color: '#0f172a' }}>
@@ -565,9 +375,6 @@ export default function HorseDetailPage() {
                 </Tag>
                 <Tag color={horseActive ? 'success' : 'default'}>
                   {horseActive ? t('horses.activeRacing') : t('horses.resting')}
-                </Tag>
-                <Tag color={eligibility.tagColor} style={{ fontWeight: 600 }}>
-                  {eligibility.tagText}
                 </Tag>
               </Space>
             </div>
@@ -624,16 +431,6 @@ export default function HorseDetailPage() {
           </Descriptions.Item>
         </Descriptions>
 
-        {!eligibility.eligible && (
-          <div style={{ marginTop: 16 }}>
-            <Alert
-              type={eligibility.reason === 'CRITICAL_CONDITION' ? 'error' : 'warning'}
-              showIcon
-              message={eligibility.tagText}
-              description={eligibility.message}
-            />
-          </div>
-        )}
       </Card>
 
       {/* KHỐI TABS: THÔNG TIN CHUNG / HỒ SƠ THÚ Y / LỊCH SỬ VẬN CHUYỂN */}
@@ -648,121 +445,6 @@ export default function HorseDetailPage() {
         confirmLoading={editSubmitting}
       />
 
-      {/* MODAL THÊM / CHỈNH SỬA HỒ SƠ THÚ Y */}
-      <Modal
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 17, fontWeight: 700 }}>
-            <span>{editingVetRecord ? '✏️ Chỉnh sửa hồ sơ thú y' : '➕ Bổ sung hồ sơ thú y'}</span>
-            <Tag color="blue">{horseName}</Tag>
-          </div>
-        }
-        open={vetModalVisible}
-        onCancel={() => setVetModalVisible(false)}
-        onOk={() => vetForm.submit()}
-        confirmLoading={vetSubmitting}
-        okText={t('common.save') || 'Lưu hồ sơ'}
-        cancelText={t('common.cancel') || 'Hủy'}
-        destroyOnClose
-        width={640}
-      >
-        <Form
-          form={vetForm}
-          layout="vertical"
-          onFinish={handleSaveVetRecord}
-          style={{ marginTop: 16 }}
-        >
-          <Form.Item
-            name="title"
-            label={<span style={{ fontWeight: 600 }}>Tên tài liệu / Hạng mục kiểm dịch</span>}
-            rules={[{ required: true, message: 'Vui lòng nhập tên tài liệu hoặc hạng mục' }]}
-          >
-            <Input placeholder="Ví dụ: Giấy chứng nhận kiểm dịch CVI, Xét nghiệm Coggins..." size="large" />
-          </Form.Item>
-
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="recordType"
-                label={<span style={{ fontWeight: 600 }}>Loại tài liệu</span>}
-                rules={[{ required: true, message: 'Vui lòng chọn loại tài liệu' }]}
-              >
-                <Select size="large">
-                  <Select.Option value="CVI">Chứng nhận kiểm dịch xuất xứ (CVI)</Select.Option>
-                  <Select.Option value="Passport">Hộ chiếu ngựa quốc tế (FEI Passport)</Select.Option>
-                  <Select.Option value="Vaccination">Hồ sơ tiêm chủng (Vaccination)</Select.Option>
-                  <Select.Option value="BloodTest">Xét nghiệm huyết thanh Coggins / EVA</Select.Option>
-                  <Select.Option value="GeneralCheckup">Khám lâm sàng Fit-to-Travel</Select.Option>
-                  <Select.Option value="Quarantine">Chứng nhận cách ly kiểm dịch</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="status"
-                label={<span style={{ fontWeight: 600 }}>Trạng thái</span>}
-                rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}
-              >
-                <Select size="large">
-                  <Select.Option value="Valid">Còn hiệu lực (Valid)</Select.Option>
-                  <Select.Option value="Pending">Chờ phê duyệt (Pending)</Select.Option>
-                  <Select.Option value="Expired">Hết hiệu lực (Expired)</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="veterinarian"
-                label={<span style={{ fontWeight: 600 }}>Bác sĩ thú y phụ trách</span>}
-                rules={[{ required: true, message: 'Vui lòng nhập tên bác sĩ thú y' }]}
-              >
-                <Input placeholder="Ví dụ: Dr. Sarah Jenkins (FEI)" size="large" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="clinic"
-                label={<span style={{ fontWeight: 600 }}>Cơ sở / Bệnh viện thú y</span>}
-              >
-                <Input placeholder="Ví dụ: Bệnh viện Thú y Quốc tế IET" size="large" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="date"
-                label={<span style={{ fontWeight: 600 }}>Ngày cấp / Ngày kiểm tra</span>}
-                rules={[{ required: true, message: 'Vui lòng chọn ngày cấp' }]}
-              >
-                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" size="large" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="validUntil"
-                label={<span style={{ fontWeight: 600 }}>Hạn hiệu lực</span>}
-                rules={[{ required: true, message: 'Vui lòng chọn hạn hiệu lực' }]}
-              >
-                <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" size="large" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item
-            name="notes"
-            label={<span style={{ fontWeight: 600 }}>Ghi chú / Kết luận kiểm dịch</span>}
-          >
-            <Input.TextArea
-              rows={3}
-              placeholder="Ghi chú lâm sàng, chỉ định đặc biệt khi di chuyển..."
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
     </div>
   );
 }

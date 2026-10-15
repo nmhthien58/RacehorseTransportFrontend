@@ -40,6 +40,8 @@ export const ENDPOINTS = {
     CREATE: '/horses',
     UPDATE: (id) => `/horses/${id}`,
     DELETE: (id) => `/horses/${id}`,
+    DOCUMENTS: (id) => `/horses/${id}/documents`,
+    DOCUMENT: (id, documentId) => `/horses/${id}/documents/${documentId}`,
   },
 
   // 4. Đặt chuyến (Bookings - Flow 1)

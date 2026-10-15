@@ -84,24 +84,42 @@ export const horseService = {
   },
 
   /**
-   * Bổ sung hồ sơ thú y cho ngựa
+   * Hồ sơ thú y đã lưu của một con ngựa, mới nhất trước
+   * @param {number|string} horseId
+   * @returns {Promise<any>}
    */
-  async addVetRecord(horseId, recordData) {
-    return api.post(`/horses/${horseId}/vet-records`, recordData);
+  async getHorseDocuments(horseId) {
+    return api.get(ENDPOINTS.HORSES.DOCUMENTS(horseId));
   },
 
   /**
-   * Chỉnh sửa hồ sơ thú y của ngựa
+   * Thêm một hồ sơ thú y (multipart/form-data, file ở trường `file`)
+   * @param {number|string} horseId
+   * @param {{ docTypeId: number, file: File, documentNumber?: string, issuedBy?: string,
+   *           issueDate?: string, expiryDate?: string, notes?: string }} doc
+   * @returns {Promise<any>}
    */
-  async updateVetRecord(horseId, recordId, recordData) {
-    return api.put(`/horses/${horseId}/vet-records/${recordId}`, recordData);
+  async addHorseDocument(horseId, doc) {
+    const form = toFormData({
+      docTypeId: doc.docTypeId,
+      documentNumber: doc.documentNumber?.trim(),
+      issuedBy: doc.issuedBy?.trim(),
+      issueDate: doc.issueDate,
+      expiryDate: doc.expiryDate,
+      notes: doc.notes?.trim(),
+      file: doc.file,
+    });
+    return api.post(ENDPOINTS.HORSES.DOCUMENTS(horseId), form, MULTIPART);
   },
 
   /**
-   * Xóa hồ sơ thú y của ngựa
+   * Xóa một hồ sơ thú y của ngựa
+   * @param {number|string} horseId
+   * @param {number|string} documentId
+   * @returns {Promise<any>}
    */
-  async deleteVetRecord(horseId, recordId) {
-    return api.delete(`/horses/${horseId}/vet-records/${recordId}`);
+  async deleteHorseDocument(horseId, documentId) {
+    return api.delete(ENDPOINTS.HORSES.DOCUMENT(horseId, documentId));
   },
 };
 

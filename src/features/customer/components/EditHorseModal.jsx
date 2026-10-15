@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Modal,
   Form,
@@ -11,6 +11,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { MICROCHIP_PATTERN, UELN_PATTERN } from '@utils/constants';
+import HorsePhotoPicker from './HorsePhotoPicker';
 
 const HEALTH_STATUS_OPTIONS = [
   { value: 'Excellent', labelVi: 'Xuất sắc', labelEn: 'Excellent', color: '#16a34a' },
@@ -49,6 +50,8 @@ export default function EditHorseModal({
 }) {
   const { t, i18n } = useTranslation();
   const [form] = Form.useForm();
+  // undefined: giữ ảnh đang có; File: ảnh mới; null: xóa ảnh đang có
+  const [photoFile, setPhotoFile] = useState(undefined);
   const isEn = i18n.language?.startsWith('en');
 
   useEffect(() => {
@@ -74,6 +77,8 @@ export default function EditHorseModal({
     const formattedValues = {
       ...values,
       dateOfBirth: values.dateOfBirth ? values.dateOfBirth.format('YYYY-MM-DD') : null,
+      photo: photoFile || null,
+      removePhoto: photoFile === null,
     };
     onSave?.(formattedValues);
   };
@@ -95,6 +100,7 @@ export default function EditHorseModal({
       okText={t('horses.saveChanges', 'Lưu thay đổi')}
       cancelText={t('horses.cancel', 'Hủy')}
       destroyOnClose
+      afterClose={() => setPhotoFile(undefined)}
       width={680}
     >
       <Form
@@ -208,6 +214,15 @@ export default function EditHorseModal({
             </Form.Item>
           </Col>
         </Row>
+
+        <Form.Item label={<span style={{ fontWeight: 600 }}>{t('horses.fields.photo')}</span>}>
+          <HorsePhotoPicker
+            file={photoFile}
+            currentUrl={photoFile === undefined ? horse?.photoUrl || horse?.PhotoUrl : null}
+            onChange={setPhotoFile}
+            disabled={confirmLoading}
+          />
+        </Form.Item>
 
         <Form.Item
           name="specialCareRequirements"

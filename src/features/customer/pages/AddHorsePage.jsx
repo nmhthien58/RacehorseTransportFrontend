@@ -3,6 +3,7 @@ import { Button, Modal, Space, Typography, message } from 'antd';
 import {
   CheckCircleFilled,
   ArrowLeftOutlined,
+  FileAddOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -181,6 +182,18 @@ export default function AddHorsePage() {
             }}
           >
             {t('horses.backToList')}
+          </Button>
+
+          <Button
+            size="large"
+            block
+            icon={<FileAddOutlined />}
+            onClick={() =>
+              navigate(`${ROUTES.CUSTOMER_VET_RECORDS}?horseId=${createdHorse?.horseId}&add=1`)
+            }
+            style={{ height: 46, borderRadius: 10, fontWeight: 600 }}
+          >
+            {t('horseDocs.addForNewHorse')}
           </Button>
 
           <Button

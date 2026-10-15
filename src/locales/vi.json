@@ -135,7 +135,7 @@
     "title": "Hồ sơ ngựa của tôi",
     "subtitle": "Quản lý thông tin định danh, số Microchip và hộ chiếu các cá thể ngựa đua",
     "addNewTitle": "Thêm hồ sơ ngựa mới",
-    "addNewSubtitle": "Khai báo thông tin định danh, số Microchip, hộ chiếu và yêu cầu chăm sóc thú y",
+    "addNewSubtitle": "Nhập thông tin định danh của ngựa. Hồ sơ thú y bổ sung sau ở trang Hồ sơ thú y",
     "myHorsesTitle": "Danh sách ngựa của tôi",
     "myHorsesSubtitle": "Quản lý danh sách ngựa đua, theo dõi số Microchip và lịch sử sức khỏe",
     "detailTitle": "Hồ sơ chi tiết ngựa đua",
@@ -254,12 +254,12 @@
     "delete": "Xóa hồ sơ",
     "deleteConfirm": "Bạn có chắc chắn muốn xóa hồ sơ ngựa này không?",
     "deleteSuccess": "Xóa hồ sơ ngựa thành công",
-    "createSuccess": "Thêm hồ sơ ngựa thành công",
+    "createSuccess": "Đã thêm ngựa",
     "createFailed": "Không thể tạo hồ sơ ngựa, vui lòng thử lại",
-    "modalSuccessTitle": "Thêm hồ sơ ngựa thành công!",
-    "modalSuccessSubtitle": "Hồ sơ của cá thể {{name}} đã được lưu trữ an toàn trong chuồng của bạn.",
+    "modalSuccessTitle": "Đã thêm ngựa",
+    "modalSuccessSubtitle": "{{name}} đã có trong danh sách ngựa của bạn. Hồ sơ thú y có thể bổ sung ngay hoặc để sau.",
     "backToList": "Quay lại danh sách ngựa",
-    "addAnother": "Thêm tiếp cá thể khác",
+    "addAnother": "Thêm ngựa khác",
     "updateSuccess": "Cập nhật hồ sơ ngựa thành công",
     "emptyText": "Chưa có hồ sơ ngựa nào trong chuồng của bạn",
     "addNow": "Thêm cá thể đầu tiên",
@@ -267,12 +267,22 @@
     "vetRecords": "Sổ thú y",
     "noColorDesc": "Chưa có mô tả màu sắc và dấu hiệu nhận dạng",
     "photoPreviewTitle": "Xem trước ảnh nhận diện",
+    "photo": {
+      "choose": "Chọn ảnh từ máy",
+      "change": "Đổi ảnh khác",
+      "remove": "Xóa ảnh",
+      "empty": "Chưa có ảnh nhận diện",
+      "hint": "Ảnh JPG hoặc PNG, tối đa {{max}} MB. Ảnh hiển thị trên thẻ hồ sơ và tài liệu vận chuyển",
+      "previewAlt": "Ảnh nhận diện ngựa",
+      "invalidType": "Chỉ nhận ảnh JPG hoặc PNG",
+      "tooLarge": "Ảnh vượt quá {{max}} MB"
+    },
     "photoPreviewHint": "Ảnh sẽ hiển thị trên thẻ hồ sơ và tài liệu vận chuyển",
     "sections": {
-      "basicInfo": "Thông tin định danh cơ bản",
-      "basicInfoDesc": "Nhập các thông tin nhận dạng sinh trắc học và hộ chiếu pháp lý của ngựa đua",
-      "specialCare": "Yêu cầu chăm sóc đặc biệt & Thú y",
-      "specialCareDesc": "Chế độ đệm lót, say xe, nhiệt độ cabin và các lưu ý thể trạng khi vận chuyển"
+      "basicInfo": "Thông tin định danh",
+      "basicInfoDesc": "Dùng để đối chiếu ngựa khi kiểm dịch và bàn giao",
+      "specialCare": "Chăm sóc khi vận chuyển",
+      "specialCareDesc": "Đệm lót, say xe, nhiệt độ chuồng và các lưu ý khác cho đội vận chuyển"
     },
     "stats": {
       "totalHorses": "Tổng số ngựa",
@@ -291,7 +301,7 @@
       "microchip": "Số Microchip",
       "passport": "Số hộ chiếu",
       "color": "Màu lông",
-      "photoUrl": "Ảnh nhận diện (URL)",
+      "photo": "Ảnh nhận diện",
       "specialCare": "Chăm sóc đặc biệt",
       "status": "Trạng thái"
     },
@@ -302,7 +312,6 @@
       "color": "Ví dụ: Dark Bay, Hồng sắc, Bạch sắc...",
       "microchip": "Ví dụ: 982000412345671 (15 chữ số)",
       "passport": "Ví dụ: 704001000000001 (mã UELN 15 ký tự)",
-      "photoUrl": "https://images.unsplash.com/...",
       "specialCare": "Ghi chú chế độ đệm rơm dày, bổ sung điện giải, cách ly với ngựa đực khác, nhiệt độ cabin 16-19°C..."
     },
     "genderOptions": {
@@ -320,7 +329,8 @@
       "microchipFormat": "Số Microchip phải gồm đúng 15 chữ số",
       "passportRequired": "Vui lòng nhập số hộ chiếu vận chuyển",
       "passportFormat": "Số hộ chiếu phải là mã UELN 15 ký tự: 6 chữ số đầu, sau đó 9 chữ hoặc số"
-    }
+    },
+    "vetRecordsLaterHint": "Hộ chiếu, kết quả xét nghiệm và giấy tiêm phòng không bắt buộc ở bước này. Bạn có thể bổ sung sau khi lưu ngựa."
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -372,14 +382,14 @@
     "stepReviewSubtitle": "Vui lòng xem lại chi tiết yêu cầu trước khi chính thức gửi đơn tới ban điều hành",
     "submitRequest": "Gửi yêu cầu đặt chuyến",
     "noHorsesHint": "Vui lòng thêm ngựa vào hồ sơ trước khi tạo đơn đặt chuyến.",
-    "createdAt": "Tạo ngày",
+    "createdAt": "Ngày tạo",
     "horseUnit": "con",
     "climateControlTag": "Điều hòa cabin",
     "cancelConfirmTitle": "Hủy yêu cầu đặt chuyến?",
     "cancelConfirmDesc": "Bạn có chắc chắn muốn hủy yêu cầu vận chuyển này không?",
     "cancelRequest": "Hủy đơn",
     "cancelSuccess": "Đã hủy yêu cầu vận chuyển thành công",
-    "cancelFailed": "Không thể hủy đơn vận chuyển",
+    "cancelFailed": "Không thể hủy đơn",
     "detailTitle": "Chi tiết đơn vận chuyển",
     "emptyTitle": "Chưa có yêu cầu vận chuyển nào",
     "emptyFilterHint": "Không tìm thấy yêu cầu phù hợp với bộ lọc",
@@ -462,8 +472,6 @@
       "dropoffRequired": "Vui lòng nhập địa chỉ giao",
       "selectHorseRequired": "Vui lòng chọn ít nhất 1 cá thể ngựa để tiếp tục"
     },
-    "detailTitle": "Chi tiết đơn vận chuyển",
-    "createdAt": "Ngày tạo",
     "pickupLocation": "ĐIỂM ĐÓN",
     "dropoffLocation": "ĐIỂM GIAO",
     "transportMode": "Phương thức vận chuyển",
@@ -477,9 +485,7 @@
     "quoteQty": "SL",
     "quoteUnitPrice": "Đơn giá",
     "quoteAmount": "Thành tiền",
-    "totalEstimatedCost": "Tổng dự toán cước phí",
-    "cancelSuccess": "Đã hủy yêu cầu vận chuyển thành công",
-    "cancelFailed": "Không thể hủy đơn"
+    "totalEstimatedCost": "Tổng dự toán cước phí"
   },
   "messages": {
     "title": "Tin nhắn & Liên lạc Trực tiếp",
@@ -1444,6 +1450,74 @@
       "planning": "NHÁP / CHỜ DUYỆT",
       "scheduled": "ĐÃ LÊN LỊCH",
       "onTheRoad": "ĐANG CHẠY / ĐÃ TỚI"
+    }
+  },
+  "horseDocs": {
+    "pageTitle": "Hồ sơ thú y",
+    "pageSubtitle": "Chọn ngựa để xem và bổ sung hộ chiếu, kết quả xét nghiệm, giấy tiêm phòng",
+    "selectHorse": "Ngựa",
+    "viewHorse": "Xem thông tin ngựa",
+    "noHorses": "Bạn chưa có ngựa nào. Thêm ngựa trước rồi bổ sung hồ sơ thú y sau.",
+    "addButton": "Bổ sung hồ sơ",
+    "addForNewHorse": "Bổ sung hồ sơ thú y",
+    "documentsHint": "Giấy tờ lưu ở đây dùng để chuẩn bị nộp cho hồ sơ thông quan khi đặt chuyến.",
+    "deleted": "Đã xóa hồ sơ",
+    "tabs": {
+      "documents": "Hồ sơ của ngựa",
+      "clearance": "Hồ sơ thông quan theo đơn"
+    },
+    "columns": {
+      "type": "Loại giấy tờ",
+      "issuedBy": "Nơi cấp",
+      "issueDate": "Ngày cấp",
+      "expiryDate": "Hết hạn",
+      "validity": "Tình trạng"
+    },
+    "numberPrefix": "Số:",
+    "viewFile": "Xem file",
+    "deleteConfirmTitle": "Xóa hồ sơ này?",
+    "deleteConfirmDesc": "File đã tải lên cũng sẽ không còn hiển thị.",
+    "empty": "Ngựa này chưa có hồ sơ thú y nào",
+    "validity": {
+      "Valid": "Còn hạn",
+      "ExpiringSoon": "Sắp hết hạn",
+      "Expired": "Đã hết hạn",
+      "NoExpiry": "Không thời hạn"
+    },
+    "addTitle": "Bổ sung hồ sơ cho {{name}}",
+    "addTitleShort": "Bổ sung hồ sơ",
+    "fileHint": "File PDF, JPG hoặc PNG, tối đa {{max}} MB mỗi file",
+    "saveCount": "Lưu {{count}} hồ sơ",
+    "savedCount": "Đã lưu {{count}} hồ sơ",
+    "rowTitle": "Hồ sơ {{index}}",
+    "removeRow": "Bỏ hồ sơ này",
+    "addRow": "Thêm hồ sơ khác",
+    "chooseFile": "Chọn file",
+    "fields": {
+      "type": "Loại giấy tờ",
+      "file": "File",
+      "number": "Số giấy tờ",
+      "issuedBy": "Nơi cấp",
+      "issueDate": "Ngày cấp",
+      "expiryDate": "Ngày hết hạn"
+    },
+    "placeholders": {
+      "type": "Chọn loại giấy tờ",
+      "issuedBy": "Bác sĩ, phòng xét nghiệm hoặc cơ quan cấp",
+      "date": "Chọn ngày"
+    },
+    "errors": {
+      "typeRequired": "Chọn loại giấy tờ",
+      "fileRequired": "Chọn file cho hồ sơ này",
+      "issueInFuture": "Ngày cấp không được ở tương lai",
+      "expiryBeforeIssue": "Ngày hết hạn phải sau ngày cấp",
+      "fileType": "Chỉ nhận file PDF, JPG hoặc PNG",
+      "fileSize": "File vượt quá {{max}} MB",
+      "saveFailed": "Không lưu được hồ sơ",
+      "loadTypes": "Không tải được danh mục giấy tờ",
+      "loadHorses": "Không tải được danh sách ngựa",
+      "loadDocuments": "Không tải được hồ sơ thú y",
+      "deleteFailed": "Không xóa được hồ sơ"
     }
   }
 }

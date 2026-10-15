@@ -380,9 +380,8 @@ export const HEALTH_STATUS_OPTIONS = [
 /**
  * Đánh giá điều kiện vận chuyển của ngựa (Transport Eligibility Assessment)
  * Dựa trên:
- * 1. Bắt buộc có hồ sơ thú y (Vet Records) hợp lệ -> Không có hồ sơ thì KHÔNG ĐƯỢC PHÉP vận chuyển
- * 2. Tình trạng sức khỏe (HealthStatus) -> Critical/chấn thương là CẤM vận chuyển
- * 3. Đánh giá y tế đưa ra mức độ: Fit-to-Travel, Giám sát y tế, hoặc Cấm vận chuyển
+ * 1. Tình trạng sức khỏe (HealthStatus) -> Critical/chấn thương là CẤM vận chuyển
+ * 2. Đánh giá y tế đưa ra mức độ: Fit-to-Travel, Giám sát y tế, hoặc Cấm vận chuyển
  */
 export function checkHorseTransportEligibility(horse, lang = 'vi') {
   const isEn = String(lang).toLowerCase().startsWith('en');
@@ -396,31 +395,12 @@ export function checkHorseTransportEligibility(horse, lang = 'vi') {
     };
   }
 
-  const hasVet = Boolean(
-    horse.hasVetRecord !== false &&
-    horse.HasVetRecord !== false &&
-    ((horse.VetRecords && horse.VetRecords.length > 0) ||
-      (horse.vetRecords && horse.vetRecords.length > 0) ||
-      horse.hasVetRecord === true ||
-      horse.HasVetRecord === true)
-  );
-
   const status = (horse.HealthStatus || horse.healthStatus || '').trim().toLowerCase();
   const isCritical = status === 'critical' || status === 'poor';
   const isExplicitlyIneligible = horse.isEligibleForTransport === false || horse.IsEligibleForTransport === false;
 
-  if (!hasVet) {
-    return {
-      eligible: false,
-      reason: 'MISSING_VET_RECORD',
-      tagText: isEn ? 'NO VET RECORD • INELIGIBLE' : 'THIẾU HỒ SƠ THÚ Y • CẤM VẬN CHUYỂN',
-      tagColor: 'warning',
-      message: isEn
-        ? 'Cannot transport this horse: Missing mandatory veterinary record (Vet Record)!'
-        : 'Chú ngựa này chưa có hồ sơ thú y hợp lệ. Bắt buộc phải bổ sung hồ sơ thú y để được phép vận chuyển!',
-    };
-  }
-
+  // Hồ sơ thú y không bắt buộc khi tạo ngựa (giấy tờ được kiểm ở hồ sơ thông quan của từng đơn),
+  // nên thiếu hồ sơ không làm ngựa bị chặn vận chuyển.
   if (isCritical || isExplicitlyIneligible) {
     return {
       eligible: false,

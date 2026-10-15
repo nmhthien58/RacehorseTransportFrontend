@@ -136,7 +136,7 @@
     "title": "My Horses",
     "subtitle": "Manage racehorse identification, microchips, and passports",
     "addNewTitle": "Add a New Horse",
-    "addNewSubtitle": "Register horse identification, microchip number, passport, and veterinary care profile",
+    "addNewSubtitle": "Enter the horse's identification details. Vet records can be added later on the Vet Records page",
     "myHorsesTitle": "My Horses List",
     "myHorsesSubtitle": "Manage your racehorses, track biometric microchips, and monitor health passports",
     "detailTitle": "Horse Profile Details",
@@ -255,12 +255,12 @@
     "delete": "Delete Profile",
     "deleteConfirm": "Are you sure you want to delete this horse profile?",
     "deleteSuccess": "Horse profile deleted successfully",
-    "createSuccess": "Horse profile created successfully",
+    "createSuccess": "Horse added",
     "createFailed": "Failed to create horse profile, please try again",
-    "modalSuccessTitle": "Horse Profile Created Successfully!",
-    "modalSuccessSubtitle": "The profile for {{name}} has been safely added to your stable.",
+    "modalSuccessTitle": "Horse added",
+    "modalSuccessSubtitle": "{{name}} is now in your horse list. You can add vet records now or later.",
     "backToList": "Back to Horses",
-    "addAnother": "Add Another Horse",
+    "addAnother": "Add another horse",
     "updateSuccess": "Horse profile updated successfully",
     "emptyText": "No horses in your stable yet",
     "addNow": "Add Your First Horse",
@@ -268,12 +268,22 @@
     "vetRecords": "Vet Records",
     "noColorDesc": "No color or markings specified",
     "photoPreviewTitle": "Identification Photo Preview",
+    "photo": {
+      "choose": "Choose photo from device",
+      "change": "Change photo",
+      "remove": "Remove photo",
+      "empty": "No identification photo yet",
+      "hint": "JPG or PNG, up to {{max}} MB. Shown on the profile card and transport documents",
+      "previewAlt": "Horse identification photo",
+      "invalidType": "Only JPG or PNG images are accepted",
+      "tooLarge": "Photo exceeds {{max}} MB"
+    },
     "photoPreviewHint": "Photo will be displayed on profile card and transport dossier",
     "sections": {
-      "basicInfo": "Basic Identification",
-      "basicInfoDesc": "Enter biological identification and legal transport passport details",
-      "specialCare": "Special Care & Veterinary Profile",
-      "specialCareDesc": "Bedding preferences, motion sickness, cabin climate, and health handling notes"
+      "basicInfo": "Identification",
+      "basicInfoDesc": "Used to identify the horse at quarantine checks and handover",
+      "specialCare": "Care during transport",
+      "specialCareDesc": "Bedding, motion sickness, stall temperature and other notes for the transport team"
     },
     "stats": {
       "totalHorses": "Total Horses",
@@ -292,7 +302,7 @@
       "microchip": "Microchip Number",
       "passport": "Passport Number",
       "color": "Color / Markings",
-      "photoUrl": "Photo URL",
+      "photo": "Identification Photo",
       "specialCare": "Special Care",
       "status": "Status"
     },
@@ -303,7 +313,6 @@
       "color": "e.g. Dark Bay, Chestnut, Grey...",
       "microchip": "e.g. 982000412345671 (15 digits)",
       "passport": "e.g. 704001000000001 (15-character UELN)",
-      "photoUrl": "https://images.unsplash.com/...",
       "specialCare": "Bedding straw preferences, electrolyte supplements, isolation requirements, cabin temperature 16-19°C..."
     },
     "genderOptions": {
@@ -321,7 +330,8 @@
       "microchipFormat": "Microchip number must be exactly 15 digits",
       "passportRequired": "Please enter passport number",
       "passportFormat": "Passport number must be a 15-character UELN: 6 digits followed by 9 letters or digits"
-    }
+    },
+    "vetRecordsLaterHint": "Passport scans, lab results and vaccination records are not needed here. You can add them after saving the horse."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -373,14 +383,14 @@
     "stepReviewSubtitle": "Please verify all information before officially submitting to logistics dispatchers",
     "submitRequest": "Submit Transport Request",
     "noHorsesHint": "Please register horses in your stable before creating a transport request.",
-    "createdAt": "Created at",
+    "createdAt": "Created At",
     "horseUnit": "horses",
     "climateControlTag": "Climate Control",
     "cancelConfirmTitle": "Cancel Transport Request?",
     "cancelConfirmDesc": "Are you sure you want to cancel this transport request?",
     "cancelRequest": "Cancel Request",
     "cancelSuccess": "Transport request cancelled successfully",
-    "cancelFailed": "Failed to cancel transport request",
+    "cancelFailed": "Unable to cancel booking",
     "detailTitle": "Transport Request Details",
     "emptyTitle": "No transport requests found",
     "emptyFilterHint": "No requests match your current filters",
@@ -463,8 +473,6 @@
       "dropoffRequired": "Please enter delivery address",
       "selectHorseRequired": "Please select at least 1 horse to continue"
     },
-    "detailTitle": "Transport Request Details",
-    "createdAt": "Created At",
     "pickupLocation": "PICKUP LOCATION",
     "dropoffLocation": "DELIVERY LOCATION",
     "transportMode": "Transport Mode",
@@ -478,9 +486,7 @@
     "quoteQty": "Qty",
     "quoteUnitPrice": "Unit Price",
     "quoteAmount": "Amount",
-    "totalEstimatedCost": "Total Estimated Cost",
-    "cancelSuccess": "Transport request cancelled successfully",
-    "cancelFailed": "Unable to cancel booking"
+    "totalEstimatedCost": "Total Estimated Cost"
   },
   "messages": {
     "title": "Messages & Live Dispatch",
@@ -1445,6 +1451,74 @@
       "planning": "DRAFT / PENDING",
       "scheduled": "SCHEDULED",
       "onTheRoad": "ON THE ROAD / ARRIVED"
+    }
+  },
+  "horseDocs": {
+    "pageTitle": "Vet Records",
+    "pageSubtitle": "Pick a horse to view and add its passport, lab results and vaccination records",
+    "selectHorse": "Horse",
+    "viewHorse": "View horse",
+    "noHorses": "You have no horses yet. Add a horse first, then add its vet records.",
+    "addButton": "Add records",
+    "addForNewHorse": "Add vet records",
+    "documentsHint": "Records stored here help you prepare the clearance dossier when you book a trip.",
+    "deleted": "Record deleted",
+    "tabs": {
+      "documents": "Horse records",
+      "clearance": "Clearance dossiers"
+    },
+    "columns": {
+      "type": "Document",
+      "issuedBy": "Issued by",
+      "issueDate": "Issued",
+      "expiryDate": "Expires",
+      "validity": "Status"
+    },
+    "numberPrefix": "No.",
+    "viewFile": "View file",
+    "deleteConfirmTitle": "Delete this record?",
+    "deleteConfirmDesc": "The uploaded file will no longer be shown.",
+    "empty": "This horse has no vet records yet",
+    "validity": {
+      "Valid": "Valid",
+      "ExpiringSoon": "Expiring soon",
+      "Expired": "Expired",
+      "NoExpiry": "No expiry"
+    },
+    "addTitle": "Add records for {{name}}",
+    "addTitleShort": "Add records",
+    "fileHint": "PDF, JPG or PNG, up to {{max}} MB each",
+    "saveCount": "Save {{count}} record(s)",
+    "savedCount": "Saved {{count}} record(s)",
+    "rowTitle": "Record {{index}}",
+    "removeRow": "Remove this record",
+    "addRow": "Add another record",
+    "chooseFile": "Choose file",
+    "fields": {
+      "type": "Document type",
+      "file": "File",
+      "number": "Document number",
+      "issuedBy": "Issued by",
+      "issueDate": "Issue date",
+      "expiryDate": "Expiry date"
+    },
+    "placeholders": {
+      "type": "Choose a document type",
+      "issuedBy": "Vet, lab or issuing authority",
+      "date": "Select date"
+    },
+    "errors": {
+      "typeRequired": "Choose a document type",
+      "fileRequired": "Choose a file for this record",
+      "issueInFuture": "Issue date cannot be in the future",
+      "expiryBeforeIssue": "Expiry date must be after the issue date",
+      "fileType": "Only PDF, JPG or PNG files are accepted",
+      "fileSize": "File exceeds {{max}} MB",
+      "saveFailed": "Could not save the record",
+      "loadTypes": "Could not load document types",
+      "loadHorses": "Could not load your horses",
+      "loadDocuments": "Could not load vet records",
+      "deleteFailed": "Could not delete the record"
     }
   }
 }

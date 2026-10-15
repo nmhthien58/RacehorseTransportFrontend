@@ -23,27 +23,30 @@ async function enableMocking() {
   });
 }
 
+function renderApp() {
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    <React.StrictMode>
+      <BrowserRouter>
+        <ConfigProvider
+          theme={{
+            token: {
+              colorPrimary: '#F59E0B',
+              borderRadius: 8,
+            },
+          }}
+        >
+          <AntApp>
+            <App />
+          </AntApp>
+        </ConfigProvider>
+      </BrowserRouter>
+    </React.StrictMode>,
+  );
+}
+
+// Mock (MSW) lỗi thì vẫn render app, tránh màn hình trắng; các request khi đó đi thẳng tới backend
 void enableMocking()
-  .then(() => {
-    ReactDOM.createRoot(document.getElementById('root')).render(
-      <React.StrictMode>
-        <BrowserRouter>
-          <ConfigProvider
-            theme={{
-              token: {
-                colorPrimary: '#F59E0B',
-                borderRadius: 8,
-              },
-            }}
-          >
-            <AntApp>
-              <App />
-            </AntApp>
-          </ConfigProvider>
-        </BrowserRouter>
-      </React.StrictMode>,
-    );
-  })
   .catch((err) => {
-    console.error('Failed to start application:', err);
-  });
+    console.error('Failed to start mock service worker, continuing without mocks:', err);
+  })
+  .finally(renderApp);

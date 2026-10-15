@@ -23,6 +23,8 @@ export default defineConfig({
     },
   },
   server: {
+    // Nghe cả IPv4 (127.0.0.1) lẫn IPv6 (::1); mặc định chỉ ::1 nên trình duyệt gọi qua 127.0.0.1 bị từ chối
+    host: true,
     port: 3000,
     open: true,
   },

@@ -99,7 +99,6 @@ export const ENDPOINTS = {
     WELFARE_LOGS: (id) => `/trips/${id}/welfare-logs`,
     CREATE_WELFARE_LOG: (id) => `/trips/${id}/welfare-logs`,
     CLOSE: (id) => `/trips/${id}/close`,
-    COMPLETION_REPORT: (id) => `/trips/${id}/completion-report`,
     // Bí danh tương thích ngược
     UPDATE_STATUS: (id) => `/trips/${id}/status`,
     CREW: (id) => `/trips/${id}/crew`,

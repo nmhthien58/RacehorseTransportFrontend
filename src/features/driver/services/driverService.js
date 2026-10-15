@@ -149,41 +149,28 @@ export const driverService = {
   },
 
   /**
-   * Lập biên bản bàn giao nghiệm thu tại điểm đến có chữ ký số điện tử (e-POD)
+   * Lập biên bản bàn giao cho một đơn trên chuyến (multipart, mỗi mã vi mạch append một lần).
    * @param {number|string} tripId
-   * @param {Object} handoverData
+   * @param {{ bookingId: number, recipientName: string, recipientPhone: string, recipientIdCard: string, overallCondition: string, remarks?: string, microchipNumbers: string[], signature: Blob }} handoverData
    * @returns {Promise<any>}
    */
   async submitHandover(tripId, handoverData) {
-    return api.post(ENDPOINTS.HANDOVER.CREATE_FOR_TRIP(tripId), handoverData);
+    const { signature, ...fields } = handoverData;
+    const form = toFormData(fields);
+    // Backend kiểm tra đuôi file chữ ký nên phải đặt tên .png
+    form.append('signature', signature, 'signature.png');
+    return api.post(ENDPOINTS.HANDOVER.CREATE_FOR_TRIP(tripId), form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
   },
 
   /**
-   * Lấy thông tin biên bản bàn giao của chuyến đi
+   * Các biên bản bàn giao đã lập trên chuyến
    * @param {number|string} tripId
-   * @returns {Promise<any>}
+   * @returns {Promise<Array<any>>}
    */
-  async getHandover(tripId) {
+  async getHandovers(tripId) {
     return api.get(ENDPOINTS.HANDOVER.BY_TRIP(tripId));
-  },
-
-  /**
-   * Lấy báo cáo hoàn tất ca trực & tổng kết chuyến đi (Shift Closeout Report)
-   * @param {number|string} tripId
-   * @returns {Promise<any>}
-   */
-  async getCompletionReport(tripId) {
-    return api.get(ENDPOINTS.TRIPS.COMPLETION_REPORT(tripId));
-  },
-
-  /**
-   * Nộp báo cáo tổng kết chuyến đi và kết thúc ca trực lên Quản lý vận hành
-   * @param {number|string} tripId
-   * @param {Object} payload
-   * @returns {Promise<any>}
-   */
-  async submitCompletionReport(tripId, payload) {
-    return api.post(ENDPOINTS.TRIPS.COMPLETION_REPORT(tripId), payload);
   },
 };
 

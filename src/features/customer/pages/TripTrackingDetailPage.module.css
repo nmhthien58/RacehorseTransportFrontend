@@ -1,0 +1,272 @@
+.page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid #e7e5e4;
+  border-radius: 12px;
+}
+
+/* Header */
+.header {
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.headerTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tripCode {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1c1917;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.route {
+  margin-top: 6px;
+  color: #57534e;
+  font-size: 14px;
+}
+
+.routeArrow {
+  color: #a8a29e;
+  margin: 0 8px;
+}
+
+.muted {
+  color: #78716c;
+  font-size: 12px;
+}
+
+.progressRow {
+  margin: 18px 0 16px;
+}
+
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #57534e;
+  margin-bottom: 4px;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px 24px;
+  padding-top: 16px;
+  border-top: 1px solid #f5f5f4;
+}
+
+.factLabel {
+  font-size: 12px;
+  color: #a8a29e;
+  margin-bottom: 2px;
+}
+
+.factValue {
+  font-size: 14px;
+  color: #1c1917;
+  font-weight: 500;
+}
+
+/* Section */
+.sectionHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f5f5f4;
+}
+
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1c1917;
+  margin: 0;
+}
+
+.sectionBody {
+  padding: 20px;
+}
+
+/* Lộ trình */
+.stop {
+  position: relative;
+  padding-left: 28px;
+  padding-bottom: 20px;
+}
+
+.stop:last-child {
+  padding-bottom: 0;
+}
+
+.stop::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 16px;
+  bottom: -2px;
+  width: 2px;
+  background: #e7e5e4;
+}
+
+.stop:last-child::before {
+  display: none;
+}
+
+.stopDone::before {
+  background: #f59e0b;
+}
+
+.dot {
+  position: absolute;
+  left: 0;
+  top: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #d6d3d1;
+  background: #fff;
+}
+
+.dotDone {
+  border-color: #f59e0b;
+  background: #f59e0b;
+}
+
+.dotCurrent {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 4px #fef3c7;
+}
+
+.dotCancelled {
+  border-color: #e7e5e4;
+  background: #f5f5f4;
+}
+
+.stopName {
+  font-weight: 600;
+  color: #1c1917;
+  font-size: 14px;
+}
+
+.stopNameMuted {
+  color: #a8a29e;
+  text-decoration: line-through;
+}
+
+.stopMeta {
+  font-size: 12px;
+  color: #78716c;
+  margin-top: 2px;
+  line-height: 1.6;
+}
+
+/* Sức khỏe: số liệu lần ghi gần nhất */
+.latest {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.latestItem {
+  background: #fafaf9;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.latestValue {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1c1917;
+  margin-top: 2px;
+}
+
+/* Danh sách nhật ký */
+.logList {
+  margin-top: 20px;
+}
+
+.log {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid #f5f5f4;
+}
+
+.logAlert {
+  background: #fef2f2;
+  margin: 0 -20px;
+  padding: 14px 20px;
+}
+
+.logDate {
+  font-size: 12px;
+  color: #a8a29e;
+}
+
+.logTime {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1c1917;
+}
+
+.logWhere {
+  font-size: 13px;
+  font-weight: 500;
+  color: #44403c;
+}
+
+.logStats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin-top: 4px;
+  font-size: 13px;
+  color: #57534e;
+}
+
+.logNotes {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #78716c;
+  line-height: 1.55;
+}
+
+.logSide {
+  text-align: right;
+  font-size: 12px;
+  color: #a8a29e;
+  min-width: 90px;
+}
+
+@media (max-width: 640px) {
+  .latest {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .log {
+    grid-template-columns: 56px 1fr;
+  }
+
+  .logSide {
+    grid-column: 2;
+    text-align: left;
+  }
+}

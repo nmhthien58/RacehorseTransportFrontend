@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { message } from 'antd';
 import driverService from '../services/driverService';
 import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 
@@ -237,7 +238,8 @@ export function useMissionDetail(tripId) {
       fetchMission();
       return true;
     } catch (err) {
-      setError(getErrorMessage(err, 'Không thể gửi báo cáo khẩn cấp'));
+      // Modal báo sự cố vẫn mở nên báo lỗi bằng toast để người dùng thấy ngay
+      message.error(getErrorMessage(err, 'Không thể gửi báo cáo sự cố'));
       return false;
     } finally {
       setActionLoading(false);
@@ -255,7 +257,7 @@ export function useMissionDetail(tripId) {
       fetchMission();
       return true;
     } catch (err) {
-      setError(getErrorMessage(err, 'Không thể nộp biên bản nghiệm thu bàn giao'));
+      message.error(getErrorMessage(err, 'Không thể lập biên bản bàn giao'));
       return false;
     } finally {
       setActionLoading(false);

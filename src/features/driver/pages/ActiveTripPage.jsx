@@ -14,6 +14,7 @@ import {
   Steps,
   Progress,
   Empty,
+  message,
 } from 'antd';
 import {
   CompassOutlined,
@@ -28,9 +29,10 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useDriverMissions } from '../hooks/useDriverMissions';
+import { useDriverMissions, useMissionDetail } from '../hooks/useDriverMissions';
 import { getTripStatusMeta, driverService } from '../services/driverService';
 import EmergencyReportModal from '../components/EmergencyReportModal';
+import { getErrorMessage } from '@utils/apiHelpers';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -41,7 +43,7 @@ const { Title, Text, Paragraph } = Typography;
 export default function ActiveTripPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { missions, loading, refreshMissions } = useDriverMissions();
+  const { missions, loading, refresh } = useDriverMissions();
 
   const [sosModalOpen, setSosModalOpen] = useState(false);
 
@@ -63,14 +65,29 @@ export default function ActiveTripPage() {
     return missions[0];
   }, [missions]);
 
+  // Nhật ký thể trạng của chuyến đang chạy (GET /trips/{id}/welfare-logs)
+  const { mission: activeDetail } = useMissionDetail(activeTrip?.tripId);
+  const welfareLogs = activeDetail?.welfareLogs || [];
+
+  /**
+   * Lần ghi gần nhất của một con ngựa trên chuyến.
+   * @param {number} tripHorseId
+   * @returns {Object|undefined}
+   */
+  const latestLogOf = (tripHorseId) =>
+    welfareLogs
+      .filter((log) => log.tripHorseId === tripHorseId)
+      .sort((a, b) => new Date(b.loggedAt) - new Date(a.loggedAt))[0];
+
   // Xử lý gửi báo cáo SOS
   const handleReportSOS = async (incidentData) => {
     if (!activeTrip) return false;
     try {
       await driverService.reportIncident(activeTrip.tripId, incidentData);
-      refreshMissions();
+      refresh();
       return true;
-    } catch {
+    } catch (err) {
+      message.error(getErrorMessage(err, 'Không thể gửi báo cáo sự cố'));
       return false;
     }
   };
@@ -190,77 +207,6 @@ export default function ActiveTripPage() {
         />
       )}
 
-      {/* Khối Telemetry Thời Gian Thực (IoT Telemetry Clean Card) */}
-      <Card
-        style={{
-          borderRadius: 12,
-          background: '#FFFFFF',
-          marginBottom: 24,
-          border: '1px solid #E2E8F0',
-        }}
-        bodyStyle={{ padding: 20 }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
-          <div>
-            <Space align="center">
-              <DashboardOutlined style={{ color: '#F59E0B', fontSize: 18 }} />
-              <Text strong style={{ color: '#111827', fontSize: 15 }}>
-                Thông Số Telemetry Thời Gian Thực Khoang Xe
-              </Text>
-            </Space>
-            <div style={{ color: '#6B7280', fontSize: 12, marginTop: 2 }}>
-              Phương tiện: <strong>{activeTrip.vehicleCode}</strong> ({activeTrip.vehicleName}) • Tín hiệu GPS: Ổn định
-            </div>
-          </div>
-
-          <Tag color="processing" style={{ borderRadius: 4, padding: '2px 10px', fontWeight: 600 }}>
-            LIVE SENSOR
-          </Tag>
-        </div>
-
-        <Row gutter={[16, 16]}>
-          <Col xs={12} sm={6}>
-            <Card bordered style={{ background: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0', textAlign: 'center' }} bodyStyle={{ padding: 14 }}>
-              <Text type="secondary" style={{ fontSize: 12 }}>Tốc Độ GPS Hiện Tại</Text>
-              <Title level={3} style={{ color: '#111827', margin: '4px 0 2px 0' }}>
-                68 <span style={{ fontSize: 13, fontWeight: 400 }}>km/h</span>
-              </Title>
-              <Tag color="success" style={{ margin: 0, fontSize: 10 }}>Dải an toàn (&lt; 80 km/h)</Tag>
-            </Card>
-          </Col>
-
-          <Col xs={12} sm={6}>
-            <Card bordered style={{ background: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0', textAlign: 'center' }} bodyStyle={{ padding: 14 }}>
-              <Text type="secondary" style={{ fontSize: 12 }}>Nhiệt Độ Thùng Xe</Text>
-              <Title level={3} style={{ color: '#111827', margin: '4px 0 2px 0' }}>
-                19.2 <span style={{ fontSize: 13, fontWeight: 400 }}>°C</span>
-              </Title>
-              <Tag color="success" style={{ margin: 0, fontSize: 10 }}>Chuẩn FEI (18-20°C)</Tag>
-            </Card>
-          </Col>
-
-          <Col xs={12} sm={6}>
-            <Card bordered style={{ background: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0', textAlign: 'center' }} bodyStyle={{ padding: 14 }}>
-              <Text type="secondary" style={{ fontSize: 12 }}>Độ Ẩm Khoang Ngựa</Text>
-              <Title level={3} style={{ color: '#111827', margin: '4px 0 2px 0' }}>
-                62 <span style={{ fontSize: 13, fontWeight: 400 }}>%</span>
-              </Title>
-              <Tag color="blue" style={{ margin: 0, fontSize: 10 }}>Thoáng khí tự động</Tag>
-            </Card>
-          </Col>
-
-          <Col xs={12} sm={6}>
-            <Card bordered style={{ background: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0', textAlign: 'center' }} bodyStyle={{ padding: 14 }}>
-              <Text type="secondary" style={{ fontSize: 12 }}>Treo Khí Nén Thùng</Text>
-              <Title level={3} style={{ color: '#111827', margin: '4px 0 2px 0' }}>
-                HOẠT ĐỘNG
-              </Title>
-              <Tag color="success" style={{ margin: 0, fontSize: 10 }}>Giảm chấn êm dịu</Tag>
-            </Card>
-          </Col>
-        </Row>
-      </Card>
-
       <Row gutter={[24, 24]}>
         {/* Cột trái: Tiến trình lộ trình & Trạm dừng */}
         <Col xs={24} lg={15}>
@@ -372,44 +318,67 @@ export default function ActiveTripPage() {
             style={{ borderRadius: 14, marginBottom: 24, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
           >
             <Space direction="vertical" size={14} style={{ width: '100%' }}>
-              {horses.map((horse) => (
-                <div
-                  key={horse.tripHorseId || horse.horseId}
-                  style={{
-                    padding: 14,
-                    borderRadius: 10,
-                    background: '#F8FAFC',
-                    border: '1px solid #E2E8F0',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <Text strong style={{ fontSize: 14, color: '#1E293B' }}>{horse.horseName}</Text>
-                      <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                        Mã chip: {horse.microchipNumber} • Chuồng #{horse.stallSlotNumber || 1}
+              {horses.map((horse) => {
+                const log = latestLogOf(horse.tripHorseId);
+                return (
+                  <div
+                    key={horse.tripHorseId || horse.horseId}
+                    style={{
+                      padding: 14,
+                      borderRadius: 10,
+                      background: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <Text strong style={{ fontSize: 14, color: '#1E293B' }}>{horse.horseName}</Text>
+                        <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                          Mã chip: {horse.microchipNumber || '—'} • Chuồng #{horse.stallSlotNumber || 1}
+                        </div>
                       </div>
+                      {log && (
+                        <Tag color={log.needsAttention ? 'red' : 'green'} style={{ borderRadius: 4 }}>
+                          {log.needsAttention ? t('driver.activeTrip.needsAttention') : t('driver.activeTrip.stable')}
+                        </Tag>
+                      )}
                     </div>
-                    <Tag color="green" style={{ borderRadius: 4 }}>Ổn định</Tag>
+
+                    <Divider style={{ margin: '10px 0' }} />
+
+                    {log ? (
+                      <>
+                        <Row gutter={8} style={{ fontSize: 11, textAlign: 'center' }}>
+                          <Col span={6}>
+                            <div style={{ color: '#64748B' }}>{t('customerTrips.log.cabinTemp')}</div>
+                            <div style={{ fontWeight: 600, color: '#1E293B' }}>{log.cabinTemp} °C</div>
+                          </Col>
+                          <Col span={6}>
+                            <div style={{ color: '#64748B' }}>{t('customerTrips.log.water')}</div>
+                            <div style={{ fontWeight: 600, color: '#1E293B' }}>{log.waterIntakeLiters} L</div>
+                          </Col>
+                          <Col span={6}>
+                            <div style={{ color: '#64748B' }}>{t('customerTrips.log.feed')}</div>
+                            <div style={{ fontWeight: 600, color: '#1E293B' }}>{t(`customerTrips.feed.${log.feedStatus}`, log.feedStatus)}</div>
+                          </Col>
+                          <Col span={6}>
+                            <div style={{ color: '#64748B' }}>{t('customerTrips.log.stress')}</div>
+                            <div style={{ fontWeight: 600, color: '#1E293B' }}>{t(`customerTrips.stress.${log.stressLevel}`, log.stressLevel)}</div>
+                          </Col>
+                        </Row>
+                        <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 8 }}>
+                          {t('driver.activeTrip.lastLog', {
+                            time: new Date(log.loggedAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }),
+                            by: log.recordedByName || '—',
+                          })}
+                        </div>
+                      </>
+                    ) : (
+                      <Text type="secondary" style={{ fontSize: 12 }}>{t('driver.activeTrip.noLog')}</Text>
+                    )}
                   </div>
-
-                  <Divider style={{ margin: '10px 0' }} />
-
-                  <Row gutter={8} style={{ fontSize: 11, textAlign: 'center' }}>
-                    <Col span={8}>
-                      <div style={{ color: '#64748B' }}>Nhịp tim</div>
-                      <div style={{ fontWeight: 600, color: '#1E293B' }}>38 bpm</div>
-                    </Col>
-                    <Col span={8}>
-                      <div style={{ color: '#64748B' }}>Thân nhiệt</div>
-                      <div style={{ fontWeight: 600, color: '#1E293B' }}>38.1 °C</div>
-                    </Col>
-                    <Col span={8}>
-                      <div style={{ color: '#64748B' }}>Mức stress</div>
-                      <div style={{ fontWeight: 600, color: '#10B981' }}>Bình tĩnh</div>
-                    </Col>
-                  </Row>
-                </div>
-              ))}
+                );
+              })}
             </Space>
           </Card>
 

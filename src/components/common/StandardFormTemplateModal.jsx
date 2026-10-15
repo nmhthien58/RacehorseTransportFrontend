@@ -202,7 +202,7 @@ export default function StandardFormTemplateModal({
             <div class="box-title">I. ĐẶC ĐIỂM NHẬN DẠNG CÁ THỂ NGỰA (EQUINE IDENTIFICATION)</div>
             <table>
               <tr><td class="td-label">1. Tên cá thể ngựa:</td><td><strong>${horseName}</strong></td></tr>
-              <tr><td class="td-label">2. Mã vi mạch (Microchip):</td><td><code>${microchip}</code></td></tr>
+              <tr><td class="td-label">2. Số Microchip:</td><td><code>${microchip}</code></td></tr>
               <tr><td class="td-label">3. Số Hộ chiếu (Passport No):</td><td><strong>${passport}</strong></td></tr>
               <tr><td class="td-label">4. Giống ngựa (Breed):</td><td>${breed}</td></tr>
               <tr><td class="td-label">5. Giới tính (Sex):</td><td>${gender}</td></tr>
@@ -326,7 +326,7 @@ export default function StandardFormTemplateModal({
               <span style={{ color: '#64748B' }}>1. Tên cá thể ngựa:</span> <strong>{horseName}</strong>
             </Col>
             <Col xs={24} sm={12}>
-              <span style={{ color: '#64748B' }}>2. Mã vi mạch (Microchip):</span>{' '}
+              <span style={{ color: '#64748B' }}>2. Số Microchip:</span>{' '}
               <code style={{ fontWeight: 700, color: '#1D4ED8' }}>{microchip}</code>
             </Col>
             <Col xs={24} sm={12}>

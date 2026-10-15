@@ -136,7 +136,7 @@
     "title": "My Horses",
     "subtitle": "Manage racehorse identification, microchips, and passports",
     "addNewTitle": "Add a New Horse",
-    "addNewSubtitle": "Register horse identification, microchip number, FEI passport, and veterinary care profile",
+    "addNewSubtitle": "Register horse identification, microchip number, passport, and veterinary care profile",
     "myHorsesTitle": "My Horses List",
     "myHorsesSubtitle": "Manage your racehorses, track biometric microchips, and monitor health passports",
     "detailTitle": "Horse Profile Details",
@@ -301,8 +301,8 @@
       "breed": "Select horse breed",
       "dob": "Select date of birth",
       "color": "e.g. Dark Bay, Chestnut, Grey...",
-      "microchip": "e.g. 985141008472910 (15-digit RFID code)",
-      "passport": "e.g. FEI-VN-2026-01, AQHA-5920184",
+      "microchip": "e.g. 982000412345671 (15 digits)",
+      "passport": "e.g. 704001000000001 (15-character UELN)",
       "photoUrl": "https://images.unsplash.com/...",
       "specialCare": "Bedding straw preferences, electrolyte supplements, isolation requirements, cabin temperature 16-19°C..."
     },
@@ -318,9 +318,9 @@
       "genderRequired": "Please select horse gender",
       "dobRequired": "Please select date of birth",
       "microchipRequired": "Please enter microchip number",
-      "microchipFormat": "Microchip number must be 9 to 30 alphanumeric characters",
+      "microchipFormat": "Microchip number must be exactly 15 digits",
       "passportRequired": "Please enter passport number",
-      "passportMaxLength": "Passport number cannot exceed 50 characters"
+      "passportFormat": "Passport number must be a 15-character UELN: 6 digits followed by 9 letters or digits"
     }
   },
   "dashboard": {
@@ -1003,7 +1003,7 @@
       "quickReasonsTitle": "Common reasons & requirements (click to add to notes):",
       "quickBlurry": "Scanned copy is blurry or missing official veterinary stamp and signature",
       "quickExpired": "Veterinary certificate or laboratory test has exceeded validity period",
-      "quickMismatch": "RFID microchip number or horse name does not match the booking request",
+      "quickMismatch": "Microchip number or horse name does not match the booking request",
       "quickFormat": "Document is not formatted according to destination country regulations",
       "notesLabel": "Instructions & Specific Notes for Customer:",
       "notesPlaceholder": "Enter detailed instructions for customer on how to rectify and resubmit documents...",

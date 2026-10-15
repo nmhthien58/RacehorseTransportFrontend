@@ -28,6 +28,7 @@ import {
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import { MICROCHIP_PATTERN, UELN_PATTERN } from '@utils/constants';
 
 const getUniqueRecordId = () => Date.now();
 
@@ -121,7 +122,7 @@ export default function AddHorseForm({
       return;
     }
 
-    // Trùng mã vi mạch / số hộ chiếu do backend kiểm tra và trả lỗi 400 kèm lý do
+    // Trùng số Microchip / số hộ chiếu do backend kiểm tra và trả lỗi 400 kèm lý do
     const payload = {
       ...data,
       name: data.name?.trim(),
@@ -341,7 +342,7 @@ export default function AddHorseForm({
               />
             </Col>
 
-            {/* Số vi mạch sinh trắc học */}
+            {/* Số Microchip (15 chữ số) */}
             <Col xs={24} md={12}>
               <Controller
                 name="microchipNumber"
@@ -349,7 +350,7 @@ export default function AddHorseForm({
                 rules={{
                   required: t('horses.validation.microchipRequired'),
                   pattern: {
-                    value: /^[0-9A-Za-z-]{9,30}$/,
+                    value: MICROCHIP_PATTERN,
                     message: t('horses.validation.microchipFormat'),
                   },
                 }}
@@ -372,16 +373,16 @@ export default function AddHorseForm({
               />
             </Col>
 
-            {/* Số hộ chiếu FEI */}
+            {/* Số hộ chiếu UELN */}
             <Col xs={24} md={12}>
               <Controller
                 name="passportNumber"
                 control={control}
                 rules={{
                   required: t('horses.validation.passportRequired'),
-                  maxLength: {
-                    value: 50,
-                    message: t('horses.validation.passportMaxLength'),
+                  pattern: {
+                    value: UELN_PATTERN,
+                    message: t('horses.validation.passportFormat'),
                   },
                 }}
                 render={({ field, fieldState: { error } }) => (

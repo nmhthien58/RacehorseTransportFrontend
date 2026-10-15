@@ -10,6 +10,7 @@ import {
 } from 'antd';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import { MICROCHIP_PATTERN, UELN_PATTERN } from '@utils/constants';
 
 const HEALTH_STATUS_OPTIONS = [
   { value: 'Excellent', labelVi: 'Xuất sắc', labelEn: 'Excellent', color: '#16a34a' },
@@ -69,7 +70,7 @@ export default function EditHorseModal({
   }, [open, horse, form]);
 
   const handleFinish = (values) => {
-    // Trùng mã vi mạch / số hộ chiếu do backend kiểm tra và trả lỗi 400 kèm lý do
+    // Trùng số Microchip / số hộ chiếu do backend kiểm tra và trả lỗi 400 kèm lý do
     const formattedValues = {
       ...values,
       dateOfBirth: values.dateOfBirth ? values.dateOfBirth.format('YYYY-MM-DD') : null,
@@ -153,13 +154,27 @@ export default function EditHorseModal({
 
         <Row gutter={16}>
           <Col xs={24} sm={12}>
-            <Form.Item name="microchipNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.microchip', 'Số Microchip')}</span>}>
-              <Input placeholder={t('horses.placeholders.microchip', '15 chữ số')} size="large" />
+            <Form.Item
+              name="microchipNumber"
+              label={<span style={{ fontWeight: 600 }}>{t('horses.fields.microchip', 'Số Microchip')}</span>}
+              rules={[
+                { required: true, message: t('horses.validation.microchipRequired') },
+                { pattern: MICROCHIP_PATTERN, message: t('horses.validation.microchipFormat') },
+              ]}
+            >
+              <Input placeholder={t('horses.placeholders.microchip')} size="large" />
             </Form.Item>
           </Col>
           <Col xs={24} sm={12}>
-            <Form.Item name="passportNumber" label={<span style={{ fontWeight: 600 }}>{t('horses.fields.passport', 'Số Hộ chiếu')}</span>}>
-              <Input placeholder={t('horses.placeholders.passport', 'Số hộ chiếu FEI')} size="large" />
+            <Form.Item
+              name="passportNumber"
+              label={<span style={{ fontWeight: 600 }}>{t('horses.fields.passport', 'Số hộ chiếu (UELN)')}</span>}
+              rules={[
+                { required: true, message: t('horses.validation.passportRequired') },
+                { pattern: UELN_PATTERN, message: t('horses.validation.passportFormat') },
+              ]}
+            >
+              <Input placeholder={t('horses.placeholders.passport')} size="large" />
             </Form.Item>
           </Col>
         </Row>

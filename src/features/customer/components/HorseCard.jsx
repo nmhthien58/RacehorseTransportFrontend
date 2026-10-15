@@ -160,7 +160,7 @@ export default function HorseCard({ horse, onEdit, onDelete, onView }) {
         </Text>
       </div>
 
-      {/* Mã vi mạch & Hộ chiếu */}
+      {/* Số Microchip & Hộ chiếu */}
       <div
         style={{
           background: '#f8fafc',

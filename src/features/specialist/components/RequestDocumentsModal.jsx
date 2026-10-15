@@ -67,7 +67,7 @@ export default function RequestDocumentsModal({
   const quickReasons = [
     t('specialist.requestDocs.quickBlurry', 'Ảnh chụp/scan mờ, thiếu con dấu đỏ hoặc chữ ký kiểm dịch viên'),
     t('specialist.requestDocs.quickExpired', 'Giấy chứng nhận thú y hoặc kết quả xét nghiệm đã hết thời hạn hiệu lực'),
-    t('specialist.requestDocs.quickMismatch', 'Mã số vi mạch RFID hoặc tên cá thể ngựa không khớp với đơn đặt chuyến'),
+    t('specialist.requestDocs.quickMismatch', 'Số Microchip hoặc tên cá thể ngựa không khớp với đơn đặt chuyến'),
     t('specialist.requestDocs.quickFormat', 'Tài liệu không đúng biểu mẫu quy định của nước sở tại'),
   ];
 

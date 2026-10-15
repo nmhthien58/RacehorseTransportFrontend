@@ -366,7 +366,7 @@ export default function DossierDetailPage() {
                   <strong style={{ color: '#0F172A' }}>{dossier?.horseName}</strong>
                 </div>
                 <div>
-                  <span style={{ color: '#64748B' }}>Vi mạch sinh trắc học:</span>{' '}
+                  <span style={{ color: '#64748B' }}>Số Microchip:</span>{' '}
                   <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#1E293B' }}>{dossier?.microchipNumber}</span>
                 </div>
                 <div>

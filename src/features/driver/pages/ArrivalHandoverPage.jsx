@@ -150,7 +150,7 @@ export default function ArrivalHandoverPage() {
       ),
     },
     {
-      title: 'Số vi mạch (Microchip)',
+      title: 'Số Microchip',
       dataIndex: 'microchipNumber',
       key: 'microchipNumber',
       render: (val) => <Tag color="geekblue">{val}</Tag>,

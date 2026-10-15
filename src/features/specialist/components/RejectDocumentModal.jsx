@@ -31,7 +31,7 @@ export default function RejectDocumentModal({
 
   const quickReasons = [
     t('specialist.reject.quickFormat', 'Sai định dạng file hoặc hình ảnh bị mờ'),
-    t('specialist.reject.quickMismatch', 'Mã số vi mạch hoặc tên ngựa không khớp hồ sơ'),
+    t('specialist.reject.quickMismatch', 'Số Microchip hoặc tên ngựa không khớp hồ sơ'),
     t('specialist.reject.quickExpired', 'Giấy tờ đã quá thời hạn quy định (hết hiệu lực)'),
     t('specialist.reject.quickStamp', 'Thiếu dấu mộc tròn hoặc chữ ký của bác sĩ thú y'),
   ];

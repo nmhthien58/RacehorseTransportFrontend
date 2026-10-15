@@ -131,3 +131,9 @@ export const HANDOVER_CONDITION = {
   NORMAL_FATIGUE: 'NormalFatigue',
   INJURED: 'Injured',
 };
+
+// Định dạng mã định danh ngựa, khớp với validate của backend (HorseRequests.cs)
+// Microchip chuẩn ISO 11784/11785: đúng 15 chữ số
+export const MICROCHIP_PATTERN = /^\s*[0-9]{15}\s*$/;
+// Hộ chiếu UELN: 3 số mã quốc gia + 3 số mã cơ quan cấp + 9 chữ/số định danh
+export const UELN_PATTERN = /^\s*[0-9]{6}[A-Za-z0-9]{9}\s*$/;

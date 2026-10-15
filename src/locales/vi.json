@@ -133,11 +133,11 @@
   },
   "horses": {
     "title": "Hồ sơ ngựa của tôi",
-    "subtitle": "Quản lý thông tin định danh, vi mạch và hộ chiếu các cá thể ngựa đua",
+    "subtitle": "Quản lý thông tin định danh, số Microchip và hộ chiếu các cá thể ngựa đua",
     "addNewTitle": "Thêm hồ sơ ngựa mới",
-    "addNewSubtitle": "Khai báo thông tin định danh, số vi mạch, hộ chiếu FEI và yêu cầu chăm sóc thú y",
+    "addNewSubtitle": "Khai báo thông tin định danh, số Microchip, hộ chiếu và yêu cầu chăm sóc thú y",
     "myHorsesTitle": "Danh sách ngựa của tôi",
-    "myHorsesSubtitle": "Quản lý danh sách ngựa đua, theo dõi số vi mạch sinh trắc học và lịch sử sức khỏe",
+    "myHorsesSubtitle": "Quản lý danh sách ngựa đua, theo dõi số Microchip và lịch sử sức khỏe",
     "detailTitle": "Hồ sơ chi tiết ngựa đua",
     "detailSubtitle": "Thông tin nhận diện sinh trắc học, lý lịch thi đấu và hồ sơ kiểm dịch thú y",
     "viewAction": "Xem",
@@ -288,7 +288,7 @@
       "breed": "Giống ngựa",
       "gender": "Giới tính",
       "dob": "Ngày sinh",
-      "microchip": "Số vi mạch",
+      "microchip": "Số Microchip",
       "passport": "Số hộ chiếu",
       "color": "Màu lông",
       "photoUrl": "Ảnh nhận diện (URL)",
@@ -300,8 +300,8 @@
       "breed": "Chọn giống ngựa",
       "dob": "Chọn ngày sinh",
       "color": "Ví dụ: Dark Bay, Hồng sắc, Bạch sắc...",
-      "microchip": "Ví dụ: 985141008472910 (Mã RFID)",
-      "passport": "Ví dụ: FEI-VN-2026-01, AQHA-5920184",
+      "microchip": "Ví dụ: 982000412345671 (15 chữ số)",
+      "passport": "Ví dụ: 704001000000001 (mã UELN 15 ký tự)",
       "photoUrl": "https://images.unsplash.com/...",
       "specialCare": "Ghi chú chế độ đệm rơm dày, bổ sung điện giải, cách ly với ngựa đực khác, nhiệt độ cabin 16-19°C..."
     },
@@ -316,10 +316,10 @@
       "breedRequired": "Vui lòng chọn hoặc nhập giống ngựa",
       "genderRequired": "Vui lòng chọn giới tính ngựa",
       "dobRequired": "Vui lòng chọn ngày sinh của ngựa",
-      "microchipRequired": "Vui lòng nhập số vi mạch sinh trắc học",
-      "microchipFormat": "Mã vi mạch phải gồm 9 đến 30 ký tự số hoặc chữ",
+      "microchipRequired": "Vui lòng nhập số Microchip",
+      "microchipFormat": "Số Microchip phải gồm đúng 15 chữ số",
       "passportRequired": "Vui lòng nhập số hộ chiếu vận chuyển",
-      "passportMaxLength": "Số hộ chiếu không được vượt quá 50 ký tự"
+      "passportFormat": "Số hộ chiếu phải là mã UELN 15 ký tự: 6 chữ số đầu, sau đó 9 chữ hoặc số"
     }
   },
   "dashboard": {
@@ -1002,7 +1002,7 @@
       "quickReasonsTitle": "Lý do & yêu cầu thường gặp (bấm để thêm vào ghi chú):",
       "quickBlurry": "Ảnh chụp/scan mờ, thiếu con dấu đỏ hoặc chữ ký kiểm dịch viên",
       "quickExpired": "Giấy chứng nhận thú y hoặc kết quả xét nghiệm đã hết thời hạn hiệu lực",
-      "quickMismatch": "Mã số vi mạch RFID hoặc tên cá thể ngựa không khớp với đơn đặt chuyến",
+      "quickMismatch": "Số Microchip hoặc tên cá thể ngựa không khớp với đơn đặt chuyến",
       "quickFormat": "Tài liệu không đúng biểu mẫu quy định của nước sở tại",
       "notesLabel": "Ghi chú & Hướng dẫn cụ thể cho khách hàng:",
       "notesPlaceholder": "Nhập hướng dẫn cụ thể cho khách hàng về cách bổ sung/sửa đổi tài liệu...",

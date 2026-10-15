@@ -9,9 +9,6 @@ import {
   Space,
   Timeline,
   Modal,
-  Form,
-  Input,
-  InputNumber,
   Spin,
   Alert,
   message,
@@ -24,12 +21,10 @@ import {
   LoginOutlined,
   LogoutOutlined,
   HeartOutlined,
-  DashboardOutlined,
-  ThunderboltOutlined,
-  ApartmentOutlined,
   SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@features/auth/store/authStore';
 import { Tooltip } from 'antd';
 import { useMissionDetail } from '../hooks/useDriverMissions';
@@ -37,7 +32,6 @@ import MissionHeaderCard from '../components/MissionHeaderCard';
 import EmergencyReportModal from '../components/EmergencyReportModal';
 
 const { Title, Text, Paragraph } = Typography;
-const { TextArea } = Input;
 
 /**
  * Trả về màu và nhãn cho trạng thái trạm kiểm soát
@@ -63,6 +57,7 @@ function getCheckpointStatusMeta(status) {
 export default function TripExecutionPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const {
     mission,
     loading,
@@ -77,7 +72,6 @@ export default function TripExecutionPage() {
   const [sosModalOpen, setSosModalOpen] = useState(false);
   const [clearModalOpen, setClearModalOpen] = useState(false);
   const [selectedCp, setSelectedCp] = useState(null);
-  const [clearForm] = Form.useForm();
 
   const checkpoints = mission?.routeCheckpoints || [];
   const { user } = useAuthStore();
@@ -87,34 +81,20 @@ export default function TripExecutionPage() {
   const isCrewMember = (mission?.crew || []).some((c) => Number(c.userId) === Number(user?.userId));
   const canUpdateRoute = isCrewMember || userRole === 'Admin';
 
-  // Mở modal hoàn tất kiểm tra trạm
+  // Mở modal xác nhận thông quan cửa khẩu
   const handleOpenClearModal = (cp) => {
     setSelectedCp(cp);
-    clearForm.resetFields();
-    clearForm.setFieldsValue({
-      odometerReading: cp.odometerReading || 12450,
-      clearanceNumber: cp.clearanceNumber || '',
-      notes: cp.notes || '',
-    });
     setClearModalOpen(true);
   };
 
-  // Xác nhận Clear trạm
+  // Xác nhận thông quan (POST /checkpoints/{id}/clear không nhận body)
   const handleConfirmClear = async () => {
-    try {
-      const values = await clearForm.validateFields();
-      if (!selectedCp) return;
-
-      // Backend chỉ ghi nhận đã thông quan (không lưu số liệu trong form); form giữ để đoàn xe đối chiếu
-      void values;
-      const success = await clearCheckpoint(selectedCp.checkpointId);
-      if (success) {
-        message.success(`Đã hoàn tất kiểm tra tại trạm "${selectedCp.locationName}"!`);
-        setClearModalOpen(false);
-        setSelectedCp(null);
-      }
-    } catch {
-      // Validate error
+    if (!selectedCp) return;
+    const success = await clearCheckpoint(selectedCp.checkpointId);
+    if (success) {
+      message.success(`Đã hoàn tất kiểm tra tại trạm "${selectedCp.locationName}"!`);
+      setClearModalOpen(false);
+      setSelectedCp(null);
     }
   };
 
@@ -148,6 +128,14 @@ export default function TripExecutionPage() {
 
   const isDestinationReached =
     mission?.overallStatus === 'ArrivedDestination' || mission?.overallStatus === 'Completed';
+
+  // Số liệu tóm tắt lấy từ dữ liệu thật của chuyến (mốc + nhật ký thể trạng), không có cảm biến GPS
+  const welfareLogs = [...(mission?.welfareLogs || [])].sort((a, b) => new Date(b.loggedAt) - new Date(a.loggedAt));
+  const latestLog = welfareLogs[0];
+  const passedCount = checkpoints.filter(
+    (cp) => cp.status === 'Departed' || (cp.locationType === 'Destination' && cp.actualArrivalTime),
+  ).length;
+  const alertCount = welfareLogs.filter((log) => log.needsAttention).length;
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px' }}>
@@ -189,65 +177,45 @@ export default function TripExecutionPage() {
         />
       )}
 
-      {/* Dải Telemetry Realtime trên xe */}
-      <Card
-        style={{
-          borderRadius: 12,
-          marginBottom: 24,
-          background: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)',
-          border: 'none',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-        }}
-        bodyStyle={{ padding: '20px 24px' }}
-      >
+      {/* Tóm tắt chuyến từ dữ liệu thật */}
+      <Card style={{ borderRadius: 12, marginBottom: 24, border: '1px solid #E5E7EB' }} bodyStyle={{ padding: '16px 24px' }}>
         <Row gutter={[24, 16]} align="middle">
-          <Col xs={24} md={6}>
-            <Space size={10} align="center">
-              <DashboardOutlined style={{ color: '#F59E0B', fontSize: 24 }} />
-              <div>
-                <Text style={{ color: '#94A3B8', fontSize: 12 }}>VẬN TỐC HIỆN TẠI (GPS)</Text>
-                <div style={{ color: '#FFF', fontSize: 22, fontWeight: 700 }}>
-                  62 <span style={{ fontSize: 14, fontWeight: 400 }}>km/h</span>
-                </div>
-              </div>
-            </Space>
+          <Col xs={12} md={6}>
+            <Text type="secondary" style={{ fontSize: 12 }}>{t('driver.execution.summary.checkpoints')}</Text>
+            <div style={{ fontSize: 20, fontWeight: 600 }}>
+              {passedCount}/{checkpoints.length}
+            </div>
           </Col>
-
-          <Col xs={24} md={6}>
-            <Space size={10} align="center">
-              <ThunderboltOutlined style={{ color: '#10B981', fontSize: 24 }} />
-              <div>
-                <Text style={{ color: '#94A3B8', fontSize: 12 }}>NHIỆT ĐỘ CABIN NGỰA</Text>
-                <div style={{ color: '#10B981', fontSize: 22, fontWeight: 700 }}>
-                  19.4°C <Tag color="green" style={{ marginLeft: 6 }}>Tối ưu</Tag>
-                </div>
-              </div>
-            </Space>
+          <Col xs={12} md={6}>
+            <Text type="secondary" style={{ fontSize: 12 }}>{t('driver.execution.summary.cabinTemp')}</Text>
+            <div style={{ fontSize: 20, fontWeight: 600 }}>
+              {latestLog ? `${latestLog.cabinTemp} °C` : '—'}
+            </div>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {latestLog
+                ? t('driver.execution.summary.loggedAt', {
+                    time: new Date(latestLog.loggedAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }),
+                  })
+                : t('driver.execution.summary.noLog')}
+            </Text>
           </Col>
-
-          <Col xs={24} md={6}>
-            <Space size={10} align="center">
-              <ApartmentOutlined style={{ color: '#38BDF8', fontSize: 24 }} />
-              <div>
-                <Text style={{ color: '#94A3B8', fontSize: 12 }}>ĐỘ ẨM & THÔNG GIÓ</Text>
-                <div style={{ color: '#FFF', fontSize: 22, fontWeight: 700 }}>
-                  64% <span style={{ fontSize: 14, fontWeight: 400 }}>/ Cấp 3</span>
-                </div>
-              </div>
-            </Space>
+          <Col xs={12} md={6}>
+            <Text type="secondary" style={{ fontSize: 12 }}>{t('driver.execution.summary.logs')}</Text>
+            <div style={{ fontSize: 20, fontWeight: 600 }}>
+              {welfareLogs.length}
+              {alertCount > 0 && (
+                <Tag color="red" style={{ marginLeft: 8, verticalAlign: 'middle' }}>
+                  {t('driver.execution.summary.alerts', { count: alertCount })}
+                </Tag>
+              )}
+            </div>
           </Col>
-
-          <Col xs={24} md={6} style={{ textAlign: 'right' }}>
+          <Col xs={12} md={6} style={{ textAlign: 'right' }}>
             <Button
               type="primary"
               icon={<HeartOutlined />}
               onClick={() => navigate(`/driver/missions/${tripId}/welfare-log`)}
-              style={{
-                backgroundColor: '#F59E0B',
-                borderColor: '#F59E0B',
-                fontWeight: 600,
-                borderRadius: 8,
-              }}
+              style={{ fontWeight: 600, borderRadius: 8 }}
             >
               Ghi nhật ký phúc lợi ngựa
             </Button>
@@ -278,7 +246,7 @@ export default function TripExecutionPage() {
               Danh sách trạm kiểm soát & Điểm dừng nghỉ trên lộ trình
             </Title>
             <Paragraph type="secondary" style={{ margin: '4px 0 0 0' }}>
-              Thực hiện check-in đúng quy trình State Machine: Đến trạm (Arrive) → Hoàn tất kiểm tra (Clear) → Rời trạm (Depart)
+              {t('driver.execution.stepsHint')}
             </Paragraph>
           </div>
 
@@ -550,37 +518,16 @@ export default function TripExecutionPage() {
         open={clearModalOpen}
         onCancel={() => setClearModalOpen(false)}
         onOk={handleConfirmClear}
-        okText="Lưu & Xác nhận Đạt"
+        okText={t('driver.execution.clearOk')}
         cancelText="Hủy"
         okButtonProps={{
           style: { backgroundColor: '#7C3AED', borderColor: '#7C3AED' },
           loading: actionLoading,
         }}
       >
-        <Paragraph type="secondary">
-          Ghi nhận thông tin kiểm tra dịch tễ thú y, số chứng nhận thông quan và chỉ số đồng hồ công-tơ-mét xe.
+        <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+          {t('driver.execution.clearConfirm')}
         </Paragraph>
-
-        <Form form={clearForm} layout="vertical">
-          <Form.Item
-            name="odometerReading"
-            label="Số chỉ đồng hồ Km (Odometer)"
-            rules={[{ required: true, message: 'Vui lòng nhập số km' }]}
-          >
-            <InputNumber style={{ width: '100%' }} size="large" addonAfter="km" />
-          </Form.Item>
-
-          <Form.Item
-            name="clearanceNumber"
-            label="Số chứng nhận thông quan / Phiếu kiểm dịch (nếu có)"
-          >
-            <Input placeholder="Ví dụ: VET-CL-2026-9988" size="large" />
-          </Form.Item>
-
-          <Form.Item name="notes" label="Ghi chú tại trạm">
-            <TextArea rows={3} placeholder="Ghi nhận thời tiết, tình trạng ngựa hoặc thời gian dừng nghỉ..." />
-          </Form.Item>
-        </Form>
       </Modal>
 
       {/* Modal Báo cáo khẩn cấp SOS */}

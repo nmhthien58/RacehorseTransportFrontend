@@ -97,7 +97,12 @@
     "escortMissions": "Equine Escort Missions",
     "escortMission": "Veterinary Supervision & Escort",
     "tripHistory": "Trip History",
-    "ownerPortal": "Owner Portal"
+    "ownerPortal": "Owner Portal",
+    "tripTracking": "Trip tracking",
+    "incidents": "Incidents & rerouting",
+    "incidentReview": "Incident approvals",
+    "tripClosure": "Trip closing & KPI",
+    "reports": "Reports"
   },
   "status": {
     "submitted": "Submitted",
@@ -1145,7 +1150,18 @@
       "speed": "GPS Speed",
       "arrive": "Check-in Arrive",
       "clear": "Complete Clearance / Inspection",
-      "depart": "Check-in Depart"
+      "depart": "Check-in Depart",
+      "stepsHint": "At each checkpoint: Arrive → Clear (border gates only) → Depart",
+      "clearConfirm": "Confirm the crew has finished customs and quarantine at this border gate. You can only leave the gate after this step.",
+      "clearOk": "Confirm clearance",
+      "summary": {
+        "checkpoints": "Checkpoints passed",
+        "cabinTemp": "Cabin temperature (latest log)",
+        "loggedAt": "Logged at {{time}}",
+        "noLog": "No log yet",
+        "logs": "Health log entries",
+        "alerts": "{{count}} need attention"
+      }
     },
     "welfare": {
       "title": "Biometric Health & Equine Welfare Log",
@@ -1194,13 +1210,17 @@
     },
     "activeTrip": {
       "title": "Active Transport Trip",
-      "subtitle": "Live telemetry monitoring for vehicle, equine stall environment, and horse vitals",
+      "subtitle": "Route, horses on board and the latest health log of the trip you are running",
       "loading": "Loading live telemetry data...",
       "noTripTitle": "No active trip is currently in transit",
       "noTripDesc": "You have no active trips assigned or the previous trip has concluded.",
       "viewBriefing": "View Mission Briefing",
       "sosButton": "Report Emergency (SOS)",
-      "manageCheckpoints": "Manage Checkpoints"
+      "manageCheckpoints": "Manage Checkpoints",
+      "stable": "Stable",
+      "needsAttention": "Needs attention",
+      "noLog": "No health log for this horse yet",
+      "lastLog": "Logged at {{time}} by {{by}}"
     },
     "report": {
       "loading": "Loading shift completion report...",
@@ -1520,5 +1540,321 @@
       "loadDocuments": "Could not load vet records",
       "deleteFailed": "Could not delete the record"
     }
+  },
+  "customerTrips": {
+    "title": "Trip tracking",
+    "subtitle": "Trips that are carrying or have carried your horses. Click a trip to see its route and health logs.",
+    "empty": "No trips yet. A trip appears once your booking is approved and the coordinator plans it.",
+    "awaitingPlanning": "Horses waiting for a trip: {{horses}}",
+    "planned": "planned",
+    "checkpointProgress": "{{reached}}/{{total}} checkpoints",
+    "alerts": "{{count}} need attention",
+    "filters": {
+      "all": "All",
+      "running": "In progress",
+      "upcoming": "Upcoming",
+      "finished": "Finished"
+    },
+    "columns": {
+      "trip": "Trip",
+      "route": "Route",
+      "horses": "Horses",
+      "departure": "Departure",
+      "progress": "Progress",
+      "logs": "Health logs",
+      "status": "Status"
+    },
+    "backToList": "All trips",
+    "notFound": "This trip was not found in your bookings",
+    "updatedAt": "Updated at {{time}}",
+    "refresh": "Refresh",
+    "info": {
+      "vehicle": "Vehicle",
+      "driver": "Lead driver",
+      "departure": "Departure",
+      "arrival": "Arrival",
+      "progress": "Checkpoints reached",
+      "delay": "Schedule",
+      "handover": "Handover",
+      "logs": "Health log entries"
+    },
+    "handoverDone": "Handed over",
+    "handoverPending": "Not handed over yet",
+    "routeTitle": "Route",
+    "arrivedAt": "Arrived {{time}}",
+    "plannedAt": "Planned {{time}}",
+    "departedAt": "Left {{time}}",
+    "checkpointCancelled": "Dropped when the trip was rerouted",
+    "healthTitle": "Health logs",
+    "stall": "Stall {{number}}",
+    "logCount": "{{count}} entries",
+    "noLogs": "The crew has not logged this horse yet",
+    "log": {
+      "time": "Time",
+      "checkpoint": "At checkpoint",
+      "onRoad": "On the road",
+      "cabinTemp": "Cabin temp",
+      "water": "Water",
+      "feed": "Feeding",
+      "stress": "Stress",
+      "notes": "Notes",
+      "by": "Logged by",
+      "photo": "Photo"
+    },
+    "feed": {
+      "Normal": "Normal",
+      "Reduced": "Reduced",
+      "Refused": "Refused"
+    },
+    "stress": {
+      "Calm": "Calm",
+      "MildStress": "Mild stress",
+      "Agitated": "Agitated"
+    },
+    "bookingRef": "Booking {{code}}",
+    "headingHere": "Heading to this stop",
+    "stoppedHere": "Stopped here now",
+    "latestAt": "Latest log · {{time}}",
+    "allLogs": "All log entries",
+    "waterShort": "{{liters}} L water"
+  },
+  "filePreview": {
+    "noFile": "This document has no attached file",
+    "unsupported": "This file type cannot be previewed",
+    "openNewTab": "Open in new tab"
+  },
+  "incidents": {
+    "title": "Incidents",
+    "none": "No incidents",
+    "empty": "No incidents here",
+    "pageTitle": {
+      "coordinator": "Incidents & rerouting",
+      "manager": "Incident approvals"
+    },
+    "pageSubtitle": {
+      "coordinator": "Incidents reported by crews on the road. Propose a plan, reroute when needed and close the incident when handled.",
+      "manager": "Response plans proposed by coordinators, with their extra cost."
+    },
+    "filters": {
+      "coordinator": {
+        "todo": "To handle",
+        "waiting": "Awaiting approval",
+        "resolved": "Closed"
+      },
+      "manager": {
+        "todo": "To review",
+        "open": "In progress",
+        "resolved": "Closed"
+      }
+    },
+    "columns": {
+      "code": "Incident",
+      "trip": "Trip",
+      "reportedAt": "Reported",
+      "reportedBy": "Reported by",
+      "cost": "Extra cost",
+      "status": "Status",
+      "approvedBy": "Approved by",
+      "resolvedAt": "Closed at"
+    },
+    "fields": {
+      "type": "Type",
+      "severity": "Severity",
+      "location": "Location",
+      "horse": "Affected horse",
+      "description": "Description",
+      "plan": "Plan",
+      "routeNotes": "Route notes",
+      "cost": "Extra cost (USD)",
+      "rejectReason": "Reason"
+    },
+    "type": {
+      "MechanicalBreakdown": "Vehicle breakdown",
+      "BorderCongestion": "Border congestion",
+      "EquineHealthIssue": "Horse health issue",
+      "Weather": "Weather",
+      "ClimateControlFailure": "Climate control failure",
+      "CustomsHold": "Customs hold",
+      "Other": "Other"
+    },
+    "severity": {
+      "Minor": "Minor",
+      "Moderate": "Moderate",
+      "Major": "Major",
+      "Critical": "Critical"
+    },
+    "status": {
+      "Reported": "Reported",
+      "PlanProposed": "Plan awaiting approval",
+      "Approved": "Plan approved",
+      "Rejected": "Plan rejected",
+      "Resolved": "Resolved"
+    },
+    "planTitle": "Response plan",
+    "planPlaceholder": "E.g. switch to the spare truck, extra rest at the nearest vet station",
+    "noPlan": "The coordinator has not proposed a plan yet.",
+    "rejectedBecause": "The manager rejected the previous plan",
+    "finishHint": "The plan is approved. Reroute if the route must change, then close the incident once handled.",
+    "actions": {
+      "propose": "Send plan",
+      "repropose": "Send revised plan",
+      "proposed": "Plan sent to managers",
+      "approve": "Approve plan",
+      "approveConfirm": "Approve this plan?",
+      "approved": "Plan approved",
+      "reject": "Reject",
+      "rejectTitle": "Reject plan",
+      "rejected": "Plan rejected",
+      "reroute": "Reroute",
+      "resolve": "Close incident",
+      "resolveConfirm": "Mark this incident as handled?",
+      "resolved": "Incident closed"
+    },
+    "report": {
+      "title": "Report an incident",
+      "submit": "Send report",
+      "success": "Incident reported to the coordinator",
+      "hint": "Trip {{trip}}. The coordinator, managers and owners of horses on board are notified right away.",
+      "typePlaceholder": "Choose a type",
+      "typeRequired": "Choose a type",
+      "locationPlaceholder": "E.g. Nanning expressway, km 120",
+      "locationRequired": "Enter where it happened",
+      "horsePlaceholder": "Not tied to a specific horse",
+      "descriptionPlaceholder": "What happened and what the crew did",
+      "descriptionRequired": "Describe the incident"
+    },
+    "reroute": {
+      "title": "Reroute trip {{trip}}",
+      "submit": "Apply new route",
+      "success": "Route updated; the trip is now in emergency rerouting",
+      "nothing": "Pick at least one stop to remove or add a new stop",
+      "currentRoute": "Current route",
+      "removeHint": "Tick stops to remove. Only stops not reached yet can be removed, never the origin or destination.",
+      "insertAfter": "Insert new stops after",
+      "insertAfterHint": "Leave empty to insert after the last stop the crew reached.",
+      "newStops": "New stops (in travel order)",
+      "addStop": "Add stop",
+      "stopName": "Stop name",
+      "stopType": "Type",
+      "plannedTime": "Planned time",
+      "address": "Address",
+      "rest": "Mandatory rest (min)",
+      "type": {
+        "RestStop": "Rest stop",
+        "BorderGate": "Border gate"
+      }
+    }
+  },
+  "handover": {
+    "title": "Handover & e-POD",
+    "notArrived": "Handover records can only be made once the truck has checked in at the destination.",
+    "tripClosed": "The manager has closed this trip.",
+    "bookingsTitle": "Bookings to hand over",
+    "progress": "{{done}}/{{total}} bookings handed over",
+    "done": "Handed over",
+    "pending": "Not handed over",
+    "create": "Create record",
+    "receivedBy": "Received by",
+    "at": "Time",
+    "by": "Recorded by",
+    "listTitle": "Handover records",
+    "none": "No handover records yet",
+    "condition": {
+      "label": "Horse condition on arrival",
+      "Excellent": "Good",
+      "NormalFatigue": "Normal fatigue",
+      "Injured": "Injured"
+    },
+    "sign": {
+      "clear": "Clear",
+      "placeholder": "Recipient signs here"
+    },
+    "form": {
+      "title": "Handover record for {{code}}",
+      "chipsTitle": "Microchip check",
+      "chipsHint": "Scan or type the microchip of each horse. All must match before the record can be saved.",
+      "chipPlaceholder": "15-digit microchip",
+      "chipsMismatch": "Some microchips do not match",
+      "recipientTitle": "Recipient",
+      "recipientName": "Full name",
+      "recipientPhone": "Phone",
+      "recipientIdCard": "ID card / passport",
+      "remarks": "Remarks",
+      "signature": "Recipient signature",
+      "required": "Required",
+      "signatureRequired": "The recipient has not signed",
+      "submit": "Save record",
+      "success": "Handover recorded for {{code}}",
+      "failed": "Could not save the handover record"
+    }
+  },
+  "tripReport": {
+    "title": "Trip summary {{code}}",
+    "notClosed": "The manager has not closed this trip yet, so there is no KPI score.",
+    "bookings": "Bookings",
+    "horses": "Horses",
+    "started": "Departed",
+    "ended": "Finished",
+    "checkpoints": "Stops passed",
+    "logs": "Health logs"
+  },
+  "tripClose": {
+    "title": "Trip closing & KPI",
+    "subtitle": "Arrived trips are closed once every booking has a handover record. The system locks in delay, KPI score and actual cost.",
+    "tabs": {
+      "toClose": "To close",
+      "closed": "Closed"
+    },
+    "columns": {
+      "bookings": "Bookings",
+      "horses": "Horses",
+      "handover": "Handed over",
+      "plannedEnd": "Planned arrival"
+    },
+    "emptyToClose": "No trips waiting to be closed",
+    "emptyClosed": "No closed trips yet",
+    "kpi": "KPI score",
+    "kpiOutOf": "/ 100 points",
+    "onTime": "Punctuality",
+    "onTimeStatus": {
+      "OnTime": "On time",
+      "Delayed_AcceptableForceMajeure": "Delayed (force majeure)",
+      "Delayed_OperationalFault": "Delayed (operational fault)"
+    },
+    "plannedCost": "Planned cost",
+    "actualCost": "Actual cost",
+    "closedAt": "Closed at",
+    "closedBy": "Closed by",
+    "remarks": "Remarks",
+    "missingHandover": "Cannot close yet: some bookings have no handover record ({{codes}}).",
+    "closeHint": "All bookings are handed over. Add remarks if needed and close the trip; results cannot be changed later.",
+    "remarksPlaceholder": "Remarks about the trip (optional)",
+    "closeButton": "Close trip",
+    "confirm": "Close the trip and lock in the KPI? This cannot be undone.",
+    "success": "Closed trip {{code}}, KPI {{score}}"
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "Figures for closed trips. Leave the dates empty to see everything.",
+    "from": "From",
+    "to": "To",
+    "operations": "Operations",
+    "finance": "Finance ({{currency}})",
+    "punctuality": "Punctuality",
+    "incidentsByType": "Incidents by type",
+    "completedTrips": "Trips closed",
+    "completedBookings": "Bookings completed",
+    "horsesDelivered": "Horses delivered",
+    "onTimeRate": "On-time rate",
+    "averageKpi": "Average KPI",
+    "averageDelay": "Average delay",
+    "minutes": "{{count}} min",
+    "revenue": "Revenue",
+    "operatingCost": "Operating cost",
+    "grossProfit": "Gross profit",
+    "totalIncidents": "Incidents reported",
+    "incidentCost": "Extra cost from incidents",
+    "trips": "Trips",
+    "count": "Count"
   }
 }

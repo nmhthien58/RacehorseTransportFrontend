@@ -13,6 +13,9 @@ import {
   FileTextOutlined,
   HistoryOutlined,
   TeamOutlined,
+  WarningOutlined,
+  FileDoneOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -68,7 +71,7 @@ export default function AppSidebar({ collapsed, user }) {
         {
           key: ROUTES.CUSTOMER_TRIPS,
           icon: <CompassOutlined style={{ fontSize: 18 }} />,
-          label: t('nav.activeTrips', 'Theo dõi chuyến đi'),
+          label: t('nav.tripTracking', 'Theo dõi chuyến đi'),
         },
         {
           key: ROUTES.CUSTOMER_MESSAGES,
@@ -101,6 +104,21 @@ export default function AppSidebar({ collapsed, user }) {
           label: t('nav.routeApprovals', 'Phê duyệt lộ trình'),
         },
         {
+          key: ROUTES.MANAGER_INCIDENTS,
+          icon: <WarningOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.incidentReview', 'Duyệt xử lý sự cố'),
+        },
+        {
+          key: ROUTES.MANAGER_TRIPS,
+          icon: <FileDoneOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.tripClosure', 'Đóng chuyến & KPI'),
+        },
+        {
+          key: ROUTES.MANAGER_REPORTS,
+          icon: <BarChartOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.reports', 'Báo cáo'),
+        },
+        {
           key: ROUTES.ADMIN_USERS,
           icon: <TeamOutlined style={{ fontSize: 18 }} />,
           label: t('nav.userManagement', 'Quản lý người dùng'),
@@ -129,6 +147,11 @@ export default function AppSidebar({ collapsed, user }) {
           key: ROUTES.COORDINATOR_FLEET_ROSTER,
           icon: <CarOutlined style={{ fontSize: 18 }} />,
           label: t('nav.fleetRoster', 'Đội xe & Nhân sự'),
+        },
+        {
+          key: ROUTES.COORDINATOR_INCIDENTS,
+          icon: <WarningOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.incidents', 'Sự cố & nắn tuyến'),
         },
         {
           key: ROUTES.PROFILE,
@@ -255,11 +278,15 @@ export default function AppSidebar({ collapsed, user }) {
     if (current.startsWith('/customer/profile')) return ROUTES.CUSTOMER_PROFILE;
     if (current.startsWith('/customer/billing') || current.startsWith('/billing')) return ROUTES.CUSTOMER_BILLING;
     if (current.startsWith('/manager/route-approvals')) return ROUTES.MANAGER_ROUTE_APPROVALS;
+    if (current.startsWith('/manager/incidents')) return ROUTES.MANAGER_INCIDENTS;
+    if (current.startsWith('/manager/trips')) return ROUTES.MANAGER_TRIPS;
+    if (current.startsWith('/manager/reports')) return ROUTES.MANAGER_REPORTS;
     if (current.startsWith('/manager/pending-requests')) return ROUTES.MANAGER_PENDING_REQUESTS;
     if (current.startsWith('/manager/bookings')) return ROUTES.MANAGER_BOOKINGS;
     if (current.startsWith('/manager/dashboard')) return ROUTES.MANAGER_DASHBOARD;
     if (current.startsWith('/manager/profile')) return ROUTES.PROFILE;
     if (current.startsWith('/coordinator/route-planning')) return ROUTES.COORDINATOR_ROUTE_PLANNING;
+    if (current.startsWith('/coordinator/incidents')) return ROUTES.COORDINATOR_INCIDENTS;
     if (current.startsWith('/coordinator/fleet-roster') || current.startsWith('/coordinator/driver-schedules')) return ROUTES.COORDINATOR_FLEET_ROSTER;
     if (current.startsWith('/coordinator/dashboard') || current.startsWith('/coordinator')) return ROUTES.COORDINATOR_DASHBOARD;
     if (current.startsWith('/driver/history') || current.includes('/completion-report')) return ROUTES.DRIVER_HISTORY;

@@ -25,7 +25,8 @@ import MyHorsesPage from '@features/customer/pages/MyHorsesPage';
 import HorseDetailPage from '@features/customer/pages/HorseDetailPage';
 import AddHorsePage from '@features/customer/pages/AddHorsePage';
 import VetRecordsPage from '@features/customer/pages/VetRecordsPage';
-import ActiveTripsPage from '@features/customer/pages/ActiveTripsPage';
+import TripTrackingPage from '@features/customer/pages/TripTrackingPage';
+import TripTrackingDetailPage from '@features/customer/pages/TripTrackingDetailPage';
 import MessagesPage from '@features/customer/pages/MessagesPage';
 import ProfilePage from '@features/customer/pages/ProfilePage';
 import BillingPage from '@features/customer/pages/BillingPage';
@@ -38,6 +39,9 @@ import BookingDetailPage from '@features/manager/pages/BookingDetailPage';
 import PendingRequestsPage from '@features/manager/pages/PendingRequestsPage';
 import RouteApprovalsPage from '@features/manager/pages/RouteApprovalsPage';
 import UserManagementPage from '@features/manager/pages/UserManagementPage';
+import IncidentReviewPage from '@features/manager/pages/IncidentReviewPage';
+import TripClosurePage from '@features/manager/pages/TripClosurePage';
+import ReportsPage from '@features/manager/pages/ReportsPage';
 
 // Specialist pages
 import SpecialistDashboard from '@features/specialist/pages/DashboardPage';
@@ -50,6 +54,7 @@ import DocumentsPage from '@features/specialist/pages/DocumentsPage';
 import CoordinatorDashboard from '@features/coordinator/pages/DashboardPage';
 import RoutePlanningPage from '@features/coordinator/pages/RoutePlanningPage';
 import FleetRosterPage from '@features/coordinator/pages/FleetRosterPage';
+import CoordinatorIncidentsPage from '@features/coordinator/pages/IncidentsPage';
 
 // Driver pages
 import DriverDashboard from '@features/driver/pages/DashboardPage';
@@ -120,7 +125,8 @@ export default function AppRoutes() {
           <Route path="/bookings" element={<Navigate to={ROUTES.CUSTOMER_BOOKINGS} replace />} />
           <Route path="/booking" element={<Navigate to={ROUTES.CUSTOMER_BOOKINGS} replace />} />
           <Route path={ROUTES.CUSTOMER_PRICING} element={<CustomerPricingPage />} />
-          <Route path={ROUTES.CUSTOMER_TRIPS} element={<ActiveTripsPage />} />
+          <Route path={ROUTES.CUSTOMER_TRIPS} element={<TripTrackingPage />} />
+          <Route path={ROUTES.CUSTOMER_TRIP_DETAIL} element={<TripTrackingDetailPage />} />
           <Route path={ROUTES.CUSTOMER_MESSAGES} element={<MessagesPage />} />
           <Route path={ROUTES.CUSTOMER_PROFILE} element={<ProfilePage />} />
           <Route path={ROUTES.CUSTOMER_BILLING} element={<BillingPage />} />
@@ -140,6 +146,9 @@ export default function AppRoutes() {
           <Route path="/manager/route-approvals" element={<RouteApprovalsPage />} />
           <Route path={ROUTES.MANAGER_USERS} element={<UserManagementPage />} />
           <Route path="/manager/users" element={<UserManagementPage />} />
+          <Route path={ROUTES.MANAGER_INCIDENTS} element={<IncidentReviewPage />} />
+          <Route path={ROUTES.MANAGER_TRIPS} element={<TripClosurePage />} />
+          <Route path={ROUTES.MANAGER_REPORTS} element={<ReportsPage />} />
           <Route path={ROUTES.MANAGER_PROFILE} element={<ProfilePage />} />
         </Route>
       </Route>
@@ -170,6 +179,7 @@ export default function AppRoutes() {
           <Route path="/coordinator/fleet-roster" element={<FleetRosterPage />} />
           <Route path={ROUTES.COORDINATOR_DRIVER_SCHEDULES} element={<FleetRosterPage />} />
           <Route path="/coordinator/driver-schedules" element={<FleetRosterPage />} />
+          <Route path={ROUTES.COORDINATOR_INCIDENTS} element={<CoordinatorIncidentsPage />} />
           <Route path={ROUTES.COORDINATOR_TRACKING} element={<CoordinatorDashboard />} />
           <Route path="/coordinator/tracking" element={<CoordinatorDashboard />} />
         </Route>

@@ -38,6 +38,7 @@ import SubmitAuthorityModal from '../components/SubmitAuthorityModal';
 import RequestDocumentsModal from '../components/RequestDocumentsModal';
 import ClearDossierModal from '../components/ClearDossierModal';
 import StandardFormTemplateModal from '@components/common/StandardFormTemplateModal';
+import FilePreview from '@components/common/FilePreview';
 import { ROUTES } from '@routes/routes';
 
 const { Title, Text } = Typography;
@@ -1033,15 +1034,10 @@ export default function DossierDetailPage() {
         open={previewFileModal.open}
         onCancel={() => setPreviewFileModal({ open: false, url: '', title: '' })}
         footer={null}
-        width={700}
+        width={900}
+        destroyOnHidden
       >
-        <div style={{ textAlign: 'center', padding: '10px 0' }}>
-          <img
-            src={previewFileModal.url}
-            alt="Document Preview"
-            style={{ maxWidth: '100%', maxHeight: '500px', objectFit: 'contain', borderRadius: 4 }}
-          />
-        </div>
+        <FilePreview url={previewFileModal.url} title={previewFileModal.title} />
       </Modal>
 
       {/* Modal Mẫu Đơn Pháp Lý Chuẩn Quốc Tế (Official Standard Form Preview) */}

@@ -96,7 +96,12 @@
     "escortMissions": "Nhiệm vụ áp tải thú y",
     "escortMission": "Giám sát thú y & Áp tải",
     "tripHistory": "Lịch sử chuyến đi",
-    "ownerPortal": "Owner Portal"
+    "ownerPortal": "Owner Portal",
+    "tripTracking": "Theo dõi chuyến đi",
+    "incidents": "Sự cố & nắn tuyến",
+    "incidentReview": "Duyệt xử lý sự cố",
+    "tripClosure": "Đóng chuyến & KPI",
+    "reports": "Báo cáo"
   },
   "status": {
     "submitted": "Đã gửi",
@@ -1144,7 +1149,18 @@
       "speed": "Vận tốc GPS",
       "arrive": "Xác nhận Đã đến trạm",
       "clear": "Hoàn tất kiểm tra / Thông quan",
-      "depart": "Xác nhận Rời trạm"
+      "depart": "Xác nhận Rời trạm",
+      "stepsHint": "Thứ tự tại mỗi mốc: Đến trạm → Thông quan (chỉ cửa khẩu) → Rời trạm",
+      "clearConfirm": "Xác nhận đoàn xe đã hoàn tất thủ tục hải quan và kiểm dịch tại cửa khẩu này. Sau bước này mới rời được cửa khẩu.",
+      "clearOk": "Xác nhận thông quan",
+      "summary": {
+        "checkpoints": "Mốc đã qua",
+        "cabinTemp": "Nhiệt độ khoang (lần ghi gần nhất)",
+        "loggedAt": "Ghi lúc {{time}}",
+        "noLog": "Chưa có nhật ký",
+        "logs": "Số lần ghi sức khỏe",
+        "alerts": "{{count}} cần chú ý"
+      }
     },
     "welfare": {
       "title": "Nhật ký thể trạng sinh trắc & Phúc lợi ngựa",
@@ -1193,13 +1209,17 @@
     },
     "activeTrip": {
       "title": "Hành Trình Đang Chạy",
-      "subtitle": "Giám sát điều hành trực tiếp phương tiện, telemetry môi trường thùng xe và chỉ số sinh tồn của ngựa",
+      "subtitle": "Lộ trình, ngựa trên xe và lần ghi sức khỏe gần nhất của chuyến bạn đang chạy",
       "loading": "Đang nạp thông tin hành trình thời gian thực...",
       "noTripTitle": "Hiện không có chuyến xe nào đang hoạt động",
       "noTripDesc": "Bạn chưa được giao chuyến mới hoặc chuyến đi trước đó đã hoàn tất bàn giao.",
       "viewBriefing": "Xem Danh sách Nhiệm vụ",
       "sosButton": "Báo Cáo Sự Cố (SOS)",
-      "manageCheckpoints": "Check-in Trạm Kiểm Soát"
+      "manageCheckpoints": "Check-in Trạm Kiểm Soát",
+      "stable": "Ổn định",
+      "needsAttention": "Cần chú ý",
+      "noLog": "Chưa có nhật ký sức khỏe cho con ngựa này",
+      "lastLog": "Ghi lúc {{time}} bởi {{by}}"
     },
     "report": {
       "loading": "Đang nạp hồ sơ hoàn tất ca trực...",
@@ -1519,5 +1539,321 @@
       "loadDocuments": "Không tải được hồ sơ thú y",
       "deleteFailed": "Không xóa được hồ sơ"
     }
+  },
+  "customerTrips": {
+    "title": "Theo dõi chuyến đi",
+    "subtitle": "Các chuyến đang hoặc đã chở ngựa của bạn. Bấm vào một chuyến để xem lộ trình và nhật ký sức khỏe.",
+    "empty": "Chưa có chuyến nào. Chuyến xuất hiện sau khi đơn được duyệt và điều phối viên xếp chuyến.",
+    "awaitingPlanning": "Ngựa đang chờ xếp chuyến: {{horses}}",
+    "planned": "dự kiến",
+    "checkpointProgress": "{{reached}}/{{total}} mốc",
+    "alerts": "{{count}} cần chú ý",
+    "filters": {
+      "all": "Tất cả",
+      "running": "Đang chạy",
+      "upcoming": "Sắp khởi hành",
+      "finished": "Đã kết thúc"
+    },
+    "columns": {
+      "trip": "Chuyến",
+      "route": "Lộ trình",
+      "horses": "Ngựa",
+      "departure": "Khởi hành",
+      "progress": "Tiến độ",
+      "logs": "Nhật ký sức khỏe",
+      "status": "Trạng thái"
+    },
+    "backToList": "Tất cả chuyến đi",
+    "notFound": "Không tìm thấy chuyến này trong các đơn của bạn",
+    "updatedAt": "Cập nhật lúc {{time}}",
+    "refresh": "Làm mới",
+    "info": {
+      "vehicle": "Xe",
+      "driver": "Tài xế trưởng",
+      "departure": "Khởi hành",
+      "arrival": "Đến nơi",
+      "progress": "Mốc đã tới",
+      "delay": "Tiến độ so với kế hoạch",
+      "handover": "Bàn giao",
+      "logs": "Số lần ghi sức khỏe"
+    },
+    "handoverDone": "Đã bàn giao",
+    "handoverPending": "Chưa bàn giao",
+    "routeTitle": "Lộ trình",
+    "arrivedAt": "Đến lúc {{time}}",
+    "plannedAt": "Dự kiến {{time}}",
+    "departedAt": "Rời lúc {{time}}",
+    "checkpointCancelled": "Mốc đã bỏ khi đổi tuyến",
+    "healthTitle": "Nhật ký sức khỏe",
+    "stall": "Ô chuồng {{number}}",
+    "logCount": "{{count}} lần ghi",
+    "noLogs": "Đoàn xe chưa ghi nhật ký sức khỏe nào cho con ngựa này",
+    "log": {
+      "time": "Thời gian",
+      "checkpoint": "Tại mốc",
+      "onRoad": "Dọc đường",
+      "cabinTemp": "Nhiệt độ khoang",
+      "water": "Nước uống",
+      "feed": "Ăn uống",
+      "stress": "Căng thẳng",
+      "notes": "Ghi chú",
+      "by": "Người ghi",
+      "photo": "Ảnh"
+    },
+    "feed": {
+      "Normal": "Bình thường",
+      "Reduced": "Ăn ít",
+      "Refused": "Bỏ ăn"
+    },
+    "stress": {
+      "Calm": "Bình tĩnh",
+      "MildStress": "Hơi căng thẳng",
+      "Agitated": "Kích động"
+    },
+    "bookingRef": "Đơn {{code}}",
+    "headingHere": "Xe đang tới mốc này",
+    "stoppedHere": "Xe đang dừng tại đây",
+    "latestAt": "Lần ghi gần nhất · {{time}}",
+    "allLogs": "Tất cả các lần ghi",
+    "waterShort": "{{liters}} L nước"
+  },
+  "filePreview": {
+    "noFile": "Giấy tờ này chưa có tệp đính kèm",
+    "unsupported": "Không xem trước được loại tệp này",
+    "openNewTab": "Mở trong tab mới"
+  },
+  "incidents": {
+    "title": "Sự cố",
+    "none": "Không có sự cố nào",
+    "empty": "Không có sự cố trong mục này",
+    "pageTitle": {
+      "coordinator": "Sự cố & nắn tuyến",
+      "manager": "Duyệt xử lý sự cố"
+    },
+    "pageSubtitle": {
+      "coordinator": "Sự cố đoàn xe báo trên đường. Đề xuất phương án, nắn tuyến khi cần và đóng sự cố khi đã xử lý xong.",
+      "manager": "Phương án xử lý sự cố do điều phối viên đề xuất, kèm chi phí phát sinh."
+    },
+    "filters": {
+      "coordinator": {
+        "todo": "Cần xử lý",
+        "waiting": "Chờ quản lý duyệt",
+        "resolved": "Đã đóng"
+      },
+      "manager": {
+        "todo": "Chờ duyệt",
+        "open": "Đang xử lý",
+        "resolved": "Đã đóng"
+      }
+    },
+    "columns": {
+      "code": "Sự cố",
+      "trip": "Chuyến",
+      "reportedAt": "Báo lúc",
+      "reportedBy": "Người báo",
+      "cost": "Chi phí phát sinh",
+      "status": "Trạng thái",
+      "approvedBy": "Người duyệt",
+      "resolvedAt": "Đóng lúc"
+    },
+    "fields": {
+      "type": "Loại sự cố",
+      "severity": "Mức độ",
+      "location": "Vị trí",
+      "horse": "Ngựa bị ảnh hưởng",
+      "description": "Mô tả",
+      "plan": "Phương án",
+      "routeNotes": "Ghi chú tuyến đường",
+      "cost": "Chi phí phát sinh (USD)",
+      "rejectReason": "Lý do từ chối"
+    },
+    "type": {
+      "MechanicalBreakdown": "Hỏng xe",
+      "BorderCongestion": "Tắc ở cửa khẩu",
+      "EquineHealthIssue": "Sức khỏe ngựa",
+      "Weather": "Thời tiết",
+      "ClimateControlFailure": "Hỏng điều hòa khoang",
+      "CustomsHold": "Bị giữ ở hải quan",
+      "Other": "Khác"
+    },
+    "severity": {
+      "Minor": "Nhẹ",
+      "Moderate": "Trung bình",
+      "Major": "Nghiêm trọng",
+      "Critical": "Khẩn cấp"
+    },
+    "status": {
+      "Reported": "Mới báo",
+      "PlanProposed": "Chờ duyệt phương án",
+      "Approved": "Đã duyệt phương án",
+      "Rejected": "Phương án bị từ chối",
+      "Resolved": "Đã xử lý xong"
+    },
+    "planTitle": "Phương án xử lý",
+    "planPlaceholder": "Ví dụ: đổi xe dự phòng, nghỉ thêm tại trạm thú y gần nhất",
+    "noPlan": "Điều phối viên chưa đề xuất phương án.",
+    "rejectedBecause": "Quản lý đã từ chối phương án trước",
+    "finishHint": "Phương án đã được duyệt. Nắn tuyến nếu cần đổi lộ trình, rồi đóng sự cố khi đã xử lý xong.",
+    "actions": {
+      "propose": "Gửi phương án",
+      "repropose": "Gửi lại phương án",
+      "proposed": "Đã gửi phương án cho quản lý",
+      "approve": "Duyệt phương án",
+      "approveConfirm": "Duyệt phương án này?",
+      "approved": "Đã duyệt phương án",
+      "reject": "Từ chối",
+      "rejectTitle": "Từ chối phương án",
+      "rejected": "Đã từ chối phương án",
+      "reroute": "Nắn tuyến",
+      "resolve": "Đóng sự cố",
+      "resolveConfirm": "Xác nhận sự cố đã xử lý xong?",
+      "resolved": "Đã đóng sự cố"
+    },
+    "report": {
+      "title": "Báo sự cố",
+      "submit": "Gửi báo cáo",
+      "success": "Đã báo sự cố cho điều phối viên",
+      "hint": "Chuyến {{trip}}. Điều phối viên, quản lý và khách có ngựa trên xe sẽ nhận thông báo ngay.",
+      "typePlaceholder": "Chọn loại sự cố",
+      "typeRequired": "Chọn loại sự cố",
+      "locationPlaceholder": "Ví dụ: Cao tốc Nam Ninh, km 120",
+      "locationRequired": "Nhập vị trí xảy ra sự cố",
+      "horsePlaceholder": "Không gắn với con ngựa nào",
+      "descriptionPlaceholder": "Chuyện gì đã xảy ra, đoàn xe đã làm gì",
+      "descriptionRequired": "Nhập mô tả sự cố"
+    },
+    "reroute": {
+      "title": "Nắn tuyến chuyến {{trip}}",
+      "submit": "Áp dụng tuyến mới",
+      "success": "Đã cập nhật lộ trình, chuyến chuyển sang đổi tuyến khẩn cấp",
+      "nothing": "Chọn ít nhất một mốc cần bỏ hoặc thêm mốc mới",
+      "currentRoute": "Lộ trình hiện tại",
+      "removeHint": "Đánh dấu các mốc cần bỏ. Chỉ bỏ được mốc chưa tới, không bỏ điểm đi và điểm giao.",
+      "insertAfter": "Chèn mốc mới sau",
+      "insertAfterHint": "Bỏ trống thì chèn sau mốc gần nhất đoàn xe đã tới.",
+      "newStops": "Mốc mới (theo thứ tự đi)",
+      "addStop": "Thêm mốc",
+      "stopName": "Tên mốc",
+      "stopType": "Loại",
+      "plannedTime": "Giờ dự kiến",
+      "address": "Địa chỉ",
+      "rest": "Nghỉ bắt buộc (phút)",
+      "type": {
+        "RestStop": "Trạm nghỉ",
+        "BorderGate": "Cửa khẩu"
+      }
+    }
+  },
+  "handover": {
+    "title": "Bàn giao & e-POD",
+    "notArrived": "Chỉ lập biên bản bàn giao khi xe đã check-in tại điểm giao.",
+    "tripClosed": "Chuyến đã được quản lý đóng.",
+    "bookingsTitle": "Các đơn cần bàn giao",
+    "progress": "Đã bàn giao {{done}}/{{total}} đơn",
+    "done": "Đã bàn giao",
+    "pending": "Chưa bàn giao",
+    "create": "Lập biên bản",
+    "receivedBy": "Người nhận",
+    "at": "Thời điểm",
+    "by": "Người lập",
+    "listTitle": "Biên bản bàn giao",
+    "none": "Chưa có biên bản nào",
+    "condition": {
+      "label": "Tình trạng ngựa khi giao",
+      "Excellent": "Tốt",
+      "NormalFatigue": "Mệt bình thường",
+      "Injured": "Bị thương"
+    },
+    "sign": {
+      "clear": "Ký lại",
+      "placeholder": "Người nhận ký vào đây"
+    },
+    "form": {
+      "title": "Biên bản bàn giao đơn {{code}}",
+      "chipsTitle": "Đối chiếu mã vi mạch",
+      "chipsHint": "Quét hoặc nhập mã vi mạch của từng con. Phải khớp đủ tất cả mới lập được biên bản.",
+      "chipPlaceholder": "Mã vi mạch 15 số",
+      "chipsMismatch": "Còn mã vi mạch chưa khớp",
+      "recipientTitle": "Người nhận",
+      "recipientName": "Họ tên",
+      "recipientPhone": "Số điện thoại",
+      "recipientIdCard": "CCCD / Hộ chiếu",
+      "remarks": "Ghi chú",
+      "signature": "Chữ ký người nhận",
+      "required": "Không được để trống",
+      "signatureRequired": "Người nhận chưa ký",
+      "submit": "Lập biên bản",
+      "success": "Đã lập biên bản bàn giao cho đơn {{code}}",
+      "failed": "Không lập được biên bản bàn giao"
+    }
+  },
+  "tripReport": {
+    "title": "Tổng kết chuyến {{code}}",
+    "notClosed": "Chuyến chưa được quản lý đóng nên chưa có điểm KPI.",
+    "bookings": "Đơn",
+    "horses": "Số ngựa",
+    "started": "Xuất phát",
+    "ended": "Kết thúc",
+    "checkpoints": "Mốc đã qua",
+    "logs": "Nhật ký sức khỏe"
+  },
+  "tripClose": {
+    "title": "Đóng chuyến & KPI",
+    "subtitle": "Chuyến đã tới đích được đóng khi mọi đơn đã có biên bản bàn giao. Hệ thống tự chốt số phút trễ, điểm KPI và chi phí thực tế.",
+    "tabs": {
+      "toClose": "Chờ đóng",
+      "closed": "Đã đóng"
+    },
+    "columns": {
+      "bookings": "Đơn",
+      "horses": "Số ngựa",
+      "handover": "Đã bàn giao",
+      "plannedEnd": "Dự kiến tới"
+    },
+    "emptyToClose": "Không có chuyến nào chờ đóng",
+    "emptyClosed": "Chưa có chuyến nào đã đóng",
+    "kpi": "Điểm KPI",
+    "kpiOutOf": "/ 100 điểm",
+    "onTime": "Đúng giờ",
+    "onTimeStatus": {
+      "OnTime": "Đúng giờ",
+      "Delayed_AcceptableForceMajeure": "Trễ do bất khả kháng",
+      "Delayed_OperationalFault": "Trễ do lỗi vận hành"
+    },
+    "plannedCost": "Chi phí dự kiến",
+    "actualCost": "Chi phí thực tế",
+    "closedAt": "Đóng lúc",
+    "closedBy": "Người đóng",
+    "remarks": "Nhận xét",
+    "missingHandover": "Chưa đóng được: còn đơn chưa có biên bản bàn giao ({{codes}}).",
+    "closeHint": "Mọi đơn đã bàn giao. Có thể ghi nhận xét rồi đóng chuyến; kết quả không sửa lại được.",
+    "remarksPlaceholder": "Nhận xét về chuyến đi (không bắt buộc)",
+    "closeButton": "Đóng chuyến",
+    "confirm": "Đóng chuyến và chốt KPI? Không thể hoàn tác.",
+    "success": "Đã đóng chuyến {{code}}, KPI {{score}} điểm"
+  },
+  "reports": {
+    "title": "Báo cáo",
+    "subtitle": "Số liệu của các chuyến đã đóng. Bỏ trống khoảng ngày để xem toàn bộ.",
+    "from": "Từ ngày",
+    "to": "Đến ngày",
+    "operations": "Vận hành",
+    "finance": "Tài chính ({{currency}})",
+    "punctuality": "Đúng giờ",
+    "incidentsByType": "Sự cố theo loại",
+    "completedTrips": "Chuyến đã đóng",
+    "completedBookings": "Đơn hoàn tất",
+    "horsesDelivered": "Ngựa đã giao",
+    "onTimeRate": "Tỉ lệ đúng giờ",
+    "averageKpi": "KPI trung bình",
+    "averageDelay": "Trễ trung bình",
+    "minutes": "{{count}} phút",
+    "revenue": "Doanh thu",
+    "operatingCost": "Chi phí vận hành",
+    "grossProfit": "Lợi nhuận gộp",
+    "totalIncidents": "Sự cố được báo",
+    "incidentCost": "Chi phí phát sinh do sự cố",
+    "trips": "Số chuyến",
+    "count": "Số lần"
   }
 }

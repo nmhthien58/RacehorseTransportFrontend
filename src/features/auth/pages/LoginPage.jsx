@@ -12,14 +12,6 @@ import usersData from '@/mocks/data/users.json';
 import logoImg from '@/assets/logo.svg';
 import styles from './AuthPages.module.css';
 
-const TEST_ACCOUNTS = [
-  { label: 'Customer (Khách hàng)', email: 'customer@test.com', role: ROLES.CUSTOMER },
-  { label: 'Logistics Manager (Quản lý Logistics)', email: 'manager@test.com', role: ROLES.MANAGER },
-  { label: 'Fleet & Route Coordinator (Điều phối viên)', email: 'coordinator@test.com', role: ROLES.COORDINATOR },
-  { label: 'Driver (Tài xế)', email: 'driver@test.com', role: ROLES.DRIVER },
-  { label: 'Escort (Áp tải thú y)', email: 'escort@test.com', role: ROLES.ESCORT },
-  { label: 'Specialist (Chuyên viên kiểm dịch)', email: 'specialist@test.com', role: ROLES.SPECIALIST },
-];
 
 /**
  * Trang Đăng nhập (Sign In) khớp thiết kế Figma node 94:1089.
@@ -117,18 +109,6 @@ export default function LoginPage() {
     }
   };
 
-  /**
-   * Đăng nhập nhanh 1-click cho môi trường thử nghiệm
-   * @param {string} email
-   */
-  const handleQuickLogin = async (email) => {
-    form.setFieldsValue({
-      email,
-      password: 'password123',
-    });
-    await handleLogin({ email, password: 'password123' });
-  };
-
   return (
     <div>
       {/* Header & Logo */}
@@ -163,8 +143,6 @@ export default function LoginPage() {
         layout="vertical"
         onFinish={handleLogin}
         initialValues={{
-          email: 'customer@test.com',
-          password: 'password123',
           keepLoggedIn: true,
         }}
         requiredMark={false}
@@ -235,63 +213,6 @@ export default function LoginPage() {
         </span>
       </div>
 
-      {/* Thanh tài khoản thử nghiệm phục vụ kiểm thử nhanh */}
-      <div className={styles.testAccountsCard}>
-        <div className={styles.testAccountsTitle} style={{ fontWeight: 700, color: '#1e293b', marginBottom: 8 }}>
-          ⚡ {t('auth.testAccounts', 'Tài khoản kiểm thử')} (Click để đăng nhập 1-chạm):
-        </div>
-        <div className={styles.testAccountsBadges} style={{ marginBottom: 12 }}>
-          {TEST_ACCOUNTS.map((acc) => (
-            <button
-              key={acc.email}
-              type="button"
-              className={styles.badgeBtn}
-              onClick={() => handleQuickLogin(acc.email)}
-              title={`Đăng nhập trực tiếp với ${acc.label}`}
-              style={{
-                cursor: 'pointer',
-                fontWeight: acc.role === ROLES.CUSTOMER || acc.role === ROLES.ADMIN ? 700 : 500,
-                backgroundColor: acc.role === ROLES.ADMIN ? '#FEF3C7' : acc.role === ROLES.CUSTOMER ? '#EFF6FF' : '#F1F5F9',
-                color: acc.role === ROLES.ADMIN ? '#B45309' : acc.role === ROLES.CUSTOMER ? '#1D4ED8' : '#334155',
-                borderColor: acc.role === ROLES.ADMIN ? '#FDE68A' : acc.role === ROLES.CUSTOMER ? '#BFDBFE' : '#CBD5E1',
-                padding: '4px 10px',
-                borderRadius: 6,
-              }}
-            >
-              {acc.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Bảng ghi chú tài khoản cụ thể cho người dùng */}
-        <div
-          style={{
-            fontSize: 12,
-            lineHeight: 1.6,
-            background: '#ffffff',
-            padding: '10px 14px',
-            borderRadius: 8,
-            border: '1px solid #e2e8f0',
-            color: '#475569',
-          }}
-        >
-          <div style={{ marginBottom: 4 }}>
-            🚚 <b>Fleet & Route Coordinator (Điều phối viên):</b> <code>coordinator@test.com</code> | Mật khẩu: <code>password123</code>
-          </div>
-          <div style={{ marginBottom: 4 }}>
-            👤 <b>Customer (Khách hàng):</b> <code>customer@test.com</code> | Mật khẩu: <code>password123</code>
-          </div>
-          <div style={{ marginBottom: 4 }}>
-            🛡️ <b>Logistics Manager & Admin:</b> <code>manager@test.com</code> / <code>admin@test.com</code> | Mật khẩu: <code>password123</code>
-          </div>
-          <div style={{ marginBottom: 4 }}>
-            🔬 <b>Transport Specialist (Kiểm dịch):</b> <code>specialist@test.com</code> | Mật khẩu: <code>password123</code>
-          </div>
-          <div>
-            🚛 <b>Driver & Escort:</b> <code>driver@test.com</code> / <code>escort@test.com</code> | Mật khẩu: <code>password123</code>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

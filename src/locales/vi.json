@@ -1866,10 +1866,6 @@
     },
     "form": {
       "title": "Biên bản bàn giao đơn {{code}}",
-      "chipsTitle": "Đối chiếu mã vi mạch",
-      "chipsHint": "Quét hoặc nhập mã vi mạch của từng con. Phải khớp đủ tất cả mới lập được biên bản.",
-      "chipPlaceholder": "Mã vi mạch 15 số",
-      "chipsMismatch": "Còn mã vi mạch chưa khớp",
       "recipientTitle": "Người nhận",
       "recipientName": "Họ tên",
       "recipientPhone": "Số điện thoại",
@@ -1880,7 +1876,13 @@
       "signatureRequired": "Người nhận chưa ký",
       "submit": "Lập biên bản",
       "success": "Đã lập biên bản bàn giao cho đơn {{code}}",
-      "failed": "Không lập được biên bản bàn giao"
+      "failed": "Không lập được biên bản bàn giao",
+      "verifyTitle": "Đối chiếu ngựa",
+      "verifyHint": "Cùng người nhận kiểm tra từng con ngoài thực tế với ảnh, mã vi mạch và đặc điểm trên hệ thống, rồi tích xác nhận.",
+      "verified": "Đã đối chiếu",
+      "noPhoto": "Chưa có ảnh",
+      "microchip": "Mã vi mạch",
+      "horsesNotVerified": "Còn ngựa chưa được đối chiếu"
     }
   },
   "tripReport": {

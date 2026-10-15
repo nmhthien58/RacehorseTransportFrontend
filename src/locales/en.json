@@ -1867,10 +1867,6 @@
     },
     "form": {
       "title": "Handover record for {{code}}",
-      "chipsTitle": "Microchip check",
-      "chipsHint": "Scan or type the microchip of each horse. All must match before the record can be saved.",
-      "chipPlaceholder": "15-digit microchip",
-      "chipsMismatch": "Some microchips do not match",
       "recipientTitle": "Recipient",
       "recipientName": "Full name",
       "recipientPhone": "Phone",
@@ -1881,7 +1877,13 @@
       "signatureRequired": "The recipient has not signed",
       "submit": "Save record",
       "success": "Handover recorded for {{code}}",
-      "failed": "Could not save the handover record"
+      "failed": "Could not save the handover record",
+      "verifyTitle": "Check the horses",
+      "verifyHint": "With the recipient, check each horse against its photo, microchip and markings on file, then tick it.",
+      "verified": "Checked",
+      "noPhoto": "No photo",
+      "microchip": "Microchip",
+      "horsesNotVerified": "Some horses have not been checked yet"
     }
   },
   "tripReport": {

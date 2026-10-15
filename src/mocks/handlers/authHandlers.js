@@ -79,14 +79,28 @@ export const authHandlers = [
 
   http.post('/api/auth/register', async ({ request }) => {
     const body = await request.json();
-    return HttpResponse.json({
-      success: true,
-      message: `Đăng ký thành công. Mã xác minh đã được gửi tới email ${body.email}`,
-      data: {
-        email: body.email,
-      },
+    // Khớp backend: đăng ký xong trả token ngay, không cần xác minh email
+    const user = {
+      userId: Date.now(),
+      fullName: body.fullName || 'New Customer',
       email: body.email,
-    });
+      phoneNumber: body.phoneNumber || null,
+      role: 'Customer',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    };
+    return HttpResponse.json(
+      {
+        success: true,
+        message: 'Account registered successfully',
+        data: {
+          accessToken: `mock-token-${user.userId}`,
+          refreshToken: `mock-refresh-${user.userId}`,
+          user,
+        },
+      },
+      { status: 201 },
+    );
   }),
 
   http.post('/api/auth/google', async ({ request }) => {
@@ -118,58 +132,27 @@ export const authHandlers = [
     });
   }),
 
-  http.post('/api/auth/verify-email', async ({ request }) => {
-    const body = await request.json();
-    const newUser = {
-      userId: Date.now(),
-      fullName: body.fullName || 'New Customer',
-      email: body.email,
-      phoneNumber: body.phoneNumber || '+84988000999',
-      role: 'Customer',
-      isActive: true,
-      createdAt: new Date().toISOString(),
-    };
-    const token = `mock-token-${newUser.userId}`;
+  // Khớp backend: luôn trả 200 và gửi link /reset-password?token=... qua email
+  http.post('/api/auth/forgot-password', async () => {
     return HttpResponse.json({
       success: true,
-      data: {
-        accessToken: token,
-        user: newUser,
-      },
-      token,
-      user: newUser,
+      message: 'If this email is registered, a password reset link has been sent.',
+      data: null,
     });
   }),
 
-  http.post('/api/auth/resend-otp', async ({ request }) => {
+  http.post('/api/auth/reset-password', async ({ request }) => {
     const body = await request.json();
+    if (!body.token) {
+      return HttpResponse.json(
+        { success: false, message: 'Token is required.', data: null },
+        { status: 400 },
+      );
+    }
     return HttpResponse.json({
       success: true,
-      message: `Mã xác minh mới đã được gửi tới email ${body.email}`,
-    });
-  }),
-
-  http.post('/api/auth/forgot-password', async ({ request }) => {
-    const body = await request.json();
-    return HttpResponse.json({
-      success: true,
-      message: `Mã OTP hoặc liên kết đặt lại đã được gửi đến email ${body.email}`,
-    });
-  }),
-
-  http.post('/api/auth/verify-code', async ({ request }) => {
-    const body = await request.json();
-    return HttpResponse.json({
-      success: true,
-      verifyToken: `verify-token-${Date.now()}`,
-      email: body.email,
-    });
-  }),
-
-  http.post('/api/auth/reset-password', async () => {
-    return HttpResponse.json({
-      success: true,
-      message: 'Mật khẩu đã được đặt lại thành công',
+      message: 'Password reset successfully',
+      data: null,
     });
   }),
 

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button, Checkbox, Col, Form, Input, Row, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '@features/auth/store/authStore';
 import { registerApi } from '@features/auth/services/authService';
 import { useGoogleAuth } from '@features/auth/hooks/useGoogleAuth';
 import GoogleIcon from '@features/auth/components/GoogleIcon';
@@ -15,19 +16,10 @@ import styles from './AuthPages.module.css';
 export default function RegisterPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { login } = useAuthStore();
   const { loginWithGoogle, isGoogleLoading } = useGoogleAuth();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-
-  // Khôi phục thông tin nếu người dùng quay lại từ màn hình xác thực
-  const savedPending = (() => {
-    try {
-      const raw = sessionStorage.getItem('pending_register');
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  })();
 
   const handleRegister = async (values) => {
     if (values.password !== values.confirmPassword) {
@@ -38,30 +30,19 @@ export default function RegisterPage() {
     try {
       setLoading(true);
       const fullName = `${values.firstName || ''} ${values.lastName || ''}`.trim();
-      await registerApi({
+      const res = await registerApi({
         fullName: fullName || 'New Customer',
         email: values.email,
         password: values.password,
       });
 
-      // Lưu thông tin tạm để màn hình xác minh OTP sử dụng
-      sessionStorage.setItem(
-        'pending_register',
-        JSON.stringify({
-          firstName: values.firstName,
-          lastName: values.lastName,
-          fullName: fullName || 'New Customer',
-          email: values.email,
-          password: values.password,
-        }),
-      );
-
-      message.success(
-        t('auth.codeSent', `Mã xác minh 6 chữ số đã được gửi đến email ${values.email}!`),
-      );
-      navigate(ROUTES.VERIFY_EMAIL);
-    } catch {
-      message.error(t('auth.registerFailed', 'Đăng ký thất bại. Vui lòng thử lại.'));
+      // Backend không còn xác minh email: đăng ký xong trả luôn token nên đăng nhập ngay
+      const authData = res.data || res;
+      login(authData.user, authData.accessToken, authData.refreshToken);
+      message.success(t('auth.registerSuccess'));
+      navigate(ROUTES.CUSTOMER_DASHBOARD, { replace: true });
+    } catch (err) {
+      message.error(err?.userMessage || t('auth.registerFailed'));
     } finally {
       setLoading(false);
     }
@@ -84,9 +65,6 @@ export default function RegisterPage() {
         layout="vertical"
         onFinish={handleRegister}
         initialValues={{
-          firstName: savedPending?.firstName || '',
-          lastName: savedPending?.lastName || '',
-          email: savedPending?.email || '',
           keepLoggedIn: true,
         }}
         requiredMark={false}
@@ -135,7 +113,11 @@ export default function RegisterPage() {
           name="password"
           label={t('auth.password')}
           className={styles.formItem}
-          rules={[{ required: true, message: t('auth.enterPassword') }]}
+          rules={[
+            { required: true, message: t('auth.enterPassword') },
+            // Khớp ràng buộc backend: mật khẩu 8-64 ký tự
+            { min: 8, max: 64, message: t('auth.passwordLength') },
+          ]}
         >
           <Input.Password
             placeholder="••••••••••••"

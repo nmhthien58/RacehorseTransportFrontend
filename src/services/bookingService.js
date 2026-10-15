@@ -17,6 +17,15 @@ export const bookingService = {
   },
 
   /**
+   * Tính toán quãng đường đường bộ dự kiến từ Backend
+   * @param {{ pickupCountryCode?: string, pickupCity?: string, pickupAddress?: string, dropoffCountryCode: string, dropoffCity?: string, dropoffAddress?: string }} params
+   * @returns {Promise<{ distanceKm: number, estimatedHours: number, routeSummary: string, source: string }>}
+   */
+  async estimateDistance(params) {
+    return api.post(ENDPOINTS.BOOKINGS.ESTIMATE_DISTANCE, params);
+  },
+
+  /**
    * Lấy danh sách các đơn đặt chuyến vận chuyển (hỗ trợ lọc theo trạng thái, khách hàng, phân trang)
    * @param {{ customerUserId?: number, status?: string, search?: string, sort?: string, page?: number, size?: number }} [params]
    * @returns {Promise<{ data: import('../types/database').Booking[], pagination?: any }>}

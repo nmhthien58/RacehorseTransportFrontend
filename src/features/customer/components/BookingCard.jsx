@@ -6,6 +6,7 @@ import {
   RocketOutlined,
   CloseCircleOutlined,
   ArrowRightOutlined,
+  FileProtectOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
@@ -21,9 +22,10 @@ const { Text } = Typography;
  * @param {import('@types/database').Booking} props.booking
  * @param {(bookingId: number) => void} [props.onCancel]
  * @param {(booking: import('@types/database').Booking) => void} [props.onViewDetail]
+ * @param {(booking: import('@types/database').Booking) => void} [props.onManageDocuments]
  * @returns {JSX.Element}
  */
-export default function BookingCard({ booking, onCancel, onViewDetail }) {
+export default function BookingCard({ booking, onCancel, onViewDetail, onManageDocuments }) {
   const { t } = useTranslation();
 
   if (!booking) return null;
@@ -33,6 +35,7 @@ export default function BookingCard({ booking, onCancel, onViewDetail }) {
   const isDoorToDoor = mode === 'DoorToDoor' || mode === 'Door-to-Door';
   const status = booking.status || booking.Status || 'Submitted';
   const canCancel = ['submitted', 'pending', 'draft'].includes(String(status).toLowerCase());
+  const canOpenDocuments = !['Rejected', 'Cancelled', 'Expired'].includes(status);
   const bookingCode = booking.bookingCode || booking.BookingCode || `${booking.bookingId || booking.BookingID || ''}`;
   const createdAt = booking.createdAt || booking.CreatedAt;
   const departureDate = booking.departureDate || booking.DepartureDate;
@@ -194,6 +197,17 @@ export default function BookingCard({ booking, onCancel, onViewDetail }) {
 
         {/* NÚT THAO TÁC */}
         <Space size="small">
+          {canOpenDocuments && onManageDocuments && (
+            <Button
+              icon={<FileProtectOutlined />}
+              size="middle"
+              onClick={() => onManageDocuments(booking)}
+              style={{ borderRadius: 6, fontWeight: 500 }}
+            >
+              {t('bookings.manageDocuments')}
+            </Button>
+          )}
+
           {canCancel && onCancel && (
             <Popconfirm
               title={t('bookings.cancelConfirmTitle') || 'Hủy yêu cầu đặt chuyến?'}

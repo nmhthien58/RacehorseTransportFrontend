@@ -132,6 +132,16 @@ export default function CustomerBookings() {
       .catch((err) => message.error(getErrorMessage(err, 'Không tải được chi tiết đơn')));
   };
 
+  /**
+   * Mở tab hồ sơ của đúng yêu cầu vận chuyển.
+   * @param {import('@types/database').Booking} record
+   */
+  const handleOpenDocuments = (record) => {
+    const id = record?.bookingId || record?.BookingID;
+    if (!id) return;
+    navigate(`${ROUTES.CUSTOMER_BOOKING_DETAIL.replace(':id', id)}?tab=documents`);
+  };
+
   // Thống kê số lượng theo 3 chỉ số chính (Figma Frame 75:5337)
   const totalCount = Array.isArray(bookings) ? bookings.length : 0;
   const pendingCount = Array.isArray(bookings)
@@ -526,6 +536,7 @@ export default function CustomerBookings() {
               booking={b}
               onCancel={handleCancelBooking}
               onViewDetail={handleOpenDetail}
+              onManageDocuments={handleOpenDocuments}
             />
           ))}
         </div>

@@ -9,7 +9,7 @@ import { ENDPOINTS } from './endpoints';
 export const dossierService = {
   /**
    * Lấy danh sách các bộ hồ sơ kiểm dịch
-   * @param {{ status?: string, specialistUserId?: number, search?: string, sort?: string, page?: number, size?: number }} [params]
+   * @param {{ status?: string, bookingId?: number|string, specialistUserId?: number, search?: string, sort?: string, page?: number, size?: number }} [params]
    * @returns {Promise<{ data: import('../types/database').DigitalDossier[], pagination?: any }>}
    */
   async getDossiers(params) {

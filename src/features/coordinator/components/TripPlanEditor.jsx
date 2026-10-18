@@ -22,6 +22,7 @@ import {
 import { DeleteOutlined, PlusOutlined, SaveOutlined, SendOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedule';
 import tripService from '@services/tripService';
 import StatusTag from '@components/common/StatusTag';
 import { unwrapData, unwrapList, getErrorMessage, toIsoString } from '@utils/apiHelpers';
@@ -112,8 +113,12 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
     if (trip) return [dayjs(trip.plannedStartDate), dayjs(trip.plannedEndDate)];
     const chosen = pool.filter((h) => preselected.includes(h.bookingHorseId));
     if (chosen.length === 0) return null;
-    const start = chosen.map((h) => dayjs(h.departureDate)).sort((a, b) => a - b)[0];
-    const end = chosen.map((h) => dayjs(h.deliveryDate)).sort((a, b) => b - a)[0];
+    // Gợi ý: chạy ngày đầu khoảng pickup muộn nhất (để nằm trong khoảng pickup của mọi đơn),
+    // kết thúc trước hạn giao sớm nhất trong các đơn đã chọn
+    const start = chosen
+      .map((h) => dayjs(h.pickupWindowStart).hour(6).minute(0))
+      .sort((a, b) => b - a)[0];
+    const end = chosen.map((h) => dayjs(h.deliveryDeadline)).sort((a, b) => a - b)[0];
     return [start, end];
   });
 
@@ -364,9 +369,9 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
                 title: t('tripPlan.fields.window'),
                 width: 150,
                 render: (_, h) =>
-                  h.departureDate ? (
+                  h.pickupWindowStart ? (
                     <span style={{ fontSize: 12 }}>
-                      {dayjs(h.departureDate).format('DD/MM')} → {dayjs(h.deliveryDate).format('DD/MM/YYYY')}
+                      {formatPickupWindow(h)} · {t('bookings.fields.deliveryDeadline')}: {formatDeliveryDeadline(h)}
                     </span>
                   ) : (
                     '—'

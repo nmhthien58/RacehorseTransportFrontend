@@ -108,9 +108,11 @@ export const specialistDossierService = {
     const res = await api.get(ENDPOINTS.DOSSIERS.LIST, { params: { size: 100 } });
     const dossiers = Array.isArray(res?.data) ? res.data : [];
 
-    // "Quá hạn": chưa thông quan mà còn dưới 3 ngày là tới ngày khởi hành (backend không có trường SLA riêng)
+    // "Quá hạn": chưa thông quan mà còn dưới 3 ngày là tới ngày đầu khoảng đón (backend không có trường SLA riêng)
     const isOverdue = (d) =>
-      d.status !== 'Cleared' && d.departureDate && new Date(d.departureDate).getTime() - Date.now() < 3 * 24 * 3600 * 1000;
+      d.status !== 'Cleared' &&
+      d.pickupWindowStart &&
+      new Date(d.pickupWindowStart).getTime() - Date.now() < 3 * 24 * 3600 * 1000;
     const overdueCount = dossiers.filter(isOverdue).length;
     const pendingCount = dossiers.filter((d) => d.status === 'Reviewing' || d.status === 'AwaitingDocs').length;
     const activeQuarantineCount = dossiers.filter((d) => ['Reviewing', 'SubmittedToAuthorities', 'Draft'].includes(d.status)).length;

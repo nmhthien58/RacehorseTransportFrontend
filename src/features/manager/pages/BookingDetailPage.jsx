@@ -27,6 +27,7 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedule';
 import StatusTag from '@components/common/StatusTag';
 import bookingService from '@services/bookingService';
 import userService from '@services/userService';
@@ -358,10 +359,10 @@ export default function BookingDetailPage() {
                 </Descriptions.Item>
 
                 <Descriptions.Item label={t('manager.bookings.modals.departureDate')}>
-                  {booking.departureDate ? dayjs(booking.departureDate).format('DD/MM/YYYY HH:mm') : '—'}
+                  {formatPickupWindow(booking)}
                 </Descriptions.Item>
                 <Descriptions.Item label={t('manager.bookings.modals.deliveryDate')}>
-                  {booking.deliveryDate ? dayjs(booking.deliveryDate).format('DD/MM/YYYY HH:mm') : '—'}
+                  {formatDeliveryDeadline(booking)}
                 </Descriptions.Item>
 
                 <Descriptions.Item label={t('manager.bookings.modals.transportMode')}>

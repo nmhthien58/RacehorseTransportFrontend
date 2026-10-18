@@ -18,7 +18,7 @@ import {
 import { ArrowLeftOutlined, EnvironmentOutlined, FileProtectOutlined } from '@ant-design/icons';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import dayjs from 'dayjs';
+import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedule';
 import PageHeader from '@components/layout/PageHeader';
 import StatusTag from '@components/common/StatusTag';
 import CustomerDossierPanel from '@features/customer/components/CustomerDossierPanel';
@@ -173,11 +173,11 @@ export default function CustomerBookingDetailPage() {
               <EnvironmentOutlined style={{ color: '#10b981', marginRight: 6 }} />
               {booking.dropoffAddress || booking.DropoffAddress}
             </Descriptions.Item>
-            <Descriptions.Item label={t('bookings.detailPage.requestedPickup')}>
-              {dayjs(booking.departureDate || booking.DepartureDate).format('DD/MM/YYYY HH:mm')}
+            <Descriptions.Item label={t('bookings.fields.pickupWindow')}>
+              {formatPickupWindow(booking)}
             </Descriptions.Item>
-            <Descriptions.Item label={t('bookings.detailPage.requestedDelivery')}>
-              {dayjs(booking.deliveryDate || booking.DeliveryDate).format('DD/MM/YYYY HH:mm')}
+            <Descriptions.Item label={t('bookings.fields.deliveryDeadline')}>
+              {formatDeliveryDeadline(booking)}
             </Descriptions.Item>
           </Descriptions>
         </Card>

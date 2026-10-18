@@ -24,6 +24,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import { formatPickupWindow } from '@utils/bookingSchedule';
 import PageHeader from '@components/layout/PageHeader';
 import StatusTag from '@components/common/StatusTag';
 import bookingService from '@services/bookingService';
@@ -57,7 +58,7 @@ export default function ManagerBookings({ isDashboardView = false }) {
   const [specialistFilter, setSpecialistFilter] = useState('All');
 
   // Bộ lọc theo ngày tháng & thời gian tạo
-  const [dateTypeFilter, setDateTypeFilter] = useState('departureDate');
+  const [dateTypeFilter, setDateTypeFilter] = useState('pickupWindowStart');
   const [dateRange, setDateRange] = useState(null);
 
   // Kích hoạt làm mới danh sách dữ liệu
@@ -71,7 +72,7 @@ export default function ManagerBookings({ isDashboardView = false }) {
     setSearchQuery('');
     setModeFilter('All');
     setSpecialistFilter('All');
-    setDateTypeFilter('departureDate');
+    setDateTypeFilter('pickupWindowStart');
     setDateRange(null);
   }, []);
 
@@ -171,7 +172,7 @@ export default function ManagerBookings({ isDashboardView = false }) {
       // 5. Lọc theo khoảng ngày (Ngày khởi hành hoặc Ngày tạo đơn)
       if (dateRange && dateRange[0] && dateRange[1]) {
         const targetDateStr =
-          dateTypeFilter === 'departureDate' ? item.departureDate : item.createdAt;
+          dateTypeFilter === 'pickupWindowStart' ? item.pickupWindowStart : item.createdAt;
         if (!targetDateStr) return false;
 
         const targetMoment = dayjs(targetDateStr);
@@ -270,7 +271,7 @@ export default function ManagerBookings({ isDashboardView = false }) {
       width: 120,
       render: (_, record) => (
         <span style={{ fontSize: 13, color: '#475569' }}>
-          {record.departureDate ? dayjs(record.departureDate).format('DD/MM/YYYY') : '—'}
+          {formatPickupWindow(record)}
         </span>
       ),
     },
@@ -470,7 +471,7 @@ export default function ManagerBookings({ isDashboardView = false }) {
               onChange={setDateTypeFilter}
               style={{ width: 145 }}
               options={[
-                { value: 'departureDate', label: t('manager.bookings.filters.dateTypeDeparture') },
+                { value: 'pickupWindowStart', label: t('manager.bookings.filters.dateTypeDeparture') },
                 { value: 'createdAt', label: t('manager.bookings.filters.dateTypeCreated') },
               ]}
             />

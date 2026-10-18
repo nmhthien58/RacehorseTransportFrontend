@@ -13,6 +13,8 @@ import {
   Alert,
   message,
   Popconfirm,
+  Form,
+  Input,
 } from 'antd';
 import {
   EnvironmentOutlined,
@@ -22,6 +24,8 @@ import {
   LogoutOutlined,
   HeartOutlined,
   SafetyCertificateOutlined,
+  FileDoneOutlined,
+  ExportOutlined,
 } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -29,6 +33,7 @@ import { useAuthStore } from '@features/auth/store/authStore';
 import { Tooltip } from 'antd';
 import { useMissionDetail } from '../hooks/useDriverMissions';
 import MissionHeaderCard from '../components/MissionHeaderCard';
+import TripHorseStatusTag from '@components/common/TripHorseStatusTag';
 import EmergencyReportModal from '../components/EmergencyReportModal';
 
 const { Title, Text, Paragraph } = Typography;
@@ -66,8 +71,11 @@ export default function TripExecutionPage() {
     arriveCheckpoint,
     clearCheckpoint,
     departCheckpoint,
+    offloadHorse,
     reportIncident,
   } = useMissionDetail(tripId);
+  const [offloadTarget, setOffloadTarget] = useState(null);
+  const [offloadForm] = Form.useForm();
 
   const [sosModalOpen, setSosModalOpen] = useState(false);
   const [clearModalOpen, setClearModalOpen] = useState(false);
@@ -128,6 +136,27 @@ export default function TripExecutionPage() {
 
   const isDestinationReached =
     mission?.overallStatus === 'ArrivedDestination' || mission?.overallStatus === 'Completed';
+  const isOnTheRoad = ['InTransit', 'EmergencyRerouting', 'ArrivedDestination'].includes(mission?.overallStatus);
+
+  // R-04: đơn được trả ở mốc DropOff này còn ngựa trên xe chưa bàn giao không
+  const bookingOf = (bookingId) => (mission?.bookings || []).find((b) => b.bookingId === bookingId);
+  const horsesAwaitingHandover = (bookingId) =>
+    (mission?.horses || []).filter((h) => h.bookingId === bookingId && (h.status === 'InTransit' || h.status === 'Planned'));
+
+  const handleOffload = async () => {
+    let values;
+    try {
+      values = await offloadForm.validateFields();
+    } catch {
+      return;
+    }
+    const success = await offloadHorse(offloadTarget.tripHorseId, values.reason.trim());
+    if (success) {
+      message.success(t('driver.execution.offloaded', { name: offloadTarget.horseName }));
+      setOffloadTarget(null);
+      offloadForm.resetFields();
+    }
+  };
 
   // Số liệu tóm tắt lấy từ dữ liệu thật của chuyến (mốc + nhật ký thể trạng), không có cảm biến GPS
   const welfareLogs = [...(mission?.welfareLogs || [])].sort((a, b) => new Date(b.loggedAt) - new Date(a.loggedAt));
@@ -281,6 +310,11 @@ export default function TripExecutionPage() {
             const statusMeta = getCheckpointStatusMeta(cp.status);
             const isDestination = cp.locationType === 'Destination';
             const isBorder = cp.locationType === 'BorderGate' || cp.locationType === 'Customs';
+            const isDropOff = cp.locationType === 'DropOff';
+            // Xe đang dừng ở điểm trả của một đơn mà đơn đó chưa ký biên bản: phải bàn giao trước khi đi tiếp
+            const handoverPendingHere =
+              isDropOff && cp.status === 'Arrived' && horsesAwaitingHandover(cp.bookingId).length > 0
+              && !bookingOf(cp.bookingId)?.handoverCompleted;
 
             return {
               color: statusMeta.color === 'default' ? 'gray' : statusMeta.color,
@@ -344,6 +378,16 @@ export default function TripExecutionPage() {
                         {isDestination && (
                           <Tag color="success" style={{ borderRadius: 4 }}>
                             Điểm giao đích
+                          </Tag>
+                        )}
+                        {cp.locationType === 'PickUp' && (
+                          <Tag color="cyan" style={{ borderRadius: 4 }}>
+                            {t('driver.execution.pickUpTag', { code: cp.bookingCode })}
+                          </Tag>
+                        )}
+                        {isDropOff && (
+                          <Tag color="orange" style={{ borderRadius: 4 }}>
+                            {t('driver.execution.dropOffTag', { code: cp.bookingCode })}
                           </Tag>
                         )}
                       </Space>
@@ -450,8 +494,20 @@ export default function TripExecutionPage() {
                           </Tooltip>
                         )}
 
+                        {/* 2b. Điểm trả của một đơn giữa đường (R-04): ký e-POD cho đơn đó trước khi rời */}
+                        {handoverPendingHere && (
+                          <Button
+                            type="primary"
+                            icon={<FileDoneOutlined />}
+                            onClick={() => navigate(`/driver/missions/${tripId}/arrival?booking=${cp.bookingId}`)}
+                            style={{ backgroundColor: '#10B981', borderColor: '#10B981', borderRadius: 8, fontWeight: 600 }}
+                          >
+                            {t('driver.execution.handoverHere', { code: cp.bookingCode })}
+                          </Button>
+                        )}
+
                         {/* 3. Rời mốc: cửa khẩu sau khi Cleared, mốc khác ngay sau khi Arrived; điểm giao không có bước rời */}
-                        {!isDestination && (cp.status === 'Cleared' || (cp.status === 'Arrived' && !isBorder)) && (
+                        {!isDestination && !handoverPendingHere && (cp.status === 'Cleared' || (cp.status === 'Arrived' && !isBorder)) && (
                           <Tooltip title={!canUpdateRoute ? "Chỉ thành viên đoàn xe của chuyến này mới cập nhật được hành trình" : ""}>
                             <Popconfirm
                               title="Xác nhận rời trạm kiểm soát?"
@@ -477,6 +533,10 @@ export default function TripExecutionPage() {
                               </Button>
                             </Popconfirm>
                           </Tooltip>
+                        )}
+
+                        {handoverPendingHere && (
+                          <div style={{ width: '100%', fontSize: 12, color: '#B45309' }}>{t('driver.execution.handoverFirst')}</div>
                         )}
 
                         {/* 4. Nếu Departed -> Hiển thị badge hoàn tất */}
@@ -506,6 +566,73 @@ export default function TripExecutionPage() {
           })}
         />
       </Card>
+
+      {/* Ngựa trên chuyến và trạng thái từng con (R-05) */}
+      <Card
+        title={t('driver.execution.horsesTitle')}
+        style={{ borderRadius: 12, marginBottom: 24, border: '1px solid #E5E7EB' }}
+        bodyStyle={{ padding: '8px 24px' }}
+      >
+        {(mission?.horses || [])
+          .slice()
+          .sort((a, b) => a.stallSlotNumber - b.stallSlotNumber)
+          .map((h, idx) => (
+            <Row
+              key={h.tripHorseId}
+              gutter={[12, 6]}
+              align="middle"
+              style={{ padding: '10px 0', borderTop: idx === 0 ? 'none' : '1px solid #F3F4F6' }}
+            >
+              <Col xs={24} md={14}>
+                <Text strong>{h.horseName}</Text>
+                <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
+                  {h.bookingCode} · {t('customerTrips.stall', { number: h.stallSlotNumber })}
+                </Text>
+                {h.offloadReason && <div style={{ fontSize: 12, color: '#6B7280' }}>{h.offloadReason}</div>}
+              </Col>
+              <Col xs={24} md={10} style={{ textAlign: 'right' }}>
+                <Space size={8}>
+                  <TripHorseStatusTag status={h.status} />
+                  {isOnTheRoad && canUpdateRoute && (h.status === 'InTransit' || h.status === 'Planned') && (
+                    <Button
+                      size="small"
+                      danger
+                      icon={<ExportOutlined />}
+                      onClick={() => {
+                        offloadForm.resetFields();
+                        setOffloadTarget(h);
+                      }}
+                    >
+                      {t('driver.execution.offload')}
+                    </Button>
+                  )}
+                </Space>
+              </Col>
+            </Row>
+          ))}
+      </Card>
+
+      <Modal
+        title={t('driver.execution.offloadTitle', { name: offloadTarget?.horseName || '' })}
+        open={Boolean(offloadTarget)}
+        onCancel={() => setOffloadTarget(null)}
+        onOk={handleOffload}
+        okText={t('driver.execution.offloadOk')}
+        cancelText={t('common.cancel')}
+        okButtonProps={{ danger: true, loading: actionLoading }}
+        destroyOnHidden
+      >
+        <Paragraph type="secondary">{t('driver.execution.offloadHint')}</Paragraph>
+        <Form form={offloadForm} layout="vertical">
+          <Form.Item
+            name="reason"
+            label={t('driver.execution.offloadReason')}
+            rules={[{ required: true, whitespace: true, message: t('driver.execution.offloadReasonRequired') }, { max: 300 }]}
+          >
+            <Input.TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
 
       {/* Modal hoàn tất kiểm tra trạm (Clear Modal) */}
       <Modal

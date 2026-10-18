@@ -97,6 +97,17 @@ export const driverService = {
   },
 
   /**
+   * Cho một con ngựa rời chuyến giữa đường (thú y / sự cố); chuyến vẫn đi tiếp
+   * @param {number|string} tripId
+   * @param {number|string} tripHorseId
+   * @param {string} reason
+   * @returns {Promise<any>} Chi tiết chuyến sau khi cập nhật
+   */
+  async offloadHorse(tripId, tripHorseId, reason) {
+    return api.post(ENDPOINTS.TRIPS.OFFLOAD_HORSE(tripId, tripHorseId), { reason });
+  },
+
+  /**
    * Lấy danh sách toàn bộ nhật ký sinh trắc & phúc lợi ngựa trong suốt chuyến đi
    * @param {number|string} tripId
    * @returns {Promise<Array<any>>}

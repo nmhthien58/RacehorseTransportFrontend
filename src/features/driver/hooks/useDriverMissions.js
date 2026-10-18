@@ -201,6 +201,10 @@ export function useMissionDetail(tripId) {
   const departCheckpoint = (checkpointId) =>
     runAction(() => driverService.departCheckpoint(checkpointId), 'Không thể cập nhật rời trạm');
 
+  /** Một con ngựa rời chuyến giữa đường (POST /trips/{id}/horses/{tripHorseId}/offload) */
+  const offloadHorse = (tripHorseId, reason) =>
+    runAction(() => driverService.offloadHorse(tripId, tripHorseId, reason), 'Không thể ghi nhận ngựa rời chuyến');
+
   /**
    * Ghi nhật ký thể trạng một con ngựa (multipart)
    * @param {Object} logData - xem driverService.createWelfareLog
@@ -267,6 +271,7 @@ export function useMissionDetail(tripId) {
     arriveCheckpoint,
     clearCheckpoint,
     departCheckpoint,
+    offloadHorse,
     addWelfareLog,
     reportIncident,
     submitArrivalPod,

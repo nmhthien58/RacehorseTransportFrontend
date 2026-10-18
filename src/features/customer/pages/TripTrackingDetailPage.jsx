@@ -20,6 +20,7 @@ import {
   INCIDENT_STATUS_COLOR,
   HANDOVER_CONDITION_COLOR,
 } from '@utils/incidents';
+import TripHorseStatusTag from '@components/common/TripHorseStatusTag';
 import styles from './TripTrackingDetailPage.module.css';
 
 const { Text } = Typography;
@@ -115,6 +116,9 @@ export default function TripTrackingDetailPage() {
       label: t('customerTrips.info.arrival'),
       value: trip.actualEndDate ? formatTime(trip.actualEndDate) : `${formatTime(trip.plannedEndDate)} (${t('customerTrips.planned')})`,
     },
+    ...(trip.estimatedDeliveryAt
+      ? [{ label: t('customerTrips.info.eta'), value: formatTime(trip.estimatedDeliveryAt) }]
+      : []),
     {
       label: t('customerTrips.info.delay'),
       value:
@@ -205,8 +209,14 @@ export default function TripTrackingDetailPage() {
                   return (
                     <div key={cp.checkpointId} className={`${styles.stop} ${state === 'done' ? styles.stopDone : ''}`}>
                       <span className={`${styles.dot} ${dotClass}`} />
-                      <div className={`${styles.stopName} ${state === 'cancelled' ? styles.stopNameMuted : ''}`}>
-                        {cp.checkpointName}
+                      <div className={`${styles.stopName} ${state === 'cancelled' || cp.isOtherBookingStop ? styles.stopNameMuted : ''}`}>
+                        {cp.isOtherBookingStop ? t('customerTrips.otherStop') : cp.checkpointName}
+                        {cp.isMyPickup && cp.checkpointType === 'PickUp' && (
+                          <Tag color="cyan" style={{ marginLeft: 6 }}>{t('customerTrips.myPickup')}</Tag>
+                        )}
+                        {cp.isMyDropoff && (
+                          <Tag color="orange" style={{ marginLeft: 6 }}>{t('customerTrips.myDropoff')}</Tag>
+                        )}
                       </div>
                       <div className={styles.stopMeta}>
                         {cp.address && <div>{cp.address}</div>}
@@ -279,7 +289,9 @@ export default function TripTrackingDetailPage() {
                 {horse && (
                   <div className={styles.muted}>
                     {horse.horseName} · {t('customerTrips.stall', { number: horse.stallSlotNumber })} ·{' '}
-                    {t('customerTrips.logCount', { count: horse.logs.length })}
+                    {t('customerTrips.logCount', { count: horse.logs.length })} <TripHorseStatusTag status={horse.status} />
+                    {horse.deliveredAt && <div>{t('customerTrips.deliveredAt', { time: formatTime(horse.deliveredAt) })}</div>}
+                    {horse.offloadReason && <div>{t('customerTrips.offloadReason', { reason: horse.offloadReason })}</div>}
                   </div>
                 )}
               </div>

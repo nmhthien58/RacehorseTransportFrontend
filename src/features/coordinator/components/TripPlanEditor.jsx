@@ -19,18 +19,21 @@ import {
   Typography,
   message,
 } from 'antd';
-import { DeleteOutlined, PlusOutlined, SaveOutlined, SendOutlined, ReloadOutlined } from '@ant-design/icons';
+import { DeleteOutlined, NodeIndexOutlined, PlusOutlined, SaveOutlined, SendOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedule';
 import tripService from '@services/tripService';
 import StatusTag from '@components/common/StatusTag';
+import RouteSuggestionPanel from '@features/coordinator/components/RouteSuggestionPanel';
 import { unwrapData, unwrapList, getErrorMessage, toIsoString } from '@utils/apiHelpers';
 
 const { Text, Title } = Typography;
 const { RangePicker } = DatePicker;
 
-const CHECKPOINT_TYPES = ['Origin', 'RestStop', 'BorderGate', 'Destination'];
+const CHECKPOINT_TYPES = ['Origin', 'PickUp', 'RestStop', 'BorderGate', 'DropOff', 'Destination'];
+// Mốc gắn với một đơn (R-04): đơn được đón / trả ở mốc này
+const BOOKING_STOP_TYPES = ['PickUp', 'DropOff'];
 // Backend: cứ 3 con ngựa cần ít nhất 1 Escort, và luôn cần ít nhất 1 Driver
 const HORSES_PER_ESCORT = 3;
 
@@ -142,6 +145,17 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
   const [vehicles, setVehicles] = useState([]);
   const [crewOptions, setCrewOptions] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [suggestion, setSuggestion] = useState(null);
+  const [suggesting, setSuggesting] = useState(false);
+
+  // Các đơn có ngựa đang được chọn: dùng cho cột "Đơn" của mốc Điểm đón / Điểm trả
+  const selectedBookings = useMemo(() => {
+    const map = new Map();
+    selectedHorses.forEach((h) => {
+      if (!map.has(h.bookingId)) map.set(h.bookingId, { bookingId: h.bookingId, bookingCode: h.bookingCode });
+    });
+    return [...map.values()];
+  }, [selectedHorses]);
 
   const periodValid = Boolean(period?.[0] && period?.[1] && period[1].isAfter(period[0]));
   const fromIso = periodValid ? toIsoString(period[0]) : null;
@@ -223,6 +237,46 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
   const updateCheckpoint = (key, patch) =>
     setCheckpoints((prev) => prev.map((c) => (c.key === key ? { ...c, ...patch } : c)));
 
+  // Đổi loại mốc: chỉ Điểm đón / Điểm trả mới gắn đơn
+  const changeCheckpointType = (key, type) =>
+    updateCheckpoint(key, BOOKING_STOP_TYPES.includes(type) ? { checkpointType: type } : { checkpointType: type, bookingId: null });
+
+  // Gợi ý lộ trình từ backend: thay danh sách mốc, đặt giờ kết thúc theo giờ tới mốc cuối (giữ giờ khởi hành)
+  const suggestRoute = async () => {
+    if (selectedIds.length === 0 || !period?.[0]) {
+      message.warning(t('tripPlan.messages.suggestNeedInput'));
+      return;
+    }
+    setSuggesting(true);
+    try {
+      const result = unwrapData(
+        await tripService.suggestRoute({
+          bookingHorseIds: selectedIds,
+          plannedStartDate: toIsoString(period[0]),
+          driverCount: Math.max(1, driverCount),
+        }),
+      );
+      setSuggestion(result);
+      setCheckpoints(
+        (result.checkpoints || []).map((c, idx) => ({
+          key: `cp-s-${Date.now()}-${idx}`,
+          checkpointName: c.checkpointName,
+          checkpointType: c.checkpointType,
+          address: c.address,
+          plannedTime: dayjs(c.plannedTime),
+          mandatoryRestMinutes: c.mandatoryRestMinutes,
+          bookingId: c.bookingId,
+        })),
+      );
+      if (result.suggestedEndDate) setPeriod([period[0], dayjs(result.suggestedEndDate)]);
+      message.success(t('tripPlan.messages.suggested'));
+    } catch (err) {
+      message.error(getErrorMessage(err, t('tripPlan.messages.suggestFailed')));
+    } finally {
+      setSuggesting(false);
+    }
+  };
+
   const addStop = () => {
     setCheckpoints((prev) => {
       const dest = prev.findIndex((c) => c.checkpointType === 'Destination');
@@ -265,6 +319,7 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
       address: c.address?.trim(),
       plannedTime: toIsoString(c.plannedTime),
       mandatoryRestMinutes: Number(c.mandatoryRestMinutes) || 0,
+      bookingId: BOOKING_STOP_TYPES.includes(c.checkpointType) ? c.bookingId || null : null,
     })),
   });
 
@@ -275,6 +330,9 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
     if (driverCount < 1) return t('tripPlan.messages.needDriver');
     if (checkpoints.some((c) => !c.checkpointName?.trim() || !c.address?.trim() || !c.plannedTime)) {
       return t('tripPlan.messages.incompleteCheckpoint');
+    }
+    if (checkpoints.some((c) => BOOKING_STOP_TYPES.includes(c.checkpointType) && !c.bookingId)) {
+      return t('tripPlan.messages.needBookingForStop');
     }
     return null;
   };
@@ -522,7 +580,10 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
       <Card
         title={<Title level={5} style={{ margin: 0 }}>{t('tripPlan.sections.route')}</Title>}
         extra={
-          <Space>
+          <Space wrap>
+            <Button size="small" type="primary" ghost icon={<NodeIndexOutlined />} loading={suggesting} onClick={suggestRoute}>
+              {t('tripPlan.actions.suggestRoute')}
+            </Button>
             <Button size="small" icon={<ReloadOutlined />} onClick={() => setCheckpoints(buildDefaultCheckpoints(selectedHorses, period))}>
               {t('tripPlan.actions.resetRoute')}
             </Button>
@@ -533,26 +594,48 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
         }
         style={{ borderRadius: 14 }}
       >
+        {suggestion && (
+          <div style={{ marginBottom: 12 }}>
+            <RouteSuggestionPanel suggestion={suggestion} />
+          </div>
+        )}
         <Table
           size="small"
           rowKey="key"
           pagination={false}
           dataSource={checkpoints}
-          scroll={{ x: 860 }}
+          scroll={{ x: 1000 }}
           columns={[
             { title: '#', width: 40, render: (_, __, idx) => idx + 1 },
             {
               title: t('tripPlan.fields.checkpointType'),
-              width: 130,
+              width: 140,
               render: (_, c) => (
                 <Select
                   size="small"
-                  style={{ width: 120 }}
+                  style={{ width: 130 }}
                   value={c.checkpointType}
-                  onChange={(v) => updateCheckpoint(c.key, { checkpointType: v })}
+                  onChange={(v) => changeCheckpointType(c.key, v)}
                   options={CHECKPOINT_TYPES.map((v) => ({ value: v, label: t(`tripPlan.checkpointType.${v}`) }))}
                 />
               ),
+            },
+            {
+              title: t('tripPlan.fields.stopBooking'),
+              width: 150,
+              render: (_, c) =>
+                BOOKING_STOP_TYPES.includes(c.checkpointType) ? (
+                  <Select
+                    size="small"
+                    style={{ width: 140 }}
+                    status={c.bookingId ? undefined : 'warning'}
+                    value={c.bookingId || undefined}
+                    onChange={(v) => updateCheckpoint(c.key, { bookingId: v })}
+                    options={selectedBookings.map((b) => ({ value: b.bookingId, label: b.bookingCode }))}
+                  />
+                ) : (
+                  <Text type="secondary">—</Text>
+                ),
             },
             {
               title: t('tripPlan.fields.checkpointName'),

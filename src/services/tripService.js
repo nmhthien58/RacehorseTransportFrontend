@@ -17,6 +17,16 @@ export const tripService = {
   },
 
   /**
+   * Gợi ý lộ trình cho các con ngựa đã chọn (một hoặc nhiều đơn): thứ tự đón / trả, cửa khẩu,
+   * giờ dự kiến, giờ giao từng đơn so với hạn giao và cảnh báo khi ghép đơn
+   * @param {{ bookingHorseIds: number[], plannedStartDate: string, driverCount?: number }} payload
+   * @returns {Promise<any>}
+   */
+  async suggestRoute(payload) {
+    return api.post(ENDPOINTS.TRIPS.SUGGEST_ROUTE, payload);
+  },
+
+  /**
    * Lấy danh sách phương tiện chuyên dụng còn rảnh trong khoảng thời gian dự kiến
    * @param {{ from: string, to: string, transportMode?: 'Ground'|'Air' }} params
    * @returns {Promise<Array<any>>}

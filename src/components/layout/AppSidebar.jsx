@@ -16,6 +16,7 @@ import {
   WarningOutlined,
   FileDoneOutlined,
   BarChartOutlined,
+  DollarOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -117,6 +118,11 @@ export default function AppSidebar({ collapsed, user }) {
           key: ROUTES.MANAGER_REPORTS,
           icon: <BarChartOutlined style={{ fontSize: 18 }} />,
           label: t('nav.reports', 'Báo cáo'),
+        },
+        {
+          key: ROUTES.MANAGER_PAYMENT_SETTINGS,
+          icon: <DollarOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.paymentSettings', 'Cấu hình thanh toán'),
         },
         {
           key: ROUTES.ADMIN_USERS,

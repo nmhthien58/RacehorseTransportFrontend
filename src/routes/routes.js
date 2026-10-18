@@ -28,6 +28,8 @@ export const ROUTES = {
   CUSTOMER_MESSAGES: '/customer/messages',
   CUSTOMER_PROFILE: '/customer/profile',
   CUSTOMER_BILLING: '/customer/billing',
+  CUSTOMER_PAYMENT_RESULT: '/customer/payments/result',
+  CUSTOMER_PAYMENT_MOCK: '/customer/payments/mock',
   CUSTOMER_SETTINGS: '/customer/settings',
 
   // Manager
@@ -39,6 +41,7 @@ export const ROUTES = {
   MANAGER_TRIPS: '/manager/trips',
   MANAGER_INCIDENTS: '/manager/incidents',
   MANAGER_REPORTS: '/manager/reports',
+  MANAGER_PAYMENT_SETTINGS: '/manager/payment-settings',
   MANAGER_PROFILE: '/manager/profile',
   MANAGER_USERS: '/manager/users',
   ADMIN_USERS: '/manager/users',

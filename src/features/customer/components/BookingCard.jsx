@@ -26,7 +26,7 @@ const { Text } = Typography;
  * @param {(booking: import('@types/database').Booking) => void} [props.onManageDocuments]
  * @returns {JSX.Element}
  */
-export default function BookingCard({ booking, onCancel, onViewDetail, onManageDocuments }) {
+export default function BookingCard({ booking, onCancel, onViewDetail, onManageDocuments, cancelRefundPercent }) {
   const { t } = useTranslation();
 
   if (!booking) return null;
@@ -35,7 +35,8 @@ export default function BookingCard({ booking, onCancel, onViewDetail, onManageD
   const isAir = mode === 'Air';
   const isDoorToDoor = mode === 'DoorToDoor' || mode === 'Door-to-Door';
   const status = booking.status || booking.Status || 'Submitted';
-  const canCancel = ['submitted', 'pending', 'draft'].includes(String(status).toLowerCase());
+  // Hủy được trước khi ngựa lên chuyến; đã cọc thì hoàn theo % cấu hình (backend kiểm tra lại)
+  const canCancel = ['Submitted', 'AwaitingDeposit', 'Approved'].includes(status);
   const canOpenDocuments = !['Rejected', 'Cancelled', 'Expired'].includes(status);
   const bookingCode = booking.bookingCode || booking.BookingCode || `${booking.bookingId || booking.BookingID || ''}`;
   const createdAt = booking.createdAt || booking.CreatedAt;
@@ -212,8 +213,10 @@ export default function BookingCard({ booking, onCancel, onViewDetail, onManageD
             <Popconfirm
               title={t('bookings.cancelConfirmTitle') || 'Hủy yêu cầu đặt chuyến?'}
               description={
-                t('bookings.cancelConfirmDesc') ||
-                'Bạn có chắc chắn muốn hủy yêu cầu vận chuyển này không?'
+                status === 'Approved'
+                  ? t('bookings.cancelRefundDesc', { percent: cancelRefundPercent ?? 50 })
+                  : t('bookings.cancelConfirmDesc') ||
+                    'Bạn có chắc chắn muốn hủy yêu cầu vận chuyển này không?'
               }
               onConfirm={() => onCancel(bookingId)}
               okText={t('common.confirm')}

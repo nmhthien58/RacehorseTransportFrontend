@@ -11,8 +11,10 @@ export const ROLES = {
 // Vòng đời đơn đặt chuyến (st1_booking.png & Script 04)
 export const BOOKING_STATUS = {
   SUBMITTED: 'Submitted',
+  AWAITING_DEPOSIT: 'AwaitingDeposit', // đã duyệt, chờ khách đặt cọc
   APPROVED: 'Approved',
   ASSIGNED: 'Assigned',
+  AWAITING_FINAL_PAYMENT: 'AwaitingFinalPayment', // còn chi phí phát sinh chưa trả
   COMPLETED: 'Completed',
   REJECTED: 'Rejected',
   EXPIRED: 'Expired',

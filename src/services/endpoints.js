@@ -18,6 +18,16 @@ export const ENDPOINTS = {
     RESET_PASSWORD: '/auth/reset-password',
   },
 
+  // Thanh toán (R-02): cọc, phần còn lại, phát sinh, hoàn tiền; cấu hình % cọc / tỉ giá
+  PAYMENTS: {
+    BOOKING: (bookingId) => `/bookings/${bookingId}/payments`,
+    MANUAL: (bookingId) => `/bookings/${bookingId}/payments/manual`,
+    MOCK_COMPLETE: (txnRef) => `/payments/mock/${txnRef}/complete`,
+    RETRY_REFUND: (paymentId) => `/payments/${paymentId}/retry-refund`,
+    MARK_REFUNDED: (paymentId) => `/payments/${paymentId}/mark-refunded`,
+    SETTINGS: '/settings/payment',
+  },
+
   // 2. Quản lý người dùng & Dropdown nhân sự
   USERS: {
     LIST: '/users',

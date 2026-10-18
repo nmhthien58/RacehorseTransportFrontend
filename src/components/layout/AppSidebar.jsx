@@ -17,6 +17,7 @@ import {
   FileDoneOutlined,
   BarChartOutlined,
   DollarOutlined,
+  CreditCardOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -63,6 +64,11 @@ export default function AppSidebar({ collapsed, user }) {
           key: ROUTES.CUSTOMER_BOOKINGS,
           icon: <CarOutlined style={{ fontSize: 18 }} />,
           label: t('nav.transportRequests', 'Yêu cầu vận chuyển'),
+        },
+        {
+          key: ROUTES.CUSTOMER_BILLING,
+          icon: <CreditCardOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.billing', 'Thanh toán'),
         },
         {
           key: ROUTES.CUSTOMER_PRICING,

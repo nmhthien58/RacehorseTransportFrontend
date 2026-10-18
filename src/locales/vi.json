@@ -81,7 +81,7 @@
     "messages": "Tin nhắn",
     "accountGroup": "Tài khoản",
     "profile": "Hồ sơ cá nhân",
-    "billing": "Thanh toán & Hóa đơn",
+    "billing": "Thanh toán",
     "settings": "Cài đặt",
     "specialDashboard": "Bảng điều khiển",
     "specialistDossiers": "Hồ sơ pháp lý",
@@ -657,26 +657,44 @@
     "close": "Đóng"
   },
   "billing": {
-    "title": "Thanh toán & Hóa đơn",
-    "subtitle": "Theo dõi lịch sử giao dịch cước vận chuyển, hóa đơn GTGT và trạng thái quyết toán",
+    "title": "Thanh toán",
+    "subtitle": "Các khoản cần trả, tình hình thanh toán của từng đơn và lịch sử giao dịch",
+    "refresh": "Tải lại",
     "stats": {
-      "monthlyTotal": "Tổng chi tiêu tháng này",
-      "paid": "Đã quyết toán",
-      "pending": "Chờ xử lý"
+      "payableNow": "Có thể thanh toán ngay",
+      "bookingsCount": "{{count}} đơn",
+      "nothingDue": "Không có khoản nào đến lượt",
+      "outstanding": "Còn phải trả (tất cả đơn)",
+      "outstandingHint": "Gồm cả phần còn lại chưa đến hạn",
+      "paid": "Đã thanh toán",
+      "paidHint": "Cọc + phần còn lại + phát sinh",
+      "refunded": "Đã hoàn tiền",
+      "refundedHint": "Hoàn khi hủy đơn"
     },
+    "payableTitle": "Khoản có thể thanh toán",
+    "payableHint": "Số tiền tính theo USD như báo giá, thanh toán qua VNPay bằng VND (tỉ giá {{rate}} ₫/USD).",
+    "noPayable": "Hiện không có khoản nào đến lượt thanh toán",
+    "bookingsTitle": "Thanh toán theo đơn",
+    "noBookings": "Chưa có đơn nào phát sinh thanh toán",
+    "historyTitle": "Lịch sử giao dịch",
+    "noPayments": "Chưa có giao dịch",
+    "searchPlaceholder": "Mã giao dịch, mã đơn, mã VNPay",
+    "filterType": "Loại khoản",
+    "filterStatus": "Trạng thái",
+    "pay": "Thanh toán",
+    "dueHint": {
+      "Deposit": "Trước khi hết hạn giữ chỗ",
+      "Balance": "Trước ngày khởi hành (chưa xếp chuyến)",
+      "Extra": "Sớm nhất có thể"
+    },
+    "overdue": "quá hạn",
+    "horses": "{{count}} ngựa",
+    "refundNote": "Tiền hoàn qua VNPay về tài khoản thẻ trong 7–15 ngày làm việc tùy ngân hàng.",
     "columns": {
-      "invoiceCode": "Mã hóa đơn",
-      "description": "Mô tả dịch vụ",
-      "tripCode": "Mã chuyến",
-      "date": "Ngày xuất",
-      "amount": "Số tiền",
-      "method": "Phương thức",
-      "status": "Trạng thái",
-      "action": "Thao tác"
-    },
-    "viewInvoice": "Xem hóa đơn",
-    "downloadPdf": "Tải PDF",
-    "close": "Đóng"
+      "booking": "Đơn",
+      "dueAt": "Hạn trả",
+      "totalDue": "Tổng phải trả"
+    }
   },
   "landing": {
     "nav": {

@@ -81,7 +81,7 @@
     "messages": "Messages",
     "accountGroup": "Account",
     "profile": "My Profile",
-    "billing": "Billing & Payments",
+    "billing": "Billing",
     "settings": "Settings",
     "searchPlaceholder": "Search routes, jobs, stalls, or...",
     "specialistDashboard": "Dashboard",
@@ -658,26 +658,44 @@
     "close": "Close"
   },
   "billing": {
-    "title": "Billing & Invoices",
-    "subtitle": "Track transportation transaction history, VAT invoices, and settlement status",
+    "title": "Billing",
+    "subtitle": "Payments due, payment status of each booking and transaction history",
+    "refresh": "Refresh",
     "stats": {
-      "monthlyTotal": "This Month's Spending",
-      "paid": "Settled / Paid",
-      "pending": "Pending Settlement"
+      "payableNow": "Payable now",
+      "bookingsCount": "{{count}} booking(s)",
+      "nothingDue": "Nothing to pay right now",
+      "outstanding": "Outstanding (all bookings)",
+      "outstandingHint": "Includes balances not yet due",
+      "paid": "Paid",
+      "paidHint": "Deposit + balance + extra charges",
+      "refunded": "Refunded",
+      "refundedHint": "Refunds on cancellation"
     },
+    "payableTitle": "Payments you can make",
+    "payableHint": "Amounts are in USD as quoted and paid via VNPay in VND (rate {{rate}} ₫/USD).",
+    "noPayable": "Nothing to pay right now",
+    "bookingsTitle": "Payments by booking",
+    "noBookings": "No bookings with payments yet",
+    "historyTitle": "Transaction history",
+    "noPayments": "No transactions yet",
+    "searchPlaceholder": "Transaction, booking or VNPay code",
+    "filterType": "Type",
+    "filterStatus": "Status",
+    "pay": "Pay",
+    "dueHint": {
+      "Deposit": "Before the booking hold expires",
+      "Balance": "Before departure (trip not scheduled yet)",
+      "Extra": "As soon as possible"
+    },
+    "overdue": "overdue",
+    "horses": "{{count}} horse(s)",
+    "refundNote": "VNPay refunds reach your card account within 7–15 working days depending on the bank.",
     "columns": {
-      "invoiceCode": "Invoice Code",
-      "description": "Service Description",
-      "tripCode": "Trip Code",
-      "date": "Issue Date",
-      "amount": "Amount",
-      "method": "Payment Method",
-      "status": "Status",
-      "action": "Actions"
-    },
-    "viewInvoice": "View Invoice",
-    "downloadPdf": "Download PDF",
-    "close": "Close"
+      "booking": "Booking",
+      "dueAt": "Due date",
+      "totalDue": "Total due"
+    }
   },
   "landing": {
     "nav": {

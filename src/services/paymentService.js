@@ -18,6 +18,14 @@ export const paymentService = {
   },
 
   /**
+   * Trang Thanh toán của khách: tổng quan tiền mọi đơn, các khoản cần trả ngay và toàn bộ giao dịch
+   * @returns {Promise<any>}
+   */
+  async getMyBilling() {
+    return api.get(ENDPOINTS.PAYMENTS.MY);
+  },
+
+  /**
    * Khách tạo link thanh toán (VNPay hoặc cổng giả lập) cho khoản đang mở của đơn
    * @param {number|string} bookingId
    * @param {'Deposit'|'Balance'|'Extra'} paymentType

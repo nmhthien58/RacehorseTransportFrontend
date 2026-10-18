@@ -21,6 +21,7 @@ export const ENDPOINTS = {
   // Thanh toán (R-02): cọc, phần còn lại, phát sinh, hoàn tiền; cấu hình % cọc / tỉ giá
   PAYMENTS: {
     BOOKING: (bookingId) => `/bookings/${bookingId}/payments`,
+    MY: '/payments/my',
     MANUAL: (bookingId) => `/bookings/${bookingId}/payments/manual`,
     MOCK_COMPLETE: (txnRef) => `/payments/mock/${txnRef}/complete`,
     RETRY_REFUND: (paymentId) => `/payments/${paymentId}/retry-refund`,

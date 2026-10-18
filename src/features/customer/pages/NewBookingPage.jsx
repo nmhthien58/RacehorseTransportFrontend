@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import dayjs from 'dayjs';
+import { formatPickupWindow } from '@utils/bookingSchedule';
 import PageHeader from '@components/layout/PageHeader';
 import BookingWizard from '@features/customer/components/BookingWizard';
 import bookingService from '@services/bookingService';
@@ -173,10 +173,10 @@ export default function NewBookingPage() {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-              <Text type="secondary">{t('bookings.fields.departureDate') || 'Khởi hành'}:</Text>
+              <Text type="secondary">{t('bookings.fields.pickupWindow')}:</Text>
               <Text strong>
                 <CalendarOutlined style={{ marginRight: 4 }} />
-                {dayjs(createdBooking.departureDate || createdBooking.DepartureDate).format('DD/MM/YYYY')}
+                {formatPickupWindow(createdBooking)}
               </Text>
             </div>
 

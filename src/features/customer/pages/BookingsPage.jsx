@@ -30,6 +30,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import { formatPickupWindow } from '@utils/bookingSchedule';
 import PageHeader from '@components/layout/PageHeader';
 import StatusTag from '@components/common/StatusTag';
 import BookingCard from '@features/customer/components/BookingCard';
@@ -609,10 +610,10 @@ export default function CustomerBookings() {
                 <strong>🐴 {t('bookings.totalHorsesCount', { count: selectedBooking.totalHorses || selectedBooking.TotalHorses || 1 })}</strong>
               </Col>
               <Col span={12}>
-                <Text type="secondary">{t('bookings.fields.departureDate')}: </Text>
+                <Text type="secondary">{t('bookings.fields.pickupWindow')}: </Text>
                 <strong>
                   <CalendarOutlined style={{ marginRight: 4 }} />
-                  {dayjs(selectedBooking.departureDate || selectedBooking.DepartureDate).format('DD/MM/YYYY')}
+                  {formatPickupWindow(selectedBooking)}
                 </strong>
               </Col>
               <Col span={12}>

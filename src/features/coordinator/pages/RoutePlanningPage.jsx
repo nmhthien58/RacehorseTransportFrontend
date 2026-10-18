@@ -18,6 +18,7 @@ import { ArrowLeftOutlined, EditOutlined, EyeOutlined, PlusOutlined, ReloadOutli
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedule';
 import PageHeader from '@components/layout/PageHeader';
 import StatusTag from '@components/common/StatusTag';
 import tripService from '@services/tripService';
@@ -247,7 +248,7 @@ export default function RoutePlanningPage() {
       width: 150,
       render: (_, h) => (
         <span style={{ fontSize: 12 }}>
-          {dayjs(h.departureDate).format('DD/MM/YYYY')} → {dayjs(h.deliveryDate).format('DD/MM/YYYY')}
+          {formatPickupWindow(h)} · {t('bookings.fields.deliveryDeadline')}: {formatDeliveryDeadline(h)}
         </span>
       ),
     },

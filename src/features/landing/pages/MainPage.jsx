@@ -84,7 +84,8 @@ export default function MainPage() {
       pickupAddress: quickOrigin,
       dropoffAddress: quickDestination,
       totalHorses: quickHorses,
-      departureDate: quickDate ? quickDate.format('YYYY-MM-DD') : undefined,
+      // Ngày khách chọn nhanh ở trang chủ được dùng làm ngày đầu khoảng đón (nếu không sớm hơn ngày cho phép)
+      pickupWindowStart: quickDate ? quickDate.format('YYYY-MM-DD') : undefined,
     });
   };
 

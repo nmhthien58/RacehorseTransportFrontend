@@ -42,7 +42,8 @@ import dayjs from 'dayjs';
 import horseService from '@services/horseService';
 import bookingService from '@services/bookingService';
 import { useAuthStore } from '@features/auth/store/authStore';
-import { unwrapData, unwrapList, getErrorMessage, toIsoString } from '@utils/apiHelpers';
+import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
+import { formatDeliveryDeadline, formatPickupWindow, toLocalDateTimeString } from '@utils/bookingSchedule';
 import { checkHorseTransportEligibility } from '@utils/horseHealth';
 import { ROUTES } from '@routes/routes';
 import {
@@ -103,7 +104,6 @@ export default function BookingWizard({
 
   const {
     control,
-    trigger,
     getValues,
     setValue,
   } = useForm({
@@ -130,8 +130,9 @@ export default function BookingWizard({
       PickupAirportCode: initialValues?.pickupAirportCode || AIRPORTS_BY_COUNTRY[initialPickupCountry]?.[0]?.code || 'HAN',
       DropoffAirportCode: initialValues?.dropoffAirportCode || AIRPORTS_BY_COUNTRY[initialDropoffCountry]?.[0]?.code || 'NRT',
       DistanceKm: initialValues?.distanceKm || 250,
-      DepartureDate: initialValues?.departureDate || dayjs().add(7, 'day').format('YYYY-MM-DDTHH:mm:ssZ'),
-      DeliveryDate: initialValues?.deliveryDate || dayjs().add(9, 'day').format('YYYY-MM-DDTHH:mm:ssZ'),
+      // Khoảng ngày sẵn sàng đón [đầu, cuối] và hạn giao; điền mặc định khi đã biết ngày sớm nhất từ backend
+      PickupWindow: null,
+      DeliveryDeadline: null,
       InsurancePackage: initialValues?.declaredValue === null ? 'none' : 'transit',
       DeclaredValue: initialValues?.declaredValue || 50000,
       RequiresClimateControl: initialValues?.requiresClimateControl ?? true,
@@ -149,8 +150,10 @@ export default function BookingWizard({
   const dropoffAddress = useWatch({ control, name: 'DropoffAddress' });
   const pickupAirportCode = useWatch({ control, name: 'PickupAirportCode' });
   const dropoffAirportCode = useWatch({ control, name: 'DropoffAirportCode' });
-  const departureDate = useWatch({ control, name: 'DepartureDate' });
-  const deliveryDate = useWatch({ control, name: 'DeliveryDate' });
+  const pickupWindow = useWatch({ control, name: 'PickupWindow' });
+  const deliveryDeadline = useWatch({ control, name: 'DeliveryDeadline' });
+  const pickupWindowStart = pickupWindow?.[0] || null;
+  const pickupWindowEnd = pickupWindow?.[1] || null;
   const insurancePackage = useWatch({ control, name: 'InsurancePackage' });
   const declaredValue = useWatch({ control, name: 'DeclaredValue' });
   const distanceKm = useWatch({ control, name: 'DistanceKm' });
@@ -314,36 +317,119 @@ export default function BookingWizard({
     });
   };
 
+  // Lịch sớm nhất của tuyến (ngày đón sớm nhất, mốc Express, thời gian vận chuyển) lấy từ API xem giá.
+  // Lịch không phụ thuộc số ngựa nên gửi tạm một con hạng Shared, chưa gửi ngày.
+  const [schedule, setSchedule] = useState(null);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [scheduleError, setScheduleError] = useState(null);
+
+  useEffect(() => {
+    if (currentStep !== 1 || !dropoffCountry) return undefined;
+    if (transportMode === 'Ground' && !(Number(distanceKm) > 0)) return undefined;
+    let cancelled = false;
+
+    const timer = setTimeout(async () => {
+      setScheduleLoading(true);
+      setScheduleError(null);
+      try {
+        const res = await bookingService.previewQuote({
+          transportMode,
+          pickupCountryCode: pickupCountry,
+          dropoffCountryCode: dropoffCountry,
+          distanceKm: transportMode === 'Ground' ? Number(distanceKm) : null,
+          horses: [{ stallClass: 'Shared' }],
+        });
+        if (!cancelled) setSchedule(unwrapData(res));
+      } catch (err) {
+        if (!cancelled) {
+          setSchedule(null);
+          setScheduleError(getErrorMessage(err, ''));
+        }
+      } finally {
+        if (!cancelled) setScheduleLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [currentStep, transportMode, pickupCountry, dropoffCountry, distanceKm]);
+
+  const earliestPickup = schedule?.earliestPickupDate ? dayjs(schedule.earliestPickupDate) : null;
+  const maxTransitHours = Number(schedule?.transit?.maxHours || 0);
+  // Hạn giao sớm nhất = đầu khoảng đón + thời gian vận chuyển chậm nhất
+  const earliestDeadline = pickupWindowStart
+    ? dayjs(pickupWindowStart).add(maxTransitHours, 'hour')
+    : null;
+
+  // Có lịch rồi mà khách chưa chọn ngày: dùng ngày khách chọn nhanh ở trang chủ nếu hợp lệ,
+  // nếu không thì gợi ý khoảng đón ngay sau mốc Express (không bị phụ phí gấp)
+  const preferredPickup = initialValues?.pickupWindowStart;
+  useEffect(() => {
+    if (!schedule || getValues('PickupWindow')) return;
+    const preferred = preferredPickup ? dayjs(preferredPickup).startOf('day') : null;
+    const start =
+      preferred && !preferred.isBefore(dayjs(schedule.earliestPickupDate), 'day')
+        ? preferred
+        : dayjs(schedule.expressUntilDate).startOf('day');
+    setValue('PickupWindow', [toLocalDateTimeString(start), toLocalDateTimeString(start.add(3, 'day'))]);
+    setValue(
+      'DeliveryDeadline',
+      toLocalDateTimeString(start.add(Number(schedule.transit?.maxHours || 0), 'hour').add(3, 'day').endOf('day')),
+    );
+  }, [schedule, preferredPickup, getValues, setValue]);
+
+  // Kiểm tra lịch khách chọn; trả về thông báo lỗi hoặc null
+  const validateSchedule = () => {
+    const [start, end] = getValues('PickupWindow') || [];
+    const deadline = getValues('DeliveryDeadline');
+    if (!start || !end) return t('bookings.schedule.pickupRequired');
+    if (!deadline) return t('bookings.schedule.deadlineRequired');
+    if (earliestPickup && dayjs(start).isBefore(earliestPickup, 'day')) {
+      return t('bookings.schedule.tooEarly', { date: earliestPickup.format('DD/MM/YYYY') });
+    }
+    const minDeadline = dayjs(start).add(maxTransitHours, 'hour');
+    if (dayjs(deadline).isBefore(minDeadline)) {
+      return t('bookings.schedule.deadlineTooEarly', { date: minDeadline.format('DD/MM/YYYY HH:mm') });
+    }
+    return null;
+  };
+
   // State báo giá tính từ backend
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState(null);
 
   const quoteRequest = useMemo(() => {
-    if (selectedHorseIds.length === 0 || !departureDate || !deliveryDate || !dropoffCountry) return null;
+    if (selectedHorseIds.length === 0 || !pickupWindowStart || !deliveryDeadline || !dropoffCountry) return null;
     if (transportMode === 'Ground' && !(Number(distanceKm) > 0)) return null;
 
     return {
       transportMode,
+      pickupCountryCode: pickupCountry,
       dropoffCountryCode: dropoffCountry,
       distanceKm: transportMode === 'Ground' ? Number(distanceKm) : null,
       requiresClimateControl: Boolean(requiresClimateControl),
       declaredValue: insurancePackage === 'none' ? null : Number(declaredValue) || null,
-      departureDate: toIsoString(departureDate),
-      deliveryDate: toIsoString(deliveryDate),
+      pickupWindowStart: toLocalDateTimeString(pickupWindowStart),
+      pickupWindowEnd: toLocalDateTimeString(pickupWindowEnd),
+      deliveryDeadline: toLocalDateTimeString(deliveryDeadline),
       horses: selectedHorseIds.map((hId) => ({ stallClass: stallClasses[hId] || 'Comfort' })),
     };
   }, [
     selectedHorseIds,
     stallClasses,
     transportMode,
+    pickupCountry,
     dropoffCountry,
     distanceKm,
     requiresClimateControl,
     insurancePackage,
     declaredValue,
-    departureDate,
-    deliveryDate,
+    pickupWindowStart,
+    pickupWindowEnd,
+    deliveryDeadline,
   ]);
 
   // Gọi API tính báo giá ở bước Review
@@ -415,15 +501,9 @@ export default function BookingWizard({
     }
 
     if (targetStep >= 2) {
-      const isWhenValid = await trigger(['DepartureDate', 'DeliveryDate']);
-      if (!isWhenValid) {
-        message.warning('Vui lòng kiểm tra lại ngày vận chuyển.');
-        return;
-      }
-      const depDate = getValues('DepartureDate');
-      const delDate = getValues('DeliveryDate');
-      if (dayjs(delDate).isBefore(dayjs(depDate), 'day')) {
-        message.error('Ngày giao hàng không thể trước ngày khởi hành.');
+      const scheduleProblem = validateSchedule();
+      if (scheduleProblem) {
+        message.warning(scheduleProblem);
         return;
       }
     }
@@ -469,15 +549,9 @@ export default function BookingWizard({
     }
 
     if (currentStep === 1) {
-      const isValid = await trigger(['DepartureDate', 'DeliveryDate']);
-      if (!isValid) {
-        message.warning('Vui lòng chọn ngày vận chuyển hợp lệ.');
-        return;
-      }
-      const depDate = getValues('DepartureDate');
-      const delDate = getValues('DeliveryDate');
-      if (dayjs(delDate).isBefore(dayjs(depDate), 'day')) {
-        message.error('Ngày giao hàng không thể trước ngày khởi hành.');
+      const scheduleProblem = validateSchedule();
+      if (scheduleProblem) {
+        message.warning(scheduleProblem);
         return;
       }
     }
@@ -527,8 +601,9 @@ export default function BookingWizard({
       dropoffAddress: finalDropoff,
       dropoffCity: mode === 'Ground' ? dCity : null,
       dropoffCountryCode: dCode,
-      departureDate: toIsoString(values.DepartureDate),
-      deliveryDate: toIsoString(values.DeliveryDate),
+      pickupWindowStart: toLocalDateTimeString(values.PickupWindow?.[0]),
+      pickupWindowEnd: toLocalDateTimeString(values.PickupWindow?.[1]),
+      deliveryDeadline: toLocalDateTimeString(values.DeliveryDeadline),
       transportMode: mode,
       distanceKm: mode === 'Ground' ? Number(values.DistanceKm) : null,
       requiresClimateControl: Boolean(values.RequiresClimateControl),
@@ -982,61 +1057,112 @@ export default function BookingWizard({
         <div>
           {/* Lịch trình đón & giao */}
           <div style={{ marginBottom: 24 }}>
-            <Text strong style={{ fontSize: 14, color: '#0f172a', display: 'block', marginBottom: 12 }}>
-              1. Thời gian vận chuyển dự kiến
+            <Text strong style={{ fontSize: 14, color: '#0f172a', display: 'block', marginBottom: 8 }}>
+              {t('bookings.schedule.title')}
             </Text>
+            <Text type="secondary" style={{ fontSize: 12.5, display: 'block', marginBottom: 12 }}>
+              {t('bookings.schedule.intro')}
+            </Text>
+
+            {scheduleLoading && (
+              <Flex align="center" gap={8} style={{ marginBottom: 12 }}>
+                <Spin size="small" />
+                <Text type="secondary">{t('bookings.schedule.loading')}</Text>
+              </Flex>
+            )}
+            {scheduleError && (
+              <Alert
+                type="error"
+                showIcon
+                style={{ marginBottom: 12 }}
+                title={t('bookings.schedule.unavailable', { message: scheduleError })}
+              />
+            )}
+            {schedule && (
+              <Alert
+                type="info"
+                showIcon
+                style={{ marginBottom: 12 }}
+                title={
+                  <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>
+                    <div>
+                      {t('bookings.schedule.earliestHint', {
+                        date: dayjs(schedule.earliestPickupDate).format('DD/MM/YYYY'),
+                        days: schedule.leadTimeDays,
+                      })}
+                    </div>
+                    <div>
+                      {t('bookings.schedule.expressHint', {
+                        date: dayjs(schedule.expressUntilDate).format('DD/MM/YYYY'),
+                      })}
+                    </div>
+                    <div>
+                      {t('bookings.schedule.transitHint', {
+                        hours: schedule.transit?.totalHours,
+                        maxHours: schedule.transit?.maxHours,
+                        days: schedule.transit?.transitDays,
+                      })}
+                    </div>
+                    {earliestDeadline && (
+                      <div>
+                        {t('bookings.schedule.deadlineHint', {
+                          date: earliestDeadline.format('DD/MM/YYYY HH:mm'),
+                        })}
+                      </div>
+                    )}
+                  </div>
+                }
+              />
+            )}
+
             <Row gutter={16}>
-              <Col xs={24} md={12}>
+              <Col xs={24} md={14}>
                 <Controller
-                  name="DepartureDate"
+                  name="PickupWindow"
                   control={control}
-                  rules={{ required: 'Vui lòng chọn ngày đón' }}
-                  render={({ field, fieldState: { error } }) => (
-                    <Form.Item
-                      label="Ngày đón dự kiến"
-                      required
-                      validateStatus={error ? 'error' : ''}
-                      help={error?.message}
-                    >
-                      <DatePicker
-                        value={field.value ? dayjs(field.value) : null}
-                        onChange={(date) =>
-                          field.onChange(date ? date.format('YYYY-MM-DDTHH:mm:ssZ') : null)
+                  render={({ field }) => (
+                    <Form.Item label={t('bookings.schedule.pickupWindowLabel')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }}>
+                      <DatePicker.RangePicker
+                        value={field.value ? [dayjs(field.value[0]), dayjs(field.value[1])] : null}
+                        onChange={(dates) =>
+                          field.onChange(
+                            dates
+                              ? [
+                                  toLocalDateTimeString(dates[0].startOf('day')),
+                                  toLocalDateTimeString(dates[1].startOf('day')),
+                                ]
+                              : null,
+                          )
                         }
-                        disabledDate={(current) => current && current < dayjs().startOf('day')}
+                        // Khóa các ngày trước ngày đón sớm nhất backend cho phép
+                        disabledDate={(current) =>
+                          current && current < (earliestPickup || dayjs()).startOf('day')
+                        }
                         format="DD/MM/YYYY"
                         size="large"
                         style={{ width: '100%', borderRadius: 8 }}
-                        placeholder="Chọn ngày khởi hành"
                       />
                     </Form.Item>
                   )}
                 />
               </Col>
-              <Col xs={24} md={12}>
+              <Col xs={24} md={10}>
                 <Controller
-                  name="DeliveryDate"
+                  name="DeliveryDeadline"
                   control={control}
-                  rules={{ required: 'Vui lòng chọn ngày giao' }}
-                  render={({ field, fieldState: { error } }) => (
-                    <Form.Item
-                      label="Ngày giao dự kiến"
-                      required
-                      validateStatus={error ? 'error' : ''}
-                      help={error?.message}
-                    >
+                  render={({ field }) => (
+                    <Form.Item label={t('bookings.schedule.deadlineLabel')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }}>
                       <DatePicker
                         value={field.value ? dayjs(field.value) : null}
-                        onChange={(date) =>
-                          field.onChange(date ? date.format('YYYY-MM-DDTHH:mm:ssZ') : null)
-                        }
+                        // Hạn giao tính tới cuối ngày được chọn
+                        onChange={(date) => field.onChange(date ? toLocalDateTimeString(date.endOf('day')) : null)}
                         disabledDate={(current) =>
-                          current && current < (departureDate ? dayjs(departureDate) : dayjs().startOf('day'))
+                          current &&
+                          current.endOf('day') < (earliestDeadline || earliestPickup || dayjs())
                         }
                         format="DD/MM/YYYY"
                         size="large"
                         style={{ width: '100%', borderRadius: 8 }}
-                        placeholder="Chọn ngày giao đến"
                       />
                     </Form.Item>
                   )}
@@ -1452,15 +1578,15 @@ export default function BookingWizard({
 
                 <Row gutter={16} style={{ marginBottom: 10 }}>
                   <Col span={12}>
-                    <Text type="secondary" style={{ fontSize: 12 }}>Ngày đón dự kiến:</Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>{t('bookings.fields.pickupWindow')}:</Text>
                     <div style={{ fontSize: 13, fontWeight: 600 }}>
-                      {departureDate ? dayjs(departureDate).format('DD/MM/YYYY') : '---'}
+                      {formatPickupWindow({ pickupWindowStart, pickupWindowEnd }, '---')}
                     </div>
                   </Col>
                   <Col span={12}>
-                    <Text type="secondary" style={{ fontSize: 12 }}>Ngày giao dự kiến:</Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>{t('bookings.fields.deliveryDeadline')}:</Text>
                     <div style={{ fontSize: 13, fontWeight: 600 }}>
-                      {deliveryDate ? dayjs(deliveryDate).format('DD/MM/YYYY') : '---'}
+                      {formatDeliveryDeadline({ deliveryDeadline }, '---')}
                     </div>
                   </Col>
                 </Row>

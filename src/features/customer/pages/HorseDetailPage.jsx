@@ -24,6 +24,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedule';
 import horseService from '@services/horseService';
 import { getErrorMessage, unwrapList } from '@utils/apiHelpers';
 import PageHeader from '@components/layout/PageHeader';
@@ -167,14 +168,13 @@ export default function HorseDetailPage() {
     },
     {
       title: t('horses.tripTime'),
-      dataIndex: 'departureDate',
-      key: 'departureDate',
-      render: (dep, record) => {
-        const depDate = dep || record.DepartureDate;
-        const arrDate = record.arrivalDate || record.ArrivalDate;
+      dataIndex: 'pickupWindowStart',
+      key: 'pickupWindowStart',
+      // Khoảng ngày sẵn sàng đón ➔ hạn giao trễ nhất của đơn
+      render: (_, record) => {
         return (
           <span style={{ fontSize: 13 }}>
-            {depDate ? dayjs(depDate).format('DD/MM/YYYY') : '-'} ➔ {arrDate ? dayjs(arrDate).format('DD/MM/YYYY') : '-'}
+            {formatPickupWindow(record, '-')} ➔ {formatDeliveryDeadline(record, '-')}
           </span>
         );
       },

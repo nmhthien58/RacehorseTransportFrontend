@@ -10,6 +10,7 @@ import {
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import { formatPickupWindow } from '@utils/bookingSchedule';
 import StatusTag from '@components/common/StatusTag';
 
 const { Text } = Typography;
@@ -38,7 +39,6 @@ export default function BookingCard({ booking, onCancel, onViewDetail, onManageD
   const canOpenDocuments = !['Rejected', 'Cancelled', 'Expired'].includes(status);
   const bookingCode = booking.bookingCode || booking.BookingCode || `${booking.bookingId || booking.BookingID || ''}`;
   const createdAt = booking.createdAt || booking.CreatedAt;
-  const departureDate = booking.departureDate || booking.DepartureDate;
   const pickupAddress = booking.pickupAddress || booking.PickupAddress || 'Việt Nam';
   const pickupCountryCode = booking.pickupCountryCode || booking.PickupCountryCode || 'VN';
   const dropoffAddress = booking.dropoffAddress || booking.DropoffAddress || 'Điểm đến';
@@ -175,12 +175,12 @@ export default function BookingCard({ booking, onCancel, onViewDetail, onManageD
 
           <div>
             <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
-              {t('bookings.fields.departureDate') || 'Ngày khởi hành'}:
+              {t('bookings.fields.pickupWindow')}:
             </Text>
             <Space size={4}>
               <CalendarOutlined style={{ color: '#64748b' }} />
               <Text strong style={{ fontSize: 14, color: '#0f172a' }}>
-                {departureDate ? dayjs(departureDate).format('DD/MM/YYYY') : 'Chưa định'}
+                {formatPickupWindow(booking)}
               </Text>
             </Space>
           </div>

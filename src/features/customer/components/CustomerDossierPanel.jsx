@@ -22,6 +22,7 @@ import {
 import { FileTextOutlined, UploadOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import { formatPickupWindow } from '@utils/bookingSchedule';
 import dossierService from '@services/dossierService';
 import { unwrapData, unwrapList, getErrorMessage, toFormData } from '@utils/apiHelpers';
 
@@ -311,7 +312,7 @@ export default function CustomerDossierPanel({ horseId, bookingId, bookingStatus
             <Text type="secondary">
               {shownDetail.pickupCountryCode} → {shownDetail.dropoffCountryCode} ·{' '}
               {t('customerDossier.departure')}{' '}
-              {shownDetail.departureDate ? dayjs(shownDetail.departureDate).format('DD/MM/YYYY') : '—'}
+              {formatPickupWindow(shownDetail)}
             </Text>
             {shownDetail.specialistName && (
               <Text type="secondary">

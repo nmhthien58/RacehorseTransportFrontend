@@ -30,6 +30,7 @@ import {
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedule';
 import PageHeader from '@components/layout/PageHeader';
 import bookingService from '@services/bookingService';
 import userService from '@services/userService';
@@ -219,7 +220,9 @@ export default function PendingRequestsPage() {
       transportMode: activeBooking.transportMode || 'Air',
       totalHorses: activeBooking.totalHorses || 1,
       estimatedCost: activeBooking.estimatedCost || 0,
-      departureDate: activeBooking.departureDate,
+      pickupWindowStart: activeBooking.pickupWindowStart,
+      pickupWindowEnd: activeBooking.pickupWindowEnd,
+      deliveryDeadline: activeBooking.deliveryDeadline,
       isRead: true,
       createdAt: activeBooking.createdAt || new Date().toISOString(),
       contentVi: `Kính gửi Ban Quản Lý & Điều Phối Logistics Racehorse Transport,
@@ -231,7 +234,8 @@ Thông tin tóm tắt lộ trình:
 - Địa điểm giao: ${activeBooking.dropoffAddress || 'Điểm đến quốc tế'}
 - Phương thức vận chuyển: ${activeBooking.transportMode || 'Air'}
 - Số lượng: ${activeBooking.totalHorses || 1} cá thể ngựa
-- Dự kiến khởi hành: ${activeBooking.departureDate ? dayjs(activeBooking.departureDate).format('DD/MM/YYYY') : 'Sớm nhất'}
+- Khoảng ngày sẵn sàng đón: ${formatPickupWindow(activeBooking)}
+- Hạn giao trễ nhất: ${formatDeliveryDeadline(activeBooking)}
 - Ước tính cước phí dự kiến: ${Number(activeBooking.estimatedCost || 0).toLocaleString()} USD
 ${activeBooking.specialInstructions ? `- Yêu cầu chăm sóc đặc biệt: "${activeBooking.specialInstructions}"` : ''}
 
@@ -248,7 +252,8 @@ Trip summary:
 - Destination: ${activeBooking.dropoffAddress || 'Destination'}
 - Transport Method: ${activeBooking.transportMode || 'Air'}
 - Number of horses: ${activeBooking.totalHorses || 1}
-- Target Departure: ${activeBooking.departureDate ? dayjs(activeBooking.departureDate).format('DD/MM/YYYY') : 'Earliest'}
+- Pickup window: ${formatPickupWindow(activeBooking)}
+- Latest delivery: ${formatDeliveryDeadline(activeBooking)}
 - Estimated Freight: ${Number(activeBooking.estimatedCost || 0).toLocaleString()} USD
 ${activeBooking.specialInstructions ? `- Special Care: "${activeBooking.specialInstructions}"` : ''}
 
@@ -576,9 +581,7 @@ ${activeBooking.customerName || 'Customer'}`,
                       {t('manager.pendingRequests.requestedDate')}
                     </Text>
                     <Text strong style={{ fontSize: 14, color: '#0f172a' }}>
-                      {activeBooking.departureDate
-                        ? dayjs(activeBooking.departureDate).format('DD MMM YYYY')
-                        : '—'}
+                      {formatPickupWindow(activeBooking)}
                     </Text>
                   </Col>
                   <Col span={8}>
@@ -1070,11 +1073,11 @@ ${activeBooking.customerName || 'Customer'}`,
               },
               {
                 title: t('manager.bookings.columns.schedule'),
-                dataIndex: 'departureDate',
-                key: 'departureDate',
-                render: (date) => (
+                dataIndex: 'pickupWindowStart',
+                key: 'pickupWindowStart',
+                render: (_, record) => (
                   <span style={{ fontSize: 13, color: '#475569' }}>
-                    {date ? dayjs(date).format('DD/MM/YYYY') : '—'}
+                    {formatPickupWindow(record)}
                   </span>
                 ),
               },

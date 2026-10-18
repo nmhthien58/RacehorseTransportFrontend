@@ -1317,7 +1317,9 @@
       "offloadReason": "Lý do",
       "offloadReasonRequired": "Nhập lý do",
       "offloadOk": "Xác nhận rời chuyến",
-      "offloaded": "Đã ghi nhận {{name}} rời chuyến"
+      "offloaded": "Đã ghi nhận {{name}} rời chuyến",
+      "revisedEta": "Dự kiến mới",
+      "behindSchedule": "Đoàn xe đang trễ {{minutes}} phút so với kế hoạch; giờ dự kiến các trạm phía sau đã được lùi tương ứng."
     },
     "welfare": {
       "title": "Nhật ký thể trạng sinh trắc & Phúc lợi ngựa",
@@ -1666,7 +1668,9 @@
       "feed": "Ăn",
       "stress": "Stress",
       "by": "Người ghi"
-    }
+    },
+    "revised": "Dự kiến mới {{time}}",
+    "estimatedEnd": "Tới đích dự kiến {{time}}"
   },
   "coordinatorHub": {
     "title": "Trung tâm điều phối",
@@ -1829,7 +1833,11 @@
     "myPickup": "Điểm đón của bạn",
     "myDropoff": "Điểm trả của bạn",
     "offloadReason": "Lý do: {{reason}}",
-    "deliveredAt": "Đã giao lúc {{time}}"
+    "deliveredAt": "Đã giao lúc {{time}}",
+    "plannedShort": "Kế hoạch {{time}}",
+    "revisedAt": "Dự kiến {{time}} (kế hoạch {{planned}})",
+    "atRiskTitle": "Có thể giao trễ hạn",
+    "atRiskDescription": "Chuyến đang chạy chậm so với kế hoạch. Giờ giao dự kiến mới là {{time}}, sau hạn giao của đơn. Đội vận hành sẽ liên hệ và cập nhật thêm cho bạn."
   },
   "filePreview": {
     "noFile": "Giấy tờ này chưa có tệp đính kèm",

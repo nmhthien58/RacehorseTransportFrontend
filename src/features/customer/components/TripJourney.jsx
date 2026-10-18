@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Row, Col, Typography, Tag, Button, Segmented, Image, Space, Empty, Progress } from 'antd';
+import { Row, Col, Typography, Tag, Button, Segmented, Image, Space, Empty, Progress, Alert } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
@@ -81,6 +81,7 @@ export default function TripJourney({ trip, lastLoadedAt, onRefresh }) {
       : null;
   const progressPercent = trip.checkpointsTotal ? Math.round((trip.checkpointsReached / trip.checkpointsTotal) * 100) : 0;
   const latestLog = horse?.logs[0];
+  const lastStop = [...trip.checkpoints].reverse().find((c) => c.status !== 'Cancelled');
 
   const facts = [
     { label: t('customerTrips.info.vehicle'), value: trip.vehicleCode || '—' },
@@ -91,10 +92,30 @@ export default function TripJourney({ trip, lastLoadedAt, onRefresh }) {
     },
     {
       label: t('customerTrips.info.arrival'),
-      value: trip.actualEndDate ? formatTime(trip.actualEndDate) : `${formatTime(trip.plannedEndDate)} (${t('customerTrips.planned')})`,
+      // Chưa tới: giờ dự kiến của mốc cuối đã cập nhật theo check-in (R-08), không có thì giờ kế hoạch
+      value: trip.actualEndDate
+        ? formatTime(trip.actualEndDate)
+        : `${formatTime(lastStop?.estimatedArrivalTime || trip.plannedEndDate)} (${t('customerTrips.planned')})`,
     },
-    ...(trip.estimatedDeliveryAt
-      ? [{ label: t('customerTrips.info.eta'), value: formatTime(trip.estimatedDeliveryAt) }]
+    // R-08: giờ giao dự kiến cập nhật theo check-in thực tế; khác kế hoạch thì ghi kèm giờ kế hoạch
+    ...(trip.liveEstimatedDeliveryAt || trip.estimatedDeliveryAt
+      ? [
+          {
+            label: t('customerTrips.info.eta'),
+            value: (
+              <span>
+                <Text type={trip.deliveryAtRisk ? 'danger' : undefined}>
+                  {formatTime(trip.liveEstimatedDeliveryAt || trip.estimatedDeliveryAt)}
+                </Text>
+                {trip.liveEstimatedDeliveryAt &&
+                  trip.estimatedDeliveryAt &&
+                  !dayjs(trip.liveEstimatedDeliveryAt).isSame(dayjs(trip.estimatedDeliveryAt), 'minute') && (
+                    <div className={styles.muted}>{t('customerTrips.plannedShort', { time: formatTime(trip.estimatedDeliveryAt) })}</div>
+                  )}
+              </span>
+            ),
+          },
+        ]
       : []),
     {
       label: t('customerTrips.info.delay'),
@@ -113,6 +134,15 @@ export default function TripJourney({ trip, lastLoadedAt, onRefresh }) {
 
   return (
     <div>
+      {trip.deliveryAtRisk && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message={t('customerTrips.atRiskTitle')}
+          description={t('customerTrips.atRiskDescription', { time: formatTime(trip.liveEstimatedDeliveryAt) })}
+        />
+      )}
 
       {/* Tổng quan chuyến */}
       <div className={`${styles.panel} ${styles.header}`}>
@@ -197,7 +227,9 @@ export default function TripJourney({ trip, lastLoadedAt, onRefresh }) {
                         <div>
                           {cp.actualArrivalTime
                             ? t('customerTrips.arrivedAt', { time: formatTime(cp.actualArrivalTime) })
-                            : t('customerTrips.plannedAt', { time: formatTime(cp.plannedTime) })}
+                            : cp.estimatedArrivalTime && !dayjs(cp.estimatedArrivalTime).isSame(dayjs(cp.plannedTime), 'minute')
+                              ? t('customerTrips.revisedAt', { time: formatTime(cp.estimatedArrivalTime), planned: formatTime(cp.plannedTime) })
+                              : t('customerTrips.plannedAt', { time: formatTime(cp.plannedTime) })}
                           {cp.actualDepartureTime && cp.checkpointType !== 'Destination' && (
                             <> · {t('customerTrips.departedAt', { time: dayjs(cp.actualDepartureTime).format('HH:mm') })}</>
                           )}

@@ -121,6 +121,13 @@ export default function TripTrackingBoard() {
         <div style={{ fontSize: 12 }}>
           {r.nextCheckpointName || '—'}
           <div style={{ color: '#64748b' }}>{formatTime(r.nextCheckpointPlannedTime)}</div>
+          {/* R-08: giờ dự kiến mới theo check-in thực tế khi chuyến đang trễ */}
+          {r.nextCheckpointEstimatedTime && r.isBehindSchedule && (
+            <div style={{ color: '#DC2626' }}>{t('tracking.revised', { time: formatTime(r.nextCheckpointEstimatedTime) })}</div>
+          )}
+          {r.estimatedEndAt && (
+            <div style={{ color: '#64748b' }}>{t('tracking.estimatedEnd', { time: formatTime(r.estimatedEndAt) })}</div>
+          )}
         </div>
       ),
     },

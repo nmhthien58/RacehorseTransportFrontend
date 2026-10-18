@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Card, Row, Col, Typography, Tag, Button, Form, Input, Radio, Spin, Alert, Empty, Image, Space, Checkbox, message } from 'antd';
 import { FileDoneOutlined } from '@ant-design/icons';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { useMissionDetail } from '../hooks/useDriverMissions';
@@ -9,6 +9,7 @@ import driverService from '../services/driverService';
 import MissionHeaderCard from '../components/MissionHeaderCard';
 import DigitalSignaturePad from '../components/DigitalSignaturePad';
 import EmergencyReportModal from '../components/EmergencyReportModal';
+import TripHorseStatusTag from '@components/common/TripHorseStatusTag';
 import { unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import { HANDOVER_CONDITIONS, HANDOVER_CONDITION_COLOR } from '@utils/incidents';
 
@@ -27,9 +28,13 @@ export default function ArrivalHandoverPage() {
   const { t } = useTranslation();
   const { mission, loading, error, fetchMission, reportIncident } = useMissionDetail(tripId);
   const [form] = Form.useForm();
+  const [searchParams] = useSearchParams();
 
   const [handovers, setHandovers] = useState([]);
-  const [activeBookingId, setActiveBookingId] = useState(null);
+  // Mở sẵn form của đơn khi đi từ nút "Bàn giao đơn ..." ở mốc DropOff (?booking=<id>)
+  const [activeBookingId, setActiveBookingId] = useState(() =>
+    searchParams.get('booking') ? Number(searchParams.get('booking')) : null,
+  );
   // tripHorseId -> đã đối chiếu con ngựa thật với ảnh / dữ liệu trên hệ thống
   const [verified, setVerified] = useState({});
   const [signature, setSignature] = useState(null);
@@ -59,12 +64,23 @@ export default function ArrivalHandoverPage() {
 
   const bookings = mission?.bookings || [];
   const horses = mission?.horses || [];
-  const canHandover = mission?.overallStatus === 'ArrivedDestination';
+  const checkpoints = mission?.routeCheckpoints || [];
+  const tripUnderWay = ['InTransit', 'EmergencyRerouting', 'ArrivedDestination'].includes(mission?.overallStatus);
   const horsesOf = (bookingId) => horses.filter((h) => h.bookingId === bookingId);
+  // Ngựa còn trên xe phải giao (con đã rớt lại giữa đường không giao ở đây)
+  const onBoardOf = (bookingId) => horsesOf(bookingId).filter((h) => !h.status || h.status === 'InTransit');
   const handoverOf = (bookingId) => handovers.find((h) => h.bookingId === bookingId);
+  // R-04: mốc trả của đơn (DropOff riêng hoặc mốc cuối); chỉ ký được khi xe đang dừng ở đó
+  const dropoffOf = (booking) => checkpoints.find((c) => c.checkpointId === booking.dropoffCheckpointId);
+  const canHandoverBooking = (booking) => {
+    if (!tripUnderWay) return false;
+    const dropoff = dropoffOf(booking);
+    if (!dropoff) return mission?.overallStatus === 'ArrivedDestination';
+    return dropoff.status === 'Arrived' && onBoardOf(booking.bookingId).length > 0;
+  };
 
   const activeBooking = bookings.find((b) => b.bookingId === activeBookingId);
-  const activeHorses = activeBooking ? horsesOf(activeBooking.bookingId) : [];
+  const activeHorses = activeBooking ? onBoardOf(activeBooking.bookingId) : [];
   const allVerified = activeHorses.length > 0 && activeHorses.every((h) => verified[h.tripHorseId]);
 
   const openForm = (bookingId) => {
@@ -115,6 +131,7 @@ export default function ArrivalHandoverPage() {
   };
 
   const doneCount = bookings.filter((b) => b.handoverCompleted || handoverOf(b.bookingId)).length;
+  const anyAvailable = bookings.some((b) => !(b.handoverCompleted || handoverOf(b.bookingId)) && canHandoverBooking(b));
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px' }}>
@@ -127,8 +144,8 @@ export default function ArrivalHandoverPage() {
 
       {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
 
-      {!canHandover && mission?.overallStatus !== 'Completed' && (
-        <Alert type="info" showIcon message={t('handover.notArrived')} style={{ marginBottom: 16 }} />
+      {!anyAvailable && mission?.overallStatus !== 'Completed' && doneCount < bookings.length && (
+        <Alert type="info" showIcon message={t('handover.noneAvailable')} style={{ marginBottom: 16 }} />
       )}
       {mission?.overallStatus === 'Completed' && (
         <Alert type="success" showIcon message={t('handover.tripClosed')} style={{ marginBottom: 16 }} />
@@ -145,6 +162,9 @@ export default function ArrivalHandoverPage() {
           bookings.map((booking, index) => {
             const record = handoverOf(booking.bookingId);
             const done = booking.handoverCompleted || Boolean(record);
+            const dropoff = dropoffOf(booking);
+            const offloaded = horsesOf(booking.bookingId).filter((h) => h.status === 'Offloaded');
+            const available = !done && canHandoverBooking(booking);
             return (
               <div
                 key={booking.bookingId}
@@ -160,15 +180,27 @@ export default function ArrivalHandoverPage() {
                       <Text type="secondary">· {booking.customerName}</Text>
                       {done ? <Tag color="green">{t('handover.done')}</Tag> : <Tag>{t('handover.pending')}</Tag>}
                     </Space>
-                    <div style={{ color: '#6B7280', fontSize: 13, marginTop: 2 }}>{booking.dropoffAddress}</div>
-                    <div style={{ fontSize: 13, marginTop: 2 }}>
-                      {horsesOf(booking.bookingId)
-                        .map((h) => h.horseName)
-                        .join(', ')}
+                    <div style={{ color: '#6B7280', fontSize: 13, marginTop: 2 }}>
+                      {dropoff
+                        ? t('handover.dropoffAt', { name: dropoff.locationName, time: formatTime(dropoff.plannedTime) })
+                        : booking.dropoffAddress}
                     </div>
+                    <Space size={4} wrap style={{ marginTop: 4 }}>
+                      {horsesOf(booking.bookingId).map((h) => (
+                        <span key={h.tripHorseId} style={{ fontSize: 13 }}>
+                          {h.horseName} <TripHorseStatusTag status={h.status} />
+                        </span>
+                      ))}
+                    </Space>
+                    {offloaded.length > 0 && (
+                      <div style={{ fontSize: 12, color: '#B45309', marginTop: 2 }}>
+                        {t('handover.offloadedHorses', { names: offloaded.map((h) => h.horseName).join(', ') })}
+                      </div>
+                    )}
                   </Col>
                   <Col xs={24} md={8} style={{ textAlign: 'right' }}>
-                    {!done && canHandover && (
+                    {!done && !available && tripUnderWay && <Tag>{t('handover.waitingDropoff')}</Tag>}
+                    {available && (
                       <Button
                         type={activeBookingId === booking.bookingId ? 'default' : 'primary'}
                         icon={<FileDoneOutlined />}
@@ -215,7 +247,7 @@ export default function ArrivalHandoverPage() {
       </Card>
 
       {/* Form lập biên bản cho đơn đang chọn */}
-      {activeBooking && (
+      {activeBooking && canHandoverBooking(activeBooking) && !handoverOf(activeBooking.bookingId) && (
         <Card
           title={t('handover.form.title', { code: activeBooking.bookingCode })}
           extra={

@@ -1305,7 +1305,19 @@
         "noLog": "No log yet",
         "logs": "Health log entries",
         "alerts": "{{count}} need attention"
-      }
+      },
+      "pickUpTag": "Pick up {{code}}",
+      "dropOffTag": "Drop off {{code}}",
+      "handoverHere": "Hand over {{code}} (e-POD)",
+      "handoverFirst": "Sign the handover for this booking before leaving the drop-off.",
+      "horsesTitle": "Horses on this trip",
+      "offload": "Offload",
+      "offloadTitle": "Take {{name}} off the trip",
+      "offloadHint": "Use when the horse cannot continue (vet, injury...). The trip goes on; the horse returns to the planning queue and the customer and managers are notified.",
+      "offloadReason": "Reason",
+      "offloadReasonRequired": "Enter a reason",
+      "offloadOk": "Confirm offload",
+      "offloaded": "{{name}} was taken off the trip"
     },
     "welfare": {
       "title": "Biometric Health & Equine Welfare Log",
@@ -1494,7 +1506,14 @@
       "address": "Address",
       "plannedTime": "Planned time",
       "trip": "Trip",
-      "horses": "Horses"
+      "horses": "Horses",
+      "stopBooking": "Booking",
+      "eta": "Expected delivery",
+      "deadline": "Deadline",
+      "horseStatus": "Status",
+      "deliveredCount": "Delivered {{done}}/{{total}}",
+      "pickupAt": "Pick-up",
+      "routeKm": "Distance"
     },
     "crewRole": {
       "Driver": "Driver",
@@ -1504,7 +1523,9 @@
       "Origin": "Origin",
       "RestStop": "Rest stop",
       "BorderGate": "Border gate",
-      "Destination": "Destination"
+      "Destination": "Destination",
+      "PickUp": "Pick-up (booking)",
+      "DropOff": "Drop-off (booking)"
     },
     "placeholders": {
       "vehicle": "Choose an available vehicle",
@@ -1516,7 +1537,7 @@
     "hints": {
       "dossier": "Horses whose dossier is not cleared can be planned, but the trip cannot start until every dossier is Cleared.",
       "crewRule": "Drivers: {{drivers}} (need ≥ 1) · Escorts: {{escorts}} (need ≥ {{needed}}, one per 3 horses)",
-      "route": "First checkpoint must be Origin and the last Destination; times must increase and stay within the trip period."
+      "route": "The first stop is the Origin and the last is the Destination; times must increase. A booking with its own Pick-up / Drop-off loads / unloads there, otherwise at the Origin / Destination. The drop-off time must be before the booking's deadline."
     },
     "actions": {
       "planSelected": "Plan a trip with {{count}} horse(s)",
@@ -1528,7 +1549,8 @@
       "addStop": "Add checkpoint",
       "resetRoute": "Rebuild default route",
       "saveDraft": "Save draft",
-      "saveAndSubmit": "Save & submit"
+      "saveAndSubmit": "Save & submit",
+      "suggestRoute": "Suggest route"
     },
     "confirm": {
       "cancel": "Cancel trip {{code}}? Its horses go back to the queue."
@@ -1549,7 +1571,28 @@
       "needVehicle": "Choose a vehicle",
       "needDriver": "The crew needs at least one driver",
       "incompleteCheckpoint": "Fill in name, address and time for every checkpoint",
-      "overCapacity": "Exceeds vehicle capacity ({{capacity}} horses)"
+      "overCapacity": "Exceeds vehicle capacity ({{capacity}} horses)",
+      "needBookingForStop": "Pick-up / Drop-off stops need a booking",
+      "suggestNeedInput": "Choose horses and a departure time first",
+      "suggestFailed": "Could not suggest a route",
+      "suggested": "Route replaced with the suggestion"
+    },
+    "suggestion": {
+      "title": "Route suggestion",
+      "summary": "{{km}} km · about {{hours}} h · last stop {{end}}",
+      "onTime": "On time",
+      "late": "Late",
+      "detour": "×{{ratio}}",
+      "hint": "Check border gate names / addresses and add overnight rest stops if needed before submitting."
+    },
+    "warnings": {
+      "DeadlineMissed": "{{bookingCode}} is expected at {{eta}}, after its deadline {{deadline}}.",
+      "PickupOutsideWindow": "{{bookingCode}} would be picked up at {{pickupAt}}, outside its window {{from}} – {{to}}.",
+      "DifferentPickupCountry": "The bookings are picked up in different countries ({{countries}}).",
+      "PickupsFarApart": "The pick-up of {{bookingCode}} is {{km}} km from the origin (limit {{limit}} km).",
+      "Detour": "{{bookingCode}} travels {{routeKm}} km instead of {{directKm}} km direct (×{{ratio}}, limit ×{{limit}}).",
+      "DossierNotCleared": "Clearance of {{horseName}} ({{bookingCode}}) is not complete; the trip departs only when it is Cleared.",
+      "OvernightRest": "The leg {{from}} → {{to}} ({{km}} km) needs {{count}} overnight rest(s); add Rest stop checkpoints."
     }
   },
   "routeApproval": {
@@ -1722,7 +1765,8 @@
       "progress": "Checkpoints reached",
       "delay": "Schedule",
       "handover": "Handover",
-      "logs": "Health log entries"
+      "logs": "Health log entries",
+      "eta": "Expected delivery"
     },
     "handoverDone": "Handed over",
     "handoverPending": "Not handed over yet",
@@ -1762,7 +1806,12 @@
     "stoppedHere": "Stopped here now",
     "latestAt": "Latest log · {{time}}",
     "allLogs": "All log entries",
-    "waterShort": "{{liters}} L water"
+    "waterShort": "{{liters}} L water",
+    "otherStop": "Another booking's stop",
+    "myPickup": "Your pick-up",
+    "myDropoff": "Your drop-off",
+    "offloadReason": "Reason: {{reason}}",
+    "deliveredAt": "Delivered at {{time}}"
   },
   "filePreview": {
     "noFile": "This document has no attached file",
@@ -1934,7 +1983,11 @@
       "noPhoto": "No photo",
       "microchip": "Microchip",
       "horsesNotVerified": "Some horses have not been checked yet"
-    }
+    },
+    "dropoffAt": "Drop-off: {{name}} · planned {{time}}",
+    "waitingDropoff": "Waiting to reach the drop-off",
+    "noneAvailable": "Horses can only be handed over while the vehicle is stopped at the booking's drop-off.",
+    "offloadedHorses": "Offloaded on the way (not handed over here): {{names}}"
   },
   "tripReport": {
     "title": "Trip summary {{code}}",
@@ -2126,5 +2179,12 @@
         "extraPaymentDueDays": "Overdue debts trigger reminders and block new bookings."
       }
     }
+  },
+  "tripHorseStatus": {
+    "Planned": "Waiting to load",
+    "InTransit": "On board",
+    "Delivered": "Delivered",
+    "Offloaded": "Offloaded on the way",
+    "Cancelled": "Cancelled"
   }
 }

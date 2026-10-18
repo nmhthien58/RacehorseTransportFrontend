@@ -94,6 +94,8 @@ export const ENDPOINTS = {
     CREATE: '/trips',
     UPDATE: (id) => `/trips/${id}`,
     UNPLANNED_HORSES: '/trips/unplanned-horses',
+    SUGGEST_ROUTE: '/trips/suggest-route',
+    OFFLOAD_HORSE: (tripId, tripHorseId) => `/trips/${tripId}/horses/${tripHorseId}/offload`,
     AVAILABLE_VEHICLES: '/trips/available-vehicles',
     AVAILABLE_CREW: '/trips/available-crew',
     ADD_CHECKPOINT: (id) => `/trips/${id}/checkpoints`,

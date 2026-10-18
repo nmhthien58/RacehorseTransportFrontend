@@ -1304,7 +1304,19 @@
         "noLog": "Chưa có nhật ký",
         "logs": "Số lần ghi sức khỏe",
         "alerts": "{{count}} cần chú ý"
-      }
+      },
+      "pickUpTag": "Đón đơn {{code}}",
+      "dropOffTag": "Trả đơn {{code}}",
+      "handoverHere": "Bàn giao đơn {{code}} (e-POD)",
+      "handoverFirst": "Ký biên bản bàn giao cho đơn này trước khi rời điểm trả.",
+      "horsesTitle": "Ngựa trên chuyến",
+      "offload": "Rớt lại",
+      "offloadTitle": "Cho {{name}} rời chuyến giữa đường",
+      "offloadHint": "Dùng khi ngựa không thể đi tiếp (thú y, chấn thương...). Chuyến vẫn chạy tiếp; ngựa quay về hàng chờ để điều phối xếp chuyến khác, khách và quản lý được báo.",
+      "offloadReason": "Lý do",
+      "offloadReasonRequired": "Nhập lý do",
+      "offloadOk": "Xác nhận rời chuyến",
+      "offloaded": "Đã ghi nhận {{name}} rời chuyến"
     },
     "welfare": {
       "title": "Nhật ký thể trạng sinh trắc & Phúc lợi ngựa",
@@ -1493,7 +1505,14 @@
       "address": "Địa chỉ",
       "plannedTime": "Giờ dự kiến",
       "trip": "Chuyến",
-      "horses": "Số ngựa"
+      "horses": "Số ngựa",
+      "stopBooking": "Đơn",
+      "eta": "Dự kiến giao",
+      "deadline": "Hạn giao",
+      "horseStatus": "Trạng thái",
+      "deliveredCount": "Đã giao {{done}}/{{total}}",
+      "pickupAt": "Giờ đón",
+      "routeKm": "Quãng đường"
     },
     "crewRole": {
       "Driver": "Lái xe",
@@ -1503,7 +1522,9 @@
       "Origin": "Điểm đi",
       "RestStop": "Trạm nghỉ",
       "BorderGate": "Cửa khẩu",
-      "Destination": "Điểm giao"
+      "Destination": "Điểm giao",
+      "PickUp": "Điểm đón (đơn)",
+      "DropOff": "Điểm trả (đơn)"
     },
     "placeholders": {
       "vehicle": "Chọn xe còn rảnh",
@@ -1515,7 +1536,7 @@
     "hints": {
       "dossier": "Vẫn xếp được ngựa có hồ sơ chưa thông quan, nhưng chuyến chỉ xuất phát khi mọi hồ sơ đã Cleared.",
       "crewRule": "Lái xe: {{drivers}} (cần ≥ 1) · Áp tải: {{escorts}} (cần ≥ {{needed}}, cứ 3 ngựa 1 người)",
-      "route": "Mốc đầu phải là Điểm đi, mốc cuối là Điểm giao; giờ các mốc tăng dần và nằm trong thời gian chuyến."
+      "route": "Mốc đầu là Điểm đi, mốc cuối là Điểm giao; giờ các mốc tăng dần. Đơn có Điểm đón / Điểm trả riêng thì lên / xuống xe ở đó, không có thì lên ở Điểm đi và giao ở Điểm giao. Giờ tới điểm trả phải trước hạn giao của đơn."
     },
     "actions": {
       "planSelected": "Lập chuyến với {{count}} ngựa",
@@ -1527,7 +1548,8 @@
       "addStop": "Thêm mốc",
       "resetRoute": "Tạo lại mốc mặc định",
       "saveDraft": "Lưu nháp",
-      "saveAndSubmit": "Lưu & trình duyệt"
+      "saveAndSubmit": "Lưu & trình duyệt",
+      "suggestRoute": "Gợi ý lộ trình"
     },
     "confirm": {
       "cancel": "Hủy chuyến {{code}}? Ngựa sẽ quay lại hàng chờ."
@@ -1548,7 +1570,28 @@
       "needVehicle": "Chọn xe cho chuyến",
       "needDriver": "Đoàn xe cần ít nhất 1 lái xe",
       "incompleteCheckpoint": "Điền đủ tên, địa chỉ và giờ cho mọi mốc lộ trình",
-      "overCapacity": "Vượt sức chứa của xe ({{capacity}} ngựa)"
+      "overCapacity": "Vượt sức chứa của xe ({{capacity}} ngựa)",
+      "needBookingForStop": "Mốc Điểm đón / Điểm trả phải chọn đơn",
+      "suggestNeedInput": "Chọn ngựa và giờ khởi hành trước khi gợi ý lộ trình",
+      "suggestFailed": "Không gợi ý được lộ trình",
+      "suggested": "Đã thay lộ trình bằng gợi ý"
+    },
+    "suggestion": {
+      "title": "Kết quả gợi ý lộ trình",
+      "summary": "{{km}} km · khoảng {{hours}} giờ · tới mốc cuối {{end}}",
+      "onTime": "Kịp hạn",
+      "late": "Trễ hạn",
+      "detour": "×{{ratio}}",
+      "hint": "Kiểm tra lại tên / địa chỉ cửa khẩu và thêm Trạm nghỉ qua đêm nếu cần trước khi trình duyệt."
+    },
+    "warnings": {
+      "DeadlineMissed": "{{bookingCode}} dự kiến tới {{eta}}, trễ hơn hạn giao {{deadline}}.",
+      "PickupOutsideWindow": "{{bookingCode}} được đón lúc {{pickupAt}}, ngoài khoảng đón {{from}} – {{to}}.",
+      "DifferentPickupCountry": "Các đơn được đón ở nhiều nước khác nhau ({{countries}}).",
+      "PickupsFarApart": "Điểm đón của {{bookingCode}} cách điểm xuất phát {{km}} km (ngưỡng {{limit}} km).",
+      "Detour": "{{bookingCode}} phải đi {{routeKm}} km thay vì {{directKm}} km nếu đi thẳng (×{{ratio}}, ngưỡng ×{{limit}}).",
+      "DossierNotCleared": "Hồ sơ của {{horseName}} ({{bookingCode}}) chưa thông quan; xe chỉ xuất phát khi đã Cleared.",
+      "OvernightRest": "Chặng {{from}} → {{to}} ({{km}} km) cần {{count}} lần nghỉ qua đêm; nên thêm mốc Trạm nghỉ."
     }
   },
   "routeApproval": {
@@ -1721,7 +1764,8 @@
       "progress": "Mốc đã tới",
       "delay": "Tiến độ so với kế hoạch",
       "handover": "Bàn giao",
-      "logs": "Số lần ghi sức khỏe"
+      "logs": "Số lần ghi sức khỏe",
+      "eta": "Dự kiến giao"
     },
     "handoverDone": "Đã bàn giao",
     "handoverPending": "Chưa bàn giao",
@@ -1761,7 +1805,12 @@
     "stoppedHere": "Xe đang dừng tại đây",
     "latestAt": "Lần ghi gần nhất · {{time}}",
     "allLogs": "Tất cả các lần ghi",
-    "waterShort": "{{liters}} L nước"
+    "waterShort": "{{liters}} L nước",
+    "otherStop": "Điểm dừng của đơn khác",
+    "myPickup": "Điểm đón của bạn",
+    "myDropoff": "Điểm trả của bạn",
+    "offloadReason": "Lý do: {{reason}}",
+    "deliveredAt": "Đã giao lúc {{time}}"
   },
   "filePreview": {
     "noFile": "Giấy tờ này chưa có tệp đính kèm",
@@ -1933,7 +1982,11 @@
       "noPhoto": "Chưa có ảnh",
       "microchip": "Mã vi mạch",
       "horsesNotVerified": "Còn ngựa chưa được đối chiếu"
-    }
+    },
+    "dropoffAt": "Điểm trả: {{name}} · dự kiến {{time}}",
+    "waitingDropoff": "Chờ xe tới điểm trả",
+    "noneAvailable": "Chỉ bàn giao được khi xe đang dừng ở điểm trả của đơn.",
+    "offloadedHorses": "Rớt lại giữa đường (không bàn giao ở đây): {{names}}"
   },
   "tripReport": {
     "title": "Tổng kết chuyến {{code}}",
@@ -2125,5 +2178,12 @@
         "extraPaymentDueDays": "Quá hạn sẽ nhắc nợ và chặn khách tạo đơn mới."
       }
     }
+  },
+  "tripHorseStatus": {
+    "Planned": "Chờ lên xe",
+    "InTransit": "Trên xe",
+    "Delivered": "Đã giao",
+    "Offloaded": "Rớt lại giữa đường",
+    "Cancelled": "Đã hủy"
   }
 }

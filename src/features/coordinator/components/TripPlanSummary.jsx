@@ -2,6 +2,7 @@ import { Alert, Card, Col, Descriptions, Row, Space, Table, Tag, Timeline, Typog
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import StatusTag from '@components/common/StatusTag';
+import TripHorseStatusTag from '@components/common/TripHorseStatusTag';
 
 const { Text } = Typography;
 
@@ -9,7 +10,9 @@ const formatTime = (value) => (value ? dayjs(value).format('DD/MM/YYYY HH:mm') :
 
 const CHECKPOINT_TYPE_COLORS = {
   Origin: 'green',
+  PickUp: 'cyan',
   RestStop: 'blue',
+  DropOff: 'orange',
   BorderGate: 'purple',
   Destination: 'gold',
 };
@@ -100,6 +103,18 @@ export default function TripPlanSummary({ trip }) {
                   <div style={{ color: '#64748b', fontSize: 12 }}>
                     {b.pickupAddress} → {b.dropoffAddress}
                   </div>
+                  <div style={{ fontSize: 12 }}>
+                    {t('tripPlan.fields.eta')}:{' '}
+                    <Text type={b.estimatedDeliveryAt && dayjs(b.estimatedDeliveryAt).isAfter(dayjs(b.deliveryDeadline)) ? 'danger' : undefined}>
+                      {formatTime(b.estimatedDeliveryAt)}
+                    </Text>{' '}
+                    · {t('tripPlan.fields.deadline')}: {formatTime(b.deliveryDeadline)}
+                    {b.deliveredHorseCount > 0 && (
+                      <Tag color="success" style={{ marginLeft: 6 }}>
+                        {t('tripPlan.fields.deliveredCount', { done: b.deliveredHorseCount, total: b.horseCountOnTrip })}
+                      </Tag>
+                    )}
+                  </div>
                 </div>
               ))}
             </Space>
@@ -129,6 +144,16 @@ export default function TripPlanSummary({ trip }) {
             { title: t('tripPlan.fields.booking'), dataIndex: 'bookingCode' },
             { title: t('tripPlan.fields.stallClass'), dataIndex: 'stallClass', render: (s) => <Tag>{s}</Tag> },
             { title: t('tripPlan.fields.dossier'), dataIndex: 'dossierStatus', render: (s) => <StatusTag status={s} /> },
+            {
+              title: t('tripPlan.fields.horseStatus'),
+              dataIndex: 'status',
+              render: (s, h) => (
+                <div>
+                  <TripHorseStatusTag status={s} />
+                  {h.offloadReason && <div style={{ fontSize: 12, color: '#64748b' }}>{h.offloadReason}</div>}
+                </div>
+              ),
+            },
           ]}
         />
       </Card>
@@ -144,6 +169,7 @@ export default function TripPlanSummary({ trip }) {
               children: (
                 <div>
                   <Tag color={CHECKPOINT_TYPE_COLORS[c.checkpointType]}>{t(`tripPlan.checkpointType.${c.checkpointType}`)}</Tag>
+                  {c.bookingCode && <Tag>{c.bookingCode}</Tag>}
                   <Text strong>{c.checkpointName}</Text>
                   <div style={{ fontSize: 12, color: '#64748b' }}>
                     {c.address} · {formatTime(c.plannedTime)}

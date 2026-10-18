@@ -28,6 +28,7 @@ import {
   CheckCircleOutlined,
 } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@features/auth/store/authStore';
 import { useMissionDetail } from '../hooks/useDriverMissions';
 import MissionHeaderCard from '../components/MissionHeaderCard';
@@ -124,6 +125,7 @@ export default function HorseWelfareLogPage() {
   const [selectedHealthStatus, setSelectedHealthStatus] = useState('HEALTHY');
   const [form] = Form.useForm();
 
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   const userRole = user?.role || user?.Role;
   // Backend: đoàn xe của chuyến (và Admin) ghi nhật ký, từ lúc xuất phát tới khi bàn giao
@@ -132,6 +134,17 @@ export default function HorseWelfareLogPage() {
   const canLogWelfare = (isCrewMember || userRole === 'Admin') && isOnTheRoad;
 
   const horses = useMemo(() => mission?.horses || [], [mission?.horses]);
+  // R-06: escort chỉ ghi nhật ký cho ngựa mình phụ trách; trưởng nhóm escort (và Admin) ghi cho mọi con
+  const isLeadEscort = (mission?.crew || []).some(
+    (c) => Number(c.userId) === Number(user?.userId) && c.crewRole === 'Escort' && c.isLead,
+  );
+  const loggableHorses = useMemo(
+    () =>
+      horses.filter(
+        (h) => userRole === 'Admin' || isLeadEscort || !h.escortUserId || Number(h.escortUserId) === Number(user?.userId),
+      ),
+    [horses, userRole, isLeadEscort, user?.userId],
+  );
   const currentCheckpointId = (mission?.routeCheckpoints || []).find((c) => c.status === 'Arrived' || c.status === 'Cleared')?.checkpointId;
   const welfareLogs = useMemo(() => mission?.welfareLogs || [], [mission?.welfareLogs]);
 
@@ -371,7 +384,7 @@ export default function HorseWelfareLogPage() {
           form={form}
           layout="vertical"
           initialValues={{
-            tripHorseId: horses[0]?.tripHorseId,
+            tripHorseId: loggableHorses[0]?.tripHorseId,
             heartRate: 38,
             temperature: 38.0,
             feedStatus: 'Normal',
@@ -471,10 +484,11 @@ export default function HorseWelfareLogPage() {
                 name="tripHorseId"
                 label="Ngựa đua kiểm tra"
                 rules={[{ required: true, message: 'Vui lòng chọn ngựa' }]}
+                extra={loggableHorses.length < horses.length ? t('driver.escortAssign.onlyMyHorses') : undefined}
               >
                 <Select
                   size="large"
-                  options={horses.map((h) => ({
+                  options={loggableHorses.map((h) => ({
                     value: h.tripHorseId,
                     label: `${h.horseName} (Chip: ${h.microchipNumber || 'N/A'})`,
                   }))}

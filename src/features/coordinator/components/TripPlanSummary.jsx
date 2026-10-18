@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import StatusTag from '@components/common/StatusTag';
 import TripHorseStatusTag from '@components/common/TripHorseStatusTag';
+import StallMap from '@features/coordinator/components/StallMap';
 
 const { Text } = Typography;
 
@@ -31,6 +32,7 @@ export default function TripPlanSummary({ trip }) {
 
   const drivers = (trip.crew || []).filter((c) => c.crewRole === 'Driver');
   const escorts = (trip.crew || []).filter((c) => c.crewRole === 'Escort');
+  const escortList = [...escorts.filter((c) => c.isLead), ...escorts.filter((c) => !c.isLead)];
   const notCleared = (trip.horses || []).filter((h) => h.dossierStatus !== 'Cleared');
 
   return (
@@ -84,6 +86,9 @@ export default function TripPlanSummary({ trip }) {
                   <Tag color={c.crewRole === 'Driver' ? 'orange' : 'cyan'}>{t(`tripPlan.crewRole.${c.crewRole}`)}</Tag>
                   <Text strong>{c.fullName}</Text>
                   {c.isLead && <Tag style={{ marginLeft: 6 }}>{t('tripPlan.fields.lead')}</Tag>}
+                  {c.crewRole === 'Escort' && c.assignedHorseCount != null && (
+                    <Tag style={{ marginLeft: 6 }}>{t('tripPlan.stallMap.load', { count: c.assignedHorseCount, max: 3 })}</Tag>
+                  )}
                   <Text type="secondary" style={{ marginLeft: 6, fontSize: 12 }}>
                     {c.phoneNumber}
                     {c.duty ? ` · ${c.duty}` : ''}
@@ -122,6 +127,23 @@ export default function TripPlanSummary({ trip }) {
         </Col>
       </Row>
 
+      <Card size="small" title={t('tripPlan.sections.stallMap')} style={{ borderRadius: 12 }}>
+        <StallMap
+          readOnly
+          capacity={trip.vehicleCapacity || 0}
+          escorts={escortList}
+          horses={(trip.horses || [])
+            .filter((h) => h.status !== 'Cancelled' && h.status !== 'Offloaded')
+            .map((h) => ({
+              key: h.bookingHorseId,
+              slot: h.stallSlotNumber,
+              horseName: h.horseName,
+              bookingCode: h.bookingCode,
+              escortUserId: h.escortUserId,
+            }))}
+        />
+      </Card>
+
       <Card size="small" title={t('tripPlan.sections.horses')} style={{ borderRadius: 12 }}>
         <Table
           size="small"
@@ -142,6 +164,7 @@ export default function TripPlanSummary({ trip }) {
               ),
             },
             { title: t('tripPlan.fields.booking'), dataIndex: 'bookingCode' },
+            { title: t('tripPlan.fields.escort'), dataIndex: 'escortName', render: (name) => name || '—' },
             { title: t('tripPlan.fields.stallClass'), dataIndex: 'stallClass', render: (s) => <Tag>{s}</Tag> },
             { title: t('tripPlan.fields.dossier'), dataIndex: 'dossierStatus', render: (s) => <StatusTag status={s} /> },
             {

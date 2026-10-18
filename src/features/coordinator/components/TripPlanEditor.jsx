@@ -26,6 +26,7 @@ import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedu
 import tripService from '@services/tripService';
 import StatusTag from '@components/common/StatusTag';
 import RouteSuggestionPanel from '@features/coordinator/components/RouteSuggestionPanel';
+import StallMap from '@features/coordinator/components/StallMap';
 import { unwrapData, unwrapList, getErrorMessage, toIsoString } from '@utils/apiHelpers';
 
 const { Text, Title } = Typography;
@@ -132,6 +133,10 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
   const [slots, setSlots] = useState(() =>
     Object.fromEntries((trip?.horses || []).map((h) => [h.bookingHorseId, h.stallSlotNumber])),
   );
+  // Escort phụ trách từng con (R-06): bookingHorseId -> userId; bỏ trống = backend tự phân theo ô chuồng
+  const [escortOf, setEscortOf] = useState(() =>
+    Object.fromEntries((trip?.horses || []).filter((h) => h.escortUserId).map((h) => [h.bookingHorseId, h.escortUserId])),
+  );
   const [checkpoints, setCheckpoints] = useState(() =>
     trip
       ? (trip.checkpoints || [])
@@ -204,6 +209,25 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
   const escortCount = crew.filter((c) => c.crewRole === 'Escort' && c.userId).length;
   const escortsNeeded = Math.ceil(selectedHorses.length / HORSES_PER_ESCORT);
 
+  // Escort của chuyến theo thứ tự backend dùng khi tự phân: trưởng nhóm trước, rồi theo thứ tự trong đoàn
+  const tripEscorts = useMemo(() => {
+    const rows = crew.filter((c) => c.crewRole === 'Escort' && c.userId);
+    const ordered = [...rows.filter((c) => c.isLead), ...rows.filter((c) => !c.isLead)];
+    const seen = new Set();
+    return ordered
+      .filter((c) => !seen.has(c.userId) && seen.add(c.userId))
+      .map((c) => ({
+        userId: c.userId,
+        isLead: c.isLead,
+        fullName: crewUserOptions.find((u) => u.userId === c.userId)?.fullName || `#${c.userId}`,
+      }));
+  }, [crew, crewUserOptions]);
+  // Escort đã bị gỡ khỏi đoàn thì coi như chưa phân
+  const escortIdOf = (bookingHorseId) => {
+    const userId = escortOf[bookingHorseId];
+    return tripEscorts.some((e) => e.userId === userId) ? userId : null;
+  };
+
   // Ô chuồng: giữ số đã nhập, ngựa mới chọn được gán ô trống nhỏ nhất
   const slotOf = (bookingHorseId) => {
     if (slots[bookingHorseId]) return slots[bookingHorseId];
@@ -231,6 +255,23 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
         return next;
       });
     }
+  };
+
+  // Sơ đồ chuồng: đổi chỗ hai ô (ô đích trống thì chỉ chuyển sang)
+  const moveHorse = (fromSlot, toSlot) => {
+    const current = Object.fromEntries(selectedIds.map((id) => [id, slotOf(id)]));
+    const fromId = selectedIds.find((id) => current[id] === fromSlot);
+    const toId = selectedIds.find((id) => current[id] === toSlot);
+    if (!fromId) return;
+    setSlots({ ...current, [fromId]: toSlot, ...(toId ? { [toId]: fromSlot } : {}) });
+  };
+
+  // Tự phân công giống backend: xếp theo ô chuồng, ô 1-3 cho escort đầu tiên, 4-6 cho escort thứ hai...
+  const autoAssignEscorts = () => {
+    const ordered = [...selectedIds].sort((a, b) => slotOf(a) - slotOf(b));
+    setEscortOf(
+      Object.fromEntries(ordered.map((id, idx) => [id, tripEscorts[Math.floor(idx / HORSES_PER_ESCORT)]?.userId ?? null])),
+    );
   };
 
   const updateCrew = (key, patch) => setCrew((prev) => prev.map((c) => (c.key === key ? { ...c, ...patch } : c)));
@@ -311,6 +352,7 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
     horses: selectedIds.map((id) => ({
       bookingHorseId: id,
       stallSlotNumber: slotOf(id),
+      escortUserId: escortIdOf(id),
       notes: pool.find((h) => h.bookingHorseId === id)?.notes || null,
     })),
     checkpoints: checkpoints.map((c) => ({
@@ -439,17 +481,8 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
               { title: t('tripPlan.fields.dossier'), dataIndex: 'dossierStatus', width: 120, render: (s) => <StatusTag status={s} /> },
               {
                 title: t('tripPlan.fields.slot'),
-                width: 90,
-                render: (_, h) =>
-                  selectedIds.includes(h.bookingHorseId) ? (
-                    <InputNumber
-                      size="small"
-                      min={1}
-                      max={capacity || 12}
-                      value={slotOf(h.bookingHorseId)}
-                      onChange={(v) => setSlots((prev) => ({ ...prev, [h.bookingHorseId]: v }))}
-                    />
-                  ) : null,
+                width: 80,
+                render: (_, h) => (selectedIds.includes(h.bookingHorseId) ? slotOf(h.bookingHorseId) : null),
               },
             ]}
           />
@@ -576,7 +609,25 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
         </Col>
       </Row>
 
-      {/* 4. Lộ trình */}
+      {/* 4. Sơ đồ chuồng + escort phụ trách (R-06) */}
+      <Card title={<Title level={5} style={{ margin: 0 }}>{t('tripPlan.sections.stallMap')}</Title>} style={{ borderRadius: 14 }}>
+        <StallMap
+          capacity={capacity}
+          escorts={tripEscorts}
+          horses={selectedHorses.map((h) => ({
+            key: h.bookingHorseId,
+            slot: slotOf(h.bookingHorseId),
+            horseName: h.horseName,
+            bookingCode: h.bookingCode,
+            escortUserId: escortIdOf(h.bookingHorseId),
+          }))}
+          onMove={moveHorse}
+          onAssign={(key, userId) => setEscortOf((prev) => ({ ...prev, [key]: userId }))}
+          onAutoAssign={autoAssignEscorts}
+        />
+      </Card>
+
+      {/* 5. Lộ trình */}
       <Card
         title={<Title level={5} style={{ margin: 0 }}>{t('tripPlan.sections.route')}</Title>}
         extra={

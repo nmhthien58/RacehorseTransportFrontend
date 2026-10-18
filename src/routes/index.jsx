@@ -24,7 +24,6 @@ import MyHorsesPage from '@features/customer/pages/MyHorsesPage';
 import HorseDetailPage from '@features/customer/pages/HorseDetailPage';
 import AddHorsePage from '@features/customer/pages/AddHorsePage';
 import VetRecordsPage from '@features/customer/pages/VetRecordsPage';
-import TripTrackingPage from '@features/customer/pages/TripTrackingPage';
 import TripTrackingDetailPage from '@features/customer/pages/TripTrackingDetailPage';
 import MessagesPage from '@features/customer/pages/MessagesPage';
 import ProfilePage from '@features/customer/pages/ProfilePage';
@@ -126,7 +125,7 @@ export default function AppRoutes() {
           <Route path="/bookings" element={<Navigate to={ROUTES.CUSTOMER_BOOKINGS} replace />} />
           <Route path="/booking" element={<Navigate to={ROUTES.CUSTOMER_BOOKINGS} replace />} />
           <Route path={ROUTES.CUSTOMER_PRICING} element={<CustomerPricingPage />} />
-          <Route path={ROUTES.CUSTOMER_TRIPS} element={<TripTrackingPage />} />
+          <Route path={ROUTES.CUSTOMER_TRIPS} element={<Navigate to={`${ROUTES.CUSTOMER_BOOKINGS}?stage=InTransit`} replace />} />
           <Route path={ROUTES.CUSTOMER_TRIP_DETAIL} element={<TripTrackingDetailPage />} />
           <Route path={ROUTES.CUSTOMER_MESSAGES} element={<MessagesPage />} />
           <Route path={ROUTES.CUSTOMER_PROFILE} element={<ProfilePage />} />

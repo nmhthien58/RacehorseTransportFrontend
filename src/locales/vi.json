@@ -494,8 +494,19 @@
       "deliveryDate": "Ngày giao dự kiến tại đích",
       "pickupWindow": "Khoảng ngày sẵn sàng đón",
       "deliveryDeadline": "Hạn giao trễ nhất",
+      "route": "Tuyến (gồm nước quá cảnh)",
       "totalHorses": "Số lượng ngựa",
       "estimatedCost": "Dự toán cước phí"
+    },
+    "transit": {
+      "label": "Nước quá cảnh (nếu tuyến đi qua nước khác)",
+      "placeholder": "Đi thẳng - không qua nước nào",
+      "hint": "Chọn theo thứ tự xe đi qua, ví dụ Việt Nam → Trung Quốc → Nga thì chọn Trung Quốc. Mỗi nước quá cảnh cần thêm giấy tờ quá cảnh, phí thủ tục và thời gian qua cửa khẩu. Quản lý sẽ xác nhận lại tuyến khi duyệt đơn.",
+      "editTitle": "Nước quá cảnh",
+      "editHint": "Xác nhận hoặc sửa các nước ngựa đi qua trước khi duyệt. Hệ thống sẽ tính lại báo giá và báo cho khách.",
+      "save": "Lưu tuyến & tính lại giá",
+      "saved": "Đã cập nhật tuyến và báo giá",
+      "lockedHint": "Chỉ sửa được khi đơn đang chờ duyệt."
     },
     "schedule": {
       "title": "1. Lịch đón & hạn giao",

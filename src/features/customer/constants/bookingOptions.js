@@ -38,6 +38,7 @@ export const SUPPORTED_COUNTRIES = [
   { code: 'GB', name: 'Vương quốc Anh', ground: false, air: true },
   { code: 'DE', name: 'Đức', ground: false, air: true },
   { code: 'US', name: 'Hoa Kỳ', ground: false, air: true },
+  { code: 'RU', name: 'Nga', ground: true, air: false },
 ];
 
 export const AIRPORTS_BY_COUNTRY = {
@@ -131,5 +132,25 @@ export const CITIES_BY_COUNTRY = {
   TH: ['Bangkok', 'Pattaya', 'Chiang Mai', 'Nakhon Ratchasima'],
   LA: ['Vientiane (Viêng Chăn)', 'Savannakhet', 'Pakse', 'Luang Prabang'],
   CN: ['Nam Ninh (Nanning)', 'Bằng Tường (Pingxiang)', 'Quảng Châu (Guangzhou)', 'Côn Minh (Kunming)'],
+  RU: ['Moscow', 'Saint Petersburg', 'Novosibirsk'],
 };
+
+/**
+ * Các nước ngựa có thể đi qua (quá cảnh) trên tuyến đường bộ, theo thứ tự khách chọn.
+ * Gồm các nước trong danh sách hỗ trợ và vài nước chỉ đi qua (Mông Cổ, Kazakhstan).
+ */
+export const TRANSIT_COUNTRY_OPTIONS = [
+  ...SUPPORTED_COUNTRIES.map((c) => ({ code: c.code, name: c.name })),
+  { code: 'MN', name: 'Mông Cổ' },
+  { code: 'KZ', name: 'Kazakhstan' },
+];
+
+/**
+ * Tên nước theo mã (dùng hiển thị tuyến VN → CN → RU); không có thì trả lại mã.
+ * @param {string} code
+ * @returns {string}
+ */
+export function getCountryName(code) {
+  return TRANSIT_COUNTRY_OPTIONS.find((c) => c.code === code)?.name || code;
+}
 

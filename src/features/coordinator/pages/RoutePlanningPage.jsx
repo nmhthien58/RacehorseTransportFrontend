@@ -18,6 +18,7 @@ import { ArrowLeftOutlined, EditOutlined, EyeOutlined, PlusOutlined, ReloadOutli
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import { formatCountryRoute } from '@utils/bookingRoute';
 import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedule';
 import PageHeader from '@components/layout/PageHeader';
 import StatusTag from '@components/common/StatusTag';
@@ -236,7 +237,7 @@ export default function RoutePlanningPage() {
       title: t('tripPlan.fields.route'),
       render: (_, h) => (
         <span style={{ fontSize: 12 }}>
-          {h.pickupCountryCode} → {h.dropoffCountryCode}
+          {formatCountryRoute(h)}
           <div style={{ color: '#64748b' }}>
             {h.pickupAddress} → {h.dropoffAddress}
           </div>

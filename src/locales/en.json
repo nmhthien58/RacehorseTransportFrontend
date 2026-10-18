@@ -1667,7 +1667,9 @@
       "feed": "Feed",
       "stress": "Stress",
       "by": "Recorded by"
-    }
+    },
+    "revised": "Now expected {{time}}",
+    "estimatedEnd": "Expected at destination {{time}}"
   },
   "coordinatorHub": {
     "title": "Dispatch hub",
@@ -1830,7 +1832,11 @@
     "myPickup": "Your pick-up",
     "myDropoff": "Your drop-off",
     "offloadReason": "Reason: {{reason}}",
-    "deliveredAt": "Delivered at {{time}}"
+    "deliveredAt": "Delivered at {{time}}",
+    "plannedShort": "Planned {{time}}",
+    "revisedAt": "Expected {{time}} (planned {{planned}})",
+    "atRiskTitle": "Delivery may be late",
+    "atRiskDescription": "The trip is running behind schedule. The new expected delivery time is {{time}}, after your delivery deadline. Our operations team will contact you with updates."
   },
   "filePreview": {
     "noFile": "This document has no attached file",

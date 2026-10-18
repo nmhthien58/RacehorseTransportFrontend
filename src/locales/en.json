@@ -1318,7 +1318,9 @@
       "offloadReason": "Reason",
       "offloadReasonRequired": "Enter a reason",
       "offloadOk": "Confirm offload",
-      "offloaded": "{{name}} was taken off the trip"
+      "offloaded": "{{name}} was taken off the trip",
+      "revisedEta": "Now expected",
+      "behindSchedule": "The trip is {{minutes}} minute(s) behind schedule; later stops have been pushed back accordingly."
     },
     "welfare": {
       "title": "Biometric Health & Equine Welfare Log",

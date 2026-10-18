@@ -309,6 +309,16 @@ export default function TripExecutionPage() {
           />
         )}
 
+        {/* R-08: đoàn xe đang trễ so với kế hoạch */}
+        {isOnTheRoad && mission?.liveDelayMinutes > 0 && (
+          <Alert
+            type="warning"
+            showIcon
+            style={{ marginBottom: 16, borderRadius: 10 }}
+            message={t('driver.execution.behindSchedule', { minutes: mission.liveDelayMinutes })}
+          />
+        )}
+
         {/* Timeline chi tiết các trạm */}
         <Timeline
           mode="left"
@@ -417,6 +427,24 @@ export default function TripExecutionPage() {
                               : 'Chưa có'}
                           </Text>
                         </div>
+
+                        {/* R-08: giờ dự kiến mới theo check-in thực tế, chỉ hiện khi lệch kế hoạch */}
+                        {!cp.actualArrivalTime &&
+                          cp.estimatedArrivalTime &&
+                          cp.plannedArrivalTime &&
+                          new Date(cp.estimatedArrivalTime).getTime() - new Date(cp.plannedArrivalTime).getTime() >= 60000 && (
+                            <div>
+                              <Text type="secondary">{t('driver.execution.revisedEta')}: </Text>
+                              <Text strong style={{ color: '#DC2626' }}>
+                                {new Date(cp.estimatedArrivalTime).toLocaleTimeString('vi-VN', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                })}
+                              </Text>
+                            </div>
+                          )}
 
                         {cp.actualArrivalTime && (
                           <div>

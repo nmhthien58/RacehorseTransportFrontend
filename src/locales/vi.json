@@ -1317,7 +1317,9 @@
       "offloadReason": "Lý do",
       "offloadReasonRequired": "Nhập lý do",
       "offloadOk": "Xác nhận rời chuyến",
-      "offloaded": "Đã ghi nhận {{name}} rời chuyến"
+      "offloaded": "Đã ghi nhận {{name}} rời chuyến",
+      "revisedEta": "Dự kiến mới",
+      "behindSchedule": "Đoàn xe đang trễ {{minutes}} phút so với kế hoạch; giờ dự kiến các trạm phía sau đã được lùi tương ứng."
     },
     "welfare": {
       "title": "Nhật ký thể trạng sinh trắc & Phúc lợi ngựa",

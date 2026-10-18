@@ -31,6 +31,7 @@ import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedu
 import { formatCountryRoute, getTransitCountryCodes } from '@utils/bookingRoute';
 import { TRANSIT_COUNTRY_OPTIONS } from '@features/customer/constants/bookingOptions';
 import StatusTag from '@components/common/StatusTag';
+import BookingPaymentPanel from '@components/common/BookingPaymentPanel';
 import bookingService from '@services/bookingService';
 import userService from '@services/userService';
 import { ROUTES } from '@routes/routes';
@@ -251,8 +252,12 @@ export default function BookingDetailPage() {
   }
 
   const isSubmitted = booking.status === BOOKING_STATUS.SUBMITTED;
-  const isApprovedOrAssigned =
-    booking.status === BOOKING_STATUS.APPROVED || booking.status === BOOKING_STATUS.ASSIGNED;
+  // Đổi Specialist được cả khi đơn đang chờ khách đặt cọc
+  const isApprovedOrAssigned = [
+    BOOKING_STATUS.AWAITING_DEPOSIT,
+    BOOKING_STATUS.APPROVED,
+    BOOKING_STATUS.ASSIGNED,
+  ].includes(booking.status);
 
   return (
     <div>
@@ -672,6 +677,14 @@ export default function BookingDetailPage() {
               )}
             </Card>
           </Space>
+        </Col>
+        <Col span={24}>
+          <BookingPaymentPanel
+            bookingId={booking.bookingId}
+            bookingStatus={booking.status}
+            mode="manager"
+            onChanged={handleRefresh}
+          />
         </Col>
       </Row>
 

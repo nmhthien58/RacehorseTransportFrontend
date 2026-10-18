@@ -15,6 +15,8 @@ const STATUS_COLORS = {
 
   // Đang xử lý / Thông tin (Blue / Cyan)
   Submitted: 'processing',
+  AwaitingDeposit: 'gold',
+  AwaitingFinalPayment: 'gold',
   Assigned: 'cyan',
   Reviewing: 'processing',
   Scheduled: 'blue',
@@ -46,6 +48,8 @@ const STATUS_COLORS = {
  */
 const STATUS_I18N_KEYS = {
   Submitted: 'status.submitted',
+  AwaitingDeposit: 'status.awaitingDeposit',
+  AwaitingFinalPayment: 'status.awaitingFinalPayment',
   Approved: 'status.approved',
   Assigned: 'status.assigned',
   Completed: 'status.completed',

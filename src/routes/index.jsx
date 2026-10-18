@@ -29,6 +29,8 @@ import TripTrackingDetailPage from '@features/customer/pages/TripTrackingDetailP
 import MessagesPage from '@features/customer/pages/MessagesPage';
 import ProfilePage from '@features/customer/pages/ProfilePage';
 import BillingPage from '@features/customer/pages/BillingPage';
+import PaymentResultPage from '@features/customer/pages/PaymentResultPage';
+import MockPaymentPage from '@features/customer/pages/MockPaymentPage';
 import SettingsPage from '@features/customer/pages/SettingsPage';
 
 // Manager pages
@@ -41,6 +43,7 @@ import UserManagementPage from '@features/manager/pages/UserManagementPage';
 import IncidentReviewPage from '@features/manager/pages/IncidentReviewPage';
 import TripClosurePage from '@features/manager/pages/TripClosurePage';
 import ReportsPage from '@features/manager/pages/ReportsPage';
+import PaymentSettingsPage from '@features/manager/pages/PaymentSettingsPage';
 
 // Specialist pages
 import SpecialistDashboard from '@features/specialist/pages/DashboardPage';
@@ -128,6 +131,8 @@ export default function AppRoutes() {
           <Route path={ROUTES.CUSTOMER_MESSAGES} element={<MessagesPage />} />
           <Route path={ROUTES.CUSTOMER_PROFILE} element={<ProfilePage />} />
           <Route path={ROUTES.CUSTOMER_BILLING} element={<BillingPage />} />
+          <Route path={ROUTES.CUSTOMER_PAYMENT_RESULT} element={<PaymentResultPage />} />
+          <Route path={ROUTES.CUSTOMER_PAYMENT_MOCK} element={<MockPaymentPage />} />
           <Route path="/billing" element={<Navigate to={ROUTES.CUSTOMER_BILLING} replace />} />
           <Route path={ROUTES.CUSTOMER_SETTINGS} element={<SettingsPage />} />
         </Route>
@@ -147,6 +152,7 @@ export default function AppRoutes() {
           <Route path={ROUTES.MANAGER_INCIDENTS} element={<IncidentReviewPage />} />
           <Route path={ROUTES.MANAGER_TRIPS} element={<TripClosurePage />} />
           <Route path={ROUTES.MANAGER_REPORTS} element={<ReportsPage />} />
+          <Route path={ROUTES.MANAGER_PAYMENT_SETTINGS} element={<PaymentSettingsPage />} />
           <Route path={ROUTES.MANAGER_PROFILE} element={<ProfilePage />} />
         </Route>
       </Route>

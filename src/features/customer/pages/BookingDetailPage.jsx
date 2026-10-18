@@ -15,13 +15,14 @@ import {
   Typography,
   message,
 } from 'antd';
-import { ArrowLeftOutlined, EnvironmentOutlined, FileProtectOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, DollarOutlined, EnvironmentOutlined, FileProtectOutlined } from '@ant-design/icons';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedule';
 import { formatCountryRoute } from '@utils/bookingRoute';
 import PageHeader from '@components/layout/PageHeader';
 import StatusTag from '@components/common/StatusTag';
+import BookingPaymentPanel from '@components/common/BookingPaymentPanel';
 import CustomerDossierPanel from '@features/customer/components/CustomerDossierPanel';
 import bookingService from '@services/bookingService';
 import { unwrapData, getErrorMessage } from '@utils/apiHelpers';
@@ -41,6 +42,7 @@ export default function CustomerBookingDetailPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -59,14 +61,14 @@ export default function CustomerBookingDetailPage() {
     return () => {
       active = false;
     };
-  }, [id, t]);
+  }, [id, t, reloadKey]);
 
   const status = booking?.status || booking?.Status;
   const bookingId = booking?.bookingId || booking?.BookingID || id;
   const bookingCode = booking?.bookingCode || booking?.BookingCode || id;
   const horses = booking?.horses || booking?.Horses || [];
   const quoteLines = booking?.quoteLines || booking?.QuoteLines || [];
-  const activeTab = searchParams.get('tab') === 'documents' ? 'documents' : 'overview';
+  const activeTab = ['documents', 'payment'].includes(searchParams.get('tab')) ? searchParams.get('tab') : 'overview';
 
   const horseColumns = useMemo(
     () => [
@@ -135,7 +137,7 @@ export default function CustomerBookingDetailPage() {
   );
 
   const handleTabChange = (tab) => {
-    setSearchParams(tab === 'documents' ? { tab: 'documents' } : {});
+    setSearchParams(tab === 'overview' ? {} : { tab });
   };
 
   if (loading) {
@@ -318,6 +320,22 @@ export default function CustomerBookingDetailPage() {
               </span>
             ),
             children: documentsContent,
+          },
+          {
+            key: 'payment',
+            label: (
+              <span>
+                <DollarOutlined /> {t('payments.title')}
+              </span>
+            ),
+            children: (
+              <BookingPaymentPanel
+                bookingId={bookingId}
+                bookingStatus={status}
+                mode="customer"
+                onChanged={() => setReloadKey((k) => k + 1)}
+              />
+            ),
           },
         ]}
       />

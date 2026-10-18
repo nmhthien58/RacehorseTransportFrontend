@@ -100,10 +100,13 @@
     "incidents": "Incidents & rerouting",
     "incidentReview": "Incident approvals",
     "tripClosure": "Trip closing & KPI",
-    "reports": "Reports"
+    "reports": "Reports",
+    "paymentSettings": "Payment settings"
   },
   "status": {
     "submitted": "Submitted",
+    "awaitingDeposit": "Awaiting deposit",
+    "awaitingFinalPayment": "Awaiting final payment",
     "approved": "Approved",
     "assigned": "Assigned",
     "completed": "Completed",
@@ -555,7 +558,8 @@
     "quoteQty": "Qty",
     "quoteUnitPrice": "Unit Price",
     "quoteAmount": "Amount",
-    "totalEstimatedCost": "Total Estimated Cost"
+    "totalEstimatedCost": "Total Estimated Cost",
+    "cancelRefundDesc": "This booking has a deposit: you get {{percent}}% of the deposit and any paid balance back. The refund goes to the paying account and appears in the booking's Payments tab."
   },
   "messages": {
     "title": "Messages & Live Dispatch",
@@ -1982,5 +1986,127 @@
     "incidentCost": "Extra cost from incidents",
     "trips": "Trips",
     "count": "Count"
+  },
+  "payments": {
+    "title": "Payments",
+    "loadFailed": "Could not load payment information",
+    "createFailed": "Could not create the payment",
+    "payNow": "Pay with VNPay",
+    "rate": "rate {{rate}} ₫/USD",
+    "dueAt": "Due: {{date}}",
+    "notRequiredYet": "Once the booking is approved, you need to pay a {{percent}}% deposit to secure it.",
+    "legacyBooking": "This booking does not require online payment.",
+    "extraOverdueTitle": "Extra charges are overdue",
+    "extraOverdueDescription": "You cannot create new bookings until the outstanding extra charges are paid.",
+    "next": {
+      "Deposit": "Deposit required to confirm the booking",
+      "Balance": "Remaining balance due before departure",
+      "Extra": "Extra charges to pay"
+    },
+    "nextHint": {
+      "Deposit": "The booking expires if the deposit is not paid in time. After paying, horse documents can be submitted.",
+      "Balance": "A trip can only depart once every booking on it is fully paid.",
+      "Extra": "Incident costs approved by the manager were allocated to your booking."
+    },
+    "summary": {
+      "quote": "Quoted total",
+      "deposit": "Deposit ({{percent}}%)",
+      "balance": "Remaining balance",
+      "extra": "Extra charges",
+      "totalPaid": "Total paid",
+      "outstanding": "Outstanding",
+      "refunded": "Refunded"
+    },
+    "columns": {
+      "code": "Transaction",
+      "type": "Item",
+      "amount": "Amount",
+      "method": "Method",
+      "status": "Status",
+      "time": "Time",
+      "reference": "Reference / note"
+    },
+    "types": {
+      "Deposit": "Deposit",
+      "Balance": "Balance",
+      "Extra": "Extra",
+      "Refund": "Refund"
+    },
+    "statuses": {
+      "Pending": "Pending",
+      "Succeeded": "Succeeded",
+      "Failed": "Failed",
+      "Expired": "Expired"
+    },
+    "providers": {
+      "VnPay": "VNPay",
+      "Mock": "Mock gateway",
+      "Manual": "Off-system"
+    },
+    "manual": {
+      "open": "Record manual payment",
+      "title": "Record a payment made outside the system",
+      "hint": "Use this for bank transfers or payments at the office. A fully recorded deposit confirms the booking.",
+      "amount": "Amount ({{currency}})",
+      "amountRequired": "Enter the amount",
+      "reference": "Reference (transfer code / receipt number)",
+      "referencePlaceholder": "e.g. FT26291123456",
+      "referenceRequired": "Enter the reference",
+      "note": "Note",
+      "success": "Payment recorded",
+      "failed": "Could not record the payment"
+    },
+    "refund": {
+      "retry": "Retry refund",
+      "retrySuccess": "Refund succeeded",
+      "retryFailed": "Gateway refund failed again; refund manually",
+      "markRefunded": "Refunded manually",
+      "markTitle": "Confirm refund {{code}}",
+      "markHint": "Confirm that {{amount}} ({{vnd}}) was returned to the customer outside the system.",
+      "markSuccess": "Refund marked as completed",
+      "markFailed": "Could not update the refund"
+    },
+    "result": {
+      "successTitle": "Payment successful",
+      "successDescription": "Thank you! The booking status has been updated and you will also receive an email.",
+      "failedTitle": "Payment unsuccessful",
+      "failedDescription": "The transaction was cancelled or failed. You can pay again from the booking details.",
+      "invalidTitle": "Could not verify the transaction",
+      "invalidDescription": "The gateway response was invalid. Please check the booking's payment history.",
+      "code": "Transaction",
+      "viewBooking": "View booking",
+      "backToList": "Bookings"
+    },
+    "mock": {
+      "title": "Mock payment gateway",
+      "hint": "Demo environment: no real money is charged. Choose the transaction result to continue.",
+      "pay": "Pay successfully",
+      "fail": "Simulate failure",
+      "failed": "Could not complete the mock transaction"
+    },
+    "settings": {
+      "title": "Payment settings",
+      "subtitle": "Deposit rate, refund policy and exchange rate",
+      "hint": "Changes apply to bookings approved after saving; approved bookings keep their deposit rate.",
+      "days": "days",
+      "required": "Required",
+      "saved": "Payment settings saved",
+      "saveFailed": "Could not save the settings",
+      "updated": "Last updated {{date}} by {{name}}",
+      "fields": {
+        "depositPercent": "Deposit rate",
+        "cancelRefundPercent": "Deposit refund rate on cancellation",
+        "usdVndRate": "USD → VND rate",
+        "balanceDueDaysBeforeDeparture": "Balance due (days before departure)",
+        "extraPaymentDueDays": "Extra charges due (days after trip closure)"
+      },
+      "help": {
+        "depositPercent": "0% = confirmed on approval; 100% = full payment on approval.",
+        "cancelRefundPercent": "Any balance already paid is always refunded 100%.",
+        "usdVndRate": "Converts USD quotes to the VND amount paid via VNPay.",
+        "balanceDueDaysBeforeDeparture": "Days before the trip's departure date.",
+        "extraPaymentDueDays": "Overdue debts trigger reminders and block new bookings."
+      }
+    }
   }
 }

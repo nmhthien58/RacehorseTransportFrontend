@@ -99,10 +99,13 @@
     "incidents": "Sự cố & nắn tuyến",
     "incidentReview": "Duyệt xử lý sự cố",
     "tripClosure": "Đóng chuyến & KPI",
-    "reports": "Báo cáo"
+    "reports": "Báo cáo",
+    "paymentSettings": "Cấu hình thanh toán"
   },
   "status": {
     "submitted": "Đã gửi",
+    "awaitingDeposit": "Chờ đặt cọc",
+    "awaitingFinalPayment": "Chờ thanh toán phát sinh",
     "approved": "Đã duyệt",
     "assigned": "Đã phân công",
     "completed": "Hoàn thành",
@@ -554,7 +557,8 @@
     "quoteQty": "SL",
     "quoteUnitPrice": "Đơn giá",
     "quoteAmount": "Thành tiền",
-    "totalEstimatedCost": "Tổng dự toán cước phí"
+    "totalEstimatedCost": "Tổng dự toán cước phí",
+    "cancelRefundDesc": "Đơn đã đặt cọc: bạn được hoàn {{percent}}% tiền cọc và toàn bộ phần còn lại đã trả. Tiền hoàn về tài khoản đã thanh toán và hiển thị trong mục Thanh toán của đơn."
   },
   "messages": {
     "title": "Tin nhắn & Liên lạc Trực tiếp",
@@ -1981,5 +1985,127 @@
     "incidentCost": "Chi phí phát sinh do sự cố",
     "trips": "Số chuyến",
     "count": "Số lần"
+  },
+  "payments": {
+    "title": "Thanh toán",
+    "loadFailed": "Không tải được thông tin thanh toán",
+    "createFailed": "Không tạo được giao dịch thanh toán",
+    "payNow": "Thanh toán qua VNPay",
+    "rate": "tỉ giá {{rate}} ₫/USD",
+    "dueAt": "Hạn thanh toán: {{date}}",
+    "notRequiredYet": "Sau khi đơn được duyệt, bạn cần đặt cọc {{percent}}% giá trị báo giá để giữ chỗ.",
+    "legacyBooking": "Đơn này không yêu cầu thanh toán trực tuyến.",
+    "extraOverdueTitle": "Chi phí phát sinh đã quá hạn",
+    "extraOverdueDescription": "Bạn sẽ không tạo được đơn mới cho đến khi thanh toán khoản phát sinh còn nợ.",
+    "next": {
+      "Deposit": "Cần đặt cọc để xác nhận đơn",
+      "Balance": "Cần thanh toán phần còn lại trước ngày khởi hành",
+      "Extra": "Cần thanh toán chi phí phát sinh"
+    },
+    "nextHint": {
+      "Deposit": "Đơn sẽ hết hạn nếu chưa đặt cọc trong thời gian quy định. Sau khi cọc, hồ sơ ngựa được mở để bổ sung.",
+      "Balance": "Chuyến chỉ được khởi hành khi tất cả đơn trên chuyến đã thanh toán đủ.",
+      "Extra": "Khoản phát sinh do sự cố trong chuyến (đã được Manager duyệt) được phân bổ cho đơn của bạn."
+    },
+    "summary": {
+      "quote": "Giá trị báo giá",
+      "deposit": "Đặt cọc ({{percent}}%)",
+      "balance": "Phần còn lại",
+      "extra": "Chi phí phát sinh",
+      "totalPaid": "Tổng đã thanh toán",
+      "outstanding": "Còn phải trả",
+      "refunded": "Đã hoàn tiền"
+    },
+    "columns": {
+      "code": "Mã giao dịch",
+      "type": "Khoản",
+      "amount": "Số tiền",
+      "method": "Hình thức",
+      "status": "Trạng thái",
+      "time": "Thời gian",
+      "reference": "Tham chiếu / ghi chú"
+    },
+    "types": {
+      "Deposit": "Đặt cọc",
+      "Balance": "Phần còn lại",
+      "Extra": "Phát sinh",
+      "Refund": "Hoàn tiền"
+    },
+    "statuses": {
+      "Pending": "Đang xử lý",
+      "Succeeded": "Thành công",
+      "Failed": "Thất bại",
+      "Expired": "Hết hạn"
+    },
+    "providers": {
+      "VnPay": "VNPay",
+      "Mock": "Cổng giả lập",
+      "Manual": "Ngoài hệ thống"
+    },
+    "manual": {
+      "open": "Ghi nhận thanh toán thủ công",
+      "title": "Ghi nhận khoản khách đã trả ngoài hệ thống",
+      "hint": "Dùng khi khách chuyển khoản hoặc trả tại văn phòng. Khoản cọc ghi nhận đủ sẽ tự xác nhận đơn.",
+      "amount": "Số tiền ({{currency}})",
+      "amountRequired": "Nhập số tiền",
+      "reference": "Mã tham chiếu (mã chuyển khoản / số biên lai)",
+      "referencePlaceholder": "VD: FT26291123456",
+      "referenceRequired": "Nhập mã tham chiếu",
+      "note": "Ghi chú",
+      "success": "Đã ghi nhận thanh toán",
+      "failed": "Không ghi nhận được thanh toán"
+    },
+    "refund": {
+      "retry": "Thử hoàn lại",
+      "retrySuccess": "Hoàn tiền thành công",
+      "retryFailed": "Hoàn tiền qua cổng vẫn thất bại, hãy hoàn thủ công",
+      "markRefunded": "Đã hoàn thủ công",
+      "markTitle": "Xác nhận đã hoàn tiền {{code}}",
+      "markHint": "Xác nhận đã chuyển trả khách {{amount}} ({{vnd}}) ngoài hệ thống.",
+      "markSuccess": "Đã đánh dấu hoàn tiền",
+      "markFailed": "Không cập nhật được hoàn tiền"
+    },
+    "result": {
+      "successTitle": "Thanh toán thành công",
+      "successDescription": "Cảm ơn bạn! Trạng thái đơn đã được cập nhật, bạn cũng sẽ nhận thông báo qua email.",
+      "failedTitle": "Thanh toán không thành công",
+      "failedDescription": "Giao dịch bị hủy hoặc thất bại. Bạn có thể thanh toán lại trong trang chi tiết đơn.",
+      "invalidTitle": "Không xác minh được giao dịch",
+      "invalidDescription": "Kết quả trả về không hợp lệ. Hãy kiểm tra lại lịch sử thanh toán của đơn.",
+      "code": "Mã giao dịch",
+      "viewBooking": "Xem đơn",
+      "backToList": "Danh sách đơn"
+    },
+    "mock": {
+      "title": "Cổng thanh toán giả lập",
+      "hint": "Môi trường demo: không trừ tiền thật. Chọn kết quả giao dịch để tiếp tục.",
+      "pay": "Thanh toán thành công",
+      "fail": "Giả lập thất bại",
+      "failed": "Không hoàn tất được giao dịch giả lập"
+    },
+    "settings": {
+      "title": "Cấu hình thanh toán",
+      "subtitle": "Tỉ lệ đặt cọc, chính sách hoàn tiền và tỉ giá quy đổi",
+      "hint": "Thay đổi chỉ áp dụng cho đơn được duyệt sau khi lưu; đơn đã duyệt giữ % cọc đã chốt.",
+      "days": "ngày",
+      "required": "Bắt buộc nhập",
+      "saved": "Đã lưu cấu hình thanh toán",
+      "saveFailed": "Không lưu được cấu hình",
+      "updated": "Cập nhật lần cuối {{date}} bởi {{name}}",
+      "fields": {
+        "depositPercent": "Tỉ lệ đặt cọc",
+        "cancelRefundPercent": "Tỉ lệ hoàn cọc khi khách hủy",
+        "usdVndRate": "Tỉ giá USD → VND",
+        "balanceDueDaysBeforeDeparture": "Hạn trả phần còn lại (trước khởi hành)",
+        "extraPaymentDueDays": "Hạn trả chi phí phát sinh (sau khi đóng chuyến)"
+      },
+      "help": {
+        "depositPercent": "0% = duyệt là xác nhận ngay; 100% = thu toàn bộ khi duyệt.",
+        "cancelRefundPercent": "Phần còn lại đã trả luôn được hoàn 100%.",
+        "usdVndRate": "Dùng để quy đổi báo giá USD sang số tiền VND thanh toán qua VNPay.",
+        "balanceDueDaysBeforeDeparture": "Số ngày trước ngày khởi hành của chuyến.",
+        "extraPaymentDueDays": "Quá hạn sẽ nhắc nợ và chặn khách tạo đơn mới."
+      }
+    }
   }
 }

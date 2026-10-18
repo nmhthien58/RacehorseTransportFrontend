@@ -11,3 +11,4 @@ export { default as incidentService } from './incidentService';
 export { default as handoverService } from './handoverService';
 export { default as documentTypeService } from './documentTypeService';
 export { default as reportService } from './reportService';
+export { default as paymentService } from './paymentService';

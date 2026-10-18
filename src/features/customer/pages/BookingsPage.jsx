@@ -35,11 +35,14 @@ import PageHeader from '@components/layout/PageHeader';
 import StatusTag from '@components/common/StatusTag';
 import BookingCard from '@features/customer/components/BookingCard';
 import bookingService from '@services/bookingService';
+import paymentService from '@services/paymentService';
 import { useAuthStore } from '@features/auth/store/authStore';
 import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import { ROUTES } from '@routes/routes';
 
 const { Title, Text } = Typography;
+// Các trạng thái tính là "đang xử lý" (đã duyệt, chờ thanh toán hoặc đang vận chuyển)
+const ACTIVE_STATUSES = ['AwaitingDeposit', 'Approved', 'Assigned', 'InTransit', 'AwaitingFinalPayment'];
 
 /**
  * Trang danh sách các yêu cầu vận chuyển của khách hàng (Customer)
@@ -64,6 +67,16 @@ export default function CustomerBookings() {
   // Modal xem chi tiết đơn
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
+
+  // % hoàn cọc khi hủy, hiển thị trong hộp xác nhận hủy đơn đã đặt cọc
+  const [cancelRefundPercent, setCancelRefundPercent] = useState(null);
+
+  useEffect(() => {
+    paymentService
+      .getSettings()
+      .then((res) => setCancelRefundPercent(unwrapData(res)?.cancelRefundPercent ?? null))
+      .catch(() => {});
+  }, []);
 
   // Tải danh sách đơn từ API
   useEffect(() => {
@@ -100,12 +113,11 @@ export default function CustomerBookings() {
   };
 
   /**
-   * Xử lý hủy đơn đặt chuyến khi còn ở trạng thái Submitted
+   * Xử lý hủy đơn đặt chuyến (trước khi ngựa lên chuyến; đã cọc thì backend tự hoàn tiền)
    * @param {number} bookingId
    */
   const handleCancelBooking = async (bookingId) => {
     try {
-      // Backend chỉ cho hủy khi đơn còn Submitted
       await bookingService.cancelBooking(bookingId);
       message.success(t('bookings.cancelSuccess') || 'Đã hủy yêu cầu vận chuyển thành công');
       setRefreshKey((k) => k + 1);
@@ -151,7 +163,7 @@ export default function CustomerBookings() {
   const activeCount = Array.isArray(bookings)
     ? bookings.filter((b) => {
         const st = b.status || b.Status;
-        return st === 'Approved' || st === 'Assigned' || st === 'InTransit';
+        return ACTIVE_STATUSES.includes(st);
       }).length
     : 0;
 
@@ -166,11 +178,7 @@ export default function CustomerBookings() {
       // Lọc trạng thái
       if (statusFilter !== 'All') {
         if (statusFilter === 'Active') {
-          const isActive =
-            itemStatus === 'Approved' ||
-            itemStatus === 'Assigned' ||
-            itemStatus === 'InTransit';
-          if (!isActive) return false;
+          if (!ACTIVE_STATUSES.includes(itemStatus)) return false;
         } else if (itemStatus !== statusFilter) {
           return false;
         }
@@ -536,6 +544,7 @@ export default function CustomerBookings() {
               key={b.bookingId || b.BookingID}
               booking={b}
               onCancel={handleCancelBooking}
+              cancelRefundPercent={cancelRefundPercent}
               onViewDetail={handleOpenDetail}
               onManageDocuments={handleOpenDocuments}
             />

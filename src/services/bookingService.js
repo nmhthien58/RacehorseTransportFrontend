@@ -82,6 +82,16 @@ export const bookingService = {
   },
 
   /**
+   * Xác nhận / sửa các nước quá cảnh của đơn đang chờ duyệt; backend tính lại báo giá (dành cho LogisticsManager)
+   * @param {number|string} id - Mã định danh BookingID
+   * @param {string[]} transitCountryCodes - Mã nước đi qua theo thứ tự; mảng rỗng = đi thẳng
+   * @returns {Promise<any>}
+   */
+  async updateTransitCountries(id, transitCountryCodes) {
+    return api.put(ENDPOINTS.BOOKINGS.TRANSIT_COUNTRIES(id), { transitCountryCodes });
+  },
+
+  /**
    * Đổi chuyên viên kiểm dịch phụ trách đơn (dành cho LogisticsManager)
    * @param {number|string} id - Mã định danh BookingID
    * @param {{ specialistUserId: number }} payload - Chuyên viên mới

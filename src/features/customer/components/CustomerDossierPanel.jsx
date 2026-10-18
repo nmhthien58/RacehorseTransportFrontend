@@ -22,6 +22,7 @@ import {
 import { FileTextOutlined, UploadOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import { formatCountryRoute } from '@utils/bookingRoute';
 import { formatPickupWindow } from '@utils/bookingSchedule';
 import dossierService from '@services/dossierService';
 import { unwrapData, unwrapList, getErrorMessage, toFormData } from '@utils/apiHelpers';
@@ -310,7 +311,7 @@ export default function CustomerDossierPanel({ horseId, bookingId, bookingStatus
               {t(`customerDossier.status.${shownDetail.status}`, shownDetail.status)}
             </Tag>
             <Text type="secondary">
-              {shownDetail.pickupCountryCode} → {shownDetail.dropoffCountryCode} ·{' '}
+              {formatCountryRoute(shownDetail)} ·{' '}
               {t('customerDossier.departure')}{' '}
               {formatPickupWindow(shownDetail)}
             </Text>

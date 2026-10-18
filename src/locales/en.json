@@ -495,8 +495,19 @@
       "deliveryDate": "Estimated Delivery Date",
       "pickupWindow": "Pickup window",
       "deliveryDeadline": "Latest delivery date",
+      "route": "Route (incl. transit countries)",
       "totalHorses": "Total Horses",
       "estimatedCost": "Estimated Cost"
+    },
+    "transit": {
+      "label": "Transit countries (if the route crosses other countries)",
+      "placeholder": "Direct - no transit country",
+      "hint": "Pick them in the order the truck passes through, e.g. Vietnam → China → Russia means China. Each transit country needs transit papers, a clearance fee and border time. The manager confirms the route when reviewing the booking.",
+      "editTitle": "Transit countries",
+      "editHint": "Confirm or change the countries the horses pass through before approving. The quote is recalculated and the customer is notified.",
+      "save": "Save route & re-quote",
+      "saved": "Route and quote updated",
+      "lockedHint": "Can only be changed while the booking is awaiting review."
     },
     "schedule": {
       "title": "1. Pickup window & delivery deadline",

@@ -50,6 +50,7 @@ export const ENDPOINTS = {
     CANCEL: (id) => `/bookings/${id}/cancel`,
     APPROVE: (id) => `/bookings/${id}/approve`,
     REJECT: (id) => `/bookings/${id}/reject`,
+    TRANSIT_COUNTRIES: (id) => `/bookings/${id}/transit-countries`,
     REASSIGN_SPECIALIST: (id) => `/bookings/${id}/reassign-specialist`,
     // Bí danh tương thích ngược
     ASSIGN: (id) => `/bookings/${id}/reassign-specialist`,

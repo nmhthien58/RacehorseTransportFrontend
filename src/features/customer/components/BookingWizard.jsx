@@ -44,6 +44,7 @@ import bookingService from '@services/bookingService';
 import { useAuthStore } from '@features/auth/store/authStore';
 import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import { formatDeliveryDeadline, formatPickupWindow, toLocalDateTimeString } from '@utils/bookingSchedule';
+import { formatCountryRoute } from '@utils/bookingRoute';
 import { checkHorseTransportEligibility } from '@utils/horseHealth';
 import { ROUTES } from '@routes/routes';
 import {
@@ -52,6 +53,7 @@ import {
   AIRPORTS_BY_COUNTRY,
   STALL_CLASSES,
   CITIES_BY_COUNTRY,
+  TRANSIT_COUNTRY_OPTIONS,
 } from '@features/customer/constants/bookingOptions';
 
 const { Title, Text } = Typography;
@@ -133,6 +135,7 @@ export default function BookingWizard({
       // Khoảng ngày sẵn sàng đón [đầu, cuối] và hạn giao; điền mặc định khi đã biết ngày sớm nhất từ backend
       PickupWindow: null,
       DeliveryDeadline: null,
+      TransitCountries: initialValues?.transitCountryCodes || [],
       InsurancePackage: initialValues?.declaredValue === null ? 'none' : 'transit',
       DeclaredValue: initialValues?.declaredValue || 50000,
       RequiresClimateControl: initialValues?.requiresClimateControl ?? true,
@@ -151,6 +154,12 @@ export default function BookingWizard({
   const pickupAirportCode = useWatch({ control, name: 'PickupAirportCode' });
   const dropoffAirportCode = useWatch({ control, name: 'DropoffAirportCode' });
   const pickupWindow = useWatch({ control, name: 'PickupWindow' });
+  const transitCountries = useWatch({ control, name: 'TransitCountries' });
+  // Chỉ đường bộ mới có nước quá cảnh
+  const transitCodes = useMemo(
+    () => (transportMode === 'Ground' ? transitCountries || [] : []),
+    [transportMode, transitCountries],
+  );
   const deliveryDeadline = useWatch({ control, name: 'DeliveryDeadline' });
   const pickupWindowStart = pickupWindow?.[0] || null;
   const pickupWindowEnd = pickupWindow?.[1] || null;
@@ -337,6 +346,7 @@ export default function BookingWizard({
           pickupCountryCode: pickupCountry,
           dropoffCountryCode: dropoffCountry,
           distanceKm: transportMode === 'Ground' ? Number(distanceKm) : null,
+          transitCountryCodes: transitCodes,
           horses: [{ stallClass: 'Shared' }],
         });
         if (!cancelled) setSchedule(unwrapData(res));
@@ -354,7 +364,7 @@ export default function BookingWizard({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [currentStep, transportMode, pickupCountry, dropoffCountry, distanceKm]);
+  }, [currentStep, transportMode, pickupCountry, dropoffCountry, distanceKm, transitCodes]);
 
   const earliestPickup = schedule?.earliestPickupDate ? dayjs(schedule.earliestPickupDate) : null;
   const maxTransitHours = Number(schedule?.transit?.maxHours || 0);
@@ -415,6 +425,7 @@ export default function BookingWizard({
       pickupWindowStart: toLocalDateTimeString(pickupWindowStart),
       pickupWindowEnd: toLocalDateTimeString(pickupWindowEnd),
       deliveryDeadline: toLocalDateTimeString(deliveryDeadline),
+      transitCountryCodes: transitCodes,
       horses: selectedHorseIds.map((hId) => ({ stallClass: stallClasses[hId] || 'Comfort' })),
     };
   }, [
@@ -430,6 +441,7 @@ export default function BookingWizard({
     pickupWindowStart,
     pickupWindowEnd,
     deliveryDeadline,
+    transitCodes,
   ]);
 
   // Gọi API tính báo giá ở bước Review
@@ -604,6 +616,7 @@ export default function BookingWizard({
       pickupWindowStart: toLocalDateTimeString(values.PickupWindow?.[0]),
       pickupWindowEnd: toLocalDateTimeString(values.PickupWindow?.[1]),
       deliveryDeadline: toLocalDateTimeString(values.DeliveryDeadline),
+      transitCountryCodes: mode === 'Ground' ? values.TransitCountries || [] : [],
       transportMode: mode,
       distanceKm: mode === 'Ground' ? Number(values.DistanceKm) : null,
       requiresClimateControl: Boolean(values.RequiresClimateControl),
@@ -990,6 +1003,35 @@ export default function BookingWizard({
                 </Card>
               </Col>
             </Row>
+
+            {/* Nước quá cảnh (chỉ đường bộ): chọn theo thứ tự đi qua, Manager sẽ xác nhận khi duyệt */}
+            {transportMode === 'Ground' && (
+              <Controller
+                name="TransitCountries"
+                control={control}
+                render={({ field }) => (
+                  <Form.Item
+                    label={t('bookings.transit.label')}
+                    extra={t('bookings.transit.hint')}
+                    labelCol={{ span: 24 }}
+                    wrapperCol={{ span: 24 }}
+                  >
+                    <Select
+                      mode="multiple"
+                      size="large"
+                      allowClear
+                      optionFilterProp="label"
+                      value={field.value || []}
+                      onChange={(codes) => field.onChange(codes)}
+                      placeholder={t('bookings.transit.placeholder')}
+                      options={TRANSIT_COUNTRY_OPTIONS.filter(
+                        (c) => c.code !== pickupCountry && c.code !== dropoffCountry,
+                      ).map((c) => ({ value: c.code, label: `${c.name} (${c.code})` }))}
+                    />
+                  </Form.Item>
+                )}
+              />
+            )}
 
             {/* Quãng đường dự kiến do Backend tự động tính */}
             {transportMode === 'Ground' && (
@@ -1549,6 +1591,19 @@ export default function BookingWizard({
                     {transportMode === 'Ground' && getValues('DropoffCity') ? `, ${getValues('DropoffCity')}` : ''}
                   </div>
                 </div>
+
+                {transitCodes.length > 0 && (
+                  <div style={{ marginBottom: 12 }}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>{t('bookings.fields.route')}:</Text>
+                    <div style={{ fontSize: 13.5, fontWeight: 600, color: '#0f172a' }}>
+                      {formatCountryRoute({
+                        pickupCountryCode: pickupCountry,
+                        dropoffCountryCode: dropoffCountry,
+                        transitCountryCodes: transitCodes,
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {transportMode === 'Ground' && (
                   <div

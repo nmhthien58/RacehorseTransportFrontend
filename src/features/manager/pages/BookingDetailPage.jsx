@@ -28,6 +28,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedule';
+import { formatCountryRoute, getTransitCountryCodes } from '@utils/bookingRoute';
+import { TRANSIT_COUNTRY_OPTIONS } from '@features/customer/constants/bookingOptions';
 import StatusTag from '@components/common/StatusTag';
 import bookingService from '@services/bookingService';
 import userService from '@services/userService';
@@ -62,6 +64,8 @@ export default function BookingDetailPage() {
   const [approveModalOpen, setApproveModalOpen] = useState(false);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [reassignModalOpen, setReassignModalOpen] = useState(false);
+  // Bản nháp danh sách nước quá cảnh Manager đang sửa (null = chưa sửa, dùng giá trị của đơn)
+  const [transitDraft, setTransitDraft] = useState(null);
 
   const [reassignForm] = Form.useForm();
 
@@ -147,6 +151,21 @@ export default function BookingDetailPage() {
       });
       message.success(t('manager.bookings.messages.approveSuccess'));
       setApproveModalOpen(false);
+      handleRefresh();
+    } catch (err) {
+      message.error(getErrorMessage(err, t('manager.bookings.messages.actionFailed')));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Lưu nước quá cảnh: backend tính lại báo giá rồi báo cho khách
+  const handleSaveTransit = async () => {
+    try {
+      setActionLoading(true);
+      await bookingService.updateTransitCountries(booking.bookingId, transitDraft || []);
+      message.success(t('bookings.transit.saved'));
+      setTransitDraft(null);
       handleRefresh();
     } catch (err) {
       message.error(getErrorMessage(err, t('manager.bookings.messages.actionFailed')));
@@ -358,6 +377,10 @@ export default function BookingDetailPage() {
                   {booking.dropoffCountryCode && <Tag style={{ margin: 0 }}>{booking.dropoffCountryCode}</Tag>}
                 </Descriptions.Item>
 
+                <Descriptions.Item label={t('bookings.fields.route')} span={2}>
+                  {formatCountryRoute(booking)}
+                </Descriptions.Item>
+
                 <Descriptions.Item label={t('manager.bookings.modals.departureDate')}>
                   {formatPickupWindow(booking)}
                 </Descriptions.Item>
@@ -508,6 +531,43 @@ export default function BookingDetailPage() {
                   onApprove={handleOpenApprove}
                   onReject={handleOpenReject}
                 />
+              </Card>
+            )}
+
+            {/* Xác nhận / sửa nước quá cảnh trước khi duyệt (R-03) */}
+            {isSubmitted && (
+              <Card
+                title={
+                  <span style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>
+                    {t('bookings.transit.editTitle')}
+                  </span>
+                }
+                style={{ borderRadius: 14 }}
+              >
+                <Text type="secondary" style={{ fontSize: 12.5, display: 'block', marginBottom: 10 }}>
+                  {t('bookings.transit.editHint')}
+                </Text>
+                <Select
+                  mode="multiple"
+                  allowClear
+                  optionFilterProp="label"
+                  style={{ width: '100%', marginBottom: 12 }}
+                  value={transitDraft ?? getTransitCountryCodes(booking)}
+                  onChange={(codes) => setTransitDraft(codes)}
+                  placeholder={t('bookings.transit.placeholder')}
+                  options={TRANSIT_COUNTRY_OPTIONS.filter(
+                    (c) => c.code !== booking.pickupCountryCode && c.code !== booking.dropoffCountryCode,
+                  ).map((c) => ({ value: c.code, label: `${c.name} (${c.code})` }))}
+                />
+                <Button
+                  type="primary"
+                  block
+                  loading={actionLoading}
+                  disabled={transitDraft === null}
+                  onClick={handleSaveTransit}
+                >
+                  {t('bookings.transit.save')}
+                </Button>
               </Card>
             )}
 

@@ -19,6 +19,7 @@ import { ArrowLeftOutlined, EnvironmentOutlined, FileProtectOutlined } from '@an
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedule';
+import { formatCountryRoute } from '@utils/bookingRoute';
 import PageHeader from '@components/layout/PageHeader';
 import StatusTag from '@components/common/StatusTag';
 import CustomerDossierPanel from '@features/customer/components/CustomerDossierPanel';
@@ -172,6 +173,9 @@ export default function CustomerBookingDetailPage() {
             <Descriptions.Item label={t('bookings.fields.deliveryLocation')} span={2}>
               <EnvironmentOutlined style={{ color: '#10b981', marginRight: 6 }} />
               {booking.dropoffAddress || booking.DropoffAddress}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('bookings.fields.route')} span={2}>
+              {formatCountryRoute(booking)}
             </Descriptions.Item>
             <Descriptions.Item label={t('bookings.fields.pickupWindow')}>
               {formatPickupWindow(booking)}

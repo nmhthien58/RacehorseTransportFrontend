@@ -101,7 +101,8 @@
     "incidentReview": "Incident approvals",
     "tripClosure": "Trip closing & KPI",
     "reports": "Reports",
-    "paymentSettings": "Payment settings"
+    "paymentSettings": "Payment settings",
+    "transportOrders": "Transport orders"
   },
   "status": {
     "submitted": "Submitted",
@@ -367,7 +368,7 @@
     }
   },
   "bookings": {
-    "title": "Transport Requests",
+    "title": "Transport Orders",
     "subtitle": "Track quote approval, route planning, and dedicated fleet scheduling for your racehorses",
     "addNew": "New Request",
     "addNewTitle": "New Horse Transport Request",
@@ -400,7 +401,7 @@
     "detailTitle": "Transport Request Details",
     "manageDocuments": "Complete documents",
     "detailPage": {
-      "title": "Request {{code}}",
+      "title": "Order {{code}}",
       "subtitle": "Track the request details and transport dossier progress for every horse",
       "overview": "Overview",
       "documents": "Transport documents",
@@ -2204,5 +2205,68 @@
     "Delivered": "Delivered",
     "Offloaded": "Offloaded on the way",
     "Cancelled": "Cancelled"
+  },
+  "customerOrders": {
+    "stage": {
+      "PendingReview": "Pending review",
+      "AwaitingDeposit": "Awaiting deposit",
+      "PreparingDossier": "Preparing documents",
+      "AwaitingTrip": "Awaiting trip",
+      "Scheduled": "Scheduled",
+      "AwaitingPayment": "Awaiting payment",
+      "InTransit": "In transit",
+      "AwaitingHandover": "Awaiting handover",
+      "Completed": "Completed",
+      "Closed": "Cancelled / Rejected"
+    },
+    "backToOrders": "Back to orders",
+    "backToOrder": "Back to order {{code}}",
+    "actions": {
+      "pay": "Pay",
+      "journey": "Journey"
+    },
+    "journey": {
+      "tab": "Journey",
+      "noTrip": "This order is not on a trip yet. The journey shows up here once a trip is approved.",
+      "awaitingPlanning": "Waiting for a trip: {{horses}}"
+    },
+    "timeline": {
+      "title": "Order progress",
+      "createdAt": "Sent {{time}}",
+      "reviewedAt": "Reviewed {{time}}",
+      "paidAt": "Paid {{time}}",
+      "dueAt": "Due {{time}}",
+      "dossierProgress": "{{cleared}}/{{total}} dossiers cleared",
+      "departureAt": "Planned departure {{time}}",
+      "pickedUpAt": "Picked up {{time}}",
+      "deliveredAt": "Delivered {{time}}",
+      "closed": "This order is closed; nothing else to do.",
+      "closedTitle": {
+        "Rejected": "Order rejected",
+        "Cancelled": "Order cancelled",
+        "Expired": "Order expired"
+      },
+      "steps": {
+        "review": "Request & review",
+        "deposit": "Deposit",
+        "dossier": "Quarantine documents",
+        "planning": "Trip planning",
+        "balance": "Remaining payment",
+        "ready": "Ready to depart",
+        "transit": "In transit",
+        "handover": "Handover",
+        "done": "Completed"
+      },
+      "now": {
+        "PendingReview": "The manager is reviewing your request",
+        "AwaitingDeposit": "Pay the deposit to start the documents",
+        "PreparingDossier": "Upload documents in the Documents tab",
+        "AwaitingTrip": "Documents are done, waiting for a trip",
+        "Scheduled": "All set, waiting for departure",
+        "AwaitingPayment": "Please pay in the Payment tab",
+        "InTransit": "See the vehicle and horse logs in the Journey tab",
+        "AwaitingHandover": "The vehicle has arrived; waiting for sign-off"
+      }
+    }
   }
 }

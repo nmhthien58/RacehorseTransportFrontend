@@ -63,7 +63,7 @@ export default function AppSidebar({ collapsed, user }) {
         {
           key: ROUTES.CUSTOMER_BOOKINGS,
           icon: <CarOutlined style={{ fontSize: 18 }} />,
-          label: t('nav.transportRequests', 'Yêu cầu vận chuyển'),
+          label: t('nav.transportOrders', 'Đơn vận chuyển'),
         },
         {
           key: ROUTES.CUSTOMER_BILLING,
@@ -74,11 +74,6 @@ export default function AppSidebar({ collapsed, user }) {
           key: ROUTES.CUSTOMER_PRICING,
           icon: <DollarCircleOutlined style={{ fontSize: 18 }} />,
           label: t('nav.pricing', 'Bảng giá cước'),
-        },
-        {
-          key: ROUTES.CUSTOMER_TRIPS,
-          icon: <CompassOutlined style={{ fontSize: 18 }} />,
-          label: t('nav.tripTracking', 'Theo dõi chuyến đi'),
         },
         {
           key: ROUTES.CUSTOMER_MESSAGES,
@@ -285,7 +280,8 @@ export default function AppSidebar({ collapsed, user }) {
     if (current.startsWith('/customer/vet-record') || current.startsWith('/customer/vetrecord') || current.startsWith('/vet-record')) return ROUTES.CUSTOMER_VET_RECORDS;
     if (current.startsWith('/customer/bookings') || current.startsWith('/customer/booking')) return ROUTES.CUSTOMER_BOOKINGS;
     if (current.startsWith('/customer/pricing')) return ROUTES.CUSTOMER_PRICING;
-    if (current.startsWith('/customer/trips')) return ROUTES.CUSTOMER_TRIPS;
+    // R-07: hành trình của khách nằm trong chi tiết đơn
+    if (current.startsWith('/customer/trips')) return ROUTES.CUSTOMER_BOOKINGS;
     if (current.startsWith('/customer/messages')) return ROUTES.CUSTOMER_MESSAGES;
     if (current.startsWith('/customer/profile')) return ROUTES.CUSTOMER_PROFILE;
     if (current.startsWith('/customer/billing') || current.startsWith('/billing')) return ROUTES.CUSTOMER_BILLING;

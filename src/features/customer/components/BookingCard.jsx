@@ -7,11 +7,15 @@ import {
   CloseCircleOutlined,
   ArrowRightOutlined,
   FileProtectOutlined,
+  DollarOutlined,
+  NodeIndexOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { formatPickupWindow } from '@utils/bookingSchedule';
 import StatusTag from '@components/common/StatusTag';
+import CustomerStageTag from '@components/common/CustomerStageTag';
+import { CUSTOMER_ACTION_STAGES } from '@features/customer/constants/customerStages';
 
 const { Text } = Typography;
 
@@ -24,9 +28,10 @@ const { Text } = Typography;
  * @param {(bookingId: number) => void} [props.onCancel]
  * @param {(booking: import('@types/database').Booking) => void} [props.onViewDetail]
  * @param {(booking: import('@types/database').Booking) => void} [props.onManageDocuments]
+ * @param {(booking: import('@types/database').Booking, tab: 'journey'|'payment') => void} [props.onOpenTab] - Mở thẳng một tab của chi tiết đơn
  * @returns {JSX.Element}
  */
-export default function BookingCard({ booking, onCancel, onViewDetail, onManageDocuments, cancelRefundPercent }) {
+export default function BookingCard({ booking, onCancel, onViewDetail, onManageDocuments, onOpenTab, cancelRefundPercent }) {
   const { t } = useTranslation();
 
   if (!booking) return null;
@@ -49,6 +54,12 @@ export default function BookingCard({ booking, onCancel, onViewDetail, onManageD
   const currencyCode = booking.currencyCode || booking.CurrencyCode || 'USD';
   const requiresClimateControl = Boolean(booking.requiresClimateControl || booking.RequiresClimateControl);
   const bookingId = booking.bookingId || booking.BookingID;
+  // R-07: giai đoạn theo góc nhìn khách; có chuyến thì xem được hành trình, đến lượt trả tiền thì có nút thanh toán
+  const stage = booking.customerStage;
+  const hasJourney = ['Scheduled', 'AwaitingPayment', 'InTransit', 'AwaitingHandover', 'Completed'].includes(stage) && status !== 'AwaitingDeposit';
+  const needsPayment = CUSTOMER_ACTION_STAGES.includes(stage);
+  // Ngựa đã được xếp lên chuyến đã duyệt / đã lên xe thì không tự hủy được nữa (backend cũng chặn)
+  const showCancel = canCancel && !['Scheduled', 'AwaitingPayment', 'InTransit', 'AwaitingHandover'].includes(stage);
 
   return (
     <Card
@@ -86,7 +97,7 @@ export default function BookingCard({ booking, onCancel, onViewDetail, onManageD
           >
             #{bookingCode}
           </Text>
-          <StatusTag status={status} />
+          {stage ? <CustomerStageTag stage={stage} /> : <StatusTag status={status} />}
           {isAir && (
             <Tag color="blue" style={{ borderRadius: 6, fontWeight: 500 }}>
               <RocketOutlined style={{ marginRight: 4 }} />
@@ -197,7 +208,30 @@ export default function BookingCard({ booking, onCancel, onViewDetail, onManageD
         </Space>
 
         {/* NÚT THAO TÁC */}
-        <Space size="small">
+        <Space size="small" wrap>
+          {needsPayment && onOpenTab && (
+            <Button
+              type="primary"
+              icon={<DollarOutlined />}
+              size="middle"
+              onClick={() => onOpenTab(booking, 'payment')}
+              style={{ borderRadius: 6, fontWeight: 600, backgroundColor: '#f59e0b', borderColor: '#f59e0b' }}
+            >
+              {t('customerOrders.actions.pay')}
+            </Button>
+          )}
+
+          {hasJourney && onOpenTab && (
+            <Button
+              icon={<NodeIndexOutlined />}
+              size="middle"
+              onClick={() => onOpenTab(booking, 'journey')}
+              style={{ borderRadius: 6, fontWeight: 500 }}
+            >
+              {t('customerOrders.actions.journey')}
+            </Button>
+          )}
+
           {canOpenDocuments && onManageDocuments && (
             <Button
               icon={<FileProtectOutlined />}
@@ -209,7 +243,7 @@ export default function BookingCard({ booking, onCancel, onViewDetail, onManageD
             </Button>
           )}
 
-          {canCancel && onCancel && (
+          {showCancel && onCancel && (
             <Popconfirm
               title={t('bookings.cancelConfirmTitle') || 'Hủy yêu cầu đặt chuyến?'}
               description={

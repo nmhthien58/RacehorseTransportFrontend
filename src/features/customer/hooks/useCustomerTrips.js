@@ -10,7 +10,7 @@ import { unwrapData, unwrapList } from '@utils/apiHelpers';
  * @param {Object} trip - Một phần tử trong tracking.trips
  * @returns {Object}
  */
-function toCustomerTrip(tracking, trip) {
+export function toCustomerTrip(tracking, trip) {
   const checkpoints = [...(trip.checkpoints || [])].sort((a, b) => a.sequenceOrder - b.sequenceOrder);
   const activeCheckpoints = checkpoints.filter((c) => c.status !== 'Cancelled');
   const horses = (trip.horses || []).map((h) => ({

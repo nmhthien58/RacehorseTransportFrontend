@@ -7,15 +7,11 @@ import {
   Flex,
   Input,
   Row,
-  Segmented,
   Select,
   Spin,
   Typography,
   message,
-  Modal,
-  Table,
-  Tag,
-  Divider,
+  Tabs,
 } from 'antd';
 import {
   PlusOutlined,
@@ -23,17 +19,12 @@ import {
   InboxOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
-  CarOutlined,
-  EnvironmentOutlined,
-  CalendarOutlined,
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import dayjs from 'dayjs';
-import { formatPickupWindow } from '@utils/bookingSchedule';
 import PageHeader from '@components/layout/PageHeader';
-import StatusTag from '@components/common/StatusTag';
 import BookingCard from '@features/customer/components/BookingCard';
+import { CUSTOMER_STAGES } from '@features/customer/constants/customerStages';
 import bookingService from '@services/bookingService';
 import paymentService from '@services/paymentService';
 import { useAuthStore } from '@features/auth/store/authStore';
@@ -42,7 +33,8 @@ import { ROUTES } from '@routes/routes';
 
 const { Title, Text } = Typography;
 // Các trạng thái tính là "đang xử lý" (đã duyệt, chờ thanh toán hoặc đang vận chuyển)
-const ACTIVE_STATUSES = ['AwaitingDeposit', 'Approved', 'Assigned', 'InTransit', 'AwaitingFinalPayment'];
+// Giai đoạn "đang xử lý" theo góc nhìn khách (R-07): đã duyệt, chưa xong, chưa bị hủy
+const ACTIVE_STAGES = CUSTOMER_STAGES.filter((st) => !['PendingReview', 'Completed', 'Closed'].includes(st));
 
 /**
  * Trang danh sách các yêu cầu vận chuyển của khách hàng (Customer)
@@ -59,14 +51,14 @@ export default function CustomerBookings() {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Bộ lọc
-  const [statusFilter, setStatusFilter] = useState('All');
+  // Bộ lọc: tab giai đoạn mở sẵn theo ?stage= (vd từ dashboard)
+  const [searchParams] = useSearchParams();
+  const [statusFilter, setStatusFilter] = useState(() => {
+    const stage = searchParams.get('stage');
+    return CUSTOMER_STAGES.includes(stage) ? stage : 'All';
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [modeFilter, setModeFilter] = useState('All');
-
-  // Modal xem chi tiết đơn
-  const [detailModalVisible, setDetailModalVisible] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState(null);
 
   // % hoàn cọc khi hủy, hiển thị trong hộp xác nhận hủy đơn đã đặt cọc
   const [cancelRefundPercent, setCancelRefundPercent] = useState(null);
@@ -127,59 +119,41 @@ export default function CustomerBookings() {
   };
 
   /**
-   * Mở modal xem chi tiết đơn đặt chuyến
+   * Mở trang chi tiết đơn (R-07: timeline, hành trình, hồ sơ, thanh toán của đơn đều ở đây).
    * @param {import('@types/database').Booking} record
+   * @param {string} [tab] - journey | documents | payment
    */
-  const handleOpenDetail = (record) => {
-    setSelectedBooking(record);
-    setDetailModalVisible(true);
-    // Danh sách chỉ có tóm tắt -> tải chi tiết (quoteLines, horses, ghi chú) từ GET /bookings/{id}
+  const openDetail = (record, tab) => {
     const id = record?.bookingId || record?.BookingID;
     if (!id) return;
-    bookingService
-      .getBookingById(id)
-      .then((res) => {
-        const detail = unwrapData(res);
-        setSelectedBooking((prev) => (prev && (prev.bookingId || prev.BookingID) === id ? { ...prev, ...detail } : prev));
-      })
-      .catch((err) => message.error(getErrorMessage(err, 'Không tải được chi tiết đơn')));
+    navigate(`${ROUTES.CUSTOMER_BOOKING_DETAIL.replace(':id', id)}${tab ? `?tab=${tab}` : ''}`);
   };
 
   /**
    * Mở tab hồ sơ của đúng yêu cầu vận chuyển.
    * @param {import('@types/database').Booking} record
    */
-  const handleOpenDocuments = (record) => {
-    const id = record?.bookingId || record?.BookingID;
-    if (!id) return;
-    navigate(`${ROUTES.CUSTOMER_BOOKING_DETAIL.replace(':id', id)}?tab=documents`);
-  };
+  const handleOpenDocuments = (record) => openDetail(record, 'documents');
 
   // Thống kê số lượng theo 3 chỉ số chính (Figma Frame 75:5337)
   const totalCount = Array.isArray(bookings) ? bookings.length : 0;
-  const pendingCount = Array.isArray(bookings)
-    ? bookings.filter((b) => (b.status || b.Status) === 'Submitted').length
-    : 0;
-  const activeCount = Array.isArray(bookings)
-    ? bookings.filter((b) => {
-        const st = b.status || b.Status;
-        return ACTIVE_STATUSES.includes(st);
-      }).length
-    : 0;
+  const countOf = (stage) => (Array.isArray(bookings) ? bookings.filter((b) => b.customerStage === stage).length : 0);
+  const pendingCount = countOf('PendingReview');
+  const activeCount = Array.isArray(bookings) ? bookings.filter((b) => ACTIVE_STAGES.includes(b.customerStage)).length : 0;
 
   // Lọc danh sách theo Tab, Search và Mode
   const filteredBookings = useMemo(() => {
     if (!Array.isArray(bookings)) return [];
     return bookings.filter((item) => {
       if (!item) return false;
-      const itemStatus = item.status || item.Status;
+      const itemStage = item.customerStage;
       const itemMode = item.transportMode || item.TransportMode;
 
-      // Lọc trạng thái
+      // Lọc theo giai đoạn (R-07)
       if (statusFilter !== 'All') {
         if (statusFilter === 'Active') {
-          if (!ACTIVE_STATUSES.includes(itemStatus)) return false;
-        } else if (itemStatus !== statusFilter) {
+          if (!ACTIVE_STAGES.includes(itemStage)) return false;
+        } else if (itemStage !== statusFilter) {
           return false;
         }
       }
@@ -203,18 +177,6 @@ export default function CustomerBookings() {
       return true;
     });
   }, [bookings, statusFilter, modeFilter, searchQuery]);
-
-  // Parse bảng kê chi phí dự kiến nếu có
-  const parsedQuote = useMemo(() => {
-    if (!selectedBooking) return [];
-    const rawLines = selectedBooking.quoteLines || selectedBooking.quoteBreakdown || selectedBooking.QuoteBreakdown;
-    if (!rawLines) return [];
-    try {
-      return typeof rawLines === 'string' ? JSON.parse(rawLines) : rawLines;
-    } catch {
-      return [];
-    }
-  }, [selectedBooking]);
 
   return (
     <div>
@@ -312,17 +274,17 @@ export default function CustomerBookings() {
           <div
             role="button"
             tabIndex={0}
-            onClick={() => setStatusFilter('Submitted')}
+            onClick={() => setStatusFilter('PendingReview')}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                setStatusFilter('Submitted');
+                setStatusFilter('PendingReview');
               }
             }}
             style={{
               borderRadius: 14,
-              border: statusFilter === 'Submitted' ? '1.5px solid #f59e0b' : '1.5px solid #e2e8f0',
-              backgroundColor: statusFilter === 'Submitted' ? '#fffbeb' : '#ffffff',
+              border: statusFilter === 'PendingReview' ? '1.5px solid #f59e0b' : '1.5px solid #e2e8f0',
+              backgroundColor: statusFilter === 'PendingReview' ? '#fffbeb' : '#ffffff',
               boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
               padding: '20px 24px',
               cursor: 'pointer',
@@ -336,7 +298,7 @@ export default function CustomerBookings() {
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.04)';
-              e.currentTarget.style.borderColor = statusFilter === 'Submitted' ? '#f59e0b' : '#e2e8f0';
+              e.currentTarget.style.borderColor = statusFilter === 'PendingReview' ? '#f59e0b' : '#e2e8f0';
             }}
           >
             <Flex justify="space-between" align="center">
@@ -440,24 +402,6 @@ export default function CustomerBookings() {
         styles={{ body: { padding: '16px 20px' } }}
       >
         <Flex justify="space-between" align="center" wrap="wrap" gap="middle">
-          {/* Segmented lọc theo trạng thái */}
-          <Segmented
-            value={statusFilter}
-            onChange={setStatusFilter}
-            size="large"
-            options={[
-              { label: t('bookings.tabs.all') || 'Tất cả', value: 'All' },
-              { label: t('bookings.tabs.submitted') || 'Chờ duyệt', value: 'Submitted' },
-              { label: t('bookings.tabs.active') || 'Đang xử lý', value: 'Active' },
-              { label: t('bookings.tabs.completed') || 'Hoàn tất', value: 'Completed' },
-            ]}
-            style={{
-              padding: 4,
-              borderRadius: 10,
-              backgroundColor: '#f1f5f9',
-            }}
-          />
-
           <Flex gap="small" wrap="wrap" align="center" style={{ flex: 1, justifyContent: 'flex-end' }}>
             {/* Bộ lọc phương thức vận chuyển */}
             <Select
@@ -484,6 +428,20 @@ export default function CustomerBookings() {
             />
           </Flex>
         </Flex>
+        {/* Tab theo giai đoạn của đơn (R-07), kiểu "đơn mua" của sàn thương mại điện tử */}
+        <Tabs
+          activeKey={statusFilter}
+          onChange={setStatusFilter}
+          style={{ marginTop: 8, marginBottom: -16 }}
+          items={[
+            { key: 'All', label: `${t('bookings.tabs.all')} (${totalCount})` },
+            ...(statusFilter === 'Active' ? [{ key: 'Active', label: `${t('bookings.tabs.active')} (${activeCount})` }] : []),
+            ...CUSTOMER_STAGES.map((stage) => ({
+              key: stage,
+              label: `${t(`customerOrders.stage.${stage}`)} (${countOf(stage)})`,
+            })),
+          ]}
+        />
       </Card>
 
       {/* KHỐI HIỂN THỊ DANH SÁCH CÁC THẺ YÊU CẦU VẬN CHUYỂN */}
@@ -545,151 +503,14 @@ export default function CustomerBookings() {
               booking={b}
               onCancel={handleCancelBooking}
               cancelRefundPercent={cancelRefundPercent}
-              onViewDetail={handleOpenDetail}
+              onViewDetail={(record) => openDetail(record)}
+              onOpenTab={openDetail}
               onManageDocuments={handleOpenDocuments}
             />
           ))}
         </div>
       )}
 
-      {/* MODAL XEM CHI TIẾT ĐƠN ĐẶT CHUYẾN */}
-      <Modal
-        open={detailModalVisible}
-        onCancel={() => setDetailModalVisible(false)}
-        footer={[
-          <Button key="close" onClick={() => setDetailModalVisible(false)}>
-            {t('common.close') || 'Đóng'}
-          </Button>,
-        ]}
-        title={
-          <Flex align="center" gap="small">
-            <CarOutlined style={{ color: '#f59e0b', fontSize: 20 }} />
-            <span>
-              {t('bookings.detailTitle') || 'Chi tiết đơn vận chuyển'} #{selectedBooking?.bookingCode || selectedBooking?.BookingCode}
-            </span>
-          </Flex>
-        }
-        width={680}
-        styles={{ body: { padding: '20px 24px' } }}
-      >
-        {selectedBooking && (
-          <div>
-            <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-              <StatusTag status={selectedBooking.status || selectedBooking.Status} />
-              <Text type="secondary" style={{ fontSize: 13 }}>
-                {t('bookings.createdAt')}: {dayjs(selectedBooking.createdAt || selectedBooking.CreatedAt).format('DD/MM/YYYY HH:mm')}
-              </Text>
-            </Flex>
-
-            {/* Lộ trình */}
-            <Card bordered style={{ backgroundColor: '#f8fafc', marginBottom: 16, borderRadius: 10 }}>
-              <div style={{ marginBottom: 10 }}>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  <EnvironmentOutlined style={{ color: '#d97706', marginRight: 4 }} />
-                  {t('bookings.pickupLocation')} ({selectedBooking.pickupCountryCode || selectedBooking.PickupCountryCode}):
-                </Text>
-                <div style={{ fontWeight: 600, color: '#0f172a', marginTop: 2 }}>
-                  {selectedBooking.pickupAddress || selectedBooking.PickupAddress}
-                </div>
-              </div>
-
-              <div>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  <EnvironmentOutlined style={{ color: '#10b981', marginRight: 4 }} />
-                  {t('bookings.dropoffLocation')} ({selectedBooking.dropoffCountryCode || selectedBooking.DropoffCountryCode}):
-                </Text>
-                <div style={{ fontWeight: 600, color: '#0f172a', marginTop: 2 }}>
-                  {selectedBooking.dropoffAddress || selectedBooking.DropoffAddress}
-                </div>
-              </div>
-            </Card>
-
-            {/* Thông số kỹ thuật */}
-            <Row gutter={[16, 12]} style={{ marginBottom: 16 }}>
-              <Col span={12}>
-                <Text type="secondary">{t('bookings.transportMode')}: </Text>
-                <Tag color={(selectedBooking.transportMode || selectedBooking.TransportMode) === 'Air' ? 'blue' : 'orange'}>
-                  {(selectedBooking.transportMode || selectedBooking.TransportMode) === 'Air'
-                    ? `✈ ${t('bookings.modes.air')}`
-                    : `🚛 ${t('bookings.modes.ground')}`}
-                </Tag>
-              </Col>
-              <Col span={12}>
-                <Text type="secondary">{t('bookings.fields.totalHorses')}: </Text>
-                <strong>🐴 {t('bookings.totalHorsesCount', { count: selectedBooking.totalHorses || selectedBooking.TotalHorses || 1 })}</strong>
-              </Col>
-              <Col span={12}>
-                <Text type="secondary">{t('bookings.fields.pickupWindow')}: </Text>
-                <strong>
-                  <CalendarOutlined style={{ marginRight: 4 }} />
-                  {formatPickupWindow(selectedBooking)}
-                </strong>
-              </Col>
-              <Col span={12}>
-                <Text type="secondary">{t('bookings.climateControl')}: </Text>
-                <strong>
-                  {(selectedBooking.requiresClimateControl ?? selectedBooking.RequiresClimateControl)
-                    ? t('bookings.climateControlYes')
-                    : t('bookings.climateControlNo')}
-                </strong>
-              </Col>
-              {(selectedBooking.specialInstructions || selectedBooking.SpecialInstructions) && (
-                <Col span={24}>
-                  <Text type="secondary">{t('bookings.specialNotes')}: </Text>
-                  <div style={{ fontStyle: 'italic', marginTop: 2 }}>
-                    &ldquo;{selectedBooking.specialInstructions || selectedBooking.SpecialInstructions}&rdquo;
-                  </div>
-                </Col>
-              )}
-            </Row>
-
-            {/* Bảng kê chi phí */}
-            {parsedQuote.length > 0 && (
-              <div style={{ marginTop: 16 }}>
-                <Divider style={{ margin: '12px 0' }} />
-                <Title level={5} style={{ margin: '0 0 10px', color: '#0f172a' }}>
-                  {t('bookings.quoteBreakdownTitle')}
-                </Title>
-                <Table
-                  dataSource={parsedQuote}
-                  rowKey={(r, idx) => r.code || r.name || `quote-item-${idx}`}
-                  pagination={false}
-                  size="small"
-                  columns={[
-                    { title: t('bookings.quoteItem'), dataIndex: 'name', key: 'name' },
-                    { title: t('bookings.quoteQty'), dataIndex: 'quantity', key: 'quantity', align: 'center', render: (q, r) => q ?? r.qty ?? 1 },
-                    {
-                      title: t('bookings.quoteUnitPrice'),
-                      dataIndex: 'unitPrice',
-                      key: 'unitPrice',
-                      align: 'right',
-                      render: (v) => `$${Number(v || 0).toLocaleString()}`,
-                    },
-                    {
-                      title: t('bookings.quoteAmount'),
-                      dataIndex: 'amount',
-                      key: 'amount',
-                      align: 'right',
-                      render: (v) => <strong>${Number(v || 0).toLocaleString()}</strong>,
-                    },
-                  ]}
-                />
-              </div>
-            )}
-
-            <Divider style={{ margin: '16px 0' }} />
-
-            <Flex justify="space-between" align="center">
-              <Text strong style={{ fontSize: 15 }}>
-                {t('bookings.totalEstimatedCost')}:
-              </Text>
-              <span style={{ fontSize: 24, fontWeight: 800, color: '#d97706' }}>
-                ${Number(selectedBooking.estimatedCost || selectedBooking.EstimatedCost || 0).toLocaleString()} USD
-              </span>
-            </Flex>
-          </div>
-        )}
-      </Modal>
     </div>
   );
 }

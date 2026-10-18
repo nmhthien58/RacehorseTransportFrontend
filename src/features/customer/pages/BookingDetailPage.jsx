@@ -8,6 +8,7 @@ import {
   Empty,
   Flex,
   Row,
+  Segmented,
   Spin,
   Table,
   Tabs,
@@ -15,21 +16,29 @@ import {
   Typography,
   message,
 } from 'antd';
-import { ArrowLeftOutlined, DollarOutlined, EnvironmentOutlined, FileProtectOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, CarOutlined, DollarOutlined, EnvironmentOutlined, FileProtectOutlined } from '@ant-design/icons';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedule';
 import { formatCountryRoute } from '@utils/bookingRoute';
 import PageHeader from '@components/layout/PageHeader';
 import StatusTag from '@components/common/StatusTag';
+import CustomerStageTag from '@components/common/CustomerStageTag';
 import BookingPaymentPanel from '@components/common/BookingPaymentPanel';
 import CustomerDossierPanel from '@features/customer/components/CustomerDossierPanel';
+import OrderTimeline from '@features/customer/components/OrderTimeline';
+import TripJourney from '@features/customer/components/TripJourney';
+import { useBookingJourney } from '@features/customer/hooks/useBookingJourney';
 import bookingService from '@services/bookingService';
 import { unwrapData, getErrorMessage } from '@utils/apiHelpers';
 import { ROUTES } from '@routes/routes';
 
 const { Text, Title } = Typography;
 const INACTIVE_BOOKING_STATUSES = ['Rejected', 'Cancelled', 'Expired'];
+// Backend chỉ có dữ liệu hành trình cho đơn đã cọc trở đi
+const JOURNEY_STATUSES = ['Approved', 'Assigned', 'AwaitingFinalPayment', 'Completed'];
+// Backend giữ kết quả theo dõi 30 giây, làm mới cùng nhịp
+const JOURNEY_POLL_MS = 30000;
 
 /**
  * Trang chi tiết yêu cầu vận chuyển, bao gồm theo dõi và bổ sung hồ sơ từng ngựa.
@@ -68,7 +77,15 @@ export default function CustomerBookingDetailPage() {
   const bookingCode = booking?.bookingCode || booking?.BookingCode || id;
   const horses = booking?.horses || booking?.Horses || [];
   const quoteLines = booking?.quoteLines || booking?.QuoteLines || [];
-  const activeTab = ['documents', 'payment'].includes(searchParams.get('tab')) ? searchParams.get('tab') : 'overview';
+  const activeTab = ['journey', 'documents', 'payment'].includes(searchParams.get('tab')) ? searchParams.get('tab') : 'overview';
+
+  // Hành trình (R-07): thay cho màn "Theo dõi chuyến" riêng; chỉ tự làm mới khi đang mở tab này
+  const journey = useBookingJourney(booking ? bookingId : null, {
+    enabled: JOURNEY_STATUSES.includes(status),
+    pollMs: activeTab === 'journey' ? JOURNEY_POLL_MS : 0,
+  });
+  const [selectedTripId, setSelectedTripId] = useState(null);
+  const shownTrip = journey.trips.find((tr) => tr.tripId === selectedTripId) || journey.trips[0];
 
   const horseColumns = useMemo(
     () => [
@@ -165,45 +182,54 @@ export default function CustomerBookingDetailPage() {
 
   const overviewContent = (
     <Row gutter={[20, 20]}>
-      <Col xs={24} xl={14}>
-        <Card title={t('bookings.detailPage.routeInfo')} style={{ height: '100%' }}>
-          <Descriptions column={{ xs: 1, sm: 2 }} size="small">
-            <Descriptions.Item label={t('bookings.fields.pickupLocation')} span={2}>
-              <EnvironmentOutlined style={{ color: '#d97706', marginRight: 6 }} />
-              {booking.pickupAddress || booking.PickupAddress}
-            </Descriptions.Item>
-            <Descriptions.Item label={t('bookings.fields.deliveryLocation')} span={2}>
-              <EnvironmentOutlined style={{ color: '#10b981', marginRight: 6 }} />
-              {booking.dropoffAddress || booking.DropoffAddress}
-            </Descriptions.Item>
-            <Descriptions.Item label={t('bookings.fields.route')} span={2}>
-              {formatCountryRoute(booking)}
-            </Descriptions.Item>
-            <Descriptions.Item label={t('bookings.fields.pickupWindow')}>
-              {formatPickupWindow(booking)}
-            </Descriptions.Item>
-            <Descriptions.Item label={t('bookings.fields.deliveryDeadline')}>
-              {formatDeliveryDeadline(booking)}
-            </Descriptions.Item>
-          </Descriptions>
+      <Col xs={24} xl={8}>
+        <Card title={t('customerOrders.timeline.title')} style={{ height: '100%' }}>
+          <OrderTimeline booking={booking} />
         </Card>
       </Col>
-      <Col xs={24} xl={10}>
-        <Card title={t('bookings.detailPage.bookingInfo')} style={{ height: '100%' }}>
-          <Descriptions column={1} size="small">
-            <Descriptions.Item label={t('bookings.detailPage.mode')}>
-              {t(`bookings.modes.${String(booking.transportMode || booking.TransportMode).toLowerCase()}`)}
-            </Descriptions.Item>
-            <Descriptions.Item label={t('bookings.detailPage.climate')}>
-              {(booking.requiresClimateControl ?? booking.RequiresClimateControl)
-                ? t('bookings.detailPage.yes')
-                : t('bookings.detailPage.no')}
-            </Descriptions.Item>
-            <Descriptions.Item label={t('bookings.detailPage.specialist')}>
-              {booking.assignedSpecialistName || booking.AssignedSpecialistName || t('bookings.detailPage.notAssigned')}
-            </Descriptions.Item>
-          </Descriptions>
-        </Card>
+      <Col xs={24} xl={16}>
+        <Row gutter={[20, 20]}>
+          <Col span={24}>
+            <Card title={t('bookings.detailPage.routeInfo')} style={{ height: '100%' }}>
+              <Descriptions column={{ xs: 1, sm: 2 }} size="small">
+                <Descriptions.Item label={t('bookings.fields.pickupLocation')} span={2}>
+                  <EnvironmentOutlined style={{ color: '#d97706', marginRight: 6 }} />
+                  {booking.pickupAddress || booking.PickupAddress}
+                </Descriptions.Item>
+                <Descriptions.Item label={t('bookings.fields.deliveryLocation')} span={2}>
+                  <EnvironmentOutlined style={{ color: '#10b981', marginRight: 6 }} />
+                  {booking.dropoffAddress || booking.DropoffAddress}
+                </Descriptions.Item>
+                <Descriptions.Item label={t('bookings.fields.route')} span={2}>
+                  {formatCountryRoute(booking)}
+                </Descriptions.Item>
+                <Descriptions.Item label={t('bookings.fields.pickupWindow')}>
+                  {formatPickupWindow(booking)}
+                </Descriptions.Item>
+                <Descriptions.Item label={t('bookings.fields.deliveryDeadline')}>
+                  {formatDeliveryDeadline(booking)}
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+          </Col>
+          <Col span={24}>
+            <Card title={t('bookings.detailPage.bookingInfo')} style={{ height: '100%' }}>
+              <Descriptions column={1} size="small">
+                <Descriptions.Item label={t('bookings.detailPage.mode')}>
+                  {t(`bookings.modes.${String(booking.transportMode || booking.TransportMode).toLowerCase()}`)}
+                </Descriptions.Item>
+                <Descriptions.Item label={t('bookings.detailPage.climate')}>
+                  {(booking.requiresClimateControl ?? booking.RequiresClimateControl)
+                    ? t('bookings.detailPage.yes')
+                    : t('bookings.detailPage.no')}
+                </Descriptions.Item>
+                <Descriptions.Item label={t('bookings.detailPage.specialist')}>
+                  {booking.assignedSpecialistName || booking.AssignedSpecialistName || t('bookings.detailPage.notAssigned')}
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+          </Col>
+        </Row>
       </Col>
       <Col span={24}>
         <Card title={t('bookings.detailPage.horses')}>
@@ -244,6 +270,33 @@ export default function CustomerBookingDetailPage() {
       )}
     </Row>
   );
+
+  const journeyContent =
+    journey.trips.length === 0 ? (
+      <Card>
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={
+            journey.loading
+              ? t('common.loading')
+              : journey.awaitingPlanning.length > 0
+                ? t('customerOrders.journey.awaitingPlanning', { horses: journey.awaitingPlanning.join(', ') })
+                : t('customerOrders.journey.noTrip')
+          }
+        />
+      </Card>
+    ) : (
+      <Flex vertical gap={12}>
+        {journey.trips.length > 1 && (
+          <Segmented
+            value={shownTrip?.tripId}
+            onChange={setSelectedTripId}
+            options={journey.trips.map((tr) => ({ value: tr.tripId, label: tr.tripCode }))}
+          />
+        )}
+        {shownTrip && <TripJourney trip={shownTrip} lastLoadedAt={journey.lastLoadedAt} onRefresh={journey.refetch} />}
+      </Flex>
+    );
 
   const isInactive = INACTIVE_BOOKING_STATUSES.includes(status);
   const documentsContent = (
@@ -303,7 +356,10 @@ export default function CustomerBookingDetailPage() {
               {booking.dropoffCountryCode || booking.DropoffCountryCode}
             </Text>
           </div>
-          <StatusTag status={status} />
+          <Flex gap={8} align="center">
+            <CustomerStageTag stage={booking.customerStage} />
+            <StatusTag status={status} />
+          </Flex>
         </Flex>
       </Card>
 
@@ -312,6 +368,15 @@ export default function CustomerBookingDetailPage() {
         onChange={handleTabChange}
         items={[
           { key: 'overview', label: t('bookings.detailPage.overview'), children: overviewContent },
+          {
+            key: 'journey',
+            label: (
+              <span>
+                <CarOutlined /> {t('customerOrders.journey.tab')}
+              </span>
+            ),
+            children: journeyContent,
+          },
           {
             key: 'documents',
             label: (

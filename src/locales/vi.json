@@ -100,7 +100,8 @@
     "incidentReview": "Duyệt xử lý sự cố",
     "tripClosure": "Đóng chuyến & KPI",
     "reports": "Báo cáo",
-    "paymentSettings": "Cấu hình thanh toán"
+    "paymentSettings": "Cấu hình thanh toán",
+    "transportOrders": "Đơn vận chuyển"
   },
   "status": {
     "submitted": "Đã gửi",
@@ -366,7 +367,7 @@
     }
   },
   "bookings": {
-    "title": "Yêu cầu vận chuyển",
+    "title": "Đơn vận chuyển",
     "subtitle": "Theo dõi tiến độ báo giá, phê duyệt và điều phối lộ trình vận chuyển ngựa của bạn",
     "addNew": "Tạo yêu cầu mới",
     "addNewTitle": "Tạo yêu cầu vận chuyển ngựa",
@@ -399,7 +400,7 @@
     "detailTitle": "Chi tiết đơn vận chuyển",
     "manageDocuments": "Bổ sung hồ sơ",
     "detailPage": {
-      "title": "Yêu cầu {{code}}",
+      "title": "Đơn {{code}}",
       "subtitle": "Theo dõi thông tin yêu cầu và tiến độ hồ sơ vận chuyển của từng ngựa",
       "overview": "Tổng quan",
       "documents": "Hồ sơ vận chuyển",
@@ -2203,5 +2204,68 @@
     "Delivered": "Đã giao",
     "Offloaded": "Rớt lại giữa đường",
     "Cancelled": "Đã hủy"
+  },
+  "customerOrders": {
+    "stage": {
+      "PendingReview": "Chờ duyệt",
+      "AwaitingDeposit": "Chờ đặt cọc",
+      "PreparingDossier": "Đang làm hồ sơ",
+      "AwaitingTrip": "Chờ xếp chuyến",
+      "Scheduled": "Đã xếp chuyến",
+      "AwaitingPayment": "Chờ thanh toán",
+      "InTransit": "Đang vận chuyển",
+      "AwaitingHandover": "Chờ ký nhận",
+      "Completed": "Hoàn thành",
+      "Closed": "Đã hủy / Từ chối"
+    },
+    "backToOrders": "Về danh sách đơn",
+    "backToOrder": "Về đơn {{code}}",
+    "actions": {
+      "pay": "Thanh toán",
+      "journey": "Hành trình"
+    },
+    "journey": {
+      "tab": "Hành trình",
+      "noTrip": "Đơn chưa được xếp lên chuyến nào. Hành trình sẽ hiện ở đây khi chuyến được duyệt.",
+      "awaitingPlanning": "Đang chờ xếp chuyến: {{horses}}"
+    },
+    "timeline": {
+      "title": "Tiến trình đơn",
+      "createdAt": "Gửi lúc {{time}}",
+      "reviewedAt": "Duyệt lúc {{time}}",
+      "paidAt": "Đã trả lúc {{time}}",
+      "dueAt": "Hạn trả {{time}}",
+      "dossierProgress": "{{cleared}}/{{total}} hồ sơ đã thông quan",
+      "departureAt": "Khởi hành dự kiến {{time}}",
+      "pickedUpAt": "Lên xe lúc {{time}}",
+      "deliveredAt": "Giao lúc {{time}}",
+      "closed": "Đơn đã đóng, không còn bước nào cần làm.",
+      "closedTitle": {
+        "Rejected": "Đơn bị từ chối",
+        "Cancelled": "Đơn đã hủy",
+        "Expired": "Đơn đã quá hạn"
+      },
+      "steps": {
+        "review": "Gửi yêu cầu & chờ duyệt",
+        "deposit": "Đặt cọc",
+        "dossier": "Hồ sơ kiểm dịch",
+        "planning": "Xếp chuyến",
+        "balance": "Thanh toán phần còn lại",
+        "ready": "Chờ khởi hành",
+        "transit": "Đang vận chuyển",
+        "handover": "Ký nhận bàn giao",
+        "done": "Hoàn thành"
+      },
+      "now": {
+        "PendingReview": "Quản lý đang xem xét yêu cầu",
+        "AwaitingDeposit": "Hãy đặt cọc để bắt đầu làm hồ sơ",
+        "PreparingDossier": "Bổ sung giấy tờ ở tab Hồ sơ",
+        "AwaitingTrip": "Hồ sơ đã xong, đang chờ xếp chuyến",
+        "Scheduled": "Đã đủ điều kiện, chờ ngày chạy",
+        "AwaitingPayment": "Hãy thanh toán ở tab Thanh toán",
+        "InTransit": "Xem vị trí và nhật ký ngựa ở tab Hành trình",
+        "AwaitingHandover": "Xe đã tới điểm giao, chờ ký nhận"
+      }
+    }
   }
 }

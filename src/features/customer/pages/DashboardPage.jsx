@@ -191,7 +191,7 @@ export default function CustomerDashboard() {
           {[
             {
               key: 'activeTrips',
-              route: ROUTES.CUSTOMER_TRIPS,
+              route: `${ROUTES.CUSTOMER_BOOKINGS}?stage=InTransit`,
               count: activeTripsCount,
               label: `${t('dashboard.metrics.activeTrips')} →`,
               icon: <AppstoreOutlined />,

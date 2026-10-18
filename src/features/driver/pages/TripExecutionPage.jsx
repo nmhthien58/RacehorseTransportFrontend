@@ -15,6 +15,7 @@ import {
   Popconfirm,
   Form,
   Input,
+  Switch,
 } from 'antd';
 import {
   EnvironmentOutlined,
@@ -88,6 +89,11 @@ export default function TripExecutionPage() {
   // Backend: chỉ người có tên trong đoàn xe của chuyến (Driver hoặc Escort) và Admin được cập nhật hành trình
   const isCrewMember = (mission?.crew || []).some((c) => Number(c.userId) === Number(user?.userId));
   const canUpdateRoute = isCrewMember || userRole === 'Admin';
+  // R-06: escort xem riêng các ngựa mình phụ trách (mặc định bật nếu có ngựa được giao)
+  const isMyHorse = (h) => Number(h.escortUserId) === Number(user?.userId);
+  const hasMyHorses = (mission?.horses || []).some(isMyHorse);
+  const [onlyMine, setOnlyMine] = useState(null);
+  const showOnlyMine = onlyMine ?? hasMyHorses;
 
   // Mở modal xác nhận thông quan cửa khẩu
   const handleOpenClearModal = (cp) => {
@@ -570,10 +576,19 @@ export default function TripExecutionPage() {
       {/* Ngựa trên chuyến và trạng thái từng con (R-05) */}
       <Card
         title={t('driver.execution.horsesTitle')}
+        extra={
+          hasMyHorses && (
+            <Space size={6}>
+              <Text style={{ fontSize: 12 }}>{t('driver.escortAssign.onlyMine')}</Text>
+              <Switch size="small" checked={showOnlyMine} onChange={setOnlyMine} />
+            </Space>
+          )
+        }
         style={{ borderRadius: 12, marginBottom: 24, border: '1px solid #E5E7EB' }}
         bodyStyle={{ padding: '8px 24px' }}
       >
         {(mission?.horses || [])
+          .filter((h) => !showOnlyMine || isMyHorse(h))
           .slice()
           .sort((a, b) => a.stallSlotNumber - b.stallSlotNumber)
           .map((h, idx) => (
@@ -587,7 +602,13 @@ export default function TripExecutionPage() {
                 <Text strong>{h.horseName}</Text>
                 <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
                   {h.bookingCode} · {t('customerTrips.stall', { number: h.stallSlotNumber })}
+                  {h.escortName ? ` · ${t('driver.escortAssign.escort', { name: h.escortName })}` : ''}
                 </Text>
+                {isMyHorse(h) && (
+                  <Tag color="gold" style={{ marginLeft: 8 }}>
+                    {t('driver.escortAssign.mine')}
+                  </Tag>
+                )}
                 {h.offloadReason && <div style={{ fontSize: 12, color: '#6B7280' }}>{h.offloadReason}</div>}
               </Col>
               <Col xs={24} md={10} style={{ textAlign: 'right' }}>

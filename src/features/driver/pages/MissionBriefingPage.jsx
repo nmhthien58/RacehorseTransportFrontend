@@ -410,7 +410,8 @@ export default function MissionBriefingPage() {
                             <span>
                               <Text strong>{h.horseName}</Text>
                               <span style={{ color: '#6B7280', marginLeft: 6 }}>
-                                (Chip: {h.microchipNumber} • Chuồng #{h.stallSlotNumber || 1})
+                                (Chip: {h.microchipNumber} • Chuồng #{h.stallSlotNumber || 1}
+                                {h.escortName ? ` • ${t('driver.escortAssign.escort', { name: h.escortName })}` : ''})
                               </span>
                             </span>
                             <Tag color="cyan" style={{ margin: 0, fontSize: 10 }}>{h.healthStatus || 'Tốt'}</Tag>

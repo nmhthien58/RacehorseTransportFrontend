@@ -1404,6 +1404,12 @@
       "viewEPod": "Xem Biên bản e-POD",
       "submitBtn": "Gửi hồ sơ lên Quản lý vận hành",
       "resubmitBtn": "Cập nhật lại hồ sơ gửi QLVH"
+    },
+    "escortAssign": {
+      "onlyMyHorses": "Chỉ hiện ngựa bạn phụ trách. Trưởng nhóm áp tải ghi được cho mọi con.",
+      "onlyMine": "Chỉ ngựa tôi phụ trách",
+      "escort": "Áp tải: {{name}}",
+      "mine": "Tôi phụ trách"
     }
   },
   "customerDossier": {
@@ -1475,7 +1481,8 @@
       "vehicle": "Thời gian & phương tiện",
       "crew": "Đoàn xe",
       "route": "Lộ trình",
-      "bookings": "Các đơn trên chuyến"
+      "bookings": "Các đơn trên chuyến",
+      "stallMap": "Sơ đồ chuồng & áp tải phụ trách"
     },
     "fields": {
       "status": "Trạng thái",
@@ -1512,7 +1519,8 @@
       "horseStatus": "Trạng thái",
       "deliveredCount": "Đã giao {{done}}/{{total}}",
       "pickupAt": "Giờ đón",
-      "routeKm": "Quãng đường"
+      "routeKm": "Quãng đường",
+      "escort": "Áp tải phụ trách"
     },
     "crewRole": {
       "Driver": "Lái xe",
@@ -1592,6 +1600,16 @@
       "Detour": "{{bookingCode}} phải đi {{routeKm}} km thay vì {{directKm}} km nếu đi thẳng (×{{ratio}}, ngưỡng ×{{limit}}).",
       "DossierNotCleared": "Hồ sơ của {{horseName}} ({{bookingCode}}) chưa thông quan; xe chỉ xuất phát khi đã Cleared.",
       "OvernightRest": "Chặng {{from}} → {{to}} ({{km}} km) cần {{count}} lần nghỉ qua đêm; nên thêm mốc Trạm nghỉ."
+    },
+    "stallMap": {
+      "load": "{{count}}/{{max}} ngựa",
+      "noEscort": "Chưa có người áp tải trong đoàn xe",
+      "autoAssign": "Tự phân công",
+      "empty": "Chọn ngựa và xe để hiện sơ đồ chuồng",
+      "unassigned": "Chưa phân áp tải",
+      "autoPlaceholder": "Tự phân khi lưu",
+      "emptySlot": "Ô trống",
+      "hint": "Bấm một ô có ngựa rồi bấm ô khác để đổi chỗ. Mỗi người áp tải phụ trách tối đa 3 con; ô để trống áp tải sẽ được tự phân khi lưu (ô 1-3 cho người đầu tiên, trưởng nhóm trước)."
     }
   },
   "routeApproval": {

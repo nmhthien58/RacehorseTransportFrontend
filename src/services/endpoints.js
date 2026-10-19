@@ -185,7 +185,11 @@ export const ENDPOINTS = {
   },
   NOTIFICATIONS: {
     LIST: '/notifications',
+    UNREAD_COUNT: '/notifications/unread-count',
     MARK_READ: (id) => `/notifications/${id}/read`,
+    MARK_ALL_READ: '/notifications/read-all',
+    // SignalR hub nằm ngoài /api: https://<backend>/hubs/notifications
+    HUB: '/hubs/notifications',
   },
 };
 

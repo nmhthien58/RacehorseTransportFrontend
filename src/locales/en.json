@@ -2276,5 +2276,12 @@
         "AwaitingHandover": "The vehicle has arrived; waiting for sign-off"
       }
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications yet",
+    "ariaLabel": "Notifications",
+    "newToast": "New notification"
   }
 }

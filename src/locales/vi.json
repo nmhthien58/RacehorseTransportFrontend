@@ -2275,5 +2275,12 @@
         "AwaitingHandover": "Xe đã tới điểm giao, chờ ký nhận"
       }
     }
+  },
+  "notifications": {
+    "title": "Thông báo",
+    "markAllRead": "Đọc tất cả",
+    "empty": "Chưa có thông báo nào",
+    "ariaLabel": "Thông báo",
+    "newToast": "Thông báo mới"
   }
 }

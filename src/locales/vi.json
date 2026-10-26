@@ -2322,5 +2322,109 @@
     "empty": "Chưa có thông báo nào",
     "ariaLabel": "Thông báo",
     "newToast": "Thông báo mới"
+  },
+  "policy": {
+    "agreement": {
+      "prefix": "Tôi đã đọc và đồng ý với",
+      "policyLinkText": "Chính sách dịch vụ",
+      "versionLabel": "phiên bản",
+      "checkboxAria": "Đồng ý với chính sách dịch vụ"
+    },
+    "header": {
+      "tag": "CHÍNH THỨC",
+      "version": "Phiên bản",
+      "effectiveDate": "Ngày ban hành",
+      "title": "Chính Sách Dịch Vụ Vận Chuyển Ngựa",
+      "subtitle": "Quy định chi tiết về phạm vi trách nhiệm, quy trình đặt chuyến, cước phí, bồi thường và quyền lợi của khách hàng khi sử dụng dịch vụ của International Equine Transport."
+    },
+    "nav": {
+      "contentsTitle": "MỤC LỤC CHÍNH SÁCH"
+    },
+    "sections": {
+      "sec1": "Phạm vi áp dụng",
+      "sec2": "Quy trình đặt chuyến & báo giá",
+      "sec3": "Thanh toán",
+      "sec4": "Hủy đơn & hoàn tiền",
+      "sec5": "Điều kiện ngựa được vận chuyển",
+      "sec6": "Giấy tờ & thủ tục",
+      "sec7": "Cam kết thời gian & bồi thường giao trễ",
+      "sec8": "Bảo hiểm & giới hạn trách nhiệm",
+      "sec9": "Sự cố trong hành trình",
+      "sec10": "Giao nhận",
+      "sec11": "Khiếu nại",
+      "sec12": "Hợp đồng vận chuyển",
+      "sec13": "Thay đổi chính sách"
+    },
+    "table": {
+      "item": "Khoản",
+      "amount": "Số tiền",
+      "deadline": "Thời hạn",
+      "cancelTime": "Thời điểm Khách hủy",
+      "refund": "Hoàn tiền",
+      "criteria": "Tiêu chí",
+      "optDefault": "Không mua bảo hiểm (mặc định)",
+      "optFull": "Bảo hiểm toàn giá trị (tùy chọn)",
+      "incidentCause": "Nguyên nhân",
+      "incidentExample": "Ví dụ",
+      "unusedFare": "Tiền cước phần chưa đi",
+      "extraCosts": "Chi phí phát sinh (chờ, quay đầu, chuồng, thú y)",
+      "delayCompensation": "Bồi thường trễ"
+    },
+    "payment": {
+      "deposit": "Tiền cọc",
+      "quoteBase": "báo giá chốt",
+      "quoteAcceptHint": "Khi chấp nhận báo giá, trong",
+      "balance": "Phần còn lại",
+      "balanceCalc": "Báo giá chốt − tiền cọc",
+      "balanceDueHint": "Trước ngày xuất phát",
+      "extra": "Chi phí phát sinh",
+      "extraDesc": "Theo mục 9, 10 (nếu có)",
+      "extraDueHint": "Trong",
+      "extraAfterTrip": "ngày kể từ khi kết thúc chuyến"
+    },
+    "cancel": {
+      "beforeDeposit": "Trước khi đặt cọc",
+      "noRefundNeeded": "Không có khoản nào phải hoàn",
+      "afterDepositBeforeDeparture": "Sau khi cọc, trước khi xuất phát",
+      "refundDepositPrefix": "Hoàn",
+      "refundDepositSuffix": "tiền cọc + 100% phần còn lại đã trả",
+      "afterDeparture": "Sau khi xuất phát",
+      "cannotCancelSelf": "Khách không tự hủy được. Mọi thay đổi xử lý theo mục 9"
+    },
+    "insurance": {
+      "premium": "Phí bảo hiểm",
+      "free": "Không",
+      "agreedValue": "giá trị thỏa thuận",
+      "whenCovered": "Khi nào được bồi thường",
+      "companyFaultOnly": "Chỉ khi do lỗi công ty",
+      "allCausesCovered": "Mọi nguyên nhân trong phạm vi, kể cả bất khả kháng",
+      "lossEuthanasia": "Ngựa chết / an tử / mất",
+      "capUpTo": "Tối đa",
+      "injuredHorse": "Ngựa bị thương",
+      "actualVetCost": "Chi phí thú y thực tế, tối đa"
+    },
+    "incident": {
+      "companyFault": "Lỗi công ty",
+      "companyFaultEx": "Xe hỏng do bảo dưỡng, thiếu giấy do chuyên viên, đi sai tuyến",
+      "refund100": "Hoàn 100%",
+      "companyBears": "Công ty chịu",
+      "delayYes": "Có (mục 7)",
+      "customerFault": "Lỗi Khách",
+      "customerFaultEx": "Giấy sai / giả, khai sai tình trạng ngựa, người nhận vắng mặt / từ chối",
+      "noRefund": "Không hoàn",
+      "customerBears": "Khách chịu",
+      "delayNo": "Không",
+      "forceMajeure": "Bất khả kháng",
+      "forceMajeureEx": "Đóng biên giới, đổi chính sách nhập khẩu, thiên tai, dịch bệnh, tai nạn bên thứ 3",
+      "proRataRefund": "Hoàn theo tỉ lệ quãng đường chưa đi, trừ phí thủ tục không lấy lại được",
+      "forceMajeureExtra": "Công ty chịu chi phí xe & nhân sự; Khách chịu chuồng tạm & thú y"
+    },
+    "units": {
+      "days": "ngày",
+      "hours": "giờ",
+      "hour": "giờ",
+      "months": "tháng tuổi",
+      "horse": "con"
+    }
   }
 }

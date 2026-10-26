@@ -125,6 +125,19 @@ export default function LandingHeader({ activeKey = 'home' }) {
       ),
       onClick: () => navigate(ROUTES.BECOME_HAULER),
     },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'policy',
+      label: (
+        <Flex align="center" justify="space-between" style={{ minWidth: 170, padding: '4px 0' }}>
+          <span style={{ fontWeight: 600 }}>{t('landing.nav.policy', 'Chính sách dịch vụ')}</span>
+          <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
+        </Flex>
+      ),
+      onClick: () => navigate(ROUTES.POLICY),
+    },
   ];
 
   const currentRole = user?.role || user?.Role || 'Customer';

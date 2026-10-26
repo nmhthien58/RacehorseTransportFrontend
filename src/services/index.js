@@ -12,3 +12,4 @@ export { default as handoverService } from './handoverService';
 export { default as documentTypeService } from './documentTypeService';
 export { default as reportService } from './reportService';
 export { default as paymentService } from './paymentService';
+export { default as policyService, DEFAULT_POLICY } from './policyService';

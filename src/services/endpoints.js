@@ -191,6 +191,11 @@ export const ENDPOINTS = {
     // SignalR hub nằm ngoài /api: https://<backend>/hubs/notifications
     HUB: '/hubs/notifications',
   },
+
+  // 14. Chính sách dịch vụ (Policy - FE-15 / BE-17)
+  POLICY: {
+    GET: '/policy',
+  },
 };
 
 export default ENDPOINTS;

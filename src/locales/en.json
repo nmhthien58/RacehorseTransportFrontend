@@ -2323,5 +2323,109 @@
     "empty": "No notifications yet",
     "ariaLabel": "Notifications",
     "newToast": "New notification"
+  },
+  "policy": {
+    "agreement": {
+      "prefix": "I have read and agreed to the",
+      "policyLinkText": "Service Policy",
+      "versionLabel": "version",
+      "checkboxAria": "Agree to the service policy"
+    },
+    "header": {
+      "tag": "OFFICIAL",
+      "version": "Version",
+      "effectiveDate": "Effective Date",
+      "title": "Equine Transport Service Policy",
+      "subtitle": "Detailed guidelines covering scope of liability, booking workflow, pricing, delay compensation, and customer welfare rights across International Equine Transport services."
+    },
+    "nav": {
+      "contentsTitle": "TABLE OF CONTENTS"
+    },
+    "sections": {
+      "sec1": "Scope of Application",
+      "sec2": "Booking Workflow & Quoting",
+      "sec3": "Payment Terms",
+      "sec4": "Cancellation & Refunds",
+      "sec5": "Equine Eligibility Conditions",
+      "sec6": "Documentation & Clearance",
+      "sec7": "Schedule Commitment & Delay Compensation",
+      "sec8": "Insurance & Liability Limits",
+      "sec9": "In-Transit Incidents",
+      "sec10": "Delivery & Handover",
+      "sec11": "Complaints & Claims",
+      "sec12": "Transport Contract",
+      "sec13": "Policy Amendments"
+    },
+    "table": {
+      "item": "Payment Item",
+      "amount": "Amount",
+      "deadline": "Due Time",
+      "cancelTime": "Cancellation Timing",
+      "refund": "Refund Rule",
+      "criteria": "Coverage Aspect",
+      "optDefault": "No Insurance (Standard)",
+      "optFull": "Full Value Insurance (Optional)",
+      "incidentCause": "Root Cause",
+      "incidentExample": "Examples",
+      "unusedFare": "Unused Transport Fare",
+      "extraCosts": "Extra Expenses (Stabling, Vet, Rerouting)",
+      "delayCompensation": "Delay Penalty"
+    },
+    "payment": {
+      "deposit": "Security Deposit",
+      "quoteBase": "final quote",
+      "quoteAcceptHint": "Upon accepting quote, within",
+      "balance": "Remaining Balance",
+      "balanceCalc": "Final quote − Deposit",
+      "balanceDueHint": "Prior to departure",
+      "extra": "Extra Expenses",
+      "extraDesc": "As per Sections 9 & 10 (if any)",
+      "extraDueHint": "Within",
+      "extraAfterTrip": "days after trip completion"
+    },
+    "cancel": {
+      "beforeDeposit": "Prior to paying deposit",
+      "noRefundNeeded": "No payment made; zero charge",
+      "afterDepositBeforeDeparture": "After deposit, before departure",
+      "refundDepositPrefix": "Refund",
+      "refundDepositSuffix": "deposit + 100% of remaining balance paid",
+      "afterDeparture": "After vehicle departure",
+      "cannotCancelSelf": "Self-cancellation not permitted. Handled via Section 9"
+    },
+    "insurance": {
+      "premium": "Insurance Premium",
+      "free": "None",
+      "agreedValue": "agreed insured value",
+      "whenCovered": "Coverage Trigger",
+      "companyFaultOnly": "Company fault only",
+      "allCausesCovered": "All eligible causes, including Force Majeure",
+      "lossEuthanasia": "Horse death / humane euthanasia / loss",
+      "capUpTo": "Up to",
+      "injuredHorse": "Injured horse veterinary treatment",
+      "actualVetCost": "Actual vet costs, up to"
+    },
+    "incident": {
+      "companyFault": "Company Fault",
+      "companyFaultEx": "Mechanical breakdown, agent doc errors, incorrect routing",
+      "refund100": "100% Refund",
+      "companyBears": "Borne by Company",
+      "delayYes": "Eligible (Sec 7)",
+      "customerFault": "Customer Fault",
+      "customerFaultEx": "Fraudulent/missing docs, inaccurate horse status, recipient missing",
+      "noRefund": "Non-refundable",
+      "customerBears": "Borne by Customer",
+      "delayNo": "Ineligible",
+      "forceMajeure": "Force Majeure",
+      "forceMajeureEx": "Border closure, quarantine restrictions, natural disaster, 3rd party accident",
+      "proRataRefund": "Pro-rata refund for remaining distance less non-refundable filing fees",
+      "forceMajeureExtra": "Company covers vehicle & crew; Customer covers emergency stabling & vet"
+    },
+    "units": {
+      "days": "days",
+      "hours": "hours",
+      "hour": "hour",
+      "months": "months of age",
+      "horse": "horse"
+    }
   }
 }

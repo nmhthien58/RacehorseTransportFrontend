@@ -75,6 +75,7 @@ import HowItWorksPage from '@features/landing/pages/HowItWorksPage';
 import BecomeHaulerPage from '@features/landing/pages/BecomeHaulerPage';
 import PublicPricingPage from '@features/landing/pages/PublicPricingPage';
 import CustomerPricingPage from '@features/customer/pages/PricingPage';
+import PolicyPage from '@features/landing/pages/PolicyPage';
 
 export default function AppRoutes() {
   return (
@@ -85,6 +86,8 @@ export default function AppRoutes() {
       <Route path={ROUTES.PRICING} element={<PublicPricingPage />} />
       <Route path={ROUTES.HOW_IT_WORKS} element={<HowItWorksPage />} />
       <Route path={ROUTES.BECOME_HAULER} element={<BecomeHaulerPage />} />
+      <Route path={ROUTES.POLICY} element={<PolicyPage />} />
+      <Route path={ROUTES.POLICY_EN} element={<PolicyPage />} />
 
       {/* Auth layout chứa carousel ảnh */}
       <Route element={<AuthLayout />}>

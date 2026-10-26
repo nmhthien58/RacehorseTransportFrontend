@@ -368,10 +368,20 @@ export default function BookingWizard({
 
   const earliestPickup = schedule?.earliestPickupDate ? dayjs(schedule.earliestPickupDate) : null;
   const maxTransitHours = Number(schedule?.transit?.maxHours || 0);
-  // Hạn giao sớm nhất = đầu khoảng đón + thời gian vận chuyển chậm nhất
-  const earliestDeadline = pickupWindowStart
-    ? dayjs(pickupWindowStart).add(maxTransitHours, 'hour')
+  // Hạn giao sớm nhất = hết ngày cuối của khoảng đón (đón muộn nhất) + thời gian vận chuyển chậm nhất (khớp backend)
+  const latestPickup = pickupWindowEnd || pickupWindowStart;
+  const earliestDeadline = latestPickup
+    ? dayjs(latestPickup).add(1, 'day').startOf('day').add(maxTransitHours, 'hour')
     : null;
+
+  // Đổi khoảng đón làm hạn giao đang chọn không còn đủ thời gian: tự lùi hạn giao về ngày sớm nhất hợp lệ
+  useEffect(() => {
+    if (!earliestDeadline) return;
+    const current = getValues('DeliveryDeadline');
+    if (current && dayjs(current).isBefore(earliestDeadline)) {
+      setValue('DeliveryDeadline', toLocalDateTimeString(earliestDeadline.endOf('day')));
+    }
+  }, [earliestDeadline?.valueOf(), getValues, setValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Có lịch rồi mà khách chưa chọn ngày: dùng ngày khách chọn nhanh ở trang chủ nếu hợp lệ,
   // nếu không thì gợi ý khoảng đón ngay sau mốc Express (không bị phụ phí gấp)
@@ -399,7 +409,7 @@ export default function BookingWizard({
     if (earliestPickup && dayjs(start).isBefore(earliestPickup, 'day')) {
       return t('bookings.schedule.tooEarly', { date: earliestPickup.format('DD/MM/YYYY') });
     }
-    const minDeadline = dayjs(start).add(maxTransitHours, 'hour');
+    const minDeadline = dayjs(end).add(1, 'day').startOf('day').add(maxTransitHours, 'hour');
     if (dayjs(deadline).isBefore(minDeadline)) {
       return t('bookings.schedule.deadlineTooEarly', { date: minDeadline.format('DD/MM/YYYY HH:mm') });
     }

@@ -4,6 +4,87 @@
 
 ---
 
+## 0. QUY TRÌNH LÀM VIỆC & GIT (đọc đầu tiên)
+
+Phần này áp dụng cho **mọi người trong nhóm (Thiên, Vũ, Thắng) và mọi AI agent**. Các mục 1–7 bên dưới là quy tắc code, vẫn bắt buộc.
+
+### 0.1 Dự án trong 30 giây
+- Frontend của hệ thống vận chuyển ngựa đua quốc tế (SWP391, Group 5). Vai trò: Customer, LogisticsManager, TransportSpecialist, FleetCoordinator, DriverEscort, Admin.
+- Backend: repo `RacehorseTransportBackend` (.NET 8), bản đang chạy https://racehorsetransportbackend-production.up.railway.app/swagger. Tài liệu API: `docs/API.md` của repo backend (bản Word `API_Huong_dan_Frontend.docx` gửi qua nhóm).
+- Tài khoản test (mật khẩu `Racehorse@123`): `customer@`, `manager@`, `specialist@`, `coordinator@`, `driver@`, `admin@racehorsetransport.com`.
+
+### 0.2 Tài liệu phải đọc trước khi nhận task
+| File | Để làm gì |
+|---|---|
+| `doc/TASKS_R09_R16.md` | **Danh sách task đợt hiện tại**: ai làm gì, thứ tự, mô tả chi tiết, tiêu chí xong |
+| `doc/PLAN_NGHIEP_VU_R09.md` | Lý do và quyết định nghiệp vụ |
+| `doc/CHINH_SACH_DICH_VU.md` | Chính sách gửi khách. Chữ hiển thị và con số phải khớp file này |
+| `docs/API.md` (repo backend) | Endpoint, body, response, lỗi |
+
+`doc/PLAN_NGHIEP_VU_R09.md` và `doc/CHINH_SACH_DICH_VU.md` là bản chép từ repo backend. **Không sửa ở đây**; cần đổi thì báo Thiên sửa bản gốc.
+
+### 0.3 Chuẩn bị máy (một lần)
+```bash
+git clone https://github.com/nmhthien58/RacehorseTransportFrontend.git
+cd RacehorseTransportFrontend
+npm install
+```
+Tạo file `.env` (đã nằm trong `.gitignore`, không commit):
+```
+VITE_USE_MOCK=false
+VITE_API_BASE_URL=https://racehorsetransportbackend-production.up.railway.app
+VITE_GOOGLE_CLIENT_ID=<xin Thiên>
+```
+Chạy với backend ở máy thì đổi `VITE_API_BASE_URL=http://localhost:5080`. Chạy: `npm run dev` → http://localhost:3000.
+
+### 0.4 Quy trình làm MỘT task
+1. **Nhận task:** mở `doc/TASKS_R09_R16.md`, tìm mã của mình (ví dụ `FE-13`), xem cột **Phụ thuộc**. Endpoint backend chưa có thì vẫn làm giao diện trước với dữ liệu giả **trong service** (ghi `// TODO(BE-xx)`), không chờ. Đổi Trạng thái trong `doc/SWP391_Frontend_Tasks_R09_R16.xlsx` thành `Đang làm`.
+2. **Tạo nhánh từ `main` mới nhất:**
+   ```bash
+   git checkout main
+   git pull origin main
+   git checkout -b feature/fe-13-recipient
+   ```
+   Tên nhánh: `feature/<mã-task-viết-thường>-<mô-tả-ngắn-tiếng-anh>`; sửa lỗi: `fix/<mô-tả>`.
+3. **Code:** đúng phạm vi task, theo mục 1–7. Trước khi sửa mỗi file ghi một dòng "Đang sửa X vì…" (mục 5).
+4. **Tự kiểm tra:**
+   ```bash
+   npm run lint      # phải 0 errors 0 warnings
+   npm run build     # phải build được
+   npm run dev       # đi hết luồng của task trên trình duyệt, F12 Console không có lỗi mới
+   ```
+   Thử ở bề rộng điện thoại (375px), nhất là màn tài xế. Thử cả tiếng Việt và tiếng Anh.
+5. **Commit** (Conventional Commits, tiếng Anh, scope theo feature):
+   ```
+   feat(booking): pick pickup and drop-off on the map (FE-02)
+   fix(incidents): guard route preview when no incident is selected
+   ```
+   Không thêm dòng `Co-Authored-By` hay chữ ký AI. Kiểm tra `git status` không có `.env`, `dist/`, `node_modules/`.
+6. **Push và mở Pull Request vào `main`:**
+   ```bash
+   git push -u origin feature/fe-13-recipient
+   gh pr create --base main --title "feat(recipient): recipient form and confirmation (FE-13)" --body-file pr.md
+   ```
+   (Không có `gh` thì mở PR trên GitHub.) Mô tả PR gồm: mã task; đã làm gì; kết quả `npm run lint` (dán thật); 2–3 bước tự kiểm tra (URL nào, tài khoản nào, bấm gì, thấy gì); ảnh chụp màn hình; bảng **File | Thay đổi | Tại sao | Ảnh hưởng nếu không làm** (mục 5).
+7. **Review và merge:** Thiên review. Sửa bằng commit mới trên cùng nhánh rồi `git push`. Nhánh cũ so với `main`: `git fetch origin && git merge origin/main`, giải quyết conflict, lint + build lại, push. Merge kiểu **Squash and merge**. Xong thì đánh dấu `[x]` trong `doc/TASKS_R09_R16.md` và đổi Trạng thái Excel thành `Xong`.
+
+### 0.5 Điều cấm
+- **Không push thẳng lên `main`**, không `git push --force` lên `main` (chỉ Thiên khi cần sửa gấp).
+- Không commit `.env`, khóa, token.
+- Không thêm / nâng cấp dependency ngoài những gì task ghi rõ (đợt này chỉ được thêm `leaflet`, `react-leaflet` ở FE-01).
+- Không sửa `public/mockServiceWorker.js`.
+- Hai người sửa chung `src/locales/vi.json`, `en.json`, `src/services/endpoints.js`, `src/routes/*` rất dễ conflict: **chỉ thêm key / dòng mới vào cuối nhóm của mình**, không sắp xếp lại, không định dạng lại cả file. File locale dùng xuống dòng CRLF, giữ nguyên.
+
+### 0.6 Hướng dẫn riêng cho AI agent
+1. Đọc mục task trong `doc/TASKS_R09_R16.md`, mục R-xx trong `doc/PLAN_NGHIEP_VU_R09.md`, các file được nhắc tên, và một màn tương tự đã có trước khi viết.
+2. Bám đúng phạm vi. Không refactor "tiện thể", không đổi tên / định dạng file không liên quan.
+3. Không chắc nghiệp vụ hoặc endpoint backend chưa rõ → dừng và hỏi, trích đoạn chính sách / API liên quan.
+4. Trước khi báo xong: chạy `npm run lint` và `npm run build`, **dán kết quả thật**. Không khẳng định đã chạy khi chưa chạy.
+5. Không đọc / in nội dung `.env`. Không tự push lên `main`, không tự merge PR; được tạo nhánh, commit, push nhánh, mở PR nếu người giao việc yêu cầu.
+6. Kết thúc bằng bảng ở mục 5 và 2–3 bước để người dùng tự kiểm tra.
+
+---
+
 ## 1. NGỮ CẢNH DỰ ÁN
 
 - **Frontend:** Vite 8 + React 19 + Ant Design 6 + Zustand 5 + React Router 7.

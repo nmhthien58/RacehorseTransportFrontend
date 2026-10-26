@@ -47,8 +47,9 @@ Cập nhật: 26/10/2026 · Người làm: **Thiên**, **Vũ**, **Thắng** · F
 | FE-14 | R-16 | Không giao được: tài xế ghi nhận, khách chọn cách xử lý, phí chờ | Thiên | Cao | BE-16, FE-13 |
 | FE-15 | Chung | Trang Chính sách + hook `usePolicy()` + ô đồng ý dùng chung | Thắng | TB | BE-17 |
 | FE-16 | Chung | Admin / Manager: màn cấu hình các khóa mới | Thắng | Thấp | BE-17 |
+| FE-17 | R-17 | Hợp đồng vận chuyển: xem trước, chấp nhận, tải PDF, lịch sử phiên bản, chấp nhận bản mới | Thiên | TB | FE-05, BE-20 |
 
-Thứ tự gợi ý: **Thắng** làm FE-15 → FE-16 → FE-08 → FE-07 → FE-09. **Vũ** làm FE-13 → FE-06 → FE-04 → FE-12 → FE-11. **Thiên** làm FE-01 → FE-02 → FE-03 → FE-05 → FE-10 → FE-14.
+Thứ tự gợi ý: **Thắng** làm FE-15 → FE-16 → FE-08 → FE-07 → FE-09. **Vũ** làm FE-13 → FE-06 → FE-04 → FE-12 → FE-11. **Thiên** làm FE-01 → FE-02 → FE-03 → FE-05 → FE-10 → FE-14. FE-17 làm cùng FE-05.
 
 ---
 
@@ -56,7 +57,7 @@ Thứ tự gợi ý: **Thắng** làm FE-15 → FE-16 → FE-08 → FE-07 → FE
 
 ### [ ] FE-15 · Trang Chính sách + `usePolicy()` + ô đồng ý (Chung) — làm đầu tiên vì người khác dùng
 - `policyService.getPolicy()` gọi `GET /api/policy` (không cần đăng nhập). Hook `src/hooks/usePolicy.js` (bọc `useFetch`, nhớ kết quả trong phiên).
-- Trang công khai `/chinh-sach` (thêm route, link ở footer và header trang chủ): dựng từ nội dung `CHINH_SACH_DICH_VU.md` (12 mục, giữ nguyên tiêu đề và bảng), **thay mọi giá trị `[...]` bằng số từ `usePolicy()`**, hiển thị số phiên bản. Nội dung chữ để trong locale (`policy.*`), có mục lục nhảy tới từng mục.
+- Trang công khai `/chinh-sach` (thêm route, link ở footer và header trang chủ): dựng từ nội dung `CHINH_SACH_DICH_VU.md` (13 mục, giữ nguyên tiêu đề và bảng), **thay mọi giá trị `[...]` bằng số từ `usePolicy()`**, hiển thị số phiên bản. Nội dung chữ để trong locale (`policy.*`), có mục lục nhảy tới từng mục.
 - Component `src/components/common/PolicyAgreement.jsx`: checkbox "Tôi đã đọc và đồng ý với Chính sách dịch vụ (phiên bản X)" + link mở trang chính sách ở tab mới; trả về `{ accepted, policyVersion }`. FE-02 và FE-05 dùng component này.
 
 ### [ ] FE-16 · Màn cấu hình các khóa mới
@@ -149,3 +150,11 @@ Sửa `IncidentBoard`, `RouteChangeFields`, `TripIncidentsCard`, `EmergencyRepor
 - Khách: thẻ **"Chưa giao được ngựa — chọn cách xử lý"** với đếm ngược 24 giờ, 3 lựa chọn (người nhận / địa chỉ khác dùng `RecipientForm` + `MapPicker`; gửi chuồng tạm; chở về), mỗi lựa chọn ghi rõ ai trả phí; quá hạn thì hiện "Đã áp dụng gửi chuồng tạm".
 - Phí chờ hiện trong khoản phát sinh của đơn (số giờ × đơn giá), thanh toán qua luồng Extra hiện có.
 - Từ chối vì ngựa bị thương / nhầm ngựa: hiện cho khách rằng hồ sơ bồi thường đã được mở (link FE-11) và phí chuồng do công ty chịu.
+
+### [ ] FE-17 · Hợp đồng vận chuyển (R-17)
+Đọc `doc/PLAN_NGHIEP_VU_R09.md` mục R-17 và `doc/CHINH_SACH_DICH_VU.md` mục 12. **Không có màn ký, không OTP.**
+- Trang báo giá (FE-05): nút **Xem hợp đồng** mở PDF (modal toàn màn hình dùng `<iframe>` / `<object>`; trên điện thoại mở tab mới) từ `GET /api/bookings/{id}/contract`. Nút **Chấp nhận & đặt cọc** chỉ bật khi khách đã mở hợp đồng ít nhất một lần **và** tích "Tôi đã đọc hợp đồng và Chính sách dịch vụ" (thay checkbox của `PolicyAgreement` ở bước này). Gửi kèm `contractId`, `contractSha256` nhận được lúc mở. Backend báo hợp đồng đã đổi → thông báo và tải lại bản mới.
+- Trang chi tiết đơn: khối **Hợp đồng**: số hợp đồng, phiên bản, trạng thái, thời điểm chấp nhận, nút **Tải PDF**; danh sách các phiên bản cũ (đã thay thế) để tải lại.
+- Có bản hợp đồng mới chờ chấp nhận (đổi điểm đón / trả, đồng ý đi đường vòng, đổi người nhận): thẻ nổi bật "Hợp đồng cần xác nhận lại" kèm lý do, xem PDF, tích đã đọc, **Chấp nhận** (`POST /api/contracts/{id}/accept`). Thay đổi chỉ hiển thị là đã áp dụng sau khi chấp nhận.
+- Nhân sự (Manager, Specialist, Coordinator): xem / tải hợp đồng hiện hành trong màn chi tiết đơn.
+- Coordinator, chuyến đường hàng không: ô nhập số Air Waybill + tải tệp; hiện trong chi tiết chuyến cho mọi vai trò được xem chuyến.

@@ -60,7 +60,7 @@ Thứ tự gợi ý: **Thắng** làm FE-15 → FE-16 → FE-08 → FE-07 → FE
 - Trang công khai `/chinh-sach` (thêm route, link ở footer và header trang chủ): dựng từ nội dung `CHINH_SACH_DICH_VU.md` (13 mục, giữ nguyên tiêu đề và bảng), **thay mọi giá trị `[...]` bằng số từ `usePolicy()`**, hiển thị số phiên bản. Nội dung chữ để trong locale (`policy.*`), có mục lục nhảy tới từng mục.
 - Component `src/components/common/PolicyAgreement.jsx`: checkbox "Tôi đã đọc và đồng ý với Chính sách dịch vụ (phiên bản X)" + link mở trang chính sách ở tab mới; trả về `{ accepted, policyVersion }`. FE-02 và FE-05 dùng component này.
 
-### [ ] FE-16 · Màn cấu hình các khóa mới
+### [x] FE-16 · Màn cấu hình các khóa mới
 - Mở rộng màn cấu hình thanh toán hiện có (Admin / Manager) thành các nhóm: Báo giá (`Booking.QuoteAcceptDays`), Giao trễ (`Delay.*`), Bảo hiểm (`Insurance.*`), Ngựa (`Horse.MinAgeMonths`), Giao nhận (`Delivery.*`), Phiên bản chính sách.
 - Mỗi ô có chú thích ngắn nghĩa là gì; kiểm tra số không âm, % ≤ 100 trước khi gửi.
 

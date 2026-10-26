@@ -2235,14 +2235,48 @@
         "cancelRefundPercent": "Tỉ lệ hoàn cọc khi khách hủy",
         "usdVndRate": "Tỉ giá USD → VND",
         "balanceDueDaysBeforeDeparture": "Hạn trả phần còn lại (trước khởi hành)",
-        "extraPaymentDueDays": "Hạn trả chi phí phát sinh (sau khi đóng chuyến)"
+        "extraPaymentDueDays": "Hạn trả chi phí phát sinh (sau khi đóng chuyến)",
+        "bookingQuoteAcceptDays": "Hạn chấp nhận báo giá",
+        "delayGraceHours": "Giờ trễ miễn trừ bồi thường",
+        "delayPercentPer12Hours": "Tỷ lệ hoàn tiền mỗi 12h trễ",
+        "delayMaxPercent": "Trần hoàn cước do trễ",
+        "insuranceProofThresholdUsd": "Ngưỡng bắt buộc chứng từ",
+        "insurancePremiumPercent": "Tỷ lệ phí bảo hiểm toàn giá",
+        "insuranceBaseLiabilityUsd": "Trần trách nhiệm cơ bản ngựa chết",
+        "insuranceBaseVetCapUsd": "Trần chi phí thú y cơ bản",
+        "insuranceVetCapPercent": "Trần chi phí thú y bảo hiểm toàn giá",
+        "horseMinAgeMonths": "Độ tuổi tối thiểu của ngựa",
+        "deliveryWaitingFeePerHourUsd": "Phí chờ mỗi giờ",
+        "deliveryMaxWaitingHours": "Số giờ chờ tối đa tại điểm giao",
+        "policyVersion": "Phiên bản chính sách hiện hành",
+        "effectiveDate": "Ngày ban hành chính sách"
       },
       "help": {
         "depositPercent": "0% = duyệt là xác nhận ngay; 100% = thu toàn bộ khi duyệt.",
         "cancelRefundPercent": "Phần còn lại đã trả luôn được hoàn 100%.",
         "usdVndRate": "Dùng để quy đổi báo giá USD sang số tiền VND thanh toán qua VNPay.",
         "balanceDueDaysBeforeDeparture": "Số ngày trước ngày khởi hành của chuyến.",
-        "extraPaymentDueDays": "Quá hạn sẽ nhắc nợ và chặn khách tạo đơn mới."
+        "extraPaymentDueDays": "Quá hạn sẽ nhắc nợ và chặn khách tạo đơn mới.",
+        "bookingQuoteAcceptDays": "Số ngày khách có để xem hợp đồng và cọc trước khi báo giá hết hạn.",
+        "delayGraceHours": "Giao trễ dưới số giờ này do vận hành được miễn trừ bồi thường.",
+        "delayPercentPer12Hours": "Tỷ lệ % tiền cước vận chuyển hoàn cho khách mỗi 12 giờ trễ sau ân hạn.",
+        "delayMaxPercent": "Mức bồi thường tối đa không quá % này của tổng tiền cước vận chuyển.",
+        "insuranceProofThresholdUsd": "Ngựa khai báo giá trị từ mức này trở lên bắt buộc phải tải chứng từ định giá / hóa đơn.",
+        "insurancePremiumPercent": "Mức phí khách phải trả tính trên giá trị thỏa thuận của ngựa.",
+        "insuranceBaseLiabilityUsd": "Mức đền bù tối đa cho một con ngựa khi không mua bảo hiểm và xảy ra lỗi công ty.",
+        "insuranceBaseVetCapUsd": "Chi phí chữa trị tối đa cho mỗi con ngựa bị thương khi không mua bảo hiểm.",
+        "insuranceVetCapPercent": "Mức bồi thường tối đa chi phí thú y tính theo % giá trị thỏa thuận.",
+        "horseMinAgeMonths": "Ngựa dưới số tháng tuổi này sẽ bị hệ thống từ chối vận chuyển theo quy chuẩn IATA/EU.",
+        "deliveryWaitingFeePerHourUsd": "Phí chờ áp dụng cho mỗi giờ xe phải đợi tại điểm giao (sau 2 giờ miễn phí).",
+        "deliveryMaxWaitingHours": "Sau số giờ này người nhận không có mặt, ngựa sẽ được đưa vào chuồng tạm lưu trú.",
+        "policyVersion": "Số hiệu phiên bản hiển thị trên trang Chính sách và ghi nhận khi khách đồng ý.",
+        "effectiveDate": "Ngày áp dụng phiên bản chính sách này."
+      },
+      "tabs": {
+        "payment": "Thanh toán & Tỉ giá",
+        "bookingHorse": "Báo giá & Ngựa",
+        "delayDelivery": "Giao trễ & Giao nhận",
+        "insurancePolicy": "Bảo hiểm & Chính sách"
       }
     }
   },

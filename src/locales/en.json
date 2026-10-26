@@ -2236,14 +2236,48 @@
         "cancelRefundPercent": "Deposit refund rate on cancellation",
         "usdVndRate": "USD → VND rate",
         "balanceDueDaysBeforeDeparture": "Balance due (days before departure)",
-        "extraPaymentDueDays": "Extra charges due (days after trip closure)"
+        "extraPaymentDueDays": "Extra charges due (days after trip closure)",
+        "bookingQuoteAcceptDays": "Quote acceptance deadline",
+        "delayGraceHours": "Delay grace hours",
+        "delayPercentPer12Hours": "Refund rate per 12h delay",
+        "delayMaxPercent": "Maximum delay refund cap",
+        "insuranceProofThresholdUsd": "Valuation proof threshold",
+        "insurancePremiumPercent": "Full value insurance premium rate",
+        "insuranceBaseLiabilityUsd": "Base death liability cap",
+        "insuranceBaseVetCapUsd": "Base veterinary expenses cap",
+        "insuranceVetCapPercent": "Full insurance vet expense cap",
+        "horseMinAgeMonths": "Minimum horse age",
+        "deliveryWaitingFeePerHourUsd": "Waiting fee per hour",
+        "deliveryMaxWaitingHours": "Maximum delivery waiting hours",
+        "policyVersion": "Active policy version",
+        "effectiveDate": "Policy effective date"
       },
       "help": {
         "depositPercent": "0% = confirmed on approval; 100% = full payment on approval.",
         "cancelRefundPercent": "Any balance already paid is always refunded 100%.",
         "usdVndRate": "Converts USD quotes to the VND amount paid via VNPay.",
         "balanceDueDaysBeforeDeparture": "Days before the trip's departure date.",
-        "extraPaymentDueDays": "Overdue debts trigger reminders and block new bookings."
+        "extraPaymentDueDays": "Overdue debts trigger reminders and block new bookings.",
+        "bookingQuoteAcceptDays": "Days customer has to review contract and pay deposit before quote expires.",
+        "delayGraceHours": "Operational delays below these hours are exempt from compensation.",
+        "delayPercentPer12Hours": "Percentage of transport fare refunded per 12 hours of delay after grace period.",
+        "delayMaxPercent": "Maximum penalty cap as percentage of transport fare.",
+        "insuranceProofThresholdUsd": "Declared horse value at or above this threshold requires invoice or appraisal docs.",
+        "insurancePremiumPercent": "Insurance fee charged as percentage of agreed horse value.",
+        "insuranceBaseLiabilityUsd": "Maximum liability compensation for horse loss without optional insurance.",
+        "insuranceBaseVetCapUsd": "Maximum vet care compensation for injured horse without optional insurance.",
+        "insuranceVetCapPercent": "Maximum vet care compensation as percentage of agreed horse value.",
+        "horseMinAgeMonths": "Horses under this age in months are refused transport per IATA/EU regulations.",
+        "deliveryWaitingFeePerHourUsd": "Hourly fee applied when waiting at drop-off point beyond 2 free hours.",
+        "deliveryMaxWaitingHours": "Maximum hours vehicle waits before transferring horse to emergency temporary stable.",
+        "policyVersion": "Version identifier shown on Policy page and recorded upon customer acceptance.",
+        "effectiveDate": "Date when this policy version took effect."
+      },
+      "tabs": {
+        "payment": "Payment & Rates",
+        "bookingHorse": "Quoting & Horses",
+        "delayDelivery": "Delays & Handover",
+        "insurancePolicy": "Insurance & Policy"
       }
     }
   },

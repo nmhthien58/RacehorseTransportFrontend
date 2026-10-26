@@ -14,15 +14,26 @@ import {
   Alert,
   Typography,
   Space,
+  Select,
   message,
 } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import incidentService from '@services/incidentService';
-import { unwrapList, getErrorMessage } from '@utils/apiHelpers';
-import { SEVERITY_COLOR, INCIDENT_STATUS_COLOR, formatUsd } from '@utils/incidents';
+import tripService from '@services/tripService';
+import { unwrapList, unwrapData, getErrorMessage } from '@utils/apiHelpers';
+import {
+  SEVERITY_COLOR,
+  INCIDENT_STATUS_COLOR,
+  RESPONSE_ACTIONS,
+  RESPONSE_ACTION_COLOR,
+  formatUsd,
+  toRouteChangePayload,
+} from '@utils/incidents';
+import IncidentRouteChange from '@components/common/IncidentRouteChange';
 import RerouteModal from './RerouteModal';
+import RouteChangeFields from './RouteChangeFields';
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -88,6 +99,25 @@ export default function IncidentBoard({ role }) {
   );
   const selected = incidents.find((i) => i.incidentId === selectedId) || null;
 
+  // Lộ trình hiện tại của chuyến: để Coordinator chọn mốc khi đề xuất và Manager xem trước tuyến mới
+  const [trip, setTrip] = useState(null);
+  const selectedTripId = selected?.tripId;
+  useEffect(() => {
+    if (!selectedTripId) return undefined;
+    let active = true;
+    tripService
+      .getTripById(selectedTripId)
+      .then((res) => active && setTrip(unwrapData(res)))
+      .catch(() => active && setTrip(null));
+    return () => {
+      active = false;
+    };
+  }, [selectedTripId, incidents]);
+  const routeCheckpoints =
+    selectedTripId && trip?.tripId === selectedTripId
+      ? (trip.checkpoints || []).filter((c) => c.isActive !== false).sort((a, b) => a.sequenceOrder - b.sequenceOrder)
+      : [];
+
   /**
    * Chạy một thao tác trên sự cố đang chọn rồi cập nhật lại dòng đó trong bảng.
    * @param {() => Promise<any>} call
@@ -117,10 +147,17 @@ export default function IncidentBoard({ role }) {
     } catch {
       return;
     }
+    const routeChange = toRouteChangePayload(values.routeChange);
+    if (values.responseAction === 'Reroute' && !routeChange) {
+      message.warning(t('incidents.route.requiredForReroute'));
+      return;
+    }
     await run(
       () =>
         incidentService.proposePlan(selected.incidentId, {
+          responseAction: values.responseAction,
           proposedAction: values.proposedAction.trim(),
+          routeChange,
           revisedRouteNotes: values.revisedRouteNotes?.trim() || null,
           additionalCost: values.additionalCost || 0,
         }),
@@ -255,11 +292,30 @@ export default function IncidentBoard({ role }) {
                 layout="vertical"
                 requiredMark={false}
                 initialValues={{
+                  responseAction: selected.responseAction || undefined,
                   proposedAction: selected.proposedAction || '',
+                  // Đề xuất lại sau khi bị từ chối: điền sẵn tuyến của lần trước
+                  routeChange: selected.routeChange
+                    ? {
+                        deactivateCheckpointIds: selected.routeChange.removedCheckpoints.map((c) => c.checkpointId),
+                        insertAfterCheckpointId: selected.routeChange.insertAfterCheckpointId || undefined,
+                        newCheckpoints: selected.routeChange.newCheckpoints.map((c) => ({ ...c, plannedTime: dayjs(c.plannedTime) })),
+                      }
+                    : undefined,
                   revisedRouteNotes: selected.revisedRouteNotes || '',
                   additionalCost: selected.additionalCost || 0,
                 }}
               >
+                <Form.Item
+                  name="responseAction"
+                  label={t('incidents.fields.action')}
+                  rules={[{ required: true, message: t('handover.form.required') }]}
+                >
+                  <Select
+                    placeholder={t('incidents.actionPlaceholder')}
+                    options={RESPONSE_ACTIONS.map((value) => ({ value, label: t(`incidents.action.${value}`) }))}
+                  />
+                </Form.Item>
                 <Form.Item
                   name="proposedAction"
                   label={t('incidents.fields.plan')}
@@ -267,6 +323,15 @@ export default function IncidentBoard({ role }) {
                 >
                   <Input placeholder={t('incidents.planPlaceholder')} />
                 </Form.Item>
+                <div style={{ border: '1px dashed #E5E7EB', borderRadius: 8, padding: '12px 12px 0', marginBottom: 16 }}>
+                  <div style={{ marginBottom: 8 }}>
+                    <Text strong>{t('incidents.route.title')}</Text>{' '}
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {t('incidents.route.editHint')}
+                    </Text>
+                  </div>
+                  <RouteChangeFields checkpoints={routeCheckpoints} prefix={['routeChange']} />
+                </div>
                 <Form.Item name="revisedRouteNotes" label={t('incidents.fields.routeNotes')} rules={[{ max: 2000 }]}>
                   <TextArea rows={3} />
                 </Form.Item>
@@ -279,6 +344,11 @@ export default function IncidentBoard({ role }) {
               </Form>
             ) : selected.proposedAction ? (
               <Descriptions column={1} size="small" styles={{ label: { width: 150 } }}>
+                {selected.responseAction && (
+                  <Descriptions.Item label={t('incidents.fields.action')}>
+                    <Tag color={RESPONSE_ACTION_COLOR[selected.responseAction]}>{t(`incidents.action.${selected.responseAction}`)}</Tag>
+                  </Descriptions.Item>
+                )}
                 <Descriptions.Item label={t('incidents.fields.plan')}>{selected.proposedAction}</Descriptions.Item>
                 <Descriptions.Item label={t('incidents.fields.routeNotes')}>{selected.revisedRouteNotes || '—'}</Descriptions.Item>
                 <Descriptions.Item label={t('incidents.fields.cost')}>{formatUsd(selected.additionalCost)}</Descriptions.Item>
@@ -295,6 +365,11 @@ export default function IncidentBoard({ role }) {
               <Text type="secondary">{t('incidents.noPlan')}</Text>
             )}
 
+            {!canPropose && selected.routeChange && (
+              <div style={{ marginTop: 12 }}>
+                <IncidentRouteChange routeChange={selected.routeChange} checkpoints={routeCheckpoints} />
+              </div>
+            )}
             {canReview && (
               <Space style={{ marginTop: 20 }}>
                 <Popconfirm

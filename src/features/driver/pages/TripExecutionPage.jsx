@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Card,
   Row,
@@ -28,7 +28,7 @@ import {
   FileDoneOutlined,
   ExportOutlined,
 } from '@ant-design/icons';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@features/auth/store/authStore';
 import { Tooltip } from 'antd';
@@ -36,6 +36,7 @@ import { useMissionDetail } from '../hooks/useDriverMissions';
 import MissionHeaderCard from '../components/MissionHeaderCard';
 import TripHorseStatusTag from '@components/common/TripHorseStatusTag';
 import EmergencyReportModal from '../components/EmergencyReportModal';
+import TripIncidentsCard from '../components/TripIncidentsCard';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -64,8 +65,10 @@ export default function TripExecutionPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const location = useLocation();
   const {
     mission,
+    incidents,
     loading,
     actionLoading,
     error,
@@ -74,7 +77,20 @@ export default function TripExecutionPage() {
     departCheckpoint,
     offloadHorse,
     reportIncident,
+    fetchMission,
   } = useMissionDetail(tripId);
+
+  // Mở từ thông báo sự cố (#incidents): tải lại để thấy phương án mới nhất rồi cuộn tới khung sự cố
+  useEffect(() => {
+    if (location.hash !== '#incidents') return;
+    fetchMission();
+  }, [location.key, location.hash, fetchMission]);
+
+  useEffect(() => {
+    if (location.hash === '#incidents' && incidents.length > 0) {
+      document.getElementById('incidents')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [location.key, location.hash, incidents.length]);
   const [offloadTarget, setOffloadTarget] = useState(null);
   const [offloadForm] = Form.useForm();
 
@@ -83,6 +99,11 @@ export default function TripExecutionPage() {
   const [selectedCp, setSelectedCp] = useState(null);
 
   const checkpoints = mission?.routeCheckpoints || [];
+  // Mốc được thêm theo phương án xử lý sự cố đã duyệt: checkpointId -> mã sự cố
+  const addedByIncident = new Map();
+  (incidents || []).forEach((inc) =>
+    (inc.routeChange?.newCheckpoints || []).forEach((c) => c.checkpointId && addedByIncident.set(c.checkpointId, inc.incidentCode)),
+  );
   const { user } = useAuthStore();
   const userRole = user?.role || user?.Role;
   const isAirFlight = mission?.transportMode === 'Air';
@@ -258,6 +279,9 @@ export default function TripExecutionPage() {
         </Row>
       </Card>
 
+      {/* Sự cố của chuyến và phương án xử lý đã duyệt */}
+      <TripIncidentsCard incidents={incidents} />
+
       {/* Danh sách các Mốc Lộ trình & Trạm kiểm soát */}
       <Card
         style={{
@@ -394,6 +418,11 @@ export default function TripExecutionPage() {
                         {isDestination && (
                           <Tag color="success" style={{ borderRadius: 4 }}>
                             Điểm giao đích
+                          </Tag>
+                        )}
+                        {addedByIncident.has(cp.checkpointId) && (
+                          <Tag color="green" style={{ borderRadius: 4 }}>
+                            {t('driver.incidents.addedStop', { code: addedByIncident.get(cp.checkpointId) })}
                           </Tag>
                         )}
                         {cp.locationType === 'PickUp' && (

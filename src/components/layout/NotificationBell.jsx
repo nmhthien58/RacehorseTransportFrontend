@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { ROUTES } from '@routes/routes';
 import { useNotifications } from '@hooks/useNotifications';
+import incidentService from '@services/incidentService';
+import { unwrapData } from '@utils/apiHelpers';
 
 /**
  * Trang mở ra khi bấm một thông báo, theo role người dùng và loại đối tượng thông báo nhắc tới.
@@ -38,6 +40,7 @@ function getNotificationTarget(role, item) {
     case 'DriverEscort':
     case 'Driver':
     case 'Escort':
+      if (type === 'Trip' && id) return ROUTES.DRIVER_EXECUTION.replace(':tripId', id);
       return ROUTES.DRIVER_MISSIONS;
     default:
       return null;
@@ -58,7 +61,19 @@ export default function NotificationBell({ role }) {
   const markAsReadRef = useRef(null);
 
   const openItem = useCallback(
-    (item) => {
+    async (item) => {
+      // Đoàn xe: thông báo sự cố chỉ có mã sự cố, tra ra chuyến để mở thẳng khung "Sự cố & phương án xử lý"
+      if (role === 'DriverEscort' && item.referenceType === 'Incident' && item.referenceId) {
+        try {
+          const incident = unwrapData(await incidentService.getIncidentById(item.referenceId));
+          if (incident?.tripId) {
+            navigate(`${ROUTES.DRIVER_EXECUTION.replace(':tripId', incident.tripId)}#incidents`);
+            return;
+          }
+        } catch {
+          // Không tra được thì về danh sách nhiệm vụ như trước
+        }
+      }
       const target = getNotificationTarget(role, item);
       if (target) navigate(target);
     },

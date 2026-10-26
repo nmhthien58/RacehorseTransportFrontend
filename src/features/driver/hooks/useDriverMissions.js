@@ -120,6 +120,7 @@ export function useDriverMissions(initialParams = {}) {
  */
 export function useMissionDetail(tripId) {
   const [mission, setMission] = useState(null);
+  const [incidents, setIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -135,12 +136,14 @@ export function useMissionDetail(tripId) {
     async function loadDetail() {
       if (!tripId) return;
       try {
-        const [tripRes, logsRes] = await Promise.all([
+        const [tripRes, logsRes, incidentsRes] = await Promise.all([
           driverService.getMissionById(tripId),
           driverService.getWelfareLogs(tripId).catch(() => null),
+          driverService.getIncidents(tripId).catch(() => null),
         ]);
         if (isSubscribed) {
           setMission(normalizeMission(unwrapData(tripRes), unwrapList(logsRes)));
+          setIncidents(unwrapList(incidentsRes));
           setError(null);
         }
       } catch (err) {
@@ -263,6 +266,7 @@ export function useMissionDetail(tripId) {
 
   return {
     mission,
+    incidents,
     loading,
     actionLoading,
     error,

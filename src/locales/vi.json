@@ -1156,6 +1156,17 @@
     }
   },
   "driver": {
+    "incidents": {
+      "addedStop": "Mốc mới theo {{code}}",
+      "title": "Sự cố & phương án xử lý",
+      "reportedBy": "{{name}} báo lúc {{time}}",
+      "planApproved": "Phương án xử lý đã được duyệt",
+      "planPending": "Điều phối viên đã đề xuất phương án, đang chờ quản lý duyệt. Tiếp tục theo chỉ đạo hiện tại.",
+      "planDrafting": "Điều phối viên đang lập phương án xử lý. Giữ an toàn cho ngựa và chờ chỉ đạo.",
+      "approvedBy": "Duyệt bởi {{name}} lúc {{time}}",
+      "routeChanged": "Lộ trình có thể đã được nắn lại, kiểm tra danh sách trạm bên dưới trước khi đi tiếp.",
+      "resolvedAt": "Đã xử lý xong lúc {{time}}"
+    },
     "dashboard": {
       "title": "Bảng Điều Khiển Ca Trực & Nhiệm Vụ Vận Chuyển",
       "subtitle": "Theo dõi ca trực, tiếp nhận nhiệm vụ điều phối và thực thi an toàn hành trình vận chuyển ngựa",
@@ -1845,6 +1856,26 @@
     "openNewTab": "Mở trong tab mới"
   },
   "incidents": {
+    "action": {
+      "WaitAndContinue": "Chờ tại chỗ rồi đi tiếp",
+      "RepairAndContinue": "Sửa xe / thiết bị rồi đi tiếp",
+      "Reroute": "Đổi tuyến",
+      "VeterinaryCare": "Dừng chăm sóc thú y",
+      "OffloadHorse": "Cho ngựa rời chuyến",
+      "Other": "Khác"
+    },
+    "actionPlaceholder": "Chọn hành động",
+    "route": {
+      "title": "Thay đổi tuyến",
+      "editHint": "(tùy chọn, bắt buộc khi đổi tuyến) Bỏ mốc chưa tới hoặc thêm mốc mới. Tuyến được áp vào lộ trình khi quản lý duyệt.",
+      "pending": "Chưa áp, sẽ áp khi duyệt",
+      "applied": "Đã áp vào lộ trình {{time}}",
+      "removed": "Bỏ",
+      "added": "Thêm",
+      "addedAfter": "Thêm sau \"{{name}}\"",
+      "rest": "nghỉ {{minutes}} phút",
+      "requiredForReroute": "Phương án đổi tuyến cần bỏ hoặc thêm ít nhất một mốc"
+    },
     "title": "Sự cố",
     "none": "Không có sự cố nào",
     "empty": "Không có sự cố trong mục này",
@@ -1879,6 +1910,7 @@
       "resolvedAt": "Đóng lúc"
     },
     "fields": {
+      "action": "Hành động",
       "type": "Loại sự cố",
       "severity": "Mức độ",
       "location": "Vị trí",
@@ -1915,7 +1947,7 @@
     "planPlaceholder": "Ví dụ: đổi xe dự phòng, nghỉ thêm tại trạm thú y gần nhất",
     "noPlan": "Điều phối viên chưa đề xuất phương án.",
     "rejectedBecause": "Quản lý đã từ chối phương án trước",
-    "finishHint": "Phương án đã được duyệt. Nắn tuyến nếu cần đổi lộ trình, rồi đóng sự cố khi đã xử lý xong.",
+    "finishHint": "Phương án đã được duyệt và tuyến kèm theo (nếu có) đã áp vào lộ trình. Điều chỉnh tuyến thêm nếu cần, rồi đóng sự cố khi đã xử lý xong.",
     "actions": {
       "propose": "Gửi phương án",
       "repropose": "Gửi lại phương án",
@@ -1926,12 +1958,20 @@
       "reject": "Từ chối",
       "rejectTitle": "Từ chối phương án",
       "rejected": "Đã từ chối phương án",
-      "reroute": "Nắn tuyến",
+      "reroute": "Điều chỉnh tuyến thêm",
       "resolve": "Đóng sự cố",
       "resolveConfirm": "Xác nhận sự cố đã xử lý xong?",
       "resolved": "Đã đóng sự cố"
     },
     "report": {
+      "locate": "Lấy lại",
+      "locating": "Đang lấy vị trí GPS...",
+      "geoPlaceholder": "Vị trí GPS của thiết bị",
+      "geoHint": "Vị trí được lấy tự động từ GPS của thiết bị, cần cho phép trình duyệt truy cập vị trí.",
+      "geoDenied": "Trình duyệt chưa cho phép truy cập vị trí. Bật quyền vị trí rồi bấm Lấy lại.",
+      "geoFailed": "Không lấy được vị trí GPS. Bấm Lấy lại.",
+      "geoUnsupported": "Thiết bị không hỗ trợ định vị.",
+      "viewOnMap": "Xem trên bản đồ",
       "title": "Báo sự cố",
       "submit": "Gửi báo cáo",
       "success": "Đã báo sự cố cho điều phối viên",

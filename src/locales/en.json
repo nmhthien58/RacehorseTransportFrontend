@@ -1157,6 +1157,17 @@
     }
   },
   "driver": {
+    "incidents": {
+      "addedStop": "New stop for {{code}}",
+      "title": "Incidents & response plan",
+      "reportedBy": "Reported by {{name}} at {{time}}",
+      "planApproved": "The response plan has been approved",
+      "planPending": "The coordinator has proposed a plan and it is waiting for manager approval. Keep following current instructions.",
+      "planDrafting": "The coordinator is preparing a response plan. Keep the horses safe and wait for instructions.",
+      "approvedBy": "Approved by {{name}} at {{time}}",
+      "routeChanged": "The route may have been changed, check the checkpoint list below before moving on.",
+      "resolvedAt": "Resolved at {{time}}"
+    },
     "dashboard": {
       "title": "Driver & Escort Mission Control",
       "subtitle": "Monitor shifts, receive dispatched missions, and execute equine transport operations safely",
@@ -1846,6 +1857,26 @@
     "openNewTab": "Open in new tab"
   },
   "incidents": {
+    "action": {
+      "WaitAndContinue": "Wait, then continue",
+      "RepairAndContinue": "Repair, then continue",
+      "Reroute": "Reroute",
+      "VeterinaryCare": "Stop for veterinary care",
+      "OffloadHorse": "Offload the horse",
+      "Other": "Other"
+    },
+    "actionPlaceholder": "Choose an action",
+    "route": {
+      "title": "Route change",
+      "editHint": "(optional, required for a reroute) Remove upcoming checkpoints or add new ones. The route is applied when the manager approves.",
+      "pending": "Not applied yet, applied on approval",
+      "applied": "Applied to the route {{time}}",
+      "removed": "Removed",
+      "added": "Added",
+      "addedAfter": "Added after \"{{name}}\"",
+      "rest": "{{minutes}} min rest",
+      "requiredForReroute": "A reroute plan must remove or add at least one checkpoint"
+    },
     "title": "Incidents",
     "none": "No incidents",
     "empty": "No incidents here",
@@ -1880,6 +1911,7 @@
       "resolvedAt": "Closed at"
     },
     "fields": {
+      "action": "Action",
       "type": "Type",
       "severity": "Severity",
       "location": "Location",
@@ -1916,7 +1948,7 @@
     "planPlaceholder": "E.g. switch to the spare truck, extra rest at the nearest vet station",
     "noPlan": "The coordinator has not proposed a plan yet.",
     "rejectedBecause": "The manager rejected the previous plan",
-    "finishHint": "The plan is approved. Reroute if the route must change, then close the incident once handled.",
+    "finishHint": "The plan is approved and its route change (if any) is applied. Adjust the route further if needed, then resolve the incident once handled.",
     "actions": {
       "propose": "Send plan",
       "repropose": "Send revised plan",
@@ -1927,12 +1959,20 @@
       "reject": "Reject",
       "rejectTitle": "Reject plan",
       "rejected": "Plan rejected",
-      "reroute": "Reroute",
+      "reroute": "Adjust route further",
       "resolve": "Close incident",
       "resolveConfirm": "Mark this incident as handled?",
       "resolved": "Incident closed"
     },
     "report": {
+      "locate": "Retry",
+      "locating": "Getting GPS location...",
+      "geoPlaceholder": "Device GPS location",
+      "geoHint": "The location comes from the device GPS; allow location access in the browser.",
+      "geoDenied": "Location access is blocked. Allow it and press Retry.",
+      "geoFailed": "Could not get the GPS location. Press Retry.",
+      "geoUnsupported": "This device does not support geolocation.",
+      "viewOnMap": "View on map",
       "title": "Report an incident",
       "submit": "Send report",
       "success": "Incident reported to the coordinator",

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Modal, Form, Select, Radio, Input, Typography, message } from 'antd';
+import { Modal, Form, Select, Radio, Input, Typography, Button, message } from 'antd';
+import { AimOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { INCIDENT_TYPES, INCIDENT_SEVERITIES } from '@utils/incidents';
+import { INCIDENT_TYPES, INCIDENT_SEVERITIES, formatCoordinates, mapLinkOf } from '@utils/incidents';
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -22,6 +23,32 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
   const { t } = useTranslation();
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
+  // Vị trí lấy từ GPS của thiết bị: 'idle' | 'locating' | 'ok' | 'error'
+  const [geoStatus, setGeoStatus] = useState('idle');
+  const [geoError, setGeoError] = useState('');
+  const location = Form.useWatch('location', form);
+
+  /** Lấy tọa độ hiện tại của thiết bị và điền vào ô Vị trí (không cho gõ tay). */
+  const locate = () => {
+    if (!navigator.geolocation) {
+      setGeoStatus('error');
+      setGeoError(t('incidents.report.geoUnsupported'));
+      return;
+    }
+    setGeoStatus('locating');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        form.setFieldValue('location', formatCoordinates(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy));
+        form.validateFields(['location']).catch(() => {});
+        setGeoStatus('ok');
+      },
+      (err) => {
+        setGeoStatus('error');
+        setGeoError(err.code === err.PERMISSION_DENIED ? t('incidents.report.geoDenied') : t('incidents.report.geoFailed'));
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
+  };
 
   const handleSubmit = async () => {
     let values;
@@ -60,6 +87,10 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
       okButtonProps={{ danger: true, loading: submitting }}
       destroyOnHidden
       width={560}
+      afterOpenChange={(visible) => {
+        if (visible) locate();
+        else setGeoStatus('idle');
+      }}
     >
       <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
         {t('incidents.report.hint', { trip: tripCode || '' })}
@@ -87,12 +118,28 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
         <Form.Item
           name="location"
           label={t('incidents.fields.location')}
-          rules={[
-            { required: true, whitespace: true, message: t('incidents.report.locationRequired') },
-            { max: 255 },
-          ]}
+          rules={[{ required: true, whitespace: true, message: t('incidents.report.locationRequired') }, { max: 255 }]}
+          validateStatus={geoStatus === 'error' && !location ? 'error' : undefined}
+          help={geoStatus === 'error' && !location ? geoError : undefined}
+          extra={
+            location ? (
+              <a href={mapLinkOf(location)} target="_blank" rel="noreferrer">
+                {t('incidents.report.viewOnMap')}
+              </a>
+            ) : (
+              t('incidents.report.geoHint')
+            )
+          }
         >
-          <Input placeholder={t('incidents.report.locationPlaceholder')} />
+          <Input
+            readOnly
+            placeholder={geoStatus === 'locating' ? t('incidents.report.locating') : t('incidents.report.geoPlaceholder')}
+            addonAfter={
+              <Button type="link" size="small" icon={<AimOutlined />} loading={geoStatus === 'locating'} onClick={locate} style={{ padding: 0 }}>
+                {t('incidents.report.locate')}
+              </Button>
+            }
+          />
         </Form.Item>
 
         {horses.length > 0 && (

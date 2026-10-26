@@ -1,8 +1,9 @@
 /**
  * @file incidents.js
  * @description Giá trị hợp lệ của Flow 5 (sự cố) và Flow 6 (bàn giao) theo backend, kèm màu Tag.
- * Nhãn hiển thị lấy qua i18n: incidents.type.*, incidents.severity.*, incidents.status.*, handover.condition.*
+ * Nhãn hiển thị lấy qua i18n: incidents.type.*, incidents.severity.*, incidents.status.*, incidents.action.*, handover.condition.*
  */
+import { toIsoString } from '@utils/apiHelpers';
 
 /** Loại sự cố backend chấp nhận (incidentType) */
 export const INCIDENT_TYPES = [
@@ -14,6 +15,36 @@ export const INCIDENT_TYPES = [
   'CustomsHold',
   'Other',
 ];
+
+/** Loại hành động của phương án xử lý (responseAction); Reroute bắt buộc kèm thay đổi tuyến */
+export const RESPONSE_ACTIONS = ['WaitAndContinue', 'RepairAndContinue', 'Reroute', 'VeterinaryCare', 'OffloadHorse', 'Other'];
+
+export const RESPONSE_ACTION_COLOR = {
+  WaitAndContinue: 'default',
+  RepairAndContinue: 'gold',
+  Reroute: 'purple',
+  VeterinaryCare: 'magenta',
+  OffloadHorse: 'red',
+  Other: 'default',
+};
+
+/**
+ * Chuyển giá trị các ô sửa tuyến (RouteChangeFields) sang body backend; không có thay đổi nào thì trả null.
+ * @param {{ deactivateCheckpointIds?: number[], insertAfterCheckpointId?: number, newCheckpoints?: Array<Object> }} [values]
+ * @returns {{ deactivateCheckpointIds: number[], newCheckpoints: Array<Object>, insertAfterCheckpointId?: number } | null}
+ */
+export function toRouteChangePayload(values) {
+  const deactivateCheckpointIds = values?.deactivateCheckpointIds || [];
+  const newCheckpoints = (values?.newCheckpoints || []).map((c) => ({
+    checkpointName: c.checkpointName.trim(),
+    checkpointType: c.checkpointType,
+    address: c.address?.trim() || '',
+    plannedTime: toIsoString(c.plannedTime),
+    mandatoryRestMinutes: c.mandatoryRestMinutes || 0,
+  }));
+  if (deactivateCheckpointIds.length === 0 && newCheckpoints.length === 0) return null;
+  return { deactivateCheckpointIds, newCheckpoints, insertAfterCheckpointId: values.insertAfterCheckpointId || undefined };
+}
 
 /** Mức độ sự cố, từ nhẹ tới nặng */
 export const INCIDENT_SEVERITIES = ['Minor', 'Moderate', 'Major', 'Critical'];
@@ -51,4 +82,27 @@ export const ON_TIME_COLOR = {
 export function formatUsd(value) {
   if (value === null || value === undefined) return '—';
   return `$${Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+}
+
+/**
+ * Tọa độ GPS dạng chuỗi lưu vào trường location của sự cố.
+ * @param {number} lat
+ * @param {number} lng
+ * @param {number} [accuracy] - mét
+ * @returns {string}
+ */
+export function formatCoordinates(lat, lng, accuracy) {
+  const base = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+  return accuracy ? `${base} (±${Math.round(accuracy)} m)` : base;
+}
+
+/**
+ * Link Google Maps cho một vị trí (tọa độ hoặc địa chỉ chữ).
+ * @param {string} location
+ * @returns {string}
+ */
+export function mapLinkOf(location) {
+  const match = /(-?\d+\.\d+),\s*(-?\d+\.\d+)/.exec(location || '');
+  const query = match ? `${match[1]},${match[2]}` : location || '';
+  return `https://www.google.com/maps?q=${encodeURIComponent(query)}`;
 }

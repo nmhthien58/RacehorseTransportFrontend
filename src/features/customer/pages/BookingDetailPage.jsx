@@ -7,18 +7,32 @@ import {
   Descriptions,
   Empty,
   Flex,
+  Form,
+  Modal,
   Row,
   Segmented,
+  Space,
   Spin,
   Table,
   Tabs,
   Tag,
+  Tooltip,
   Typography,
   message,
 } from 'antd';
-import { ArrowLeftOutlined, CarOutlined, DollarOutlined, EnvironmentOutlined, FileProtectOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftOutlined,
+  CarOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  DollarOutlined,
+  EditOutlined,
+  EnvironmentOutlined,
+  FileProtectOutlined,
+} from '@ant-design/icons';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import dayjs from 'dayjs';
 import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedule';
 import { formatCountryRoute } from '@utils/bookingRoute';
 import PageHeader from '@components/layout/PageHeader';
@@ -28,6 +42,7 @@ import BookingPaymentPanel from '@components/common/BookingPaymentPanel';
 import CustomerDossierPanel from '@features/customer/components/CustomerDossierPanel';
 import OrderTimeline from '@features/customer/components/OrderTimeline';
 import TripJourney from '@features/customer/components/TripJourney';
+import RecipientForm from '@components/common/RecipientForm';
 import { useBookingJourney } from '@features/customer/hooks/useBookingJourney';
 import bookingService from '@services/bookingService';
 import { unwrapData, getErrorMessage } from '@utils/apiHelpers';
@@ -41,7 +56,7 @@ const JOURNEY_STATUSES = ['Approved', 'Assigned', 'AwaitingFinalPayment', 'Compl
 const JOURNEY_POLL_MS = 30000;
 
 /**
- * Trang chi tiết yêu cầu vận chuyển, bao gồm theo dõi và bổ sung hồ sơ từng ngựa.
+ * Trang chi tiết yêu cầu vận chuyển, bao gồm theo dõi, người nhận và bổ sung hồ sơ từng ngựa.
  * @returns {JSX.Element}
  */
 export default function CustomerBookingDetailPage() {
@@ -52,6 +67,12 @@ export default function CustomerBookingDetailPage() {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
+
+  // State cho khối Người nhận (FE-13 / R-16)
+  const [editRecipientOpen, setEditRecipientOpen] = useState(false);
+  const [savingRecipient, setSavingRecipient] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [recipientForm] = Form.useForm();
 
   useEffect(() => {
     let active = true;
@@ -86,6 +107,91 @@ export default function CustomerBookingDetailPage() {
   });
   const [selectedTripId, setSelectedTripId] = useState(null);
   const shownTrip = journey.trips.find((tr) => tr.tripId === selectedTripId) || journey.trips[0];
+
+  // R-16: Khóa nút sửa người nhận khi xe đã tới điểm trả
+  const isDropoffArrived = useMemo(() => {
+    if (['Completed', 'AwaitingHandover'].includes(status)) return true;
+    for (const tr of journey.trips || []) {
+      const dropCp = (tr.checkpoints || []).find(
+        (c) => c.checkpointId === booking?.dropoffCheckpointId || c.locationType === 'DropOff',
+      );
+      if (dropCp && ['Arrived', 'Cleared', 'Departed'].includes(dropCp.status)) {
+        return true;
+      }
+    }
+    return false;
+  }, [status, journey.trips, booking?.dropoffCheckpointId]);
+
+  // R-16: Hiện thẻ xác nhận người nhận sẽ có mặt khi tới hạn hoặc đơn đang vận chuyển
+  const showConfirmPresence = useMemo(() => {
+    if (!booking) return false;
+    if (booking.recipientConfirmedAt || booking.RecipientConfirmedAt) return false;
+    if (INACTIVE_BOOKING_STATUSES.includes(status) || status === 'Completed') return false;
+    return Boolean(
+      booking.recipientNotifiedWindowStart ||
+        booking.RecipientNotifiedWindowStart ||
+        ['InTransit', 'AwaitingHandover'].includes(status),
+    );
+  }, [booking, status]);
+
+  // R-16: Hiện thẻ đồng ý cho người khác nhận thay khi tài xế báo trên e-POD
+  const showAlternateApproval = useMemo(() => {
+    const altName = booking?.alternateRecipientName || booking?.AlternateRecipientName;
+    const approvedAt = booking?.alternateRecipientApprovedAt || booking?.AlternateRecipientApprovedAt;
+    return Boolean(altName && !approvedAt);
+  }, [booking]);
+
+  const handleConfirmPresence = async () => {
+    setActionLoading(true);
+    try {
+      await bookingService.confirmRecipient(bookingId);
+      message.success(t('recipient.confirmSuccess'));
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      message.error(getErrorMessage(err, 'Không thể xác nhận có mặt'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleApproveAlternate = async () => {
+    setActionLoading(true);
+    try {
+      await bookingService.approveAlternateRecipient(bookingId);
+      message.success(t('recipient.updateSuccess'));
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      message.error(getErrorMessage(err, 'Không thể duyệt người nhận thay'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSaveRecipient = async () => {
+    let values;
+    try {
+      values = await recipientForm.validateFields();
+    } catch {
+      return;
+    }
+    setSavingRecipient(true);
+    try {
+      await bookingService.updateRecipient(bookingId, {
+        recipientName: values.recipientName.trim(),
+        recipientPhone: values.recipientPhone.trim(),
+        recipientEmail: values.recipientEmail?.trim() || null,
+        recipientIdNumber: values.recipientIdNumber?.trim() || null,
+        recipientIsCustomer: Boolean(values.recipientIsCustomer),
+      });
+      message.success(t('recipient.updateSuccess'));
+      setEditRecipientOpen(false);
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      message.error(getErrorMessage(err, 'Cập nhật người nhận thất bại'));
+    } finally {
+      setSavingRecipient(false);
+    }
+  };
 
   const horseColumns = useMemo(
     () => [
@@ -180,95 +286,298 @@ export default function CustomerBookingDetailPage() {
     );
   }
 
+  const arrivalWindowText = (() => {
+    const start = booking.recipientNotifiedWindowStart || booking.RecipientNotifiedWindowStart;
+    const end = booking.recipientNotifiedWindowEnd || booking.RecipientNotifiedWindowEnd;
+    if (start && end) {
+      return `${dayjs(start).format('DD/MM/YYYY HH:mm')} — ${dayjs(end).format('HH:mm')}`;
+    }
+    return formatDeliveryDeadline(booking);
+  })();
+
   const overviewContent = (
-    <Row gutter={[20, 20]}>
-      <Col xs={24} xl={8}>
-        <Card title={t('customerOrders.timeline.title')} style={{ height: '100%' }}>
-          <OrderTimeline booking={booking} />
-        </Card>
-      </Col>
-      <Col xs={24} xl={16}>
-        <Row gutter={[20, 20]}>
-          <Col span={24}>
-            <Card title={t('bookings.detailPage.routeInfo')} style={{ height: '100%' }}>
-              <Descriptions column={{ xs: 1, sm: 2 }} size="small">
-                <Descriptions.Item label={t('bookings.fields.pickupLocation')} span={2}>
-                  <EnvironmentOutlined style={{ color: '#d97706', marginRight: 6 }} />
-                  {booking.pickupAddress || booking.PickupAddress}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('bookings.fields.deliveryLocation')} span={2}>
-                  <EnvironmentOutlined style={{ color: '#10b981', marginRight: 6 }} />
-                  {booking.dropoffAddress || booking.DropoffAddress}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('bookings.fields.route')} span={2}>
-                  {formatCountryRoute(booking)}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('bookings.fields.pickupWindow')}>
-                  {formatPickupWindow(booking)}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('bookings.fields.deliveryDeadline')}>
-                  {formatDeliveryDeadline(booking)}
-                </Descriptions.Item>
-              </Descriptions>
-            </Card>
-          </Col>
-          <Col span={24}>
-            <Card title={t('bookings.detailPage.bookingInfo')} style={{ height: '100%' }}>
-              <Descriptions column={1} size="small">
-                <Descriptions.Item label={t('bookings.detailPage.mode')}>
-                  {t(`bookings.modes.${String(booking.transportMode || booking.TransportMode).toLowerCase()}`)}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('bookings.detailPage.climate')}>
-                  {(booking.requiresClimateControl ?? booking.RequiresClimateControl)
-                    ? t('bookings.detailPage.yes')
-                    : t('bookings.detailPage.no')}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('bookings.detailPage.specialist')}>
-                  {booking.assignedSpecialistName || booking.AssignedSpecialistName || t('bookings.detailPage.notAssigned')}
-                </Descriptions.Item>
-              </Descriptions>
-            </Card>
-          </Col>
-        </Row>
-      </Col>
-      <Col span={24}>
-        <Card title={t('bookings.detailPage.horses')}>
-          <Table
-            rowKey={(record) => record.horseId || record.HorseID}
-            columns={horseColumns}
-            dataSource={horses}
-            pagination={false}
-            scroll={{ x: 640 }}
-          />
-        </Card>
-      </Col>
-      {quoteLines.length > 0 && (
+    <div>
+      {/* Banner duyệt người nhận thay (R-16) */}
+      {showAlternateApproval && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 20 }}
+          message={t('recipient.alternateAlertTitle')}
+          description={
+            <Space direction="vertical" style={{ width: '100%', marginTop: 6 }}>
+              <div>
+                {t('recipient.alternateAlertDesc', {
+                  name: booking.alternateRecipientName || booking.AlternateRecipientName,
+                  phone: booking.alternateRecipientPhone || booking.AlternateRecipientPhone || '—',
+                })}
+              </div>
+              <Space>
+                <Button
+                  type="primary"
+                  size="small"
+                  loading={actionLoading}
+                  onClick={handleApproveAlternate}
+                >
+                  {t('recipient.approveAlternateButton')}
+                </Button>
+              </Space>
+            </Space>
+          }
+        />
+      )}
+
+      {/* Banner xác nhận người nhận sẽ có mặt (R-16) */}
+      {showConfirmPresence && (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 20 }}
+          message={t('recipient.confirmPresenceCardTitle')}
+          description={
+            <Space direction="vertical" style={{ width: '100%', marginTop: 6 }}>
+              <div>
+                {t('recipient.confirmPresenceCardDesc', {
+                  window: arrivalWindowText,
+                })}
+              </div>
+              <Space wrap>
+                <Button
+                  type="primary"
+                  size="small"
+                  loading={actionLoading}
+                  onClick={handleConfirmPresence}
+                >
+                  {t('recipient.confirmPresenceButton')}
+                </Button>
+                <Button
+                  size="small"
+                  disabled={isDropoffArrived}
+                  onClick={() => {
+                    recipientForm.setFieldsValue({
+                      recipientIsCustomer: Boolean(booking.recipientIsCustomer ?? booking.RecipientIsCustomer),
+                      recipientName: booking.recipientName || booking.RecipientName || '',
+                      recipientPhone: booking.recipientPhone || booking.RecipientPhone || '',
+                      recipientEmail: booking.recipientEmail || booking.RecipientEmail || '',
+                      recipientIdNumber: booking.recipientIdNumber || booking.RecipientIdNumber || '',
+                    });
+                    setEditRecipientOpen(true);
+                  }}
+                >
+                  {t('recipient.changeRecipientButton')}
+                </Button>
+              </Space>
+            </Space>
+          }
+        />
+      )}
+
+      <Row gutter={[20, 20]}>
+        <Col xs={24} xl={8}>
+          <Card title={t('customerOrders.timeline.title')} style={{ height: '100%' }}>
+            <OrderTimeline booking={booking} />
+          </Card>
+        </Col>
+        <Col xs={24} xl={16}>
+          <Row gutter={[20, 20]}>
+            <Col span={24}>
+              <Card title={t('bookings.detailPage.routeInfo')} style={{ height: '100%' }}>
+                <Descriptions column={{ xs: 1, sm: 2 }} size="small">
+                  <Descriptions.Item label={t('bookings.fields.pickupLocation')} span={2}>
+                    <EnvironmentOutlined style={{ color: '#d97706', marginRight: 6 }} />
+                    {booking.pickupAddress || booking.PickupAddress}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={t('bookings.fields.deliveryLocation')} span={2}>
+                    <EnvironmentOutlined style={{ color: '#10b981', marginRight: 6 }} />
+                    {booking.dropoffAddress || booking.DropoffAddress}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={t('bookings.fields.route')} span={2}>
+                    {formatCountryRoute(booking)}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={t('bookings.fields.pickupWindow')}>
+                    {formatPickupWindow(booking)}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={t('bookings.fields.deliveryDeadline')}>
+                    {formatDeliveryDeadline(booking)}
+                  </Descriptions.Item>
+                </Descriptions>
+              </Card>
+            </Col>
+
+            {/* Khối Người nhận (FE-13 / R-16) */}
+            <Col span={24}>
+              <Card
+                title={t('recipient.title')}
+                style={{ height: '100%' }}
+                extra={
+                  <Tooltip title={isDropoffArrived ? t('recipient.lockedHint') : ''}>
+                    <Button
+                      type="link"
+                      icon={<EditOutlined />}
+                      disabled={isDropoffArrived}
+                      onClick={() => {
+                        recipientForm.setFieldsValue({
+                          recipientIsCustomer: Boolean(
+                            booking.recipientIsCustomer ?? booking.RecipientIsCustomer,
+                          ),
+                          recipientName: booking.recipientName || booking.RecipientName || '',
+                          recipientPhone: booking.recipientPhone || booking.RecipientPhone || '',
+                          recipientEmail: booking.recipientEmail || booking.RecipientEmail || '',
+                          recipientIdNumber:
+                            booking.recipientIdNumber || booking.RecipientIdNumber || '',
+                        });
+                        setEditRecipientOpen(true);
+                      }}
+                    >
+                      {t('recipient.edit')}
+                    </Button>
+                  </Tooltip>
+                }
+              >
+                <Descriptions column={{ xs: 1, sm: 2 }} size="small">
+                  <Descriptions.Item label={t('recipient.name')}>
+                    <Space>
+                      <Text strong>
+                        {booking.recipientName ||
+                          booking.RecipientName ||
+                          booking.customerName ||
+                          '—'}
+                      </Text>
+                      {Boolean(booking.recipientIsCustomer ?? booking.RecipientIsCustomer) && (
+                        <Tag color="blue">{t('recipient.isCustomer')}</Tag>
+                      )}
+                    </Space>
+                  </Descriptions.Item>
+                  <Descriptions.Item label={t('recipient.phone')}>
+                    {booking.recipientPhone ||
+                      booking.RecipientPhone ||
+                      booking.customerPhone ||
+                      '—'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={t('recipient.email')}>
+                    {booking.recipientEmail ||
+                      booking.RecipientEmail ||
+                      booking.customerEmail ||
+                      '—'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={t('recipient.idNumber')}>
+                    {booking.recipientIdNumber || booking.RecipientIdNumber || '—'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={t('recipient.statusLabel', 'Trạng thái có mặt')} span={2}>
+                    {booking.recipientConfirmedAt || booking.RecipientConfirmedAt ? (
+                      <Tag color="green" icon={<CheckCircleOutlined />}>
+                        {t('recipient.confirmedAt', {
+                          time: dayjs(
+                            booking.recipientConfirmedAt || booking.RecipientConfirmedAt,
+                          ).format('DD/MM/YYYY HH:mm'),
+                        })}
+                      </Tag>
+                    ) : (
+                      <Tag color="orange" icon={<ClockCircleOutlined />}>
+                        {t('recipient.presenceNotConfirmed')}
+                      </Tag>
+                    )}
+                  </Descriptions.Item>
+                  {(booking.alternateRecipientName || booking.AlternateRecipientName) && (
+                    <Descriptions.Item label={t('recipient.alternateSigner', 'Người nhận thay')} span={2}>
+                      <Space wrap>
+                        <Text strong>
+                          {booking.alternateRecipientName || booking.AlternateRecipientName}
+                        </Text>
+                        {booking.alternateRecipientApprovedAt || booking.AlternateRecipientApprovedAt ? (
+                          <Tag color="green">
+                            {t('recipient.alternateApproved', {
+                              name: booking.alternateRecipientName || booking.AlternateRecipientName,
+                              time: dayjs(
+                                booking.alternateRecipientApprovedAt ||
+                                  booking.AlternateRecipientApprovedAt,
+                              ).format('DD/MM/YYYY HH:mm'),
+                            })}
+                          </Tag>
+                        ) : (
+                          <Tag color="gold">{t('recipient.awaitingApproval', 'Đang chờ duyệt')}</Tag>
+                        )}
+                      </Space>
+                    </Descriptions.Item>
+                  )}
+                </Descriptions>
+              </Card>
+            </Col>
+
+            <Col span={24}>
+              <Card title={t('bookings.detailPage.bookingInfo')} style={{ height: '100%' }}>
+                <Descriptions column={1} size="small">
+                  <Descriptions.Item label={t('bookings.detailPage.mode')}>
+                    {t(`bookings.modes.${String(booking.transportMode || booking.TransportMode).toLowerCase()}`)}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={t('bookings.detailPage.climate')}>
+                    {(booking.requiresClimateControl ?? booking.RequiresClimateControl)
+                      ? t('bookings.detailPage.yes')
+                      : t('bookings.detailPage.no')}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={t('bookings.detailPage.specialist')}>
+                    {booking.assignedSpecialistName || booking.AssignedSpecialistName || t('bookings.detailPage.notAssigned')}
+                  </Descriptions.Item>
+                </Descriptions>
+              </Card>
+            </Col>
+          </Row>
+        </Col>
         <Col span={24}>
-          <Card title={t('bookings.detailPage.quote')}>
+          <Card title={t('bookings.detailPage.horses')}>
             <Table
-              rowKey={(record, index) => record.code || record.Code || `quote-${index}`}
-              columns={quoteColumns}
-              dataSource={quoteLines}
+              rowKey={(record) => record.horseId || record.HorseID}
+              columns={horseColumns}
+              dataSource={horses}
               pagination={false}
-              size="small"
-              summary={() => (
-                <Table.Summary.Row>
-                  <Table.Summary.Cell index={0} colSpan={2}>
-                    <Text strong>{t('bookings.detailPage.total')}</Text>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={2} align="right">
-                    <Text strong style={{ color: '#d97706' }}>
-                      {Number(booking.estimatedCost || booking.EstimatedCost || 0).toLocaleString()}{' '}
-                      {booking.currencyCode || booking.CurrencyCode || 'USD'}
-                    </Text>
-                  </Table.Summary.Cell>
-                </Table.Summary.Row>
-              )}
+              scroll={{ x: 640 }}
             />
           </Card>
         </Col>
-      )}
-    </Row>
+        {quoteLines.length > 0 && (
+          <Col span={24}>
+            <Card title={t('bookings.detailPage.quote')}>
+              <Table
+                rowKey={(record, index) => record.code || record.Code || `quote-${index}`}
+                columns={quoteColumns}
+                dataSource={quoteLines}
+                pagination={false}
+                size="small"
+                summary={() => (
+                  <Table.Summary.Row>
+                    <Table.Summary.Cell index={0} colSpan={2}>
+                      <Text strong>{t('bookings.detailPage.total')}</Text>
+                    </Table.Summary.Cell>
+                    <Table.Summary.Cell index={2} align="right">
+                      <Text strong style={{ color: '#d97706' }}>
+                        {Number(booking.estimatedCost || booking.EstimatedCost || 0).toLocaleString()}{' '}
+                        {booking.currencyCode || booking.CurrencyCode || 'USD'}
+                      </Text>
+                    </Table.Summary.Cell>
+                  </Table.Summary.Row>
+                )}
+              />
+            </Card>
+          </Col>
+        )}
+      </Row>
+
+      {/* Modal sửa người nhận (FE-13 / R-16) */}
+      <Modal
+        title={t('recipient.editModalTitle')}
+        open={editRecipientOpen}
+        onCancel={() => setEditRecipientOpen(false)}
+        onOk={handleSaveRecipient}
+        confirmLoading={savingRecipient}
+        okText={t('recipient.save')}
+        cancelText={t('common.cancel')}
+        destroyOnClose
+      >
+        <Form form={recipientForm} layout="vertical">
+          <RecipientForm form={recipientForm} />
+        </Form>
+      </Modal>
+    </div>
   );
 
   const journeyContent =

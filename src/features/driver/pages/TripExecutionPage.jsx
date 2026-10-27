@@ -16,6 +16,7 @@ import {
   Form,
   Input,
   Switch,
+  Flex,
 } from 'antd';
 import {
   EnvironmentOutlined,
@@ -27,6 +28,8 @@ import {
   SafetyCertificateOutlined,
   FileDoneOutlined,
   ExportOutlined,
+  UserOutlined,
+  PhoneOutlined,
 } from '@ant-design/icons';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -511,6 +514,45 @@ export default function TripExecutionPage() {
                           Ghi chú: {cp.notes}
                         </Paragraph>
                       )}
+
+                      {/* Thông tin người nhận tại mốc DropOff (FE-13 / R-16) */}
+                      {isDropOff && (() => {
+                        const targetBooking = bookingOf(cp.bookingId) || (mission?.bookings || []).find((b) => b.bookingCode === cp.bookingCode);
+                        const recName = targetBooking?.recipientName || cp.recipientName || targetBooking?.customerName;
+                        const recPhone = targetBooking?.recipientPhone || cp.recipientPhone || targetBooking?.customerPhone;
+                        const isConfirmed = Boolean(targetBooking?.recipientConfirmedAt || cp.recipientConfirmedAt);
+                        return (
+                          <div style={{ marginTop: 10, padding: '10px 14px', background: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0' }}>
+                            <Flex align="center" justify="space-between" wrap="wrap" gap={8}>
+                              <Space size={8} wrap>
+                                <UserOutlined style={{ color: '#475569' }} />
+                                <Text strong>{t('recipient.driverDropoffInfo')}:</Text>
+                                <Text>{recName || '—'}</Text>
+                                {recPhone && (
+                                  <Button
+                                    type="primary"
+                                    size="small"
+                                    icon={<PhoneOutlined />}
+                                    href={`tel:${recPhone}`}
+                                    style={{ borderRadius: 4 }}
+                                  >
+                                    {t('recipient.call')}: {recPhone}
+                                  </Button>
+                                )}
+                              </Space>
+                              {isConfirmed ? (
+                                <Tag color="green" icon={<CheckCircleOutlined />}>
+                                  {t('recipient.presenceConfirmed')}
+                                </Tag>
+                              ) : (
+                                <Tag color="orange" icon={<ClockCircleOutlined />}>
+                                  {t('recipient.presenceNotConfirmed')}
+                                </Tag>
+                              )}
+                            </Flex>
+                          </div>
+                        );
+                      })()}
                     </Col>
 
                     {/* Nút hành động theo State Machine */}

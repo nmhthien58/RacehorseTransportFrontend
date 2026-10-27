@@ -10,10 +10,11 @@ const { Text } = Typography;
  * @param {{
  *   label?: string,
  *   onChange?: (dataUrl: string | null) => void,
- *   height?: number
+ *   height?: number,
+ *   disabled?: boolean
  * }} props
  */
-export default function DigitalSignaturePad({ label, onChange, height = 180 }) {
+export default function DigitalSignaturePad({ label, onChange, height = 180, disabled = false }) {
   const { t } = useTranslation();
   const canvasRef = useRef(null);
   const drawingRef = useRef(false);
@@ -42,6 +43,7 @@ export default function DigitalSignaturePad({ label, onChange, height = 180 }) {
   };
 
   const start = (e) => {
+    if (disabled) return;
     const ctx = canvasRef.current.getContext('2d');
     const { x, y } = pointOf(e);
     ctx.beginPath();
@@ -50,7 +52,7 @@ export default function DigitalSignaturePad({ label, onChange, height = 180 }) {
   };
 
   const move = (e) => {
-    if (!drawingRef.current) return;
+    if (disabled || !drawingRef.current) return;
     const ctx = canvasRef.current.getContext('2d');
     const { x, y } = pointOf(e);
     ctx.lineTo(x, y);
@@ -59,12 +61,13 @@ export default function DigitalSignaturePad({ label, onChange, height = 180 }) {
   };
 
   const stop = () => {
-    if (!drawingRef.current) return;
+    if (disabled || !drawingRef.current) return;
     drawingRef.current = false;
     onChange?.(canvasRef.current.toDataURL('image/png'));
   };
 
   const clear = () => {
+    if (disabled) return;
     const canvas = canvasRef.current;
     canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
     setIsEmpty(true);
@@ -75,7 +78,7 @@ export default function DigitalSignaturePad({ label, onChange, height = 180 }) {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
         <Text>{label}</Text>
-        <Button size="small" type="text" icon={<ClearOutlined />} onClick={clear} disabled={isEmpty}>
+        <Button size="small" type="text" icon={<ClearOutlined />} onClick={clear} disabled={disabled || isEmpty}>
           {t('handover.sign.clear')}
         </Button>
       </div>
@@ -84,8 +87,10 @@ export default function DigitalSignaturePad({ label, onChange, height = 180 }) {
           position: 'relative',
           border: '1px dashed #D6D3D1',
           borderRadius: 8,
-          background: '#FAFAF9',
+          background: disabled ? '#F3F4F6' : '#FAFAF9',
           touchAction: 'none',
+          opacity: disabled ? 0.6 : 1,
+          pointerEvents: disabled ? 'none' : 'auto',
         }}
       >
         <canvas
@@ -97,7 +102,7 @@ export default function DigitalSignaturePad({ label, onChange, height = 180 }) {
           onTouchStart={start}
           onTouchMove={move}
           onTouchEnd={stop}
-          style={{ width: '100%', height, display: 'block', cursor: 'crosshair' }}
+          style={{ width: '100%', height, display: 'block', cursor: disabled ? 'not-allowed' : 'crosshair' }}
         />
         {isEmpty && (
           <span

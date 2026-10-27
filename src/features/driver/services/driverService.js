@@ -160,6 +160,16 @@ export const driverService = {
   },
 
   /**
+   * Báo tên người ký nhận thay khác với người nhận trên đơn (BE-15)
+   * @param {number|string} bookingId
+   * @param {{ alternateRecipientName: string, alternateRecipientPhone?: string, alternateRecipientIdCard?: string }} payload
+   * @returns {Promise<any>}
+   */
+  async proposeAlternateRecipient(bookingId, payload) {
+    return api.post(ENDPOINTS.BOOKINGS.PROPOSE_ALTERNATE_RECIPIENT(bookingId), payload);
+  },
+
+  /**
    * Lập biên bản bàn giao cho một đơn trên chuyến (multipart, mỗi mã vi mạch append một lần).
    * @param {number|string} tripId
    * @param {{ bookingId: number, recipientName: string, recipientPhone: string, recipientIdCard: string, overallCondition: string, remarks?: string, microchipNumbers: string[], signature: Blob }} handoverData

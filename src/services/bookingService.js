@@ -108,6 +108,43 @@ export const bookingService = {
     });
   },
 
+  /**
+   * Cập nhật thông tin người nhận của đơn (BE-15, khóa khi xe tới điểm trả)
+   * @param {number|string} id
+   * @param {{ recipientName: string, recipientPhone: string, recipientEmail?: string, recipientIdNumber?: string, recipientIsCustomer?: boolean }} payload
+   * @returns {Promise<any>}
+   */
+  async updateRecipient(id, payload) {
+    return api.put(ENDPOINTS.BOOKINGS.UPDATE_RECIPIENT(id), payload);
+  },
+
+  /**
+   * Khách xác nhận người nhận sẽ có mặt nhận ngựa theo khung giờ đã báo (BE-15)
+   * @param {number|string} id
+   * @returns {Promise<any>}
+   */
+  async confirmRecipient(id) {
+    return api.post(ENDPOINTS.BOOKINGS.CONFIRM_RECIPIENT(id));
+  },
+
+  /**
+   * Khách duyệt người nhận thay khi tài xế báo tên người ký khác (BE-15)
+   * @param {number|string} id
+   * @returns {Promise<any>}
+   */
+  async approveAlternateRecipient(id) {
+    return api.post(ENDPOINTS.BOOKINGS.APPROVE_ALTERNATE_RECIPIENT(id));
+  },
+
+  /**
+   * Báo tên người ký khác trên e-POD cần khách duyệt (BE-15)
+   * @param {number|string} id
+   * @param {{ alternateRecipientName: string, alternateRecipientPhone?: string, alternateRecipientIdCard?: string }} payload
+   * @returns {Promise<any>}
+   */
+  async proposeAlternateRecipient(id, payload) {
+    return api.post(ENDPOINTS.BOOKINGS.PROPOSE_ALTERNATE_RECIPIENT(id), payload);
+  },
   async calculateQuote(id, previewData = {}) {
     if (previewData && Object.keys(previewData).length > 0) {
       return this.previewQuote(previewData);

@@ -70,6 +70,30 @@ function normalizeBooking(b) {
     AssignedCoordinatorID: b.AssignedCoordinatorID || b.assignedCoordinatorId || null,
     createdAt: b.CreatedAt || b.createdAt || new Date().toISOString(),
     CreatedAt: b.CreatedAt || b.createdAt || new Date().toISOString(),
+    recipientName: b.RecipientName || b.recipientName || b.customerName || '',
+    RecipientName: b.RecipientName || b.recipientName || b.customerName || '',
+    recipientPhone: b.RecipientPhone || b.recipientPhone || b.customerPhone || '',
+    RecipientPhone: b.RecipientPhone || b.recipientPhone || b.customerPhone || '',
+    recipientEmail: b.RecipientEmail || b.recipientEmail || b.customerEmail || null,
+    RecipientEmail: b.RecipientEmail || b.recipientEmail || b.customerEmail || null,
+    recipientIdNumber: b.RecipientIdNumber || b.recipientIdNumber || null,
+    RecipientIdNumber: b.RecipientIdNumber || b.recipientIdNumber || null,
+    recipientIsCustomer: Boolean(b.RecipientIsCustomer ?? b.recipientIsCustomer),
+    RecipientIsCustomer: Boolean(b.RecipientIsCustomer ?? b.recipientIsCustomer),
+    recipientConfirmedAt: b.RecipientConfirmedAt || b.recipientConfirmedAt || null,
+    RecipientConfirmedAt: b.RecipientConfirmedAt || b.recipientConfirmedAt || null,
+    recipientNotifiedWindowStart: b.RecipientNotifiedWindowStart || b.recipientNotifiedWindowStart || null,
+    RecipientNotifiedWindowStart: b.RecipientNotifiedWindowStart || b.recipientNotifiedWindowStart || null,
+    recipientNotifiedWindowEnd: b.RecipientNotifiedWindowEnd || b.recipientNotifiedWindowEnd || null,
+    RecipientNotifiedWindowEnd: b.RecipientNotifiedWindowEnd || b.recipientNotifiedWindowEnd || null,
+    alternateRecipientName: b.AlternateRecipientName || b.alternateRecipientName || null,
+    AlternateRecipientName: b.AlternateRecipientName || b.alternateRecipientName || null,
+    alternateRecipientPhone: b.AlternateRecipientPhone || b.alternateRecipientPhone || null,
+    AlternateRecipientPhone: b.AlternateRecipientPhone || b.alternateRecipientPhone || null,
+    alternateRecipientIdCard: b.AlternateRecipientIdCard || b.alternateRecipientIdCard || null,
+    AlternateRecipientIdCard: b.AlternateRecipientIdCard || b.alternateRecipientIdCard || null,
+    alternateRecipientApprovedAt: b.AlternateRecipientApprovedAt || b.alternateRecipientApprovedAt || null,
+    AlternateRecipientApprovedAt: b.AlternateRecipientApprovedAt || b.alternateRecipientApprovedAt || null,
   };
 }
 
@@ -296,6 +320,64 @@ export const bookingHandlers = [
     });
 
     return sendBookingResponse(updated, 'Từ chối đơn vận chuyển thành công');
+  }),
+
+  // PUT /api/bookings/:id/recipient - Cập nhật người nhận (FE-13 / BE-15)
+  http.put('/api/bookings/:id/recipient', async ({ params, request }) => {
+    const body = await request.json();
+    const updated = updateStoredBooking(params.id, {
+      recipientName: body.recipientName,
+      RecipientName: body.recipientName,
+      recipientPhone: body.recipientPhone,
+      RecipientPhone: body.recipientPhone,
+      recipientEmail: body.recipientEmail,
+      RecipientEmail: body.recipientEmail,
+      recipientIdNumber: body.recipientIdNumber,
+      RecipientIdNumber: body.recipientIdNumber,
+      recipientIsCustomer: body.recipientIsCustomer,
+      RecipientIsCustomer: body.recipientIsCustomer,
+    });
+    return sendBookingResponse(updated, 'Cập nhật thông tin người nhận thành công');
+  }),
+
+  // POST /api/bookings/:id/confirm-recipient - Khách xác nhận người nhận sẽ có mặt (FE-13 / BE-15)
+  http.post('/api/bookings/:id/confirm-recipient', ({ params }) => {
+    const now = new Date().toISOString();
+    const updated = updateStoredBooking(params.id, {
+      recipientConfirmedAt: now,
+      RecipientConfirmedAt: now,
+    });
+    return sendBookingResponse(updated, 'Xác nhận có mặt thành công');
+  }),
+
+  // POST /api/bookings/:id/propose-alternate-recipient - Tài xế báo người ký nhận thay (FE-13 / BE-15)
+  http.post('/api/bookings/:id/propose-alternate-recipient', async ({ params, request }) => {
+    const body = await request.json();
+    const updated = updateStoredBooking(params.id, {
+      alternateRecipientName: body.alternateRecipientName,
+      AlternateRecipientName: body.alternateRecipientName,
+      alternateRecipientPhone: body.alternateRecipientPhone,
+      AlternateRecipientPhone: body.alternateRecipientPhone,
+      alternateRecipientIdCard: body.alternateRecipientIdCard,
+      AlternateRecipientIdCard: body.alternateRecipientIdCard,
+      alternateRecipientApprovedAt: null,
+      AlternateRecipientApprovedAt: null,
+    });
+    return sendBookingResponse(updated, 'Đã gửi yêu cầu người nhận thay');
+  }),
+
+  // POST /api/bookings/:id/approve-alternate-recipient - Khách duyệt người nhận thay (FE-13 / BE-15)
+  http.post('/api/bookings/:id/approve-alternate-recipient', ({ params }) => {
+    const b = getStoredBookingById(params.id);
+    const now = new Date().toISOString();
+    const altName = b?.alternateRecipientName || b?.AlternateRecipientName;
+    const updated = updateStoredBooking(params.id, {
+      alternateRecipientApprovedAt: now,
+      AlternateRecipientApprovedAt: now,
+      recipientName: altName || b?.recipientName,
+      RecipientName: altName || b?.recipientName,
+    });
+    return sendBookingResponse(updated, 'Đã duyệt người nhận thay thành công');
   }),
 
   // POST /api/bookings/:id/cancel - Hủy đơn

@@ -13,7 +13,7 @@ import TripHorseStatusTag from '@components/common/TripHorseStatusTag';
 import { unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import { HANDOVER_CONDITIONS, HANDOVER_CONDITION_COLOR } from '@utils/incidents';
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
 const formatTime = (value) => (value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—');
@@ -22,6 +22,7 @@ const formatTime = (value) => (value ? dayjs(value).format('DD/MM/YYYY HH:mm') :
  * Bước 4 của đoàn xe: bàn giao ngựa tại điểm đến và lập biên bản e-POD.
  * Mỗi đơn trên chuyến một biên bản (POST /trips/{id}/handover, multipart). Tài xế cùng người nhận đối chiếu
  * từng con ngoài thực tế với ảnh và dữ liệu trên hệ thống rồi tích xác nhận; mã vi mạch gửi lên lấy từ hồ sơ.
+ * Điền sẵn thông tin người nhận từ đơn; nếu đổi người ký khác thì khóa ký chờ khách duyệt (FE-13 / R-16).
  */
 export default function ArrivalHandoverPage() {
   const { tripId } = useParams();
@@ -39,6 +40,7 @@ export default function ArrivalHandoverPage() {
   const [verified, setVerified] = useState({});
   const [signature, setSignature] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [proposingAlternate, setProposingAlternate] = useState(false);
   const [sosModalOpen, setSosModalOpen] = useState(false);
 
   const loadHandovers = useCallback(
@@ -53,14 +55,6 @@ export default function ArrivalHandoverPage() {
   useEffect(() => {
     loadHandovers();
   }, [loadHandovers]);
-
-  if (loading && !mission) {
-    return (
-      <div style={{ textAlign: 'center', padding: '100px 0' }}>
-        <Spin size="large" />
-      </div>
-    );
-  }
 
   const bookings = mission?.bookings || [];
   const horses = mission?.horses || [];
@@ -83,11 +77,65 @@ export default function ArrivalHandoverPage() {
   const activeHorses = activeBooking ? onBoardOf(activeBooking.bookingId) : [];
   const allVerified = activeHorses.length > 0 && activeHorses.every((h) => verified[h.tripHorseId]);
 
+  // Theo dõi tên người ký trong form để phát hiện người ký nhận thay (FE-13 / R-16)
+  const currentSignerName = Form.useWatch('recipientName', form) || '';
+  const originalRecipientName = activeBooking?.recipientName || activeBooking?.customerName || '';
+  const isNameChanged = Boolean(
+    currentSignerName.trim() &&
+    originalRecipientName.trim() &&
+    currentSignerName.trim().toLowerCase() !== originalRecipientName.trim().toLowerCase()
+  );
+  const isAlternateApproved = Boolean(
+    (activeBooking?.alternateRecipientApprovedAt || activeBooking?.AlternateRecipientApprovedAt) &&
+    (activeBooking?.alternateRecipientName || activeBooking?.AlternateRecipientName)?.trim().toLowerCase() ===
+      currentSignerName.trim().toLowerCase()
+  );
+  const isAwaitingApproval = isNameChanged && !isAlternateApproved;
+
+  // Tự động tải lại mỗi 15 giây khi đang chờ khách xác nhận người nhận thay
+  useEffect(() => {
+    if (!isAwaitingApproval) return undefined;
+    const interval = setInterval(() => {
+      fetchMission();
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [isAwaitingApproval, fetchMission]);
+
   const openForm = (bookingId) => {
     setActiveBookingId(bookingId);
     setVerified({});
     setSignature(null);
-    form.resetFields();
+
+    // Điền sẵn thông tin người nhận từ đơn (FE-13 / R-16)
+    const b = bookings.find((item) => item.bookingId === bookingId);
+    const defaultName = b?.recipientName || b?.customerName || '';
+    const defaultPhone = b?.recipientPhone || b?.customerPhone || '';
+    const defaultId = b?.recipientIdNumber || b?.recipientIdCard || '';
+    form.setFieldsValue({
+      recipientName: defaultName,
+      recipientPhone: defaultPhone,
+      recipientIdCard: defaultId,
+      overallCondition: 'Excellent',
+      remarks: '',
+    });
+  };
+
+  const handleProposeAlternate = async () => {
+    if (!activeBooking || !currentSignerName.trim()) return;
+    setProposingAlternate(true);
+    try {
+      await driverService.proposeAlternateRecipient(activeBooking.bookingId, {
+        alternateRecipientName: currentSignerName.trim(),
+        alternateRecipientPhone: form.getFieldValue('recipientPhone') || '',
+        alternateRecipientIdCard: form.getFieldValue('recipientIdCard') || '',
+      });
+      message.success('Đã gửi thông báo cho khách hàng duyệt người nhận thay.');
+      fetchMission();
+    } catch (err) {
+      message.error(getErrorMessage(err, 'Không thể gửi yêu cầu xác nhận người nhận thay'));
+    } finally {
+      setProposingAlternate(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -99,6 +147,10 @@ export default function ArrivalHandoverPage() {
     }
     if (!allVerified) {
       message.error(t('handover.form.horsesNotVerified'));
+      return;
+    }
+    if (isAwaitingApproval) {
+      message.error(t('recipient.awaitingCustomerApproval'));
       return;
     }
     if (!signature) {
@@ -129,6 +181,14 @@ export default function ArrivalHandoverPage() {
       setSubmitting(false);
     }
   };
+
+  if (loading && !mission) {
+    return (
+      <div style={{ textAlign: 'center', padding: '100px 0' }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   const doneCount = bookings.filter((b) => b.handoverCompleted || handoverOf(b.bookingId)).length;
   const anyAvailable = bookings.some((b) => !(b.handoverCompleted || handoverOf(b.bookingId)) && canHandoverBooking(b));
@@ -348,6 +408,51 @@ export default function ArrivalHandoverPage() {
               </Col>
             </Row>
 
+            {/* Cảnh báo khi người ký khác với người nhận trên đơn (FE-13 / R-16) */}
+            {isAwaitingApproval && (
+              <Alert
+                type="warning"
+                showIcon
+                style={{ marginBottom: 16 }}
+                message={t('recipient.alternateWarning', { originalName: originalRecipientName })}
+                description={
+                  <div style={{ marginTop: 6 }}>
+                    <Paragraph style={{ margin: 0 }}>
+                      {t('recipient.awaitingCustomerApproval')}
+                    </Paragraph>
+                    <Space style={{ marginTop: 8 }}>
+                      <Button
+                        size="small"
+                        type="primary"
+                        loading={proposingAlternate}
+                        onClick={handleProposeAlternate}
+                      >
+                        {t('recipient.sendAlternateRequest')}
+                      </Button>
+                      <Button size="small" onClick={() => fetchMission()}>
+                        {t('recipient.checkAgain')}
+                      </Button>
+                    </Space>
+                  </div>
+                }
+              />
+            )}
+
+            {isAlternateApproved && (
+              <Alert
+                type="success"
+                showIcon
+                style={{ marginBottom: 16 }}
+                message={t('recipient.alternateApproved', {
+                  name: currentSignerName,
+                  time: dayjs(
+                    activeBooking.alternateRecipientApprovedAt ||
+                      activeBooking.AlternateRecipientApprovedAt,
+                  ).format('DD/MM/YYYY HH:mm'),
+                })}
+              />
+            )}
+
             <Form.Item name="overallCondition" label={t('handover.condition.label')} rules={[{ required: true }]}>
               <Radio.Group
                 optionType="button"
@@ -359,11 +464,20 @@ export default function ArrivalHandoverPage() {
               <TextArea rows={3} />
             </Form.Item>
 
-            <DigitalSignaturePad label={t('handover.form.signature')} onChange={setSignature} />
+            <DigitalSignaturePad
+              label={t('handover.form.signature')}
+              onChange={setSignature}
+              disabled={isAwaitingApproval}
+            />
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 20 }}>
               <Button onClick={() => setActiveBookingId(null)}>{t('common.cancel')}</Button>
-              <Button type="primary" loading={submitting} onClick={handleSubmit} disabled={!allVerified || !signature}>
+              <Button
+                type="primary"
+                loading={submitting}
+                onClick={handleSubmit}
+                disabled={!allVerified || !signature || isAwaitingApproval}
+              >
                 {t('handover.form.submit')}
               </Button>
             </div>

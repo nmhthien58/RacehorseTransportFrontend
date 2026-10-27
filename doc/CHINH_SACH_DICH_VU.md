@@ -152,6 +152,8 @@ Từ lúc ngựa được đưa lên xe tại điểm đón đến lúc người
 | **Lỗi Khách** | Giấy sai / giả, khai sai tình trạng ngựa, người nhận vắng mặt / từ chối | Không hoàn | Khách chịu | Không |
 | **Bất khả kháng** | Đóng biên giới, đổi chính sách nhập khẩu, thiên tai, dịch bệnh, tai nạn do bên thứ ba | Hoàn theo tỉ lệ quãng đường chưa đi, trừ phí thủ tục đã nộp không lấy lại được | Công ty chịu chi phí xe và nhân sự; Khách chịu chuồng tạm và thú y | Không |
 
+Phí chuồng tạm và chăm sóc ngựa trong lúc chờ (biên giới đóng, bổ sung giấy, người nhận vắng mặt...): `[Stable.FeePerHorsePerDayUsd = 50]` USD mỗi con mỗi ngày (chưa đủ ngày tính tròn một ngày), do bên chịu chi phí theo bảng trên trả.
+
 Khi có sự cố, Khách được thông báo ngay trên ứng dụng và qua email: nguyên nhân, phương án xử lý đã được duyệt, thay đổi tuyến (nếu có). Mọi chi phí Khách phải chịu được báo trước khi thực hiện, trừ trường hợp khẩn cấp để bảo vệ tính mạng ngựa.
 
 ### 9.2 Xe hỏng, nhân sự không thể tiếp tục
@@ -204,9 +206,9 @@ Công ty có thể cho đoàn chờ biên giới mở lại (ngựa ở chuồng
 
 ### 10.5 Người nhận vắng mặt hoặc từ chối nhận
 - **Không có lý do chính đáng:** công ty báo Khách ngay. Trong **24 giờ**, Khách chọn trên ứng dụng một trong các cách:
-  1. Chỉ định người nhận hoặc địa chỉ khác gần đó (tính phí theo quãng đường thêm).
-  2. Gửi ngựa ở chuồng tạm gần nhất (Khách trả phí chuồng và chăm sóc theo ngày), Khách tự tới nhận.
-  3. Chở ngựa về nơi đi (Khách trả chi phí chiều về theo báo giá mới).
+  1. Chỉ định người nhận hoặc địa chỉ khác gần đó (tính phí theo quãng đường thêm: `[Delivery.ExtraKmFeeUsd = 2]` USD mỗi km).
+  2. Gửi ngựa ở chuồng tạm gần nhất (Khách trả phí chuồng và chăm sóc theo ngày, `[Stable.FeePerHorsePerDayUsd = 50]` USD / con / ngày), Khách tự tới nhận.
+  3. Chở ngựa về nơi đi (Khách trả chi phí chiều về theo báo giá mới, tính như một đơn đi ngược lại).
 
   Khách không trả lời sau 24 giờ thì áp dụng **cách 2**. Tiền cước của đơn **không được hoàn** vì dịch vụ vận chuyển đã hoàn thành.
 - **Từ chối nhận vì ngựa bị thương hoặc giao nhầm ngựa:** không phải lỗi Khách. Người nhận ghi rõ lý do kèm ảnh vào biên bản. Công ty chăm sóc ngựa tại chuồng tạm **bằng chi phí của công ty** cho tới khi xử lý xong, và mở hồ sơ bồi thường (mục 8).

@@ -114,6 +114,9 @@ export default function BookingWizard({
   const [uploadingHorseId, setUploadingHorseId] = useState(null);
   // R-10: khách phải tích đồng ý Chính sách dịch vụ đúng phiên bản hiện hành
   const [policyAgreement, setPolicyAgreement] = useState({ accepted: false, policyVersion: null });
+  // R-16 (BE-15): người nhận ngựa; mặc định khách tự nhận. TODO(FE-13): thay bằng RecipientForm dùng chung
+  const [recipient, setRecipient] = useState({ isCustomer: true, name: '', phone: '', email: '', idNumber: '' });
+  const recipientValid = recipient.isCustomer || (recipient.name.trim() && /^\+?[0-9 .()-]{6,20}$/.test(recipient.phone.trim()));
   const { policy } = usePolicy();
   const proofThreshold = Number(policy?.insurance?.proofThresholdUsd ?? 50000);
   const usdVndRate = Number(policy?.payment?.usdVndRate ?? 0);
@@ -663,6 +666,11 @@ export default function BookingWizard({
       specialInstructions: instructions || null,
       ...coordinates,
       // R-10: đồng ý Chính sách dịch vụ đúng phiên bản đang hiển thị
+      recipientIsCustomer: recipient.isCustomer,
+      recipientName: recipient.isCustomer ? null : recipient.name.trim(),
+      recipientPhone: recipient.isCustomer ? null : recipient.phone.trim(),
+      recipientEmail: recipient.isCustomer ? null : recipient.email.trim() || null,
+      recipientIdNumber: recipient.idNumber.trim() || null,
       acceptPolicy: policyAgreement.accepted,
       policyVersion: policyAgreement.policyVersion,
       horses: selectedHorseIds.map((hId) => {
@@ -1718,7 +1726,56 @@ export default function BookingWizard({
                 </div>
 
                 <Divider style={{ margin: '14px 0' }} />
-                {/* TODO(FE-13, BE-15): bước người nhận ngựa (RecipientForm) */}
+                <Text strong style={{ fontSize: 13, color: '#0f172a', display: 'block', marginBottom: 8 }}>
+                  {t('bookingForm.recipient.title')}
+                </Text>
+                <Checkbox
+                  checked={recipient.isCustomer}
+                  onChange={(e) => setRecipient((r) => ({ ...r, isCustomer: e.target.checked }))}
+                  style={{ marginBottom: 8 }}
+                >
+                  {t('bookingForm.recipient.self')}
+                </Checkbox>
+                {!recipient.isCustomer && (
+                  <Row gutter={[8, 8]} style={{ marginBottom: 8 }}>
+                    <Col xs={24} sm={12}>
+                      <Input
+                        value={recipient.name}
+                        maxLength={100}
+                        onChange={(e) => setRecipient((r) => ({ ...r, name: e.target.value }))}
+                        placeholder={t('bookingForm.recipient.name')}
+                      />
+                    </Col>
+                    <Col xs={24} sm={12}>
+                      <Input
+                        value={recipient.phone}
+                        maxLength={20}
+                        onChange={(e) => setRecipient((r) => ({ ...r, phone: e.target.value }))}
+                        placeholder={t('bookingForm.recipient.phone')}
+                        status={recipient.phone && !/^\+?[0-9 .()-]{6,20}$/.test(recipient.phone.trim()) ? 'error' : undefined}
+                      />
+                    </Col>
+                    <Col xs={24} sm={12}>
+                      <Input
+                        value={recipient.email}
+                        maxLength={255}
+                        onChange={(e) => setRecipient((r) => ({ ...r, email: e.target.value }))}
+                        placeholder={t('bookingForm.recipient.email')}
+                      />
+                    </Col>
+                    <Col xs={24} sm={12}>
+                      <Input
+                        value={recipient.idNumber}
+                        maxLength={50}
+                        onChange={(e) => setRecipient((r) => ({ ...r, idNumber: e.target.value }))}
+                        placeholder={t('bookingForm.recipient.idNumber')}
+                      />
+                    </Col>
+                  </Row>
+                )}
+                <Text type="secondary" style={{ fontSize: 11.5, display: 'block', marginBottom: 12 }}>
+                  {t('bookingForm.recipient.hint')}
+                </Text>
                 <PolicyAgreement accepted={policyAgreement.accepted} onChange={setPolicyAgreement} />
               </Card>
             </Col>
@@ -1763,7 +1820,7 @@ export default function BookingWizard({
             size="large"
             icon={<CheckCircleFilled />}
             loading={loading}
-            disabled={!quote || quoteLoading || !policyAgreement.accepted}
+            disabled={!quote || quoteLoading || !policyAgreement.accepted || !recipientValid}
             onClick={handleFinalSubmit}
             style={{
               minWidth: 180,

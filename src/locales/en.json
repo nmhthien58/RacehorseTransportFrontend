@@ -2378,6 +2378,15 @@
       "label": "Estimated price",
       "note": "The final price is sent after the company plans the route; you do not pay anything at this step.",
       "linesNote": "The breakdown above is the low end of the range (without transit fees and detours)."
+    },
+    "recipient": {
+      "title": "Horse recipient",
+      "self": "I will receive the horses myself (use the name and phone in my profile)",
+      "name": "Recipient full name *",
+      "phone": "Recipient phone *",
+      "email": "Recipient email (recommended)",
+      "idNumber": "ID card / passport (optional)",
+      "hint": "The recipient is emailed when the trip is scheduled, when the vehicle departs and when it is about to arrive. You can change the recipient until the vehicle reaches the drop-off point."
     }
   },
   "policyAgreement": {

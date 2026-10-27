@@ -2377,6 +2377,15 @@
       "label": "Giá ước tính",
       "note": "Giá chốt gửi sau khi công ty lập tuyến; bạn chưa phải thanh toán ở bước này.",
       "linesNote": "Bảng chi tiết ở trên là mức thấp của khoảng giá (chưa có phí quá cảnh và quãng đường đi vòng)."
+    },
+    "recipient": {
+      "title": "Người nhận ngựa",
+      "self": "Tôi tự nhận ngựa (dùng tên, số điện thoại trong hồ sơ của tôi)",
+      "name": "Họ tên người nhận *",
+      "phone": "Số điện thoại người nhận *",
+      "email": "Email người nhận (nên có)",
+      "idNumber": "CMND / CCCD / hộ chiếu (không bắt buộc)",
+      "hint": "Người nhận được báo qua email khi chuyến được lên lịch, khi xe xuất phát và khi xe sắp tới. Bạn sửa được người nhận tới khi xe tới điểm giao."
     }
   },
   "policyAgreement": {

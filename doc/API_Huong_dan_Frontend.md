@@ -19,6 +19,7 @@ Tài liệu này hướng dẫn gọi API của hệ thống vận chuyển ng�
 6b. [Bản đồ: tìm địa chỉ, chỉ đường](#6b-bản-đồ-tìm-địa-chỉ-chỉ-đường)
 7. [Flow 1 – Đơn vận chuyển](#7-flow-1--đơn-vận-chuyển)
 7b. [Tuyến dự kiến của đơn](#7b-tuyến-dự-kiến-của-đơn)
+7c. [Hợp đồng vận chuyển](#7c-hợp-đồng-vận-chuyển)
 8. [Flow 2 – Hồ sơ kiểm dịch](#8-flow-2--hồ-sơ-kiểm-dịch)
 9. [Flow 3 – Lập kế hoạch chuyến](#9-flow-3--lập-kế-hoạch-chuyến)
 10. [Flow 4 – Chạy chuyến và theo dõi](#10-flow-4--chạy-chuyến-và-theo-dõi)
@@ -1696,9 +1697,15 @@ Mọi trạng thái trước khi lên chuyến ──(khách hủy)──> Cance
 Submitted ──(quá 48 giờ không ai duyệt)──> Expired
 ```
 
-**Báo giá chốt (R-10).** Ngay khi quản lý duyệt tuyến, server tính **giá chốt** theo quãng đường và các nước quá cảnh của tuyến (giữ nguyên bảng giá và mức hỏa tốc lúc khách gửi đơn), cộng **phí bảo hiểm toàn giá trị** cho từng con chọn gói `Full` (`Insurance.PremiumPercent`% giá trị thỏa thuận, dòng `INS_FULL`). Giá chốt nằm ở `estimatedCost` + `quoteLines`; đơn chuyển `Quoted` và khách nhận thông báo + email. Khách có `Booking.QuoteAcceptDays` ngày (mặc định 3, xem `GET /api/policy`) tính tới `quoteExpiresAt` để **chấp nhận và đặt cọc**; còn 1 ngày thì server gửi email nhắc một lần. Quá hạn (chưa chấp nhận, hoặc chấp nhận mà chưa cọc) thì đơn tự đóng `QuoteExpired`, không mất phí. Trong lúc đơn `Quoted`, công ty vẫn có thể lập lại tuyến; duyệt bản mới thì báo giá được tính lại với hạn mới.
+**Báo giá chốt (R-10) và hợp đồng (R-17).** Ngay khi quản lý duyệt tuyến, server tính **giá chốt** theo quãng đường và các nước quá cảnh của tuyến (giữ nguyên bảng giá và mức hỏa tốc lúc khách gửi đơn), cộng **phí bảo hiểm toàn giá trị** cho từng con chọn gói `Full` (`Insurance.PremiumPercent`% giá trị thỏa thuận, dòng `INS_FULL`). Giá chốt nằm ở `estimatedCost` + `quoteLines`; server tạo kèm **hợp đồng PDF** bản nháp (mục 7c); đơn chuyển `Quoted` và khách nhận thông báo + email. Khách có `Booking.QuoteAcceptDays` ngày (mặc định 3, xem `GET /api/policy`) tính tới `quoteExpiresAt` để **chấp nhận và đặt cọc**; còn 1 ngày thì server gửi email nhắc một lần. Quá hạn (chưa chấp nhận, hoặc chấp nhận mà chưa cọc) thì đơn tự đóng `QuoteExpired`, không mất phí. Trong lúc đơn `Quoted`, công ty vẫn có thể lập lại tuyến; duyệt bản mới thì báo giá được tính lại với hạn mới.
 
 Đơn tạo trước R-10 (không có `quoteExpiresAt`) vẫn theo luật cũ: quá `Payment.DepositDueHours` giờ sau khi duyệt mà chưa cọc thì `Expired`.
+
+**Hạn nộp giấy (BE-06, Chính sách mục 6).** Khi khách cọc xong (đơn `Approved`), mỗi con ngựa có một hồ sơ kiểm dịch; danh sách giấy cần nộp tự tính theo **nước đi + các nước quá cảnh của tuyến đã duyệt + nước đến** (mục 8). Khách có `Dossier.SubmitDays` ngày (mặc định 7) tính từ lúc cọc, hạn ở `docsDueAt`. Server gửi email nhắc khi còn 3 ngày và khi còn 1 ngày (chỉ cho ngựa còn thiếu giấy bắt buộc chưa nộp hoặc bị từ chối; giấy đang chờ duyệt coi như đã nộp). Quá hạn mà vẫn thiếu: đơn bị hủy, hoàn tiền **như khách tự hủy sau khi cọc** (`Payment.CancelRefundPercent`% tiền cọc + 100% phần còn lại đã trả), email cho khách. Nếu ngựa đã được xếp lên chuyến thì không tự hủy mà báo quản lý xử lý.
+
+**Đổi tuyến do công ty (BE-06, Chính sách mục 2).** Sau khi khách đã chấp nhận báo giá (`AwaitingDeposit`, `Approved`, `Assigned` và ngựa chưa rời điểm đón), điều phối vẫn lập được phiên bản tuyến mới và quản lý duyệt như thường; **giá chốt giữ nguyên**, đơn giữ trạng thái. Tuyến mới đi qua nước mới (khi đơn đang làm giấy) thì danh sách giấy tự thêm giấy quá cảnh của nước đó, hạn nộp giấy được gia hạn thêm `Dossier.SubmitDays` ngày, khách nhận thông báo + email, và tới `routeChangeCancelUntil` khách được **hủy và hoàn 100%** (`POST /api/bookings/{id}/cancel-route-change`).
+
+**Khách đổi điểm đón / trả (BE-06).** Trước khi trả bất kỳ khoản nào, khách đổi được bằng `PUT /api/bookings/{id}/locations`: khoảng giá tính lại; nếu đã có tuyến / báo giá thì bị rút lại, đơn về `PreApproved` để lập tuyến và báo giá mới. Đã trả tiền thì khách liên hệ công ty.
 
 Thứ tự gọi thông thường:
 
@@ -2272,6 +2279,8 @@ Ngoài các trường của danh sách, chi tiết có thêm:
 | `quoteMin`, `quoteMax` | Khoảng giá ước tính lúc khách gửi đơn (R-10); `null` với đơn cũ |
 | `quotedAt`, `quoteExpiresAt` | Lúc gửi báo giá chốt và hạn chấp nhận + đặt cọc (R-10); `null` khi chưa có báo giá chốt hoặc đơn cũ |
 | `quoteAcceptedAt` | Lúc khách chấp nhận báo giá chốt |
+| `docsDueAt` | Hạn khách nộp đủ giấy tờ (BE-06); có sau khi cọc. Hiện đếm ngược trên trang đơn |
+| `routeChangeCancelUntil` | Có giá trị khi công ty đổi tuyến thêm nước mới: tới lúc này khách được hủy và hoàn 100% (hiện nút "Hủy và hoàn 100%") |
 | `policyVersion`, `policyAcceptedAt` | Phiên bản Chính sách dịch vụ khách đã đồng ý gần nhất (lúc gửi đơn, cập nhật lại khi chấp nhận báo giá) và thời điểm đồng ý |
 | `horses[].bookingHorseId` | Mã "ngựa trong đơn", dùng khi xếp chuyến và khi Manager chốt giá trị |
 | `horses[].declaredValue` | Giá trị khách khai báo (USD); `null` với đơn cũ chỉ khai một giá trị cho cả đơn |
@@ -2318,7 +2327,7 @@ Lỗi thường gặp:
 
 ### POST /api/bookings/{id}/accept-quote — Khách chấp nhận báo giá chốt
 
-Khách đồng ý giá chốt (`estimatedCost`, `quoteLines`) và Chính sách dịch vụ. Đơn chuyển `AwaitingDeposit`, tiền cọc = `Payment.DepositPercent`% giá chốt; khách đặt cọc bằng `POST /api/bookings/{id}/payments` trước `quoteExpiresAt` (hạn không đổi khi chấp nhận). Quản lý nhận thông báo. Nếu cấu hình cọc 0% thì đơn chuyển thẳng `Approved` và mở hồ sơ.
+Khách đồng ý giá chốt (`estimatedCost`, `quoteLines`), **Hợp đồng vận chuyển** bản nháp đang xem (mục 7c) và Chính sách dịch vụ: đây là nút **"Chấp nhận & đặt cọc"**, cú bấm đó là giao kết hợp đồng (không ký riêng, không OTP). Hợp đồng chuyển `Accepted`, server lưu bằng chứng (tài khoản, thời điểm, IP, User-Agent, phiên bản chính sách) và email cho khách. Đơn chuyển `AwaitingDeposit`, tiền cọc = `Payment.DepositPercent`% giá chốt; khách đặt cọc bằng `POST /api/bookings/{id}/payments` trước `quoteExpiresAt` (hạn không đổi khi chấp nhận). Quản lý nhận thông báo. Nếu cấu hình cọc 0% thì đơn chuyển thẳng `Approved` và mở hồ sơ.
 
 - **Ai gọi được:** Customer (chủ đơn)
 - **Khi nào:** đơn đang `Quoted` và chưa quá `quoteExpiresAt`
@@ -2326,13 +2335,20 @@ Khách đồng ý giá chốt (`estimatedCost`, `quoteLines`) và Chính sách d
 
 | Trường | Kiểu | Bắt buộc | Mô tả |
 |---|---|---|---|
-| `acceptPolicy` | true / false | Có (phải là `true`) | Khách tích lại ô đồng ý Chính sách dịch vụ |
+| `contractId` | số | Có | `contractId` của bản hợp đồng khách đang xem (`GET /api/bookings/{id}/contract`) |
+| `contractSha256` | chuỗi | Có | `fileSha256` của bản đó (gửi nguyên giá trị nhận được) |
+| `acceptPolicy` | true / false | Có (phải là `true`) | Khách tích ô "Tôi đã đọc hợp đồng và Chính sách dịch vụ" |
 | `policyVersion` | chuỗi | Có | Phiên bản lấy từ `GET /api/policy` → `version` |
 
 Ví dụ request:
 
 ```json
-{ "acceptPolicy": true, "policyVersion": "1.0" }
+{
+  "contractId": 12,
+  "contractSha256": "5fbcfef0a93c6d1e0b4c7f3a2d9e8b1c6a5f4e3d2c1b0a9f8e7d6c5b4a392817",
+  "acceptPolicy": true,
+  "policyVersion": "1.0"
+}
 ```
 
 Response `200`: `data` là chi tiết đơn với `status = AwaitingDeposit`, `quoteAcceptedAt` đã có, `payment.nextPaymentType = Deposit`.
@@ -2342,6 +2358,8 @@ Lỗi thường gặp:
 | HTTP | `message` | Khi nào |
 |---|---|---|
 | 400 | `Only a quoted booking can be accepted (current status: PreApproved).` | Chưa có báo giá chốt, hoặc đã chấp nhận rồi |
+| 400 | `The contract has changed since you opened it. Please review the latest version.` | `contractId` không phải bản nháp hiện hành (công ty vừa lập lại tuyến nên có bản mới) hoặc `contractSha256` không khớp: tải lại `GET /api/bookings/{id}/contract`, cho khách xem lại rồi bấm lại |
+| 400 | `ContractSha256 is required.` / `ContractId is required.` | Thiếu thông tin bản hợp đồng |
 | 400 | `This quote expired at 30/10/2026 15:11 (Vietnam time). Please submit a new request.` | Quá hạn báo giá |
 | 400 | `You must accept the service policy to continue.` | `acceptPolicy` không phải `true` |
 | 400 | `The service policy has changed (current version 1.1). ...` | `policyVersion` khác phiên bản hiện hành |
@@ -2363,6 +2381,62 @@ Response `200`: `data` là chi tiết đơn với `status = Cancelled`.
 | 403 | `You can only answer the quote of your own booking.` | Đơn của khách khác |
 
 **Lưu ý thanh toán:** `POST /api/bookings/{id}/payments` trả `400 The quote for booking ... has expired. Please submit a new request.` khi đơn `AwaitingDeposit` đã quá `quoteExpiresAt` (job đóng đơn chạy vài phút một lần).
+
+### PUT /api/bookings/{id}/locations — Khách đổi điểm đón / trả
+
+Khách chọn lại điểm đón / trả trên bản đồ khi **chưa trả khoản nào**. Server tính lại khoảng giá (`quoteMin`, `quoteMax`), quãng đường và các nước đi qua. Nếu đơn đã có tuyến hoặc báo giá (`RoutePlanned`, `Quoted`, `AwaitingDeposit` chưa cọc): báo giá chốt và hợp đồng nháp bị rút lại, tuyến đã duyệt thành `Superseded`, tuyến đang soạn / chờ duyệt thành `Rejected`; đơn về `PreApproved`, điều phối và quản lý nhận thông báo lập tuyến lại; duyệt tuyến mới thì khách nhận báo giá chốt mới.
+
+- **Ai gọi được:** Customer (chủ đơn)
+- **Khi nào:** đơn `Submitted`, `PreApproved`, `RoutePlanned`, `Quoted`, hoặc `AwaitingDeposit` chưa trả đồng nào
+- **Dữ liệu gửi lên:** JSON
+
+| Trường | Kiểu | Bắt buộc | Mô tả |
+|---|---|---|---|
+| `pickupAddress` | chuỗi | Có | Địa chỉ đón mới, tối đa 255 ký tự |
+| `pickupCountryCode` | chuỗi | Có | Mã nước đón, 2 chữ cái |
+| `pickupLat`, `pickupLng` | số | Không (nên gửi) | Tọa độ điểm đón (`GET /api/geo/search` / `reverse`) |
+| `dropoffAddress` | chuỗi | Có | Địa chỉ giao mới |
+| `dropoffCountryCode` | chuỗi | Có | Mã nước giao |
+| `dropoffLat`, `dropoffLng` | số | Không (nên gửi) | Tọa độ điểm giao |
+
+Ví dụ request:
+
+```json
+{
+  "pickupAddress": "Sơn Tây, Hà Nội",
+  "pickupCountryCode": "VN",
+  "pickupLat": 21.1382,
+  "pickupLng": 105.5051,
+  "dropoffAddress": "Trường đua Nam Ninh",
+  "dropoffCountryCode": "CN",
+  "dropoffLat": 22.817,
+  "dropoffLng": 108.3665
+}
+```
+
+Response `200`: `data` là chi tiết đơn với địa chỉ, khoảng giá mới; nếu báo giá bị rút lại thì `status = PreApproved`, `estimatedCost = 0`, `quotedAt = null`.
+
+| HTTP | `message` | Khi nào |
+|---|---|---|
+| 400 | `The pickup / drop-off can no longer be changed online (current status: Approved). Please contact the logistics team.` | Đơn đã cọc / đang chạy / đã đóng |
+| 400 | `A payment was already made for this booking. Please contact the logistics team to change the pickup / drop-off.` | `AwaitingDeposit` nhưng đã trả một phần |
+| 400 | `PickupCountryCode must be a 2-letter country code.` | Sai mã nước |
+| 403 | `You can only change your own bookings.` | Đơn của khách khác |
+
+### POST /api/bookings/{id}/cancel-route-change — Khách hủy vì công ty đổi tuyến (hoàn 100%)
+
+Dùng khi chi tiết đơn có `routeChangeCancelUntil` (công ty đổi tuyến sang nước mới mà khách không lo được giấy) và chưa quá thời điểm đó. Đơn chuyển `Cancelled`, server hoàn **100%** mọi khoản đã trả (kể cả tiền cọc) qua VNPay, quản lý nhận thông báo.
+
+- **Ai gọi được:** Customer (chủ đơn)
+- **Dữ liệu gửi lên:** không có
+
+Response `200`: `data` là chi tiết đơn với `status = Cancelled`; xem khoản hoàn trong `GET /api/bookings/{id}/payments`.
+
+| HTTP | `message` | Khi nào |
+|---|---|---|
+| 400 | `This booking has no company route change that allows a free cancellation. Use POST /api/bookings/{id}/cancel instead.` | Không có thay đổi tuyến do công ty, hoặc đã quá `routeChangeCancelUntil` |
+| 400 | `Horses of this booking are already planned on trip TRP-2026-0003. Please contact the logistics team to cancel; the refund is still 100%.` | Ngựa đã được xếp lên chuyến |
+| 403 | `You can only change your own bookings.` | Đơn của khách khác |
 
 ### POST /api/bookings/{id}/approve — Duyệt sơ bộ đơn
 
@@ -2656,7 +2730,7 @@ Response `200`: `data` là tuyến đã tính (`routePlanId = 0`, `status = Draf
 
 ### POST /api/bookings/{bookingId}/route-plans — Tạo bản nháp tuyến
 
-Đơn phải đang `PreApproved` (hoặc `RoutePlanned` khi cần phiên bản mới). Mỗi lúc một đơn chỉ có một bản đang soạn / chờ duyệt.
+Đơn phải đang `PreApproved` (hoặc `RoutePlanned` / `Quoted` khi cần phiên bản mới: duyệt bản mới thì báo giá tính lại). Sau khi khách đã chấp nhận báo giá (`AwaitingDeposit`, `Approved`, `Assigned` mà ngựa chưa rời điểm đón) vẫn lập được bản mới: đó là **đổi tuyến do công ty**, giá giữ nguyên (xem mục 7). Mỗi lúc một đơn chỉ có một bản đang soạn / chờ duyệt.
 
 - **Ai gọi được:** FleetCoordinator, Admin
 - **Dữ liệu gửi lên:** JSON
@@ -2713,6 +2787,7 @@ Hệ thống kiểm tra lại cảnh báo cửa khẩu; còn cảnh báo thì 40
 |---|---|---|
 | 400 | `The route cannot be submitted yet: The leg Pickup → Drop-off crosses VN → CN without a BorderGate stop at each border; ...` | Còn chặng đổi nước thiếu cửa khẩu |
 | 400 | `Only a draft or rejected route can be submitted (current status: Submitted).` | Đã trình rồi |
+| 400 | `The pickup / drop-off of this booking changed after the route was saved. Save the route again (PUT) before submitting.` | Khách vừa đổi điểm đón / trả: gọi `PUT /api/route-plans/{id}` (cùng danh sách mốc) để tính lại rồi trình |
 
 ### POST /api/route-plans/{id}/approve — Duyệt tuyến
 
@@ -2731,6 +2806,137 @@ Tuyến thành `Approved` (bản `Approved` cũ, nếu có, thành `Superseded`)
 - **Dữ liệu gửi lên:** JSON `{ "reason": "Thêm trạm nghỉ trước cửa khẩu" }` (bắt buộc, tối đa 500 ký tự)
 
 Tuyến thành `Rejected`, người lập nhận thông báo kèm lý do; sửa bằng `PUT` rồi trình lại.
+
+## 7c. Hợp đồng vận chuyển
+
+Cùng lúc gửi báo giá chốt (đơn `Quoted`), server tự tạo **Hợp đồng vận chuyển** dạng PDF (Chính sách mục 12). Hợp đồng có: số hợp đồng `HD-2026-0001` và phiên bản; công ty, khách, người nhận; bảng ngựa (tên, số vi mạch, hạng chuồng, giá trị thỏa thuận, gói bảo hiểm); tuyến đã duyệt (điểm đón / giao, các mốc, nước quá cảnh, tổng km); khoảng ngày đón, hạn giao; bảng giá chốt, tiền cọc, phần còn lại, các hạn thanh toán; người duyệt tuyến; và **phụ lục** là toàn văn Chính sách dịch vụ đúng phiên bản hiện hành (các con số cấu hình đã thay bằng giá trị thật).
+
+**Không có bước ký riêng, không OTP.** Khách xem PDF trên ứng dụng, tích "Tôi đã đọc hợp đồng và Chính sách dịch vụ" rồi bấm **Chấp nhận & đặt cọc** (`POST /api/bookings/{id}/accept-quote` kèm `contractId` + `contractSha256`). Server chỉ nhận nếu đó đúng là bản nháp hiện hành và mã băm khớp, nên khách không thể vô tình chấp nhận một bản cũ.
+
+Vòng đời một phiên bản:
+
+```
+Draft ──(khách chấp nhận)──> Accepted ──(có bản mới được chấp nhận)──> Superseded
+  │
+  └──(công ty báo giá lại / có bản nháp mới)──> Superseded
+```
+
+- Mỗi đơn có tối đa **một** bản `Draft` (chờ khách chấp nhận) và **một** bản `Accepted` (hợp đồng đang hiệu lực). Bản đã `Accepted` không bao giờ bị sửa.
+- Công ty lập lại tuyến khi đơn còn `Quoted` → báo giá tính lại → **bản nháp mới** (`version` + 1), bản nháp cũ thành `Superseded`.
+- Sau khi giao kết, khi điều khoản đổi theo yêu cầu của khách (đổi điểm đón / giao, đồng ý đi đường vòng, đổi người nhận — các task BE-06, BE-14b, BE-15) server tạo bản nháp mới với `reason` tương ứng; khách xem và chấp nhận bằng `POST /api/contracts/{contractId}/accept`. Thay đổi chỉ có hiệu lực khi khách chấp nhận.
+- `fileSha256` là mã SHA-256 (64 ký tự hex thường) của đúng file PDF; cùng dữ liệu sinh lại vẫn ra cùng file.
+
+Các giá trị cố định:
+
+| Trường | Giá trị |
+|---|---|
+| `status` | `Draft` chờ khách chấp nhận · `Accepted` đã giao kết, đang hiệu lực · `Superseded` bị thay bằng bản mới |
+| `reason` | `Initial` bản đầu theo báo giá chốt · `PickupDropoffChanged` khách đổi điểm đón / giao · `DetourAccepted` khách đồng ý trả thêm đi đường vòng · `RecipientChanged` đổi người nhận |
+
+Gợi ý màn hình của khách (trang chi tiết đơn khi `customerStage = QuoteReady`): hiện giá chốt + hạn `quoteExpiresAt`; nút "Xem hợp đồng" mở `fileUrl` (PDF) trong tab mới; ô tích "Tôi đã đọc hợp đồng và Chính sách dịch vụ" (link tới trang Chính sách); nút "Chấp nhận & đặt cọc" gọi `accept-quote` rồi chuyển sang thanh toán cọc. Nếu nhận lỗi "The contract has changed..." thì tải lại hợp đồng và báo khách xem lại bản mới.
+
+### GET /api/bookings/{id}/contract — Hợp đồng hiện hành của đơn
+
+Bản đang chờ khách chấp nhận (`Draft`) nếu có, nếu không là bản đã giao kết (`Accepted`). Kèm link tải PDF có hạn (`fileUrl`, hết hạn lúc `fileUrlExpiresAt`, khoảng vài chục phút: hết hạn thì gọi lại API này).
+
+- **Ai gọi được:** Customer (chủ đơn); nhân sự xem được đơn (chuyên viên chỉ đơn mình phụ trách)
+- **Dữ liệu gửi lên:** không có
+
+Response `200` — phần `data`:
+
+```json
+{
+  "contractId": 12,
+  "contractCode": "HD-2026-0001",
+  "bookingId": 2,
+  "bookingCode": "BKG-2026-0002",
+  "version": 1,
+  "status": "Draft",
+  "reason": "Initial",
+  "fileSha256": "5fbcfef0a93c6d1e0b4c7f3a2d9e8b1c6a5f4e3d2c1b0a9f8e7d6c5b4a392817",
+  "policyVersion": "1.0",
+  "fileUrl": "https://xyz.supabase.co/storage/v1/object/sign/racehorse-files/documents/2026/10/...pdf?token=...",
+  "fileUrlExpiresAt": "2026-10-27T09:10:00+00:00",
+  "acceptedByUserId": null,
+  "acceptedByName": null,
+  "acceptedAt": null,
+  "acceptedIp": null,
+  "acceptedUserAgent": null,
+  "acceptedPolicyVersion": null,
+  "createdAt": "2026-10-27T08:40:00+00:00"
+}
+```
+
+| Trường | Ý nghĩa |
+|---|---|
+| `contractId`, `contractCode`, `version` | Mã hợp đồng (mỗi phiên bản một mã) và số phiên bản |
+| `status`, `reason` | Xem bảng giá trị cố định ở trên |
+| `fileSha256` | Mã băm file PDF; gửi lại nguyên giá trị này khi chấp nhận |
+| `policyVersion` | Phiên bản Chính sách dịch vụ in trong phụ lục |
+| `fileUrl`, `fileUrlExpiresAt` | Link tải PDF có hạn |
+| `acceptedByName`, `acceptedAt`, `acceptedIp`, `acceptedUserAgent`, `acceptedPolicyVersion` | Bằng chứng giao kết (chỉ có khi `Accepted`) |
+
+Lỗi thường gặp:
+
+| HTTP | `message` | Khi nào |
+|---|---|---|
+| 403 | `You do not have access to this booking.` | Đơn của khách khác / chuyên viên không phụ trách |
+| 404 | `Booking BKG-2026-0002 has no contract yet. It is created together with the final quote.` | Đơn chưa có báo giá chốt |
+
+### GET /api/bookings/{id}/contracts — Lịch sử các phiên bản
+
+Mọi phiên bản của đơn, mới nhất trước (không có `fileUrl`; tải từng bản bằng API dưới). Quyền như API trên.
+
+### GET /api/contracts/{contractId}/file — Tải PDF một phiên bản
+
+Trả `302` chuyển hướng tới link tải có hạn của file. Gọi kèm token như mọi API (ví dụ `axios.get(url, { responseType: 'blob' })`, trình duyệt tự theo chuyển hướng). Quyền như xem đơn; khách khác nhận `403`.
+
+### POST /api/contracts/{contractId}/accept — Khách chấp nhận bản hợp đồng sửa đổi
+
+Dùng cho các bản **sau** khi hợp đồng đầu đã giao kết (bản đầu luôn chấp nhận cùng báo giá bằng `accept-quote`). Bản cũ đang `Accepted` thành `Superseded`; khách nhận email.
+
+- **Ai gọi được:** Customer (chủ đơn)
+- **Dữ liệu gửi lên:** JSON
+
+```json
+{
+  "contractSha256": "9a1c...e4",
+  "acceptPolicy": true,
+  "policyVersion": "1.0"
+}
+```
+
+Response `200`: `data` là hợp đồng (dạng như trên) với `status = Accepted`.
+
+| HTTP | `message` | Khi nào |
+|---|---|---|
+| 400 | `The first contract is accepted together with the quote: use POST /api/bookings/{id}/accept-quote.` | Đơn chưa có hợp đồng nào được giao kết |
+| 400 | `The contract has changed since you opened it. Please review the latest version.` | Không phải bản nháp hiện hành, hoặc mã băm không khớp |
+| 400 | `You must accept the service policy to continue.` / `The service policy has changed ...` | Chưa tích chính sách / sai phiên bản |
+| 403 | `You can only accept the contract of your own booking.` | Hợp đồng của khách khác |
+| 404 | `Contract with ID 99 was not found.` | Không có bản hợp đồng đó |
+
+### Vận đơn hàng không của chuyến
+
+Chuyến chở ngựa của đơn **hàng không** (`transportMode = Air`) có thêm **vận đơn** (air waybill): điều phối nhập số vận đơn và tải bản scan lên (`POST /api/files`, `category = documents`, rồi gửi `path`).
+
+`GET /api/trips/{id}/air-waybill` — nhân sự (trừ tài xế) hoặc khách có ngựa trên chuyến. `PUT /api/trips/{id}/air-waybill` — FleetCoordinator, Admin:
+
+```json
+{
+  "airWaybillNumber": "880-12345675",
+  "airWaybillFilePath": "documents/2026/10/0f8e7d6c5b4a39281706f5e4d3c2b1a0.pdf"
+}
+```
+
+`airWaybillFilePath` không bắt buộc (bỏ trống thì giữ file cũ). Response `200` — phần `data`: `{ "tripId": 1, "tripCode": "TRP-2026-0001", "airWaybillNumber": "880-12345675", "airWaybillFilePath": "documents/...pdf", "airWaybillFileUrl": "https://...signed..." }`.
+
+| HTTP | `message` | Khi nào |
+|---|---|---|
+| 400 | `Trip TRP-2026-0003 carries no horse of an Air booking, so it has no air waybill.` | Chuyến chỉ chở đơn đường bộ |
+| 400 | `AirWaybillFilePath is not a valid uploaded file path (...)` | Đường dẫn file không do `POST /api/files` trả về |
+| 400 | `Trip TRP-2026-0001 is already Completed.` | Chuyến đã xong / đã hủy |
+| 403 | `You do not have access to this trip.` | Khách không có ngựa trên chuyến |
 
 ---
 
@@ -7713,7 +7919,7 @@ Response `200`:
       "balanceDueDaysBeforeDeparture": 2,
       "extraPaymentDueDays": 7
     },
-    "booking": { "quoteAcceptDays": 3 },
+    "booking": { "quoteAcceptDays": 3, "dossierSubmitDays": 7 },
     "delay": { "graceHours": 6, "percentPer12Hours": 5, "maxPercent": 25 },
     "insurance": {
       "premiumPercent": 1,
@@ -7732,6 +7938,7 @@ Response `200`:
       "Payment.BalanceDueDaysBeforeDeparture": 2,
       "Payment.ExtraPaymentDueDays": 7,
       "Booking.QuoteAcceptDays": 3,
+      "Dossier.SubmitDays": 7,
       "Delay.GraceHours": 6,
       "Delay.PercentPer12Hours": 5,
       "Delay.MaxPercent": 25,
@@ -7760,6 +7967,7 @@ Response `200`:
 | `updatedAt` | Lần sửa cấu hình gần nhất (thanh toán hoặc chính sách) |
 | `payment` | % cọc, % hoàn cọc khi hủy, tỉ giá USD → VND, hạn trả phần còn lại, hạn trả phát sinh (giống `GET /api/settings/payment`) |
 | `booking.quoteAcceptDays` | Số ngày khách có để chấp nhận báo giá chốt và đặt cọc |
+| `booking.dossierSubmitDays` | Số ngày khách có để nộp đủ giấy tờ, tính từ lúc đặt cọc |
 | `delay.graceHours` | Số giờ trễ được miễn bồi thường |
 | `delay.percentPer12Hours`, `delay.maxPercent` | % tiền cước bồi thường cho mỗi 12 giờ trễ sau ân hạn, và mức tối đa |
 | `insurance.premiumPercent` | % phí bảo hiểm toàn giá trị trên giá trị thỏa thuận mỗi con |
@@ -7798,6 +8006,7 @@ Response `200`:
   "data": {
     "policyVersion": "1.0",
     "quoteAcceptDays": 3,
+    "dossierSubmitDays": 7,
     "delayGraceHours": 6,
     "delayPercentPer12Hours": 5,
     "delayMaxPercent": 25,
@@ -7833,12 +8042,13 @@ Response `200`:
 Giá trị mới áp dụng từ lúc lưu. Đơn đã đồng ý chính sách giữ phiên bản đã đồng ý. Khi đổi nội dung quy tắc, nhớ **tăng `policyVersion`** (ví dụ `1.0` → `1.1`) để các đơn mới lưu đúng phiên bản.
 
 - **Ai gọi được:** LogisticsManager, Admin
-- **Dữ liệu gửi lên:** JSON, gửi **đủ cả 18 trường** (kể cả trường không đổi)
+- **Dữ liệu gửi lên:** JSON, gửi **đủ cả 19 trường** (kể cả trường không đổi)
 
 | Trường | Kiểu | Giới hạn | Khóa cấu hình |
 |---|---|---|---|
 | `policyVersion` | chuỗi | Bắt buộc, tối đa 20 ký tự | `Policy.Version` |
 | `quoteAcceptDays` | số nguyên | 1 – 30 | `Booking.QuoteAcceptDays` |
+| `dossierSubmitDays` | số nguyên | 1 – 60 | `Dossier.SubmitDays` |
 | `delayGraceHours` | số nguyên | 0 – 168 | `Delay.GraceHours` |
 | `delayPercentPer12Hours` | số | 0 – 100 | `Delay.PercentPer12Hours` |
 | `delayMaxPercent` | số | 0 – 100 | `Delay.MaxPercent` |
@@ -7944,8 +8154,16 @@ Tổng cộng 121 endpoint. Chi tiết từng cái xem ở mục tương ứng.
 | GET | `/api/bookings` | Danh sách đơn | Customer, LogisticsManager, TransportSpecialist, FleetCoordinator, Admin |
 | GET | `/api/bookings/{id}` | Chi tiết đơn | Như danh sách đơn |
 | POST | `/api/bookings/{id}/cancel` | Khách hủy đơn | Customer (chủ đơn) |
-| POST | `/api/bookings/{id}/accept-quote` | Khách chấp nhận báo giá chốt (→ `AwaitingDeposit`) | Customer (chủ đơn) |
+| POST | `/api/bookings/{id}/accept-quote` | Khách chấp nhận báo giá chốt + hợp đồng (→ `AwaitingDeposit`) | Customer (chủ đơn) |
+| GET | `/api/bookings/{id}/contract` | Hợp đồng hiện hành của đơn + link tải PDF | Customer (chủ đơn); nhân sự xem được đơn |
+| GET | `/api/bookings/{id}/contracts` | Lịch sử các phiên bản hợp đồng | Như trên |
+| GET | `/api/contracts/{contractId}/file` | Tải PDF (302 tới link có hạn) | Như trên |
+| POST | `/api/contracts/{contractId}/accept` | Khách chấp nhận bản hợp đồng sửa đổi | Customer (chủ đơn) |
+| GET | `/api/trips/{id}/air-waybill` | Vận đơn hàng không của chuyến | Nhân sự (trừ tài xế); khách có ngựa trên chuyến |
+| PUT | `/api/trips/{id}/air-waybill` | Nhập số / file vận đơn hàng không | FleetCoordinator, Admin |
 | POST | `/api/bookings/{id}/decline-quote` | Khách từ chối báo giá chốt (→ `Cancelled`) | Customer (chủ đơn) |
+| PUT | `/api/bookings/{id}/locations` | Khách đổi điểm đón / trả trước khi trả tiền (lập tuyến + báo giá lại) | Customer (chủ đơn) |
+| POST | `/api/bookings/{id}/cancel-route-change` | Khách hủy vì công ty đổi tuyến, hoàn 100% | Customer (chủ đơn) |
 | POST | `/api/bookings/{id}/approve` | Duyệt sơ bộ đơn (→ `PreApproved`) | LogisticsManager, Admin |
 | PUT | `/api/bookings/{id}/horse-values` | Chốt giá trị thỏa thuận từng con trước khi báo giá | LogisticsManager, Admin |
 | POST | `/api/bookings/{id}/reject` | Từ chối đơn (trước khi gửi báo giá) | LogisticsManager, Admin |

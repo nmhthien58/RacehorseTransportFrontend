@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   Button,
   Card,
   Empty,
@@ -23,6 +24,9 @@ import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedu
 import PageHeader from '@components/layout/PageHeader';
 import StatusTag from '@components/common/StatusTag';
 import tripService from '@services/tripService';
+import bookingService from '@services/bookingService';
+import BookingRoutePlanModal from '@features/coordinator/components/BookingRoutePlanModal';
+import { CompassOutlined } from '@ant-design/icons';
 import TripPlanEditor from '@features/coordinator/components/TripPlanEditor';
 import TripPlanSummary from '@features/coordinator/components/TripPlanSummary';
 import { useAuthStore } from '@features/auth/store/authStore';
@@ -61,6 +65,10 @@ export default function RoutePlanningPage() {
   const [tripDetail, setTripDetail] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
+  // Đang sửa RoutePlanningPage vì bổ sung danh sách đơn chờ lập tuyến (PreApproved/RoutePlanned) cho Coordinator
+  const [routeBookings, setRouteBookings] = useState([]);
+  const [selectedBookingForPlan, setSelectedBookingForPlan] = useState(null);
+  const [routePlanModalOpen, setRoutePlanModalOpen] = useState(false);
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
@@ -69,11 +77,14 @@ export default function RoutePlanningPage() {
     Promise.all([
       tripService.getUnplannedHorses(),
       tripService.getTrips({ size: 100 }),
+      bookingService.getBookings(),
     ])
-      .then(([qRes, tRes]) => {
+      .then(([qRes, tRes, bRes]) => {
         if (!active) return;
         setQueue(unwrapList(qRes));
         setTrips(unwrapList(tRes));
+        const allB = unwrapList(bRes);
+        setRouteBookings(allB.filter((b) => ['PreApproved', 'RoutePlanned'].includes(b.status || b.Status)));
       })
       .catch((err) => {
         if (active) message.error(getErrorMessage(err, t('tripPlan.messages.loadFailed')));
@@ -257,6 +268,91 @@ export default function RoutePlanningPage() {
     { title: t('tripPlan.fields.dossier'), dataIndex: 'dossierStatus', width: 130, render: (s) => <StatusTag status={s} /> },
   ];
 
+
+  const routeBookingColumns = [
+    {
+      title: t('bookings.fields.bookingCode', 'Mã đơn'),
+      dataIndex: 'bookingCode',
+      width: 140,
+      render: (code, b) => (
+        <div>
+          <Text strong>{code || b.BookingCode || '#' + b.bookingId}</Text>
+          <div style={{ fontSize: 12, color: '#64748b' }}>
+            {b.customerName || b.CustomerName} · {b.customerPhone || b.CustomerPhone}
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: t('tripPlan.fields.mode', 'Phương thức'),
+      dataIndex: 'transportMode',
+      width: 100,
+      render: (m) => <Tag color={m === 'Air' ? 'blue' : 'orange'}>{m || 'Ground'}</Tag>,
+    },
+    {
+      title: t('tripPlan.fields.route', 'Lộ trình'),
+      render: (_, b) => (
+        <span style={{ fontSize: 12 }}>
+          {formatCountryRoute(b)}
+          <div style={{ color: '#64748b' }}>
+            {b.pickupAddress || b.PickupAddress} → {b.dropoffAddress || b.DropoffAddress}
+          </div>
+        </span>
+      ),
+    },
+    {
+      title: t('tripPlan.fields.window', 'Thời gian'),
+      width: 160,
+      render: (_, b) => (
+        <span style={{ fontSize: 12 }}>
+          {formatPickupWindow(b)}
+          <div style={{ color: '#64748b' }}>
+            {t('bookings.fields.deliveryDeadline', 'Hạn giao')}: {formatDeliveryDeadline(b)}
+          </div>
+        </span>
+      ),
+    },
+    {
+      title: t('tripPlan.fields.horses', 'Số ngựa'),
+      width: 80,
+      align: 'center',
+      render: (_, b) => b.totalHorses || b.TotalHorses || (b.horses ? b.horses.length : 1),
+    },
+    {
+      title: t('tripPlan.fields.status', 'Trạng thái'),
+      width: 130,
+      render: (_, b) => <StatusTag status={b.status || b.Status} />,
+    },
+    {
+      title: '',
+      width: 140,
+      align: 'right',
+      render: (_, b) => {
+        const s = b.status || b.Status;
+        return (
+          <Button
+            type="primary"
+            size="small"
+            icon={<CompassOutlined />}
+            onClick={() => {
+              setSelectedBookingForPlan(b);
+              setRoutePlanModalOpen(true);
+            }}
+            style={{
+              backgroundColor: s === 'PreApproved' ? '#EA580C' : '#2563EB',
+              borderColor: s === 'PreApproved' ? '#EA580C' : '#2563EB',
+              fontWeight: 600,
+            }}
+          >
+            {s === 'PreApproved'
+              ? t('tripPlan.actions.planRoute', 'Lập tuyến')
+              : t('tripPlan.actions.viewEditRoute', 'Xem / Sửa tuyến')}
+          </Button>
+        );
+      },
+    },
+  ];
+
   const selectedModes = new Set(queue.filter((h) => selectedQueueIds.includes(h.bookingHorseId)).map((h) => h.transportMode));
 
   const tripColumns = [
@@ -343,6 +439,29 @@ export default function RoutePlanningPage() {
           onChange={(key) => setSearchParams({ tab: key })}
           items={[
             {
+              key: 'routes',
+              label: `${t('tripPlan.tabs.routePlanning', 'Đơn chờ lập tuyến')} (${routeBookings.length})`,
+              children: (
+                <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                  <Alert
+                    type="info"
+                    showIcon
+                    message={t('tripPlan.tabs.routePlanningHint', 'Danh sách các đơn vận chuyển đã được Manager duyệt sơ bộ và chuyển đến Coordinator để vẽ / lập lộ trình chi tiết trước khi gửi báo giá chốt.')}
+                  />
+                  <Table
+                    size="small"
+                    loading={loading}
+                    rowKey={(r) => r.bookingId || r.BookingID}
+                    dataSource={routeBookings}
+                    columns={routeBookingColumns}
+                    pagination={{ pageSize: 10 }}
+                    scroll={{ x: 900 }}
+                    locale={{ emptyText: <Empty description={t('tripPlan.routePlanningEmpty', 'Hiện không có đơn nào chờ lập tuyến')} /> }}
+                  />
+                </Space>
+              ),
+            },
+            {
               key: 'queue',
               label: `${t('tripPlan.tabs.queue')} (${queue.length})`,
               children: (
@@ -419,6 +538,15 @@ export default function RoutePlanningPage() {
           ]}
         />
       </Card>
+      <BookingRoutePlanModal
+        open={routePlanModalOpen}
+        booking={selectedBookingForPlan}
+        onClose={() => {
+          setRoutePlanModalOpen(false);
+          setSelectedBookingForPlan(null);
+        }}
+        onSuccess={refresh}
+      />
     </div>
   );
 }

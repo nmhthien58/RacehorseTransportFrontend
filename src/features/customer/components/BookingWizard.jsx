@@ -49,6 +49,8 @@ import usePolicy from '@hooks/usePolicy';
 import MapPicker from '@components/common/map/MapPicker';
 import RouteMap from '@components/common/map/RouteMap';
 import PolicyAgreement, { POLICY_PAGE_PATH } from '@components/common/PolicyAgreement';
+import RecipientForm from '@components/common/RecipientForm';
+import { isRecipientValid } from '@utils/recipient';
 import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import { formatDeliveryDeadline, formatPickupWindow, toLocalDateTimeString } from '@utils/bookingSchedule';
 import { formatCountryRoute } from '@utils/bookingRoute';
@@ -116,7 +118,8 @@ export default function BookingWizard({
   const [policyAgreement, setPolicyAgreement] = useState({ accepted: false, policyVersion: null });
   // R-16 (BE-15): người nhận ngựa; mặc định khách tự nhận. TODO(FE-13): thay bằng RecipientForm dùng chung
   const [recipient, setRecipient] = useState({ isCustomer: true, name: '', phone: '', email: '', idNumber: '' });
-  const recipientValid = recipient.isCustomer || (recipient.name.trim() && /^\+?[0-9 .()-]{6,20}$/.test(recipient.phone.trim()));
+  // Đang sửa BookingWizard vì tích hợp RecipientForm dùng chung theo FE-13 (R-16)
+  const recipientValid = isRecipientValid(recipient);
   const { policy } = usePolicy();
   const proofThreshold = Number(policy?.insurance?.proofThresholdUsd ?? 50000);
   const usdVndRate = Number(policy?.payment?.usdVndRate ?? 0);
@@ -1729,53 +1732,9 @@ export default function BookingWizard({
                 <Text strong style={{ fontSize: 13, color: '#0f172a', display: 'block', marginBottom: 8 }}>
                   {t('bookingForm.recipient.title')}
                 </Text>
-                <Checkbox
-                  checked={recipient.isCustomer}
-                  onChange={(e) => setRecipient((r) => ({ ...r, isCustomer: e.target.checked }))}
-                  style={{ marginBottom: 8 }}
-                >
-                  {t('bookingForm.recipient.self')}
-                </Checkbox>
-                {!recipient.isCustomer && (
-                  <Row gutter={[8, 8]} style={{ marginBottom: 8 }}>
-                    <Col xs={24} sm={12}>
-                      <Input
-                        value={recipient.name}
-                        maxLength={100}
-                        onChange={(e) => setRecipient((r) => ({ ...r, name: e.target.value }))}
-                        placeholder={t('bookingForm.recipient.name')}
-                      />
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Input
-                        value={recipient.phone}
-                        maxLength={20}
-                        onChange={(e) => setRecipient((r) => ({ ...r, phone: e.target.value }))}
-                        placeholder={t('bookingForm.recipient.phone')}
-                        status={recipient.phone && !/^\+?[0-9 .()-]{6,20}$/.test(recipient.phone.trim()) ? 'error' : undefined}
-                      />
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Input
-                        value={recipient.email}
-                        maxLength={255}
-                        onChange={(e) => setRecipient((r) => ({ ...r, email: e.target.value }))}
-                        placeholder={t('bookingForm.recipient.email')}
-                      />
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Input
-                        value={recipient.idNumber}
-                        maxLength={50}
-                        onChange={(e) => setRecipient((r) => ({ ...r, idNumber: e.target.value }))}
-                        placeholder={t('bookingForm.recipient.idNumber')}
-                      />
-                    </Col>
-                  </Row>
-                )}
-                <Text type="secondary" style={{ fontSize: 11.5, display: 'block', marginBottom: 12 }}>
-                  {t('bookingForm.recipient.hint')}
-                </Text>
+                <div style={{ marginBottom: 12 }}>
+                  <RecipientForm value={recipient} onChange={setRecipient} />
+                </div>
                 <PolicyAgreement accepted={policyAgreement.accepted} onChange={setPolicyAgreement} />
               </Card>
             </Col>

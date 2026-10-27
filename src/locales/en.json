@@ -102,10 +102,17 @@
     "tripClosure": "Trip closing & KPI",
     "reports": "Reports",
     "paymentSettings": "Payment settings",
-    "transportOrders": "Transport orders"
+    "transportOrders": "Transport orders",
+    "insuranceClaims": "Insurance Claims"
   },
   "status": {
     "submitted": "Submitted",
+    "preApproved": "Pre-Approved",
+    "routePlanned": "Route Planned",
+    "quoted": "Quoted",
+    "quoteExpired": "Quote Expired",
+    "underReview": "Under Review",
+    "paid": "Paid",
     "awaitingDeposit": "Awaiting deposit",
     "awaitingFinalPayment": "Awaiting final payment",
     "approved": "Approved",
@@ -1484,7 +1491,9 @@
     "queueEmpty": "No horses are waiting to be planned",
     "tabs": {
       "queue": "Planning queue",
-      "trips": "Trip plans"
+      "trips": "Trip plans",
+      "routePlanning": "Route Planning Queue",
+      "routePlanningHint": "List of transport requests pre-approved by Manager waiting for Coordinator to map route and stops before quoting."
     },
     "filters": {
       "allModes": "All modes",
@@ -1535,7 +1544,14 @@
       "deliveredCount": "Delivered {{done}}/{{total}}",
       "pickupAt": "Pick-up",
       "routeKm": "Distance",
-      "escort": "Escort in charge"
+      "escort": "Escort in charge",
+      "stopType": "Stop Type",
+      "stopName": "Stop Name",
+      "country": "Country",
+      "stopNamePlaceholder": "Stop name or checkpoint",
+      "addressPlaceholder": "Address",
+      "notes": "Route Notes",
+      "notesPlaceholder": "Notes for specialist or manager..."
     },
     "crewRole": {
       "Driver": "Driver",
@@ -1572,7 +1588,11 @@
       "resetRoute": "Rebuild default route",
       "saveDraft": "Save draft",
       "saveAndSubmit": "Save & submit",
-      "suggestRoute": "Suggest route"
+      "suggestRoute": "Suggest route",
+      "planRoute": "Plan Route",
+      "viewEditRoute": "View / Edit Route",
+      "previewRoute": "Preview Route",
+      "submitRoute": "Save & Submit"
     },
     "confirm": {
       "cancel": "Cancel trip {{code}}? Its horses go back to the queue."
@@ -1597,7 +1617,12 @@
       "needBookingForStop": "Pick-up / Drop-off stops need a booking",
       "suggestNeedInput": "Choose horses and a departure time first",
       "suggestFailed": "Could not suggest a route",
-      "suggested": "Route replaced with the suggestion"
+      "suggested": "Route replaced with the suggestion",
+      "stopNameRequired": "Please enter stop or checkpoint name",
+      "previewLoaded": "Route preview calculated",
+      "previewFailed": "Failed to calculate route preview",
+      "submittedSuccess": "Route plan submitted for Manager review",
+      "submitFailed": "Failed to submit route plan"
     },
     "suggestion": {
       "title": "Route suggestion",
@@ -1625,6 +1650,23 @@
       "autoPlaceholder": "Auto on save",
       "emptySlot": "Empty stall",
       "hint": "Click a stall with a horse, then another stall, to swap them. Each escort looks after at most 3 horses; stalls left without an escort are auto-assigned on save (stalls 1-3 to the first escort, lead escort first)."
+    },
+    "routePlanningEmpty": "No bookings waiting for route planning",
+    "drawer": {
+      "title": "Plan Route for Booking",
+      "origin": "Pickup Origin (Locked)",
+      "destination": "Dropoff Destination (Locked)",
+      "stops": "Rest Stops & Border Gates",
+      "noStops": "No intermediate stops added",
+      "previewInfo": "Preview Route Summary",
+      "totalDistance": "Total Distance",
+      "totalHours": "Estimated Duration",
+      "transitCountries": "Transit Countries",
+      "rejectionAlert": "Previous route plan was rejected by Manager"
+    },
+    "stopTypes": {
+      "restStop": "Rest Stop",
+      "borderGate": "Border Gate"
     }
   },
   "routeApproval": {
@@ -1638,7 +1680,11 @@
     },
     "actions": {
       "approve": "Approve plan",
-      "reject": "Return"
+      "reject": "Return",
+      "rejectRoute": "Reject Route",
+      "approveAndQuote": "Approve Route & Send Quote",
+      "previewQuote": "Preview Final Quote",
+      "confirmReject": "Confirm Rejection"
     },
     "rejectTitle": "Return plan {{code}} to the coordinator",
     "reasonPlaceholder": "Reason (required, up to 500 characters)",
@@ -1648,7 +1694,34 @@
       "rejected": "Plan {{code}} returned to the coordinator",
       "rejectedCancelled": "Trip {{code}} was cancelled after 3 returns",
       "failed": "The action failed",
-      "reasonRequired": "Please enter a reason"
+      "reasonRequired": "Please enter a reason",
+      "quotePreviewLoaded": "Final quote preview loaded",
+      "quotePreviewFailed": "Failed to calculate quote preview",
+      "noPlanToApprove": "No route plan found to approve",
+      "approvedAndQuoted": "Route approved and final quote sent to customer",
+      "rejectedSuccess": "Route plan returned to Coordinator for revisions"
+    },
+    "tabs": {
+      "bookingRoutes": "Booking Route Plans (R-10)",
+      "tripPlans": "Trip Plans"
+    },
+    "pendingListTitle": "Route-Planned Bookings",
+    "emptyBookingRoutes": "No bookings pending route approval",
+    "noBookingSelected": "Select a booking to review route and agree horse values",
+    "bookingTitle": "Review Booking Route",
+    "fields": {
+      "agreedValue": "Agreed Value ($)"
+    },
+    "horsesCardTitle": "Agree Horse Values (R-12)",
+    "quoteSummaryTitle": "Estimated Final Quote to Customer",
+    "freight": "Freight Fee",
+    "clearance": "Border Clearance",
+    "insurance": "Insurance Fee",
+    "total": "Total Agreed Price",
+    "rejectModal": {
+      "title": "Reject Route Plan",
+      "hint": "Rejection reason will be returned to Coordinator to redraw route or adjust checkpoints.",
+      "placeholder": "Enter rejection reason (required: e.g. missing rest stop, invalid border checkpoint...)"
     }
   },
   "tracking": {
@@ -1693,8 +1766,10 @@
       "queue": "HORSES TO PLAN",
       "planning": "DRAFT / PENDING",
       "scheduled": "SCHEDULED",
-      "onTheRoad": "ON THE ROAD / ARRIVED"
-    }
+      "onTheRoad": "ON THE ROAD / ARRIVED",
+      "pendingRoutes": "Pending Routes"
+    },
+    "planRoute": "Plan Route"
   },
   "horseDocs": {
     "pageTitle": "Vet Records",
@@ -2049,7 +2124,11 @@
       "verified": "Checked",
       "noPhoto": "No photo",
       "microchip": "Microchip",
-      "horsesNotVerified": "Some horses have not been checked yet"
+      "horsesNotVerified": "Some horses have not been checked yet",
+      "presenceConfirmed": "Presence Confirmed",
+      "presenceUnconfirmed": "Presence Unconfirmed",
+      "alternateApproved": "Customer approved this alternate recipient.",
+      "alternateWait": "Signer differs from booking recipient. Customer confirmation is required."
     },
     "dropoffAt": "Drop-off: {{name}} · planned {{time}}",
     "waitingDropoff": "Waiting to reach the drop-off",
@@ -2392,5 +2471,103 @@
   "policyAgreement": {
     "label": "I have read and agree to the <policyLink>Service Policy</policyLink> (version {{version}})",
     "unavailable": "Could not load the Service Policy. Please reload the page."
+  },
+  "delayCompensation": {
+    "title": "Delay Compensation (R-09)",
+    "none": "No delayed bookings",
+    "delayHours": "Delay Hours",
+    "amount": "Compensation Amount",
+    "status": "Status",
+    "reason": "Reason",
+    "actions": {
+      "adjust": "Adjust Amount"
+    },
+    "adjustModal": {
+      "title": "Adjust Delay Compensation Amount",
+      "currentAmount": "System calculated amount",
+      "newAmount": "New approved amount (USD)",
+      "reason": "Adjustment reason (required)",
+      "reasonPlaceholder": "Specify basis or agreement with customer..."
+    },
+    "messages": {
+      "approved": "Delay compensation approved",
+      "approveFailed": "Approval failed",
+      "reasonRequired": "Please enter adjustment reason",
+      "adjustedSuccess": "Compensation adjusted and approved",
+      "adjustFailed": "Adjustment failed"
+    }
+  },
+  "claims": {
+    "title": "Insurance Claims (R-13)",
+    "tabTitle": "Insurance Claims",
+    "managerTitle": "Insurance Claims Management (R-13)",
+    "managerSubtitle": "Review, appraise, and disburse horse transit loss claims according to service policy terms.",
+    "timeRemaining": "Claim submission deadline: until {{time}} (within 24 hours after delivery).",
+    "expiredNotice": "The 24-hour deadline since e-POD signature has expired.",
+    "empty": "No insurance claims found for this booking.",
+    "loadFailed": "Failed to load claims list",
+    "detailTitle": "Appraise Insurance Claim",
+    "actions": {
+      "newClaim": "File Claim",
+      "startReview": "Start Appraisal",
+      "approve": "Approve Claim",
+      "reject": "Reject",
+      "markPaid": "Mark as Paid",
+      "uploadFiles": "Attach Files"
+    },
+    "modal": {
+      "title": "Submit Insurance Claim"
+    },
+    "fields": {
+      "claimCode": "Claim Code",
+      "booking": "Booking",
+      "horse": "Horse",
+      "selectHorse": "Select damaged / injured horse",
+      "horsePlaceholder": "Select horse...",
+      "type": "Claim Type",
+      "typePlaceholder": "Select loss type...",
+      "insurancePlan": "Insurance Plan",
+      "agreedValue": "Agreed Value",
+      "requestedAmount": "Requested",
+      "amountUsd": "Requested Amount (USD)",
+      "approvedAmount": "Approved",
+      "maxCap": "Policy Liability Cap",
+      "status": "Status",
+      "description": "Incident Description & Cause",
+      "descPlaceholder": "Describe symptoms, circumstances, or cause of injury...",
+      "evidence": "Supporting Documents (Vet report, invoice, photos)",
+      "decisionNote": "Decision Notes",
+      "paymentRef": "Payment Reference",
+      "rejectReason": "Rejection Reason (Exclusion clause)",
+      "note": "Notes / Basis"
+    },
+    "types": {
+      "injury": "Injury (Vet Expenses)",
+      "death": "Death",
+      "loss": "Loss"
+    },
+    "messages": {
+      "createSuccess": "Insurance claim submitted successfully",
+      "createFailed": "Failed to submit claim",
+      "reviewed": "Claim marked as under review",
+      "approvedSuccess": "Claim amount approved successfully",
+      "rejectedSuccess": "Claim rejected based on policy terms",
+      "paidSuccess": "Claim payout recorded successfully"
+    },
+    "errors": {
+      "horseRequired": "Please select a horse",
+      "typeRequired": "Please select claim type",
+      "amountRequired": "Please enter amount",
+      "descRequired": "Please describe incident"
+    },
+    "approveForm": {
+      "title": "Approve Claim Amount"
+    },
+    "rejectForm": {
+      "title": "Reject Insurance Claim"
+    },
+    "payForm": {
+      "title": "Record Claim Payment"
+    }
   }
 }

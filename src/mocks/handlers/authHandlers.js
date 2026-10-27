@@ -24,17 +24,17 @@ export const authHandlers = [
     let user = candidateUsers.find((u) => (u.email || '').trim().toLowerCase() === rawEmail);
 
     if (!user) {
-      if (rawEmail === 'coordinator@test.com' || rawEmail === 'nam.le@fleet.com' || rawEmail === 'fleet@test.com' || rawEmail === 'coordinator@gmail.com') {
+      if (rawEmail === 'coordinator@test.com' || rawEmail === 'coordinator@racehorsetransport.com' || rawEmail === 'nam.le@fleet.com' || rawEmail === 'fleet@test.com' || rawEmail === 'coordinator@gmail.com') {
         user = candidateUsers.find((u) => u.role === 'FleetCoordinator') || usersData.find((u) => u.role === 'FleetCoordinator');
-      } else if (rawEmail === 'admin@test.com' || rawEmail === 'manager@test.com' || rawEmail === 'admin@admin.com') {
+      } else if (rawEmail === 'admin@test.com' || rawEmail === 'admin@racehorsetransport.com' || rawEmail === 'manager@test.com' || rawEmail === 'manager@racehorsetransport.com' || rawEmail === 'admin@admin.com') {
         user = candidateUsers.find((u) => u.role === 'LogisticsManager') || usersData.find((u) => u.role === 'LogisticsManager');
-      } else if (rawEmail === 'specialist@test.com' || rawEmail === 'mai.nguyen@vet.com') {
+      } else if (rawEmail === 'specialist@test.com' || rawEmail === 'specialist@racehorsetransport.com' || rawEmail === 'mai.nguyen@vet.com') {
         user = candidateUsers.find((u) => u.role === 'TransportSpecialist') || usersData.find((u) => u.role === 'TransportSpecialist');
-      } else if (rawEmail === 'driver@test.com' || rawEmail === 'duc.pham@driver.com') {
+      } else if (rawEmail === 'driver@test.com' || rawEmail === 'driver@racehorsetransport.com' || rawEmail === 'duc.pham@driver.com') {
         user = candidateUsers.find((u) => u.role === 'Driver') || usersData.find((u) => u.role === 'Driver');
-      } else if (rawEmail === 'escort@test.com' || rawEmail === 'elena.rostova@vet.com') {
+      } else if (rawEmail === 'escort@test.com' || rawEmail === 'escort@racehorsetransport.com' || rawEmail === 'elena.rostova@vet.com') {
         user = candidateUsers.find((u) => u.role === 'Escort') || usersData.find((u) => u.role === 'Escort');
-      } else if (rawEmail === 'customer@test.com') {
+      } else if (rawEmail === 'customer@test.com' || rawEmail === 'customer@racehorsetransport.com') {
         user = candidateUsers.find((u) => u.role === 'Customer') || usersData.find((u) => u.role === 'Customer');
       }
     }

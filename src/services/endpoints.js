@@ -1,3 +1,4 @@
+// Đang sửa endpoints.js vì khai báo endpoints cho route-plans, recipients, delay-compensations, claims
 /**
  * @file endpoints.js
  * @description Danh mục đường dẫn (endpoints) API đồng bộ 100% với tài liệu backend (doc/API_Huong_dan_Frontend.md)
@@ -80,6 +81,8 @@ export const ENDPOINTS = {
     REJECT: (id) => `/bookings/${id}/reject`,
     TRANSIT_COUNTRIES: (id) => `/bookings/${id}/transit-countries`,
     REASSIGN_SPECIALIST: (id) => `/bookings/${id}/reassign-specialist`,
+    HORSE_VALUES: (id) => `/bookings/${id}/horse-values`,
+    CANCEL_ROUTE_CHANGE: (id) => `/bookings/${id}/cancel-route-change`,
     // Bí danh tương thích ngược
     ASSIGN: (id) => `/bookings/${id}/reassign-specialist`,
     CALCULATE_QUOTE: (id) => (id ? `/bookings/${id}/calculate-quote` : '/bookings/quote-preview'),
@@ -197,6 +200,46 @@ export const ENDPOINTS = {
     LIST: '/assets',
     DETAIL: (id) => `/assets/${id}`,
   },
+  // 14. Người nhận ngựa (R-16, BE-15)
+  RECIPIENTS: {
+    UPDATE: (bookingId) => `/bookings/${bookingId}/recipient`,
+    CONFIRM_PRESENCE: (bookingId) => `/bookings/${bookingId}/confirm-presence`,
+    APPROVE_ALTERNATE: (bookingId) => `/bookings/${bookingId}/approve-alternate-recipient`,
+    BY_TRIP: (tripId) => `/trips/${tripId}/recipients`,
+  },
+
+  // 15. Tuyến dự kiến của đơn (R-10, BE-04)
+  ROUTE_PLANS: {
+    GET_FOR_BOOKING: (bookingId) => `/bookings/${bookingId}/route-plans`,
+    GET_BY_ID: (id) => `/route-plans/${id}`,
+    PREVIEW: (bookingId) => `/bookings/${bookingId}/route-plans/preview`,
+    CREATE: (bookingId) => `/bookings/${bookingId}/route-plans`,
+    UPDATE: (id) => `/route-plans/${id}`,
+    SUBMIT: (id) => `/route-plans/${id}/submit`,
+    APPROVE: (id) => `/route-plans/${id}/approve`,
+    REJECT: (id) => `/route-plans/${id}/reject`,
+  },
+
+  // 16. Bồi thường giao trễ (R-09, BE-13)
+  DELAY_COMPENSATIONS: {
+    LIST: '/delay-compensations',
+    BY_BOOKING: (bookingId) => `/bookings/${bookingId}/delay-compensations`,
+    APPROVE: (id) => `/delay-compensations/${id}/approve`,
+    REJECT: (id) => `/delay-compensations/${id}/reject`,
+  },
+
+  // 17. Hồ sơ bồi thường bảo hiểm (R-13, BE-12)
+  CLAIMS: {
+    LIST: '/claims',
+    DETAIL: (id) => `/claims/${id}`,
+    CREATE: (bookingId) => `/bookings/${bookingId}/claims`,
+    EVIDENCE: (id) => `/claims/${id}/evidence`,
+    REVIEW: (id) => `/claims/${id}/review`,
+    APPROVE: (id) => `/claims/${id}/approve`,
+    REJECT: (id) => `/claims/${id}/reject`,
+    PAY: (id) => `/claims/${id}/pay`,
+  },
+
   PRICING: {
     ITEMS: '/pricing/items',
   },

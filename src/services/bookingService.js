@@ -1,3 +1,4 @@
+// Đang sửa bookingService vì bổ sung API hủy đổi tuyến và đếm đơn chờ
 import api from './api';
 import { ENDPOINTS } from './endpoints';
 
@@ -113,6 +114,25 @@ export const bookingService = {
       return this.previewQuote(previewData);
     }
     return api.post(ENDPOINTS.BOOKINGS.CALCULATE_QUOTE(id));
+  },
+
+  /**
+   * Manager chốt giá trị thỏa thuận cho từng ngựa trong đơn (R-12, BE-09)
+   * @param {number|string} id - BookingID
+   * @param {{ horseValues: Array<{ horseId: number, agreedValue: number }> }} payload
+   * @returns {Promise<any>}
+   */
+  async updateHorseValues(id, payload) {
+    return api.put(ENDPOINTS.BOOKINGS.HORSE_VALUES(id), payload);
+  },
+
+  /**
+   * Khách hàng hủy đơn hoàn tiền 100% khi công ty đổi tuyến làm phát sinh giấy mới (R-10, BE-06)
+   * @param {number|string} id - BookingID
+   * @returns {Promise<any>}
+   */
+  async cancelRouteChange(id) {
+    return api.post(ENDPOINTS.BOOKINGS.CANCEL_ROUTE_CHANGE(id));
   },
 };
 

@@ -81,27 +81,27 @@ Thứ tự gợi ý: **Thắng** làm FE-15 → FE-16 → FE-08 → FE-07 → FE
 
 ## Việc của Vũ
 
-### [ ] FE-13 · Người nhận ngựa (R-16)
+### [x] FE-13 · Người nhận ngựa (R-16)
 - Component `RecipientForm` (họ tên, SĐT bắt buộc; email; số giấy tờ; ô "Tôi tự nhận ngựa" điền từ hồ sơ tài khoản). FE-02 dùng component này trong form tạo đơn.
 - Trang chi tiết đơn của khách: khối "Người nhận" + nút sửa (khóa khi xe đã tới điểm trả); khi tới hạn (backend gửi thông báo) hiện thẻ "Xác nhận người nhận sẽ có mặt" + khung giờ dự kiến, nút **Xác nhận** / **Đổi người nhận**; khi tài xế báo người ký khác tên, hiện yêu cầu "Đồng ý cho [tên] nhận thay".
 - App tài xế: ở mốc DropOff hiện tên, SĐT người nhận + nút **Gọi** (`<a href="tel:...">`), trạng thái "khách đã xác nhận có mặt" hoặc chưa.
 - e-POD (`ArrivalHandoverPage`): điền sẵn thông tin người nhận từ đơn; tài xế sửa tên người ký nếu khác → hiện cảnh báo cần khách xác nhận, nút ký bị khóa cho tới khi khách xác nhận (tự tải lại mỗi 15 giây hoặc khi có thông báo realtime).
 
-### [ ] FE-06 · Giấy cần nộp theo tuyến, hạn nộp (R-10)
+### [x] FE-06 · Giấy cần nộp theo tuyến, hạn nộp (R-10)
 - Màn hồ sơ của khách: hiện danh sách giấy theo **từng nước** (nước đi / quá cảnh / nước đến) của tuyến đã duyệt, **hạn nộp** đếm ngược, số lần đã nhắc; giấy nào còn thiếu nổi bật.
 - Khi công ty đổi tuyến làm phát sinh giấy mới: thẻ thông báo "Tuyến đã thay đổi, cần thêm các giấy sau…" + hạn mới + nút **Hủy đơn (hoàn 100%)** có hộp xác nhận.
 - Đơn bị hủy vì quá hạn nộp giấy: hiện lý do và số tiền được hoàn.
 
-### [ ] FE-04 · Manager duyệt sơ bộ, duyệt tuyến, chốt giá trị ngựa (R-10)
+### [x] FE-04 · Manager duyệt sơ bộ, duyệt tuyến, chốt giá trị ngựa (R-10)
 - Màn duyệt đơn hiện tại đổi nhãn thành **duyệt sơ bộ** (kiểm tra khả thi), giữ từ chối kèm lý do.
 - Màn duyệt tuyến: `RouteMap` chỉ xem + bảng chặng (km, giờ), nước quá cảnh, mốc cửa khẩu; bảng ngựa với giá trị khai báo, chứng từ (mở xem), ô **giá trị thỏa thuận** (mặc định = khai báo); **xem trước báo giá chốt** (gọi backend) trước khi bấm **Duyệt tuyến & gửi báo giá** / **Từ chối** (bắt buộc lý do).
 
-### [ ] FE-12 · Bồi thường giao trễ (R-09)
+### [x] FE-12 · Bồi thường giao trễ (R-09)
 - Manager, màn đóng chuyến (`TripClosurePage`): danh sách đơn trễ do lỗi công ty, số giờ trễ, số tiền bù hệ thống tính; Manager **duyệt** hoặc **sửa số tiền** (bắt buộc lý do).
 - Khách: trang thanh toán / chi tiết đơn hiện dòng "Bồi thường giao trễ" với số giờ trễ, số tiền, trạng thái hoàn.
 
 
-### [ ] FE-11 · Hồ sơ bồi thường bảo hiểm (R-13)
+### [x] FE-11 · Hồ sơ bồi thường bảo hiểm (R-13)
 - Khách: mục "Bồi thường" trong trang đơn: danh sách hồ sơ (tự mở hoặc tự tạo), nút **Yêu cầu bồi thường** (chỉ trong 24 giờ sau khi ký e-POD; hiện đếm ngược), tải chứng từ (biên bản thú y, hóa đơn, ảnh), xem quyết định + số tiền.
 - Manager: màn danh sách hồ sơ (lọc trạng thái), chi tiết: thông tin ngựa, gói bảo hiểm, giá trị thỏa thuận, **trần chi trả** theo gói, sự cố liên quan, chứng từ; **Duyệt** (nhập số tiền ≤ trần) / **Từ chối** (chọn lý do theo điều khoản loại trừ) / **Đánh dấu đã trả** (mã tham chiếu khi chuyển khoản thủ công).
 ---

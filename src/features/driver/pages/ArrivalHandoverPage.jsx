@@ -54,6 +54,24 @@ export default function ArrivalHandoverPage() {
     loadHandovers();
   }, [loadHandovers]);
 
+  const watchedRecipientName = Form.useWatch('recipientName', form);
+  const activeBooking = (mission?.bookings || []).find((b) => b.bookingId === activeBookingId);
+  const originalRecipientName = activeBooking?.recipientName || activeBooking?.customerName || '';
+  const isDifferentRecipient = Boolean(
+    watchedRecipientName &&
+    originalRecipientName &&
+    watchedRecipientName.trim().toLowerCase() !== originalRecipientName.trim().toLowerCase()
+  );
+  const isAlternateApproved = Boolean(activeBooking?.alternateRecipientApproved);
+
+  useEffect(() => {
+    if (!isDifferentRecipient || isAlternateApproved) return undefined;
+    const interval = setInterval(() => {
+      fetchMission();
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [isDifferentRecipient, isAlternateApproved, fetchMission]);
+
   if (loading && !mission) {
     return (
       <div style={{ textAlign: 'center', padding: '100px 0' }}>
@@ -79,15 +97,23 @@ export default function ArrivalHandoverPage() {
     return dropoff.status === 'Arrived' && onBoardOf(booking.bookingId).length > 0;
   };
 
-  const activeBooking = bookings.find((b) => b.bookingId === activeBookingId);
+
+
   const activeHorses = activeBooking ? onBoardOf(activeBooking.bookingId) : [];
   const allVerified = activeHorses.length > 0 && activeHorses.every((h) => verified[h.tripHorseId]);
 
+  // Đang sửa ArrivalHandoverPage vì tự điền người nhận và chặn hoàn tất nếu ký thay chưa duyệt theo FE-13 (R-16)
   const openForm = (bookingId) => {
     setActiveBookingId(bookingId);
     setVerified({});
     setSignature(null);
-    form.resetFields();
+    const b = bookings.find((item) => item.bookingId === bookingId);
+    form.setFieldsValue({
+      recipientName: b?.recipientName || b?.customerName || '',
+      recipientPhone: b?.recipientPhone || b?.customerPhone || '',
+      recipientIdCard: b?.recipientIdNumber || b?.recipientIdCard || '',
+      overallCondition: 'Excellent',
+    });
   };
 
   const handleSubmit = async () => {
@@ -317,6 +343,19 @@ export default function ArrivalHandoverPage() {
               </div>
             ))}
 
+            
+            {isDifferentRecipient && (
+              <Alert
+                type={isAlternateApproved ? 'success' : 'warning'}
+                showIcon
+                style={{ marginBottom: 16 }}
+                message={
+                  isAlternateApproved
+                    ? t('handover.form.alternateApproved', 'Khách hàng đã chấp thuận cho người này nhận thay.')
+                    : t('handover.form.alternateWait', 'Người ký khác người nhận trên đơn. Cần khách hàng xác nhận nhận thay trên ứng dụng trước khi hoàn tất.')
+                }
+              />
+            )}
             <Title level={5}>{t('handover.form.recipientTitle')}</Title>
             <Row gutter={16}>
               <Col xs={24} md={8}>

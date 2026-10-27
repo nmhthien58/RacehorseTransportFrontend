@@ -101,10 +101,17 @@
     "tripClosure": "Đóng chuyến & KPI",
     "reports": "Báo cáo",
     "paymentSettings": "Cấu hình thanh toán",
-    "transportOrders": "Đơn vận chuyển"
+    "transportOrders": "Đơn vận chuyển",
+    "insuranceClaims": "Bồi thường bảo hiểm"
   },
   "status": {
     "submitted": "Đã gửi",
+    "preApproved": "Chờ lập tuyến",
+    "routePlanned": "Chờ duyệt tuyến",
+    "quoted": "Đã báo giá",
+    "quoteExpired": "Báo giá hết hạn",
+    "underReview": "Đang thẩm định",
+    "paid": "Đã chi trả",
     "awaitingDeposit": "Chờ đặt cọc",
     "awaitingFinalPayment": "Chờ thanh toán phát sinh",
     "approved": "Đã duyệt",
@@ -1483,7 +1490,9 @@
     "queueEmpty": "Không có ngựa nào đang chờ xếp chuyến",
     "tabs": {
       "queue": "Hàng chờ xếp chuyến",
-      "trips": "Kế hoạch chuyến"
+      "trips": "Kế hoạch chuyến",
+      "routePlanning": "Đơn chờ lập tuyến",
+      "routePlanningHint": "Danh sách các đơn vận chuyển đã được Manager duyệt sơ bộ và chuyển đến Coordinator để vẽ / lập lộ trình chi tiết trước khi gửi báo giá chốt."
     },
     "filters": {
       "allModes": "Mọi phương thức",
@@ -1534,7 +1543,14 @@
       "deliveredCount": "Đã giao {{done}}/{{total}}",
       "pickupAt": "Giờ đón",
       "routeKm": "Quãng đường",
-      "escort": "Áp tải phụ trách"
+      "escort": "Áp tải phụ trách",
+      "stopType": "Loại điểm",
+      "stopName": "Tên trạm / Mốc",
+      "country": "Nước",
+      "stopNamePlaceholder": "Tên điểm dừng / cửa khẩu",
+      "addressPlaceholder": "Địa chỉ",
+      "notes": "Ghi chú tuyến",
+      "notesPlaceholder": "Ghi chú cho bộ phận kiểm dịch hoặc quản lý..."
     },
     "crewRole": {
       "Driver": "Lái xe",
@@ -1571,7 +1587,11 @@
       "resetRoute": "Tạo lại mốc mặc định",
       "saveDraft": "Lưu nháp",
       "saveAndSubmit": "Lưu & trình duyệt",
-      "suggestRoute": "Gợi ý lộ trình"
+      "suggestRoute": "Gợi ý lộ trình",
+      "planRoute": "Lập tuyến",
+      "viewEditRoute": "Xem / Sửa tuyến",
+      "previewRoute": "Xem trước tuyến",
+      "submitRoute": "Lưu & Trình duyệt"
     },
     "confirm": {
       "cancel": "Hủy chuyến {{code}}? Ngựa sẽ quay lại hàng chờ."
@@ -1596,7 +1616,12 @@
       "needBookingForStop": "Mốc Điểm đón / Điểm trả phải chọn đơn",
       "suggestNeedInput": "Chọn ngựa và giờ khởi hành trước khi gợi ý lộ trình",
       "suggestFailed": "Không gợi ý được lộ trình",
-      "suggested": "Đã thay lộ trình bằng gợi ý"
+      "suggested": "Đã thay lộ trình bằng gợi ý",
+      "stopNameRequired": "Vui lòng nhập tên điểm dừng / cửa khẩu",
+      "previewLoaded": "Đã tính toán lộ trình dự kiến",
+      "previewFailed": "Không thể tính lộ trình",
+      "submittedSuccess": "Đã trình duyệt tuyến thành công cho Manager",
+      "submitFailed": "Trình duyệt tuyến thất bại"
     },
     "suggestion": {
       "title": "Kết quả gợi ý lộ trình",
@@ -1624,6 +1649,23 @@
       "autoPlaceholder": "Tự phân khi lưu",
       "emptySlot": "Ô trống",
       "hint": "Bấm một ô có ngựa rồi bấm ô khác để đổi chỗ. Mỗi người áp tải phụ trách tối đa 3 con; ô để trống áp tải sẽ được tự phân khi lưu (ô 1-3 cho người đầu tiên, trưởng nhóm trước)."
+    },
+    "routePlanningEmpty": "Hiện không có đơn nào chờ lập tuyến",
+    "drawer": {
+      "title": "Lập tuyến vận chuyển cho đơn",
+      "origin": "Điểm đón (Khóa từ đơn)",
+      "destination": "Điểm trả (Khóa từ đơn)",
+      "stops": "Các mốc dừng chân & Cửa khẩu quốc tế",
+      "noStops": "Chưa thêm điểm dừng trung gian nào",
+      "previewInfo": "Thông số lộ trình dự kiến",
+      "totalDistance": "Tổng quãng đường",
+      "totalHours": "Thời gian ước tính",
+      "transitCountries": "Nước quá cảnh",
+      "rejectionAlert": "Tuyến trước đó đã bị Manager từ chối"
+    },
+    "stopTypes": {
+      "restStop": "Trạm nghỉ",
+      "borderGate": "Cửa khẩu"
     }
   },
   "routeApproval": {
@@ -1637,7 +1679,11 @@
     },
     "actions": {
       "approve": "Duyệt kế hoạch",
-      "reject": "Trả về"
+      "reject": "Trả về",
+      "rejectRoute": "Từ chối tuyến",
+      "approveAndQuote": "Duyệt tuyến & gửi báo giá",
+      "previewQuote": "Xem trước báo giá chốt",
+      "confirmReject": "Xác nhận từ chối"
     },
     "rejectTitle": "Trả kế hoạch {{code}} về cho điều phối",
     "reasonPlaceholder": "Lý do (bắt buộc, tối đa 500 ký tự)",
@@ -1647,7 +1693,34 @@
       "rejected": "Đã trả kế hoạch {{code}} về cho điều phối",
       "rejectedCancelled": "Chuyến {{code}} đã bị hủy sau 3 lần trả về",
       "failed": "Thao tác không thành công",
-      "reasonRequired": "Vui lòng nhập lý do"
+      "reasonRequired": "Vui lòng nhập lý do",
+      "quotePreviewLoaded": "Đã tính toán báo giá chốt",
+      "quotePreviewFailed": "Không thể tính báo giá",
+      "noPlanToApprove": "Không tìm thấy bản lộ trình cần duyệt",
+      "approvedAndQuoted": "Đã duyệt tuyến và gửi báo giá chốt cho khách hàng",
+      "rejectedSuccess": "Đã trả tuyến về cho Điều phối viên chỉnh sửa"
+    },
+    "tabs": {
+      "bookingRoutes": "Tuyến đơn hàng (R-10)",
+      "tripPlans": "Kế hoạch chuyến xe"
+    },
+    "pendingListTitle": "Đơn đã lập tuyến chờ duyệt",
+    "emptyBookingRoutes": "Không có đơn nào chờ duyệt tuyến",
+    "noBookingSelected": "Chọn một đơn hàng để xem tuyến và chốt giá trị ngựa",
+    "bookingTitle": "Duyệt tuyến đơn hàng",
+    "fields": {
+      "agreedValue": "Giá trị thỏa thuận ($)"
+    },
+    "horsesCardTitle": "Chốt giá trị thỏa thuận từng con ngựa (R-12)",
+    "quoteSummaryTitle": "Báo giá chốt dự kiến gửi cho khách hàng",
+    "freight": "Cước vận chuyển",
+    "clearance": "Phí thông quan",
+    "insurance": "Phí bảo hiểm",
+    "total": "Tổng tiền chốt",
+    "rejectModal": {
+      "title": "Từ chối phương án tuyến",
+      "hint": "Lý do từ chối sẽ được gửi lại cho Coordinator để vẽ lại tuyến hoặc thêm bớt điểm dừng phù hợp.",
+      "placeholder": "Nhập lý do từ chối (bắt buộc: vd thiếu trạm nghỉ, quá xa cửa khẩu...)"
     }
   },
   "tracking": {
@@ -1692,8 +1765,10 @@
       "queue": "NGỰA CHỜ XẾP CHUYẾN",
       "planning": "NHÁP / CHỜ DUYỆT",
       "scheduled": "ĐÃ LÊN LỊCH",
-      "onTheRoad": "ĐANG CHẠY / ĐÃ TỚI"
-    }
+      "onTheRoad": "ĐANG CHẠY / ĐÃ TỚI",
+      "pendingRoutes": "Chờ lập tuyến"
+    },
+    "planRoute": "Lập tuyến đơn"
   },
   "horseDocs": {
     "pageTitle": "Hồ sơ thú y",
@@ -2048,7 +2123,11 @@
       "verified": "Đã đối chiếu",
       "noPhoto": "Chưa có ảnh",
       "microchip": "Mã vi mạch",
-      "horsesNotVerified": "Còn ngựa chưa được đối chiếu"
+      "horsesNotVerified": "Còn ngựa chưa được đối chiếu",
+      "presenceConfirmed": "Đã xác nhận có mặt",
+      "presenceUnconfirmed": "Chưa xác nhận có mặt",
+      "alternateApproved": "Khách hàng đã chấp thuận cho người này nhận thay.",
+      "alternateWait": "Người ký khác người nhận trên đơn. Cần khách hàng xác nhận nhận thay trên ứng dụng trước khi hoàn tất."
     },
     "dropoffAt": "Điểm trả: {{name}} · dự kiến {{time}}",
     "waitingDropoff": "Chờ xe tới điểm trả",
@@ -2391,5 +2470,103 @@
   "policyAgreement": {
     "label": "Tôi đã đọc và đồng ý với <policyLink>Chính sách dịch vụ</policyLink> (phiên bản {{version}})",
     "unavailable": "Không tải được Chính sách dịch vụ. Vui lòng tải lại trang."
+  },
+  "delayCompensation": {
+    "title": "Bồi thường giao trễ (R-09)",
+    "none": "Không có đơn nào bị giao trễ",
+    "delayHours": "Thời gian trễ",
+    "amount": "Số tiền bồi thường",
+    "status": "Trạng thái",
+    "reason": "Nguyên nhân",
+    "actions": {
+      "adjust": "Sửa số tiền"
+    },
+    "adjustModal": {
+      "title": "Điều chỉnh số tiền bồi thường giao trễ",
+      "currentAmount": "Số tiền hệ thống tính",
+      "newAmount": "Số tiền duyệt mới (USD)",
+      "reason": "Lý do điều chỉnh (bắt buộc)",
+      "reasonPlaceholder": "Ghi rõ căn cứ / thỏa thuận với khách hàng..."
+    },
+    "messages": {
+      "approved": "Đã duyệt bồi thường giao trễ",
+      "approveFailed": "Duyệt thất bại",
+      "reasonRequired": "Vui lòng nhập lý do điều chỉnh số tiền",
+      "adjustedSuccess": "Đã điều chỉnh và duyệt số tiền bồi thường",
+      "adjustFailed": "Điều chỉnh thất bại"
+    }
+  },
+  "claims": {
+    "title": "Hồ sơ bồi thường bảo hiểm (R-13)",
+    "tabTitle": "Bồi thường bảo hiểm",
+    "managerTitle": "Hồ sơ bồi thường bảo hiểm (R-13)",
+    "managerSubtitle": "Tiếp nhận, thẩm định và chi trả các yêu cầu bồi thường tổn thất theo điều khoản chính sách dịch vụ.",
+    "timeRemaining": "Thời hạn gửi yêu cầu bồi thường: đến {{time}} (trong vòng 24 giờ sau khi bàn giao).",
+    "expiredNotice": "Đã quá thời hạn 24 giờ kể từ khi ký biên bản giao nhận e-POD.",
+    "empty": "Chưa có hồ sơ bồi thường bảo hiểm nào cho đơn này.",
+    "loadFailed": "Không thể tải danh sách hồ sơ bồi thường",
+    "detailTitle": "Thẩm định hồ sơ bồi thường",
+    "actions": {
+      "newClaim": "Yêu cầu bồi thường",
+      "startReview": "Bắt đầu thẩm định",
+      "approve": "Duyệt bồi thường",
+      "reject": "Từ chối",
+      "markPaid": "Đánh dấu đã chi trả",
+      "uploadFiles": "Chọn tệp đính kèm"
+    },
+    "modal": {
+      "title": "Nộp yêu cầu bồi thường bảo hiểm"
+    },
+    "fields": {
+      "claimCode": "Mã hồ sơ",
+      "booking": "Đơn hàng",
+      "horse": "Ngựa",
+      "selectHorse": "Chọn con ngựa bị tổn thất / thương tích",
+      "horsePlaceholder": "Chọn ngựa...",
+      "type": "Loại bồi thường",
+      "typePlaceholder": "Chọn loại tổn thất...",
+      "insurancePlan": "Gói bảo hiểm",
+      "agreedValue": "Giá trị thỏa thuận",
+      "requestedAmount": "Yêu cầu",
+      "amountUsd": "Số tiền yêu cầu bồi thường (USD)",
+      "approvedAmount": "Được duyệt",
+      "maxCap": "Trần chi trả theo chính sách",
+      "status": "Trạng thái",
+      "description": "Mô tả diễn biến & nguyên nhân",
+      "descPlaceholder": "Mô tả diễn biến, triệu chứng hoặc nguyên nhân thương tích...",
+      "evidence": "Chứng từ bổ sung (biên bản thú y, hóa đơn, ảnh hiện trường)",
+      "decisionNote": "Phản hồi / Ghi chú duyệt",
+      "paymentRef": "Mã tham chiếu thanh toán",
+      "rejectReason": "Lý do từ chối theo điều khoản loại trừ",
+      "note": "Căn cứ / Ghi chú"
+    },
+    "types": {
+      "injury": "Chấn thương (chi phí thú y)",
+      "death": "Tử vong",
+      "loss": "Thất lạc"
+    },
+    "messages": {
+      "createSuccess": "Đã gửi yêu cầu bồi thường bảo hiểm thành công",
+      "createFailed": "Gửi yêu cầu thất bại",
+      "reviewed": "Đã chuyển hồ sơ sang trạng thái thẩm định",
+      "approvedSuccess": "Đã phê duyệt số tiền bồi thường",
+      "rejectedSuccess": "Đã từ chối bồi thường theo điều khoản",
+      "paidSuccess": "Đã ghi nhận chi trả tiền bồi thường"
+    },
+    "errors": {
+      "horseRequired": "Vui lòng chọn ngựa",
+      "typeRequired": "Vui lòng chọn loại",
+      "amountRequired": "Vui lòng nhập số tiền",
+      "descRequired": "Vui lòng mô tả sự cố"
+    },
+    "approveForm": {
+      "title": "Phê duyệt số tiền bồi thường"
+    },
+    "rejectForm": {
+      "title": "Từ chối yêu cầu bồi thường"
+    },
+    "payForm": {
+      "title": "Ghi nhận chi trả bồi thường"
+    }
   }
 }

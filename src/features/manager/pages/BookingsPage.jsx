@@ -1,3 +1,4 @@
+// Đang sửa BookingsPage vì cập nhật thống kê đơn chờ duyệt và cấu hình thanh toán
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Button,
@@ -26,6 +27,7 @@ import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { formatPickupWindow } from '@utils/bookingSchedule';
 import PageHeader from '@components/layout/PageHeader';
+import { unwrapList } from '@utils/apiHelpers';
 import StatusTag from '@components/common/StatusTag';
 import bookingService from '@services/bookingService';
 import userService from '@services/userService';
@@ -99,9 +101,9 @@ export default function ManagerBookings({ isDashboardView = false }) {
           userService.getStaff('TransportSpecialist').catch(() => null),
         ]);
         if (active) {
-          const list = bookingsRes?.data?.data || bookingsRes?.data || [];
+          const list = unwrapList(bookingsRes);
           setBookings(Array.isArray(list) ? list : []);
-          const staffList = staffRes?.data?.data || staffRes?.data || [];
+          const staffList = unwrapList(staffRes);
           setSpecialists(Array.isArray(staffList) ? staffList : []);
         }
       } catch {
@@ -125,21 +127,40 @@ export default function ManagerBookings({ isDashboardView = false }) {
   // Thống kê 4 chỉ số tổng quan tối giản
   const stats = useMemo(() => {
     const total = bookings.length;
-    const pending = bookings.filter((b) => b.status === BOOKING_STATUS.SUBMITTED).length;
-    const approved = bookings.filter(
-      (b) => b.status === BOOKING_STATUS.APPROVED || b.status === BOOKING_STATUS.ASSIGNED,
-    ).length;
-    const rejected = bookings.filter(
-      (b) => b.status === BOOKING_STATUS.REJECTED || b.status === BOOKING_STATUS.CANCELLED,
-    ).length;
+    const getStatus = (b) => b?.status || b?.Status || '';
+    const pending = bookings.filter((b) => {
+      const s = getStatus(b);
+      return (
+        s === BOOKING_STATUS.SUBMITTED ||
+        s === 'PreApproved' ||
+        s === 'RoutePlanned' ||
+        s === 'Quoted' ||
+        s === BOOKING_STATUS.AWAITING_DEPOSIT
+      );
+    }).length;
+    const approved = bookings.filter((b) => {
+      const s = getStatus(b);
+      return s === BOOKING_STATUS.APPROVED || s === BOOKING_STATUS.ASSIGNED || s === BOOKING_STATUS.COMPLETED;
+    }).length;
+    const rejected = bookings.filter((b) => {
+      const s = getStatus(b);
+      return (
+        s === BOOKING_STATUS.REJECTED ||
+        s === BOOKING_STATUS.CANCELLED ||
+        s === BOOKING_STATUS.EXPIRED ||
+        s === 'QuoteExpired'
+      );
+    }).length;
     return { total, pending, approved, rejected };
   }, [bookings]);
+
 
   // Áp dụng các bộ lọc tìm kiếm & ngày tháng
   const filteredBookings = useMemo(() => {
     return bookings.filter((item) => {
       // 1. Lọc theo trạng thái
-      if (statusFilter !== 'All' && item.status !== statusFilter) {
+      const bStatus = item.status || item.Status;
+      if (statusFilter !== 'All' && bStatus !== statusFilter) {
         return false;
       }
 
@@ -410,11 +431,22 @@ export default function ManagerBookings({ isDashboardView = false }) {
             options={[
               { label: `${t('manager.bookings.tabs.all')} (${bookings.length})`, value: 'All' },
               {
-                label: `${t('manager.bookings.tabs.submitted')} (${stats.pending})`,
+                label: `${t('manager.bookings.tabs.submitted')} (${bookings.filter((b) => (b.status || b.Status) === BOOKING_STATUS.SUBMITTED).length})`,
                 value: BOOKING_STATUS.SUBMITTED,
               },
+              {
+                label: `${t('status.preApproved', 'Chờ lập tuyến')} (${bookings.filter((b) => (b.status || b.Status) === 'PreApproved').length})`,
+                value: 'PreApproved',
+              },
+              {
+                label: `${t('status.routePlanned', 'Chờ duyệt tuyến')} (${bookings.filter((b) => (b.status || b.Status) === 'RoutePlanned').length})`,
+                value: 'RoutePlanned',
+              },
+              {
+                label: `${t('status.quoted', 'Đã báo giá')} (${bookings.filter((b) => (b.status || b.Status) === 'Quoted').length})`,
+                value: 'Quoted',
+              },
               { label: t('manager.bookings.tabs.approved'), value: BOOKING_STATUS.APPROVED },
-              { label: t('manager.bookings.tabs.assigned'), value: BOOKING_STATUS.ASSIGNED },
               { label: t('manager.bookings.tabs.completed'), value: BOOKING_STATUS.COMPLETED },
               { label: t('manager.bookings.tabs.rejected'), value: BOOKING_STATUS.REJECTED },
             ]}

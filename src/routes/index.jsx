@@ -1,3 +1,4 @@
+// Đang sửa routes/index.jsx vì đăng ký route quản lý bồi thường bảo hiểm FE-11 (R-13)
 import { Routes, Route, Navigate } from 'react-router-dom';
 import PrivateRoute from './PrivateRoute';
 import { ROUTES } from './routes';
@@ -38,6 +39,7 @@ import ManagerBookings from '@features/manager/pages/BookingsPage';
 import BookingDetailPage from '@features/manager/pages/BookingDetailPage';
 import PendingRequestsPage from '@features/manager/pages/PendingRequestsPage';
 import RouteApprovalsPage from '@features/manager/pages/RouteApprovalsPage';
+import InsuranceClaimsPage from '@features/manager/pages/InsuranceClaimsPage';
 import UserManagementPage from '@features/manager/pages/UserManagementPage';
 import IncidentReviewPage from '@features/manager/pages/IncidentReviewPage';
 import TripClosurePage from '@features/manager/pages/TripClosurePage';
@@ -145,6 +147,7 @@ export default function AppRoutes() {
           <Route path={ROUTES.MANAGER_BOOKING_DETAIL} element={<BookingDetailPage />} />
           <Route path={ROUTES.MANAGER_PENDING_REQUESTS} element={<PendingRequestsPage />} />
           <Route path={ROUTES.MANAGER_ROUTE_APPROVALS} element={<RouteApprovalsPage />} />
+          <Route path={ROUTES.MANAGER_INSURANCE_CLAIMS} element={<InsuranceClaimsPage />} />
           <Route path="/manager/route-approvals" element={<RouteApprovalsPage />} />
           <Route path={ROUTES.MANAGER_USERS} element={<UserManagementPage />} />
           <Route path="/manager/users" element={<UserManagementPage />} />

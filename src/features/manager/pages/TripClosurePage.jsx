@@ -21,7 +21,10 @@ import dayjs from 'dayjs';
 import PageHeader from '@components/layout/PageHeader';
 import tripService from '@services/tripService';
 import handoverService from '@services/handoverService';
+// Đang sửa TripClosurePage vì bổ sung xét duyệt và điều chỉnh bồi thường giao trễ theo FE-12 (R-09, BE-13)
 import incidentService from '@services/incidentService';
+import delayCompensationService from '@services/delayCompensationService';
+import { Modal, InputNumber, Space } from 'antd';
 import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import {
   HANDOVER_CONDITION_COLOR,
@@ -50,6 +53,11 @@ export default function TripClosurePage() {
   const [extra, setExtra] = useState({ handovers: [], incidents: [], loading: false });
   const [remarks, setRemarks] = useState('');
   const [closing, setClosing] = useState(false);
+  const [adjustModalOpen, setAdjustModalOpen] = useState(false);
+  const [selectedComp, setSelectedComp] = useState(null);
+  const [newAmount, setNewAmount] = useState(0);
+  const [adjustReason, setAdjustReason] = useState('');
+  const [actionCompLoading, setActionCompLoading] = useState(false);
 
   // Danh sách chuyến chỉ có tóm tắt; tải chi tiết để có đơn, KPI, chi phí
   const load = useCallback(
@@ -85,12 +93,54 @@ export default function TripClosurePage() {
   const openTrip = async (trip) => {
     setSelected(trip);
     setRemarks('');
-    setExtra({ handovers: [], incidents: [], loading: true });
+    setExtra({ handovers: [], incidents: [], compensations: [], loading: true });
     const [handovers, incidents] = await Promise.all([
       handoverService.getTripHandovers(trip.tripId).then(unwrapList).catch(() => []),
       incidentService.getTripIncidents(trip.tripId).then(unwrapList).catch(() => []),
     ]);
     setExtra({ handovers, incidents, loading: false });
+  };
+
+
+  const handleApproveCompensation = async (compId) => {
+    setActionCompLoading(true);
+    try {
+      await delayCompensationService.approve(compId);
+      message.success(t('delayCompensation.messages.approved', 'Đã duyệt bồi thường giao trễ'));
+      if (selected) openTrip(selected);
+    } catch (err) {
+      message.error(getErrorMessage(err, t('delayCompensation.messages.approveFailed', 'Duyệt thất bại')));
+    } finally {
+      setActionCompLoading(false);
+    }
+  };
+
+  const handleOpenAdjustModal = (comp) => {
+    setSelectedComp(comp);
+    setNewAmount(Number(comp.amountUsd || comp.amount || 0));
+    setAdjustReason('');
+    setAdjustModalOpen(true);
+  };
+
+  const handleSaveAdjustedCompensation = async () => {
+    if (!adjustReason.trim()) {
+      message.warning(t('delayCompensation.messages.reasonRequired', 'Vui lòng nhập lý do điều chỉnh số tiền'));
+      return;
+    }
+    setActionCompLoading(true);
+    try {
+      await delayCompensationService.approve(selectedComp.compensationId, {
+        approvedAmount: Number(newAmount),
+        reason: adjustReason.trim(),
+      });
+      message.success(t('delayCompensation.messages.adjustedSuccess', 'Đã điều chỉnh và duyệt số tiền bồi thường'));
+      setAdjustModalOpen(false);
+      if (selected) openTrip(selected);
+    } catch (err) {
+      message.error(getErrorMessage(err, t('delayCompensation.messages.adjustFailed', 'Điều chỉnh thất bại')));
+    } finally {
+      setActionCompLoading(false);
+    }
   };
 
   const handleClose = async () => {
@@ -234,6 +284,46 @@ export default function TripClosurePage() {
               })
             )}
 
+            
+            <h4 style={{ margin: '20px 0 8px' }}>{t('delayCompensation.title', 'Bồi thường giao trễ (R-09)')}</h4>
+            {!extra.loading && extra.compensations.length === 0 && (
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('delayCompensation.none', 'Không có đơn nào bị giao trễ')} />
+            )}
+            {extra.compensations.map((comp) => (
+              <div key={comp.compensationId} style={{ padding: '10px 12px', background: '#F8FAFC', borderRadius: 8, marginBottom: 8, border: '1px solid #E2E8F0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                  <div>
+                    <Text strong>{comp.bookingCode || '#' + comp.bookingId}</Text>
+                    <div style={{ fontSize: 12, color: '#64748B' }}>
+                      {t('delayCompensation.delayHours', 'Trễ')}: <Text strong style={{ color: '#DC2626' }}>{comp.delayHours} {t('common.hours', 'giờ')}</Text> · {t('delayCompensation.amount', 'Bồi thường')}: <Text strong style={{ color: '#047857' }}>{Number(comp.amountUsd || comp.amount || 0).toLocaleString()} USD</Text>
+                    </div>
+                  </div>
+                  <Space>
+                    <Tag color={comp.status === 'Approved' ? 'green' : 'orange'}>{comp.status}</Tag>
+                    {comp.status === 'Pending' && (
+                      <>
+                        <Button
+                          size="small"
+                          type="primary"
+                          loading={actionCompLoading}
+                          onClick={() => handleApproveCompensation(comp.compensationId)}
+                          style={{ backgroundColor: '#10B981', borderColor: '#10B981' }}
+                        >
+                          {t('common.approve', 'Duyệt')}
+                        </Button>
+                        <Button
+                          size="small"
+                          onClick={() => handleOpenAdjustModal(comp)}
+                        >
+                          {t('delayCompensation.actions.adjust', 'Sửa số tiền')}
+                        </Button>
+                      </>
+                    )}
+                  </Space>
+                </div>
+              </div>
+            ))}
+
             <h4 style={{ margin: '20px 0 8px' }}>{t('incidents.title')}</h4>
             {!extra.loading && extra.incidents.length === 0 && (
               <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('incidents.none')} />
@@ -279,6 +369,45 @@ export default function TripClosurePage() {
           </>
         )}
       </Drawer>
+
+      <Modal
+        title={t('delayCompensation.adjustModal.title', 'Điều chỉnh số tiền bồi thường giao trễ')}
+        open={adjustModalOpen}
+        onCancel={() => setAdjustModalOpen(false)}
+        onOk={handleSaveAdjustedCompensation}
+        confirmLoading={actionCompLoading}
+        okText={t('common.save', 'Lưu & Duyệt')}
+        destroyOnClose
+      >
+        <div style={{ marginTop: 12 }}>
+          <p style={{ marginBottom: 8 }}>
+            {t('delayCompensation.adjustModal.currentAmount', 'Số tiền hệ thống tính')}: <Text strong>{Number(selectedComp?.amountUsd || selectedComp?.amount || 0).toLocaleString()} USD</Text>
+          </p>
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
+              {t('delayCompensation.adjustModal.newAmount', 'Số tiền duyệt mới (USD)')}:
+            </label>
+            <InputNumber
+              min={0}
+              style={{ width: '100%' }}
+              prefix="$"
+              value={newAmount}
+              onChange={setNewAmount}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
+              {t('delayCompensation.adjustModal.reason', 'Lý do điều chỉnh (bắt buộc)')}:
+            </label>
+            <TextArea
+              rows={3}
+              placeholder={t('delayCompensation.adjustModal.reasonPlaceholder', 'Ghi rõ căn cứ / thỏa thuận với khách hàng...')}
+              value={adjustReason}
+              onChange={(e) => setAdjustReason(e.target.value)}
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

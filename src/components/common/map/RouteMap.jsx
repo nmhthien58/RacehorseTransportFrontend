@@ -40,8 +40,16 @@ function FitBounds({ points }) {
   const map = useMap();
   const key = points.map((p) => p.join(',')).join('|');
   useEffect(() => {
-    if (points.length === 1) map.setView(points[0], 12);
-    if (points.length > 1) map.fitBounds(points, { padding: [32, 32] });
+    const fit = () => {
+      // Bản đồ có thể được tạo lúc khung chứa chưa có kích thước (bước wizard vừa hiện): đo lại trước khi canh khung
+      map.invalidateSize();
+      if (points.length === 1) map.setView(points[0], 12);
+      if (points.length > 1) map.fitBounds(points, { padding: [32, 32] });
+    };
+    fit();
+    const observer = new ResizeObserver(() => fit());
+    observer.observe(map.getContainer());
+    return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, key]);
   return null;

@@ -2346,5 +2346,50 @@
       "Dropoff": "Điểm trả",
       "Destination": "Điểm giao"
     }
+  },
+  "bookingForm": {
+    "pickupOnMap": "Điểm đón (tìm địa chỉ hoặc chọn trên bản đồ)",
+    "dropoffOnMap": "Điểm giao (tìm địa chỉ hoặc chọn trên bản đồ)",
+    "pickBothPoints": "Vui lòng chọn điểm đón và điểm giao trên bản đồ.",
+    "routeHint": "Quãng đường đường bộ thực tế giữa hai điểm, lấy từ bản đồ. Tuyến chính xác (trạm nghỉ, cửa khẩu) do công ty lập sau khi duyệt yêu cầu.",
+    "routeLoading": "Đang tính quãng đường...",
+    "values": {
+      "declaredLabel": "Giá trị khai báo (USD, không bắt buộc)",
+      "declaredPlaceholder": "Ví dụ: 40.000",
+      "allOrNone": "Đã khai giá trị cho một con thì phải khai cho mọi con. Còn thiếu: {{names}}.",
+      "fullNeedsValue": "{{name}}: gói Bảo hiểm toàn giá trị cần khai giá trị của ngựa.",
+      "proofRequired": "{{name}}: giá trị từ {{threshold}} USD cần tải chứng từ (hóa đơn mua, giấy định giá hoặc kết quả đấu giá).",
+      "uploadProof": "Tải chứng từ giá trị",
+      "proofHint": "Giá trị từ {{threshold}} USD cần chứng từ: hóa đơn mua, giấy định giá của bác sĩ thú y / chuyên gia, hoặc kết quả đấu giá.",
+      "proofUploaded": "Đã tải: {{name}}",
+      "uploadFailed": "Không tải được file chứng từ."
+    },
+    "insurance": {
+      "label": "Gói bảo hiểm",
+      "none": "Không mua bảo hiểm",
+      "noneHint": "Chỉ bồi thường khi lỗi do công ty: tối đa {{liability}} USD nếu ngựa chết / mất, chi phí thú y tối đa {{vet}} USD.",
+      "full": "Bảo hiểm toàn giá trị",
+      "fullHint": "Phí {{premium}}% giá trị thỏa thuận. Bồi thường 100% giá trị nếu ngựa chết / mất, chi phí thú y tối đa {{vetPercent}}% giá trị, kể cả bất khả kháng.",
+      "policyLink": "Xem Chính sách dịch vụ mục 8 (Bảo hiểm)"
+    },
+    "range": {
+      "title": "Khoảng giá ước tính",
+      "label": "Giá ước tính",
+      "note": "Giá chốt gửi sau khi công ty lập tuyến; bạn chưa phải thanh toán ở bước này.",
+      "linesNote": "Bảng chi tiết ở trên là mức thấp của khoảng giá (chưa có phí quá cảnh và quãng đường đi vòng)."
+    },
+    "recipient": {
+      "title": "Người nhận ngựa",
+      "self": "Tôi tự nhận ngựa (dùng tên, số điện thoại trong hồ sơ của tôi)",
+      "name": "Họ tên người nhận *",
+      "phone": "Số điện thoại người nhận *",
+      "email": "Email người nhận (nên có)",
+      "idNumber": "CMND / CCCD / hộ chiếu (không bắt buộc)",
+      "hint": "Người nhận được báo qua email khi chuyến được lên lịch, khi xe xuất phát và khi xe sắp tới. Bạn sửa được người nhận tới khi xe tới điểm giao."
+    }
+  },
+  "policyAgreement": {
+    "label": "Tôi đã đọc và đồng ý với <policyLink>Chính sách dịch vụ</policyLink> (phiên bản {{version}})",
+    "unavailable": "Không tải được Chính sách dịch vụ. Vui lòng tải lại trang."
   }
 }

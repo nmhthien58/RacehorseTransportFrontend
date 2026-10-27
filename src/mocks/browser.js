@@ -6,6 +6,7 @@ import { tripHandlers } from './handlers/tripHandlers';
 import { dossierHandlers } from './handlers/dossierHandlers';
 import { specialistHandlers } from './handlers/specialistHandlers';
 import { driverHandlers } from './handlers/driverHandlers';
+import { geoHandlers } from './handlers/geoHandlers';
 
 export const worker = setupWorker(
   ...driverHandlers,
@@ -15,5 +16,6 @@ export const worker = setupWorker(
   ...bookingHandlers,
   ...tripHandlers,
   ...dossierHandlers,
+  ...geoHandlers,
 );
 

@@ -2323,5 +2323,29 @@
     "empty": "No notifications yet",
     "ariaLabel": "Notifications",
     "newToast": "New notification"
+  },
+  "map": {
+    "searchPlaceholder": "Search an address (e.g. Ba Vi, Hanoi)",
+    "pickHint": "Type an address and pick a suggestion, or click the map / drag the pin to adjust.",
+    "resolving": "Looking up the address...",
+    "reverseFailed": "No address was found here. Pick a point on land or search by address.",
+    "country": "Country",
+    "km": "{{value}} km",
+    "hours": "about {{value}} driving hours",
+    "total": "Total",
+    "estimateNote": "* Some legs are estimated (straight line × 1.3)",
+    "addHint": "Click the map to add a stop.",
+    "moveUp": "Up",
+    "moveDown": "Down",
+    "remove": "Remove stop",
+    "distanceAB": "Road distance A → B",
+    "stopType": {
+      "Origin": "Pickup",
+      "Pickup": "Pickup",
+      "RestStop": "Rest stop",
+      "BorderGate": "Border gate",
+      "Dropoff": "Drop-off",
+      "Destination": "Destination"
+    }
   }
 }

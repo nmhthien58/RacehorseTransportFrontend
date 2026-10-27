@@ -2322,5 +2322,29 @@
     "empty": "Chưa có thông báo nào",
     "ariaLabel": "Thông báo",
     "newToast": "Thông báo mới"
+  },
+  "map": {
+    "searchPlaceholder": "Tìm địa chỉ (ví dụ: Ba Vì, Hà Nội)",
+    "pickHint": "Gõ địa chỉ để chọn gợi ý, hoặc bấm lên bản đồ / kéo ghim để chỉnh vị trí.",
+    "resolving": "Đang lấy địa chỉ...",
+    "reverseFailed": "Không tìm thấy địa chỉ tại điểm này. Hãy chọn điểm trên đất liền hoặc tìm theo địa chỉ.",
+    "country": "Nước",
+    "km": "{{value}} km",
+    "hours": "khoảng {{value}} giờ lái",
+    "total": "Tổng",
+    "estimateNote": "* Có chặng tính ước tính (đường chim bay × 1,3)",
+    "addHint": "Bấm lên bản đồ để thêm mốc.",
+    "moveUp": "Lên",
+    "moveDown": "Xuống",
+    "remove": "Xóa mốc",
+    "distanceAB": "Quãng đường đường bộ A → B",
+    "stopType": {
+      "Origin": "Điểm đón",
+      "Pickup": "Điểm đón",
+      "RestStop": "Trạm nghỉ",
+      "BorderGate": "Cửa khẩu",
+      "Dropoff": "Điểm trả",
+      "Destination": "Điểm giao"
+    }
   }
 }

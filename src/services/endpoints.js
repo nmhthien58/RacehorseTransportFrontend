@@ -51,6 +51,13 @@ export const ENDPOINTS = {
     DOCUMENT: (id, documentId) => `/horses/${id}/documents/${documentId}`,
   },
 
+  // Bản đồ (BE-01, R-11): tìm địa chỉ, tọa độ -> địa chỉ, chỉ đường qua nhiều điểm
+  GEO: {
+    SEARCH: '/geo/search',
+    REVERSE: '/geo/reverse',
+    ROUTE: '/geo/route',
+  },
+
   // 4. Đặt chuyến (Bookings - Flow 1)
   BOOKINGS: {
     LIST: '/bookings',

@@ -58,6 +58,16 @@ export const ENDPOINTS = {
     ROUTE: '/geo/route',
   },
 
+  // Chính sách dịch vụ công khai (BE-17): phiên bản + các giá trị cấu hình
+  POLICY: {
+    PUBLIC: '/policy',
+  },
+
+  // Tải file lên storage (chứng từ giá trị ngựa, biên bản...): trả về path để gửi kèm request khác
+  FILES: {
+    UPLOAD: '/files',
+  },
+
   // 4. Đặt chuyến (Bookings - Flow 1)
   BOOKINGS: {
     LIST: '/bookings',

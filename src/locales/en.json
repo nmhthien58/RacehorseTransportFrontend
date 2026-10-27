@@ -2347,5 +2347,41 @@
       "Dropoff": "Drop-off",
       "Destination": "Destination"
     }
+  },
+  "bookingForm": {
+    "pickupOnMap": "Pickup point (search an address or pick on the map)",
+    "dropoffOnMap": "Drop-off point (search an address or pick on the map)",
+    "pickBothPoints": "Please pick both the pickup and the drop-off point on the map.",
+    "routeHint": "Actual road distance between the two points, from the map. The exact route (rest stops, border gates) is planned by the company after reviewing your request.",
+    "routeLoading": "Calculating the distance...",
+    "values": {
+      "declaredLabel": "Declared value (USD, optional)",
+      "declaredPlaceholder": "e.g. 40,000",
+      "allOrNone": "If you declare the value of one horse, declare it for every horse. Missing: {{names}}.",
+      "fullNeedsValue": "{{name}}: full-value insurance needs the horse's value.",
+      "proofRequired": "{{name}}: a value from {{threshold}} USD needs a proof document (purchase invoice, valuation or auction result).",
+      "uploadProof": "Upload value proof",
+      "proofHint": "Values from {{threshold}} USD need a proof: purchase invoice, vet / expert valuation, or auction result.",
+      "proofUploaded": "Uploaded: {{name}}",
+      "uploadFailed": "Could not upload the proof file."
+    },
+    "insurance": {
+      "label": "Insurance plan",
+      "none": "No insurance",
+      "noneHint": "Compensation only when the company is at fault: up to {{liability}} USD if the horse dies / is lost, vet costs up to {{vet}} USD.",
+      "full": "Full-value insurance",
+      "fullHint": "Premium {{premium}}% of the agreed value. Pays 100% of the value if the horse dies / is lost, vet costs up to {{vetPercent}}% of the value, including force majeure.",
+      "policyLink": "See the Service Policy section 8 (Insurance)"
+    },
+    "range": {
+      "title": "Estimated price range",
+      "label": "Estimated price",
+      "note": "The final price is sent after the company plans the route; you do not pay anything at this step.",
+      "linesNote": "The breakdown above is the low end of the range (without transit fees and detours)."
+    }
+  },
+  "policyAgreement": {
+    "label": "I have read and agree to the <policyLink>Service Policy</policyLink> (version {{version}})",
+    "unavailable": "Could not load the Service Policy. Please reload the page."
   }
 }

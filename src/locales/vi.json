@@ -72,6 +72,8 @@
     "detail": "Chi tiết yêu cầu"
   },
   "nav": {
+    "countries": "Quốc gia & tuyến",
+    "pricingConfig": "Bảng giá chung",
     "dashboard": "Bảng điều khiển",
     "horses": "Ngựa của tôi",
     "vetRecords": "Hồ sơ thú y",
@@ -1460,6 +1462,10 @@
     }
   },
   "customerDossier": {
+    "companyProvides": "Công ty xin",
+    "companyProcessing": "Công ty đang làm thủ tục",
+    "companyObtained": "Đã có",
+    "companyDocsNote": "Bạn chỉ cần nộp giấy tờ của con ngựa (hộ chiếu, tiêm phòng, xét nghiệm). Giấy kiểm dịch xuất khẩu, giấy phép nhập khẩu và giấy phép quá cảnh do chuyên viên của công ty xin với cơ quan chức năng; bạn theo dõi tiến độ ở đây.",
     "title": "Hồ sơ kiểm dịch (Digital Dossier)",
     "empty": "Chưa có hồ sơ kiểm dịch. Hồ sơ được tạo tự động cho từng con ngựa khi đơn vận chuyển được duyệt.",
     "awaitingApproval": "Yêu cầu đang chờ duyệt. Hồ sơ sẽ xuất hiện tại đây sau khi chuyên viên được phân công.",
@@ -2524,6 +2530,13 @@
     }
   },
   "bookingForm": {
+    "routeNotOffered": "Công ty hiện chưa nhận tuyến này bằng đường bộ lẫn đường bay. Vui lòng chọn nước đi hoặc nước đến khác.",
+    "switchedToAir": "Hiện chưa nhận vận chuyển đường bộ cho tuyến đến {{country}}, đã chuyển sang đường bay.",
+    "switchedToGround": "Hiện chưa nhận vận chuyển đường bay cho tuyến này (đến {{country}}), đã chuyển sang đường bộ.",
+    "groundNotOffered": "Hiện chưa nhận vận chuyển đường bộ cho tuyến này.",
+    "airNotOffered": "Hiện chưa nhận vận chuyển đường bay cho tuyến này (cần sân bay ở cả nước đi và nước đến).",
+    "airOnlyNote": "Hiện chỉ nhận đường bay",
+    "groundOnlyNote": "Hiện chỉ nhận đường bộ",
     "pickupOnMap": "Điểm đón (tìm địa chỉ hoặc chọn trên bản đồ)",
     "dropoffOnMap": "Điểm giao (tìm địa chỉ hoặc chọn trên bản đồ)",
     "pickBothPoints": "Vui lòng chọn điểm đón và điểm giao trên bản đồ.",
@@ -3101,5 +3114,169 @@
     "acceptedMsg": "Đã ghi nhận bạn đồng ý đi vòng",
     "declinedMsg": "Đã ghi nhận bạn không đồng ý",
     "failed": "Không gửi được câu trả lời"
+  },
+  "companyDocs": {
+    "uploadTitle": "Tải lên giấy công ty đã xin",
+    "uploadOk": "Tải lên",
+    "uploadHint": "Giấy do cơ quan chức năng cấp được tính là đã duyệt ngay khi tải lên. Giấy phải còn hiệu lực tới ngày cuối khoảng đón ngựa.",
+    "uploadButton": "Tải lên giấy đã xin",
+    "uploadSuccess": "Đã lưu giấy và báo cho khách hàng",
+    "notYetObtained": "Chưa có. Chuyên viên xin giấy với cơ quan chức năng rồi tải lên tại đây."
+  },
+  "countryConfig": {
+    "title": "Quốc gia & tuyến vận chuyển",
+    "subtitle": "Nước nào công ty nhận làm nước đi / nước đến, bằng đường bộ hay đường bay, sân bay và giấy tờ của từng nước.",
+    "rulesTitle": "Khách đặt được một tuyến khi:",
+    "rule1": "Nước đi và nước đến đều đang được bật.",
+    "rule2": "Nước đến đang bật phương thức khách chọn. Công tắc \"Đường bộ\" / \"Đường bay\" chính là dòng cước của nước đó trong bảng giá: tắt thì giá vẫn được giữ.",
+    "rule3": "Đường bay cần sân bay đang mở ở cả nước đi và nước đến. Đường bộ giữa hai nước có đi được không (ví dụ cách biển) thì Manager xét khi duyệt đơn.",
+    "addCountry": "Thêm quốc gia",
+    "addCountryHint": "Nước mới đang bật nhưng chưa có cước: khách chỉ chọn được làm nước đi cho tới khi bạn nhập cước đường bộ hoặc đường bay.",
+    "countryCode": "Mã nước (ISO 2 chữ)",
+    "countryCodeInvalid": "Mã nước gồm đúng 2 chữ cái, ví dụ NZ",
+    "nameVi": "Tên tiếng Việt",
+    "nameEn": "Tên tiếng Anh",
+    "sortOrder": "Thứ tự",
+    "created": "Đã thêm quốc gia",
+    "statActive": "Nước đang nhận",
+    "statGround": "Nhận đường bộ",
+    "statAir": "Nhận đường bay",
+    "statWarnings": "Còn thiếu thông tin",
+    "filters": {
+      "all": "Tất cả",
+      "ground": "Đường bộ",
+      "air": "Đường bay",
+      "warnings": "Còn thiếu",
+      "off": "Đang tắt"
+    },
+    "search": "Tìm theo tên hoặc mã nước",
+    "country": "Quốc gia",
+    "ground": "Đường bộ",
+    "air": "Đường bay",
+    "documentsCol": "Giấy tờ (xuất / quá cảnh / nhập)",
+    "warningsCol": "Còn thiếu",
+    "configure": "Cấu hình",
+    "inactive": "Đang tắt",
+    "transitOnly": "Chỉ quá cảnh / nước đi",
+    "noRateYet": "Chưa có giá",
+    "noOpenAirport": "Không còn sân bay mở",
+    "airportCount": "{{active}}/{{total}} sân bay mở",
+    "directionsShort": {
+      "Export": "Xuất {{count}}",
+      "Transit": "Quá cảnh {{count}}",
+      "Import": "Nhập {{count}}"
+    },
+    "directions": {
+      "Export": "Xuất khẩu",
+      "Transit": "Quá cảnh",
+      "Import": "Nhập khẩu"
+    },
+    "warningsShort": {
+      "MissingImportDocuments": "Chưa khai giấy nhập khẩu",
+      "MissingExportDocuments": "Chưa khai giấy xuất khẩu",
+      "AirFreightWithoutAirport": "Bật đường bay nhưng không có sân bay mở"
+    },
+    "warnings": {
+      "MissingImportDocuments": "Nước này đang nhận làm nước đến nhưng chưa khai giấy nhập khẩu: hồ sơ của đơn sẽ thiếu giấy.",
+      "MissingExportDocuments": "Chưa khai giấy xuất khẩu: đơn đi từ nước này sẽ thiếu giấy.",
+      "AirFreightWithoutAirport": "Cước bay đang bật nhưng không còn sân bay mở, khách chưa đặt được đường bay."
+    },
+    "tabs": {
+      "modes": "Phương thức & sân bay",
+      "documents": "Giấy tờ ({{count}})",
+      "fees": "Phí riêng ({{count}})",
+      "general": "Thông tin chung"
+    },
+    "on": "Đang nhận",
+    "off": "Không nhận",
+    "groundTitle": "Đường bộ (giá tính theo km mỗi con)",
+    "airTitle": "Đường bay (giá tính theo con)",
+    "customersCanChoose": "Khách đang chọn được phương thức này cho nước đến này.",
+    "customersCannotChoose": "Khách chưa chọn được phương thức này cho nước đến này.",
+    "accepting": "Nhận khách",
+    "rate": "Giá cước",
+    "enterRateFirst": "Hãy nhập giá cước trước khi bật phương thức này.",
+    "saved": "Đã lưu",
+    "airports": "Sân bay",
+    "airportsHint": "Sân bay nhận ngựa của nước này. Đặt đường bay từ / tới nước này cần ít nhất một sân bay đang mở.",
+    "airportName": "Tên sân bay",
+    "airportNameRequired": "Nhập tên sân bay",
+    "iataInvalid": "Mã IATA gồm 3 chữ cái",
+    "city": "Thành phố",
+    "open": "Đang mở",
+    "addAirport": "Thêm sân bay",
+    "airportAdded": "Đã thêm sân bay",
+    "noAirports": "Chưa có sân bay",
+    "documentsHint": "Giấy tờ nước này yêu cầu khi ngựa đi từ nước này (xuất khẩu), đi ngang qua (quá cảnh) hoặc tới nước này (nhập khẩu). Hồ sơ của mỗi đơn tự ghép theo tuyến: xuất khẩu nước đi, quá cảnh từng nước đi qua, nhập khẩu nước đến. Đây là dữ liệu chuyên viên khai báo, không phải tư vấn pháp lý.",
+    "direction": "Chiều",
+    "document": "Loại giấy",
+    "validity": "Hiệu lực",
+    "processing": "Thời gian xin",
+    "days": "{{count}} ngày",
+    "validityDays": "Cấp trong vòng (ngày)",
+    "processingDays": "Số ngày để có giấy",
+    "note": "Ghi chú quy định",
+    "mandatory": "Bắt buộc",
+    "addRequirement": "Thêm giấy tờ",
+    "requirementAdded": "Đã thêm giấy tờ",
+    "deleteRequirement": "Xóa giấy tờ này khỏi quy định của nước?",
+    "feesHint": "Các khoản phí chỉ áp khi nước đến là nước này, ví dụ phí kiểm dịch cách ly dài của Nhật, Úc. Phí áp cho mọi nước nằm ở trang Bảng giá chung.",
+    "noFees": "Không có phí riêng",
+    "inService": "Nước này đang trong phạm vi dịch vụ",
+    "inServiceHint": "Tắt thì khách không chọn được nước này làm nước đi hay nước đến. Đơn đã gửi không bị ảnh hưởng."
+  },
+  "priceConfig": {
+    "title": "Bảng giá chung",
+    "subtitle": "Các khoản giá áp cho mọi tuyến: hạng chuồng, chiết khấu, phụ phí, phí thủ tục, người chăm ngựa, bảo hiểm.",
+    "howItWorks": "Giá mới áp cho các báo giá tính sau khi lưu; đơn đã gửi giữ nguyên giá cũ.",
+    "countrySpecific": "Cước đường bộ / đường bay của từng nước và phí riêng của nước (ví dụ kiểm dịch Nhật, Úc) chỉnh ở trang Quốc gia & tuyến.",
+    "goToCountries": "Mở trang Quốc gia & tuyến",
+    "name": "Khoản giá",
+    "mode": "Phương thức",
+    "value": "Giá trị",
+    "active": "Bật",
+    "fromHorses": "từ {{count}} con",
+    "modes": {
+      "Ground": "Đường bộ",
+      "Air": "Đường bay",
+      "any": "Cả hai"
+    },
+    "unit": {
+      "PerHorse": "/con",
+      "PerKmPerHorse": "/km/con",
+      "PerBooking": "/đơn",
+      "PerGroom": "/người",
+      "PerGroomDay": "/người/ngày"
+    },
+    "categories": {
+      "Freight": {
+        "name": "Cước vận chuyển",
+        "hint": "Cước gốc dùng chung (nếu có). Cước theo từng nước chỉnh ở trang Quốc gia & tuyến."
+      },
+      "StallClass": {
+        "name": "Hạng chuồng",
+        "hint": "Hệ số nhân vào cước gốc theo hạng chuồng khách chọn cho từng con."
+      },
+      "Discount": {
+        "name": "Chiết khấu số lượng",
+        "hint": "Phần trăm giảm trên cước; đơn được hưởng bậc cao nhất mà số ngựa đạt tới."
+      },
+      "Surcharge": {
+        "name": "Phụ phí",
+        "hint": "Phần trăm cộng thêm trên cước sau chiết khấu (nhiên liệu, khoang điều hòa, đơn gấp)."
+      },
+      "Clearance": {
+        "name": "Phí thủ tục & thông quan",
+        "hint": "Phí hồ sơ, thông quan, kiểm dịch, quá cảnh (mỗi nước đi qua), điều xe."
+      },
+      "Escort": {
+        "name": "Người chăm ngựa đi kèm",
+        "hint": "Một người chăm cho mỗi 3 con: đường bay tính theo người, đường bộ tính theo người mỗi ngày."
+      },
+      "Insurance": {
+        "name": "Bảo hiểm",
+        "hint": "Phần trăm trên giá trị ngựa khách khai báo."
+      }
+    }
   }
 }

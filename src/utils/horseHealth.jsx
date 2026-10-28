@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Tooltip } from 'antd';
+import dayjs from 'dayjs';
 import {
   CheckCircleFilled,
   ExclamationCircleFilled,
@@ -378,12 +379,21 @@ export const HEALTH_STATUS_OPTIONS = [
 ];
 
 /**
- * Đánh giá điều kiện vận chuyển của ngựa (Transport Eligibility Assessment)
- * Dựa trên:
- * 1. Tình trạng sức khỏe (HealthStatus) -> Critical/chấn thương là CẤM vận chuyển
- * 2. Đánh giá y tế đưa ra mức độ: Fit-to-Travel, Giám sát y tế, hoặc Cấm vận chuyển
+ * Đánh giá điều kiện vận chuyển của ngựa (Transport Eligibility Assessment - R-12)
+ * Kiểm tra toàn diện theo quy chuẩn IATA/EU và Chính sách dịch vụ mục 5:
+ * 1. Tình trạng sức khỏe (HealthStatus Critical/Poor là CẤM vận chuyển)
+ * 2. Tuổi tối thiểu (dưới minAgeMonths, mặc định 6 tháng tính đến ngày đón)
+ * 3. Ngựa cái mang thai quá 90% thai kỳ (còn dưới 34 ngày trước ngày dự sinh)
+ * 4. Ngựa cái vừa sinh con trong vòng 7 ngày
+ *
+ * @param {Object} horse - Dữ liệu hồ sơ ngựa
+ * @param {string} [lang='vi'] - Ngôn ngữ hiển thị
+ * @param {Object} [options={}] - Cấu hình bổ sung
+ * @param {string|Date|dayjs.Dayjs} [options.pickupDate] - Ngày đón hoặc ngày cuối khoảng đón
+ * @param {number} [options.minAgeMonths=6] - Độ tuổi tối thiểu theo chính sách (mặc định 6 tháng)
+ * @returns {{ eligible: boolean, reason: string, tagText: string, tagColor: string, message: string }}
  */
-export function checkHorseTransportEligibility(horse, lang = 'vi') {
+export function checkHorseTransportEligibility(horse, lang = 'vi', options = {}) {
   const isEn = String(lang).toLowerCase().startsWith('en');
   if (!horse) {
     return {
@@ -395,12 +405,14 @@ export function checkHorseTransportEligibility(horse, lang = 'vi') {
     };
   }
 
+  const { pickupDate = null, minAgeMonths = 6 } = options;
+  const targetDate = pickupDate ? dayjs(pickupDate) : dayjs();
+
+  // 1. Kiểm tra tình trạng sức khỏe nghiêm trọng
   const status = (horse.HealthStatus || horse.healthStatus || '').trim().toLowerCase();
   const isCritical = status === 'critical' || status === 'poor';
   const isExplicitlyIneligible = horse.isEligibleForTransport === false || horse.IsEligibleForTransport === false;
 
-  // Hồ sơ thú y không bắt buộc khi tạo ngựa (giấy tờ được kiểm ở hồ sơ thông quan của từng đơn),
-  // nên thiếu hồ sơ không làm ngựa bị chặn vận chuyển.
   if (isCritical || isExplicitlyIneligible) {
     return {
       eligible: false,
@@ -411,6 +423,74 @@ export function checkHorseTransportEligibility(horse, lang = 'vi') {
         ? 'Cannot transport this horse: Non-Fit-to-Travel due to critical medical condition/injury!'
         : 'Không thể chọn chú ngựa này: Rủi ro nguy cấp/chấn thương, cấm vận chuyển (Non-Fit-to-Travel)!',
     };
+  }
+
+  // 2. Kiểm tra độ tuổi tối thiểu (R-12: Chặn ngựa dưới MinAgeMonths tháng tuổi tính tới ngày đón)
+  const dob = horse.dateOfBirth || horse.DateOfBirth;
+  if (dob) {
+    const birthDay = dayjs(dob);
+    if (birthDay.isValid()) {
+      const ageInMonths = targetDate.diff(birthDay, 'month', true);
+      if (ageInMonths < minAgeMonths) {
+        return {
+          eligible: false,
+          reason: 'UNDERAGE',
+          tagText: isEn ? `UNDERAGE (<${minAgeMonths}M)` : `DƯỚI TUỔI TỐI THIỂU (<${minAgeMonths} THÁNG)`,
+          tagColor: 'error',
+          message: isEn
+            ? `Horse is under ${minAgeMonths} months of age at pickup date (current: ~${Math.floor(ageInMonths)} months). Transport prohibited.`
+            : `Ngựa dưới ${minAgeMonths} tháng tuổi tính đến ngày đón (hiện tại: ~${Math.floor(ageInMonths)} tháng). Không đủ điều kiện vận chuyển theo chính sách.`,
+        };
+      }
+    }
+  }
+
+  // 3. Kiểm tra ngựa cái mang thai (R-12: Chặn nếu quá 90% thai kỳ hoặc vừa đẻ trong 7 ngày)
+  const gender = (horse.gender || horse.Gender || '').trim().toLowerCase();
+  const isMare = gender === 'mare';
+
+  if (isMare) {
+    const isPregnant = horse.isPregnant || horse.IsPregnant;
+    const expectedFoaling = horse.expectedFoalingDate || horse.ExpectedFoalingDate;
+
+    // Quá 90% thai kỳ (~306/340 ngày, tức ngày đón cách ngày dự sinh dưới 34 ngày)
+    if (isPregnant && expectedFoaling) {
+      const foalingDate = dayjs(expectedFoaling);
+      if (foalingDate.isValid()) {
+        const daysToFoaling = foalingDate.diff(targetDate, 'day');
+        if (daysToFoaling <= 34) {
+          return {
+            eligible: false,
+            reason: 'LATE_PREGNANCY',
+            tagText: isEn ? 'LATE PREGNANCY (>90%)' : 'MANG THAI QUÁ 90%',
+            tagColor: 'error',
+            message: isEn
+              ? `Mare is over 90% into gestation at travel date (expected foaling: ${foalingDate.format('DD/MM/YYYY')}). Transport prohibited for animal welfare.`
+              : `Ngựa cái mang thai đã quá 90% thai kỳ tại thời điểm vận chuyển (ngày dự sinh: ${foalingDate.format('DD/MM/YYYY')}). Cấm vận chuyển theo luật phúc lợi động vật.`,
+          };
+        }
+      }
+    }
+
+    // Vừa đẻ trong 7 ngày
+    const lastFoaling = horse.lastFoalingDate || horse.LastFoalingDate;
+    if (lastFoaling) {
+      const lastFoaledDate = dayjs(lastFoaling);
+      if (lastFoaledDate.isValid()) {
+        const daysSinceFoaling = targetDate.diff(lastFoaledDate, 'day');
+        if (daysSinceFoaling >= 0 && daysSinceFoaling <= 7) {
+          return {
+            eligible: false,
+            reason: 'RECENTLY_FOALED',
+            tagText: isEn ? 'RECENTLY FOALED (≤7D)' : 'VỪA ĐẺ TRONG 7 NGÀY',
+            tagColor: 'error',
+            message: isEn
+              ? `Mare has given birth within 7 days before departure (${lastFoaledDate.format('DD/MM/YYYY')}). Transport prohibited.`
+              : `Ngựa cái vừa sinh con trong vòng 7 ngày trước ngày khởi hành (${lastFoaledDate.format('DD/MM/YYYY')}). Cấm vận chuyển để hồi phục thể trạng.`,
+          };
+        }
+      }
+    }
   }
 
   const isAttention = status === 'attention';

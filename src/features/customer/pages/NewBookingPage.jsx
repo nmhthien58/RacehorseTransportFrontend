@@ -53,6 +53,7 @@ export default function NewBookingPage() {
       message.success(t('bookings.createSuccess') || 'Tạo yêu cầu vận chuyển thành công!');
     } catch (error) {
       message.error(getErrorMessage(error, t('bookings.createFailed') || 'Có lỗi xảy ra khi gửi yêu cầu vận chuyển'));
+      throw error;
     } finally {
       setSubmitting(false);
     }

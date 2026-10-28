@@ -311,7 +311,10 @@
       "color": "Color / Markings",
       "photo": "Identification Photo",
       "specialCare": "Special Care",
-      "status": "Status"
+      "status": "Status",
+      "isPregnant": "Pregnant",
+      "expectedFoalingDate": "Expected Foaling Date",
+      "lastFoalingDate": "Last Foaling Date"
     },
     "placeholders": {
       "name": "e.g. Midnight Gunner, Red Flash",
@@ -336,9 +339,12 @@
       "microchipRequired": "Please enter microchip number",
       "microchipFormat": "Microchip number must be exactly 15 digits",
       "passportRequired": "Please enter passport number",
-      "passportFormat": "Passport number must be a 15-character UELN: 6 digits followed by 9 letters or digits"
+      "passportFormat": "Passport number must be a 15-character UELN: 6 digits followed by 9 letters or digits",
+      "expectedFoalingDateRequired": "Please select expected foaling date when mare is pregnant"
     },
-    "vetRecordsLaterHint": "Passport scans, lab results and vaccination records are not needed here. You can add them after saving the horse."
+    "vetRecordsLaterHint": "Passport scans, lab results and vaccination records are not needed here. You can add them after saving the horse.",
+    "pregnancySection": "Pregnancy Information (Mares only)",
+    "pregnancyHint": "Under animal welfare policy (R-12), transport is prohibited for mares over 90% into gestation or having given birth within 7 days."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -560,7 +566,11 @@
     "quoteUnitPrice": "Unit Price",
     "quoteAmount": "Amount",
     "totalEstimatedCost": "Total Estimated Cost",
-    "cancelRefundDesc": "This booking has a deposit: you get {{percent}}% of the deposit and any paid balance back. The refund goes to the paying account and appears in the booking's Payments tab."
+    "cancelRefundDesc": "This booking has a deposit: you get {{percent}}% of the deposit and any paid balance back. The refund goes to the paying account and appears in the booking's Payments tab.",
+    "wizard": {
+      "eligibilityPolicyTitle": "Animal Welfare & Health Standards (Service Policy)",
+      "eligibilityPolicyDesc": "Horses must be at least {{minAge}} months old by pickup date, cannot be over 90% into pregnancy (expected foaling date > 34 days from pickup), and must not have foaled within the past 7 days."
+    }
   },
   "messages": {
     "title": "Messages & Live Dispatch",

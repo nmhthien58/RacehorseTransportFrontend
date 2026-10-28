@@ -310,7 +310,10 @@
       "color": "Màu lông",
       "photo": "Ảnh nhận diện",
       "specialCare": "Chăm sóc đặc biệt",
-      "status": "Trạng thái"
+      "status": "Trạng thái",
+      "isPregnant": "Đang mang thai",
+      "expectedFoalingDate": "Ngày dự sinh",
+      "lastFoalingDate": "Ngày đẻ gần nhất"
     },
     "placeholders": {
       "name": "Ví dụ: Midnight Gunner, Red Flash",
@@ -335,9 +338,12 @@
       "microchipRequired": "Vui lòng nhập số Microchip",
       "microchipFormat": "Số Microchip phải gồm đúng 15 chữ số",
       "passportRequired": "Vui lòng nhập số hộ chiếu vận chuyển",
-      "passportFormat": "Số hộ chiếu phải là mã UELN 15 ký tự: 6 chữ số đầu, sau đó 9 chữ hoặc số"
+      "passportFormat": "Số hộ chiếu phải là mã UELN 15 ký tự: 6 chữ số đầu, sau đó 9 chữ hoặc số",
+      "expectedFoalingDateRequired": "Vui lòng chọn ngày dự sinh khi ngựa cái đang mang thai"
     },
-    "vetRecordsLaterHint": "Hộ chiếu, kết quả xét nghiệm và giấy tiêm phòng không bắt buộc ở bước này. Bạn có thể bổ sung sau khi lưu ngựa."
+    "vetRecordsLaterHint": "Hộ chiếu, kết quả xét nghiệm và giấy tiêm phòng không bắt buộc ở bước này. Bạn có thể bổ sung sau khi lưu ngựa.",
+    "pregnancySection": "Thông tin thai sản (Áp dụng cho ngựa cái)",
+    "pregnancyHint": "Theo quy chuẩn phúc lợi động vật (R-12), cấm vận chuyển ngựa mang thai quá 90% thai kỳ hoặc vừa sinh trong vòng 7 ngày."
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -559,7 +565,11 @@
     "quoteUnitPrice": "Đơn giá",
     "quoteAmount": "Thành tiền",
     "totalEstimatedCost": "Tổng dự toán cước phí",
-    "cancelRefundDesc": "Đơn đã đặt cọc: bạn được hoàn {{percent}}% tiền cọc và toàn bộ phần còn lại đã trả. Tiền hoàn về tài khoản đã thanh toán và hiển thị trong mục Thanh toán của đơn."
+    "cancelRefundDesc": "Đơn đã đặt cọc: bạn được hoàn {{percent}}% tiền cọc và toàn bộ phần còn lại đã trả. Tiền hoàn về tài khoản đã thanh toán và hiển thị trong mục Thanh toán của đơn.",
+    "wizard": {
+      "eligibilityPolicyTitle": "Quy chuẩn điều kiện & sức khỏe vận chuyển (Chính sách Dịch vụ)",
+      "eligibilityPolicyDesc": "Ngựa tối thiểu từ {{minAge}} tháng tuổi (tính đến ngày đón), không mang thai quá 90% thai kỳ (> 306 ngày hoặc cách ngày dự sinh ≤ 34 ngày), và không vận chuyển ngựa vừa sinh trong vòng 7 ngày."
+    }
   },
   "messages": {
     "title": "Tin nhắn & Liên lạc Trực tiếp",

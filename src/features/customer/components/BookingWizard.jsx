@@ -46,6 +46,7 @@ import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import { formatDeliveryDeadline, formatPickupWindow, toLocalDateTimeString } from '@utils/bookingSchedule';
 import { formatCountryRoute } from '@utils/bookingRoute';
 import { checkHorseTransportEligibility } from '@utils/horseHealth';
+import { usePolicy } from '@hooks/usePolicy';
 import { ROUTES } from '@routes/routes';
 import {
   TRANSPORT_MODES,
@@ -103,6 +104,11 @@ export default function BookingWizard({
   const [selectedHorseIds, setSelectedHorseIds] = useState([]);
   const [stallClasses, setStallClasses] = useState({});
   const [horseNotes, setHorseNotes] = useState({});
+  const [horseConditionErrors, setHorseConditionErrors] = useState({});
+
+  // Lấy chính sách dịch vụ động (tuổi tối thiểu, quy chuẩn thai sản)
+  const { policy } = usePolicy();
+  const minAgeMonths = policy?.Horse?.MinAgeMonths ?? 6;
 
   const {
     control,
@@ -310,9 +316,18 @@ export default function BookingWizard({
     );
     if (!targetHorse) return;
 
-    const status = (targetHorse.HealthStatus || targetHorse.healthStatus || '').trim().toLowerCase();
-    if (status === 'critical' || status === 'poor') {
-      message.error('Không thể chọn: Chú ngựa này chưa đạt tiêu chuẩn sức khỏe để vận chuyển (Non-Fit-to-Travel).');
+    const targetPickupDate = pickupWindowEnd || pickupWindowStart || null;
+    const eligibility = checkHorseTransportEligibility(targetHorse, i18n?.language || 'vi', {
+      pickupDate: targetPickupDate,
+      minAgeMonths,
+    });
+
+    if (!eligibility.eligible) {
+      message.error(eligibility.message);
+      setHorseConditionErrors((prev) => ({
+        ...prev,
+        [horseId]: eligibility.message,
+      }));
       return;
     }
 
@@ -323,6 +338,14 @@ export default function BookingWizard({
       }
       setStallClasses((s) => ({ ...s, [horseId]: s[horseId] || 'Comfort' }));
       return [...prev, horseId];
+    });
+
+    // Làm sạch lỗi nếu ngựa đủ điều kiện
+    setHorseConditionErrors((prev) => {
+      const copy = { ...prev };
+      delete copy[horseId];
+      delete copy[String(horseId)];
+      return copy;
     });
   };
 
@@ -535,6 +558,31 @@ export default function BookingWizard({
         message.warning('Vui lòng chọn ít nhất 1 cá thể ngựa đủ điều kiện.');
         return;
       }
+      const targetPickupDate = pickupWindowEnd || pickupWindowStart || null;
+      const conditionErrors = {};
+      let hasError = false;
+
+      for (const hId of selectedHorseIds) {
+        const targetHorse = availableHorses.find(
+          (h) => String(h.horseId || h.HorseID) === String(hId),
+        );
+        if (targetHorse) {
+          const eligibility = checkHorseTransportEligibility(targetHorse, i18n?.language || 'vi', {
+            pickupDate: targetPickupDate,
+            minAgeMonths,
+          });
+          if (!eligibility.eligible) {
+            conditionErrors[hId] = eligibility.message;
+            hasError = true;
+          }
+        }
+      }
+
+      if (hasError) {
+        setHorseConditionErrors((prev) => ({ ...prev, ...conditionErrors }));
+        message.error('Có cá thể ngựa chưa đạt điều kiện vận chuyển theo chính sách. Vui lòng kiểm tra lại!');
+        return;
+      }
     }
 
     setCurrentStep(targetStep);
@@ -581,6 +629,31 @@ export default function BookingWizard({
     if (currentStep === 2) {
       if (selectedHorseIds.length === 0) {
         message.warning('Vui lòng chọn ít nhất 1 cá thể ngựa để tiếp tục.');
+        return;
+      }
+      const targetPickupDate = pickupWindowEnd || pickupWindowStart || null;
+      const conditionErrors = {};
+      let hasError = false;
+
+      for (const hId of selectedHorseIds) {
+        const targetHorse = availableHorses.find(
+          (h) => String(h.horseId || h.HorseID) === String(hId),
+        );
+        if (targetHorse) {
+          const eligibility = checkHorseTransportEligibility(targetHorse, i18n?.language || 'vi', {
+            pickupDate: targetPickupDate,
+            minAgeMonths,
+          });
+          if (!eligibility.eligible) {
+            conditionErrors[hId] = eligibility.message;
+            hasError = true;
+          }
+        }
+      }
+
+      if (hasError) {
+        setHorseConditionErrors((prev) => ({ ...prev, ...conditionErrors }));
+        message.error('Có cá thể ngựa chưa đạt điều kiện vận chuyển theo chính sách. Vui lòng kiểm tra lại!');
         return;
       }
     }
@@ -639,7 +712,53 @@ export default function BookingWizard({
       })),
     };
 
-    await onSubmit(payload);
+    try {
+      await onSubmit(payload);
+    } catch (err) {
+      const errorMsg = getErrorMessage(err, '');
+      const responseData = err?.response?.data;
+      const validationErrors = responseData?.errors;
+      const horseErrorsFound = {};
+
+      if (validationErrors && typeof validationErrors === 'object') {
+        Object.keys(validationErrors).forEach((key) => {
+          const lowerKey = key.toLowerCase();
+          if (
+            lowerKey.includes('horse') ||
+            lowerKey.includes('age') ||
+            lowerKey.includes('pregnant') ||
+            lowerKey.includes('foal')
+          ) {
+            const val = Array.isArray(validationErrors[key])
+              ? validationErrors[key].join('; ')
+              : String(validationErrors[key]);
+            selectedHorseIds.forEach((hId) => {
+              horseErrorsFound[hId] = val;
+            });
+          }
+        });
+      } else if (
+        errorMsg &&
+        (errorMsg.toLowerCase().includes('ngựa') ||
+          errorMsg.toLowerCase().includes('horse') ||
+          errorMsg.toLowerCase().includes('mang thai') ||
+          errorMsg.toLowerCase().includes('tuổi') ||
+          errorMsg.toLowerCase().includes('pregnant') ||
+          errorMsg.toLowerCase().includes('foal') ||
+          errorMsg.toLowerCase().includes('age') ||
+          errorMsg.toLowerCase().includes('fit-to-travel'))
+      ) {
+        selectedHorseIds.forEach((hId) => {
+          horseErrorsFound[hId] = errorMsg;
+        });
+      }
+
+      if (Object.keys(horseErrorsFound).length > 0) {
+        setHorseConditionErrors((prev) => ({ ...prev, ...horseErrorsFound }));
+        setCurrentStep(2);
+      }
+      throw err;
+    }
   };
 
   const stepItems = [
@@ -1389,6 +1508,19 @@ export default function BookingWizard({
             </Flex>
           </div>
 
+          <Alert
+            type="info"
+            showIcon
+            style={{ marginBottom: 16, borderRadius: 10 }}
+            message={t('bookings.wizard.eligibilityPolicyTitle', {
+              defaultValue: 'Quy chuẩn điều kiện & sức khỏe vận chuyển (Chính sách Dịch vụ)',
+            })}
+            description={t('bookings.wizard.eligibilityPolicyDesc', {
+              minAge: minAgeMonths,
+              defaultValue: `Ngựa tối thiểu từ ${minAgeMonths} tháng tuổi (tính đến ngày đón), không mang thai quá 90% thai kỳ (> 306 ngày hoặc cách ngày dự sinh ≤ 34 ngày), và không vận chuyển ngựa vừa sinh trong vòng 7 ngày.`,
+            })}
+          />
+
           {loadingHorses ? (
             <div style={{ textAlign: 'center', padding: '36px 0' }}>
               <Text type="secondary">Đang tải danh sách hồ sơ ngựa...</Text>
@@ -1442,8 +1574,14 @@ export default function BookingWizard({
                 const horseBreed = horse.breed || horse.Breed || 'Thoroughbred';
                 const horseGender = horse.gender || horse.Gender;
                 const horseMicrochip = horse.microchipNumber || horse.MicrochipNumber;
-                const eligibility = checkHorseTransportEligibility(horse, i18n?.language || 'vi');
-                const isCritical = (horse.HealthStatus || horse.healthStatus || '').trim().toLowerCase() === 'critical';
+                const targetPickupDate = pickupWindowEnd || pickupWindowStart || null;
+                const eligibility = checkHorseTransportEligibility(horse, i18n?.language || 'vi', {
+                  pickupDate: targetPickupDate,
+                  minAgeMonths,
+                });
+                const isEligible = eligibility.eligible;
+                const conditionError = horseConditionErrors[horseId] || horseConditionErrors[String(horseId)];
+                const cannotSelect = !isEligible;
 
                 return (
                   <Col xs={24} md={12} key={horseId}>
@@ -1451,20 +1589,20 @@ export default function BookingWizard({
                       style={{
                         padding: 16,
                         borderRadius: 12,
-                        border: isSelected ? '2px solid #d97706' : '1px solid #e2e8f0',
-                        backgroundColor: isSelected ? '#fffdf7' : '#ffffff',
-                        cursor: isCritical ? 'not-allowed' : 'pointer',
-                        opacity: isCritical ? 0.6 : 1,
+                        border: isSelected ? '2px solid #d97706' : cannotSelect ? '1px solid #fecaca' : '1px solid #e2e8f0',
+                        backgroundColor: isSelected ? '#fffdf7' : cannotSelect ? '#fffbfa' : '#ffffff',
+                        cursor: cannotSelect ? 'not-allowed' : 'pointer',
+                        opacity: cannotSelect ? 0.75 : 1,
                         transition: 'all 0.2s ease',
                       }}
-                      onClick={() => !isCritical && handleToggleHorse(horseId)}
+                      onClick={() => !cannotSelect && handleToggleHorse(horseId)}
                     >
                       <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
                         <Flex align="center" gap={8}>
                           <Checkbox
                             checked={isSelected}
-                            disabled={isCritical}
-                            onChange={() => !isCritical && handleToggleHorse(horseId)}
+                            disabled={cannotSelect}
+                            onChange={() => !cannotSelect && handleToggleHorse(horseId)}
                           />
                           <strong style={{ fontSize: 15, color: '#0f172a' }}>{horseName}</strong>
                         </Flex>
@@ -1482,14 +1620,26 @@ export default function BookingWizard({
                         Giới tính: {horseGender} · Mã Microchip: <code>{horseMicrochip || 'Chưa cập nhật'}</code>
                       </div>
 
-                      {isCritical && (
-                        <Text type="danger" style={{ fontSize: 12, display: 'block', marginLeft: 24 }}>
-                          Ngựa đang có vấn đề sức khỏe nghiêm trọng, không đủ điều kiện vận chuyển.
-                        </Text>
+                      {conditionError && (
+                        <Alert
+                          type="error"
+                          showIcon
+                          message={conditionError}
+                          style={{ marginTop: 8, marginLeft: 24, borderRadius: 6, fontSize: 12.5 }}
+                        />
+                      )}
+
+                      {!isEligible && !conditionError && (
+                        <Alert
+                          type="error"
+                          showIcon
+                          message={eligibility.message}
+                          style={{ marginTop: 8, marginLeft: 24, borderRadius: 6, fontSize: 12.5 }}
+                        />
                       )}
 
                       {/* Chọn hạng chuồng nếu ngựa được chọn */}
-                      {isSelected && !isCritical && (
+                      {isSelected && isEligible && (
                         <div
                           style={{
                             marginTop: 12,

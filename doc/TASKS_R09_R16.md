@@ -64,7 +64,7 @@ Thứ tự gợi ý: **Thắng** làm FE-15 → FE-16 → FE-08 → FE-07 → FE
 - Mở rộng màn cấu hình thanh toán hiện có (Admin / Manager) thành các nhóm: Báo giá (`Booking.QuoteAcceptDays`), Giao trễ (`Delay.*`), Bảo hiểm (`Insurance.*`), Ngựa (`Horse.MinAgeMonths`), Giao nhận (`Delivery.*`), Phiên bản chính sách.
 - Mỗi ô có chú thích ngắn nghĩa là gì; kiểm tra số không âm, % ≤ 100 trước khi gửi.
 
-### [ ] FE-08 · Form ngựa: mang thai, hiện lỗi điều kiện (R-12)
+### [x] FE-08 · Form ngựa: mang thai, hiện lỗi điều kiện (R-12)
 - Form thêm / sửa ngựa của khách: thêm giới tính (nếu chưa có), "Đang mang thai" (chỉ hiện với ngựa cái) + ngày dự sinh; "Ngày đẻ gần nhất" (tùy chọn).
 - Trong form tạo đơn, khi backend trả lỗi điều kiện (dưới tuổi tối thiểu, mang thai quá 90%, vừa đẻ) → hiện cạnh đúng con ngựa, không chỉ toast. Hiện gợi ý tuổi tối thiểu lấy từ `usePolicy()`.
 

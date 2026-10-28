@@ -37,6 +37,8 @@ import CustomerClaimsPanel from '@features/customer/components/CustomerClaimsPan
 import CustomerQuoteCard from '@features/customer/components/CustomerQuoteCard';
 import BookingContractCard from '@components/common/BookingContractCard';
 import AirWaybillCard from '@components/common/AirWaybillCard';
+// Đang sửa BookingDetailPage vì thêm thẻ không giao được / chọn cách xử lý (FE-14)
+import CustomerDeliveryFailureCard from '@features/customer/components/CustomerDeliveryFailureCard';
 import OrderTimeline from '@features/customer/components/OrderTimeline';
 import TripJourney from '@features/customer/components/TripJourney';
 import { useBookingJourney } from '@features/customer/hooks/useBookingJourney';
@@ -88,7 +90,7 @@ export default function CustomerBookingDetailPage() {
   const bookingCode = booking?.bookingCode || booking?.BookingCode || id;
   const horses = booking?.horses || booking?.Horses || [];
   const quoteLines = booking?.quoteLines || booking?.QuoteLines || [];
-  const activeTab = ['journey', 'documents', 'payment'].includes(searchParams.get('tab')) ? searchParams.get('tab') : 'overview';
+  const activeTab = ['journey', 'documents', 'payment', 'claims'].includes(searchParams.get('tab')) ? searchParams.get('tab') : 'overview';
 
   // Hành trình (R-07): thay cho màn "Theo dõi chuyến" riêng; chỉ tự làm mới khi đang mở tab này
   const journey = useBookingJourney(booking ? bookingId : null, {
@@ -204,6 +206,16 @@ export default function CustomerBookingDetailPage() {
 
   const overviewContent = (
     <Row gutter={[20, 20]}>
+      {['Approved', 'Assigned', 'AwaitingFinalPayment', 'Completed'].includes(status) && (
+        <Col span={24}>
+          <CustomerDeliveryFailureCard
+            bookingId={bookingId}
+            reloadKey={reloadKey}
+            onChanged={() => setReloadKey((k) => k + 1)}
+            onOpenClaims={() => handleTabChange('claims')}
+          />
+        </Col>
+      )}
       {['Quoted', 'AwaitingDeposit', 'QuoteExpired'].includes(status) && (
         <Col span={24}>
           <CustomerQuoteCard booking={booking} onChanged={() => setReloadKey((k) => k + 1)} />

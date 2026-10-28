@@ -2667,5 +2667,89 @@
     "numberRequired": "Nhập số vận đơn",
     "saved": "Đã lưu vận đơn",
     "saveFailed": "Không lưu được vận đơn"
+  },
+  "deliveryFailed": {
+    "button": "Không giao được",
+    "title": "Không giao được đơn {{code}}",
+    "submit": "Ghi nhận không giao được",
+    "recorded": "Đã ghi nhận không giao được đơn {{code}}. Điều phối và khách đã được báo.",
+    "recordFailed": "Không ghi nhận được",
+    "recordedTag": "Đã ghi không giao được",
+    "arrivedAt": "Tới điểm giao lúc",
+    "waited": "Đã chờ",
+    "duration": "{{hours}} giờ {{minutes}} phút",
+    "feeStart": "Bắt đầu tính phí chờ",
+    "noFeeEarly": "Không tính phí chờ (xe tới trước khung giờ đã báo người nhận hoặc chưa báo khung giờ)",
+    "feeEstimate": "Phí chờ tạm tính: {{hours}} giờ × {{fee}} USD = {{total}} USD (khách trả)",
+    "reasonLabel": "Lý do",
+    "reasonRequired": "Chọn lý do",
+    "reason": {
+      "RecipientAbsent": "Người nhận vắng mặt",
+      "RecipientRefused": "Người nhận từ chối nhận",
+      "RefusedInjured": "Từ chối vì ngựa bị thương",
+      "RefusedWrongHorse": "Từ chối vì giao nhầm ngựa"
+    },
+    "reasonHint": {
+      "RecipientAbsent": "Khách chọn cách xử lý trong 24 giờ, khách trả phí",
+      "RecipientRefused": "Không có lý do chính đáng; khách chọn cách xử lý, khách trả phí",
+      "RefusedInjured": "Lỗi công ty: bắt buộc chụp ảnh; công ty chịu phí chuồng, mở hồ sơ bồi thường",
+      "RefusedWrongHorse": "Lỗi công ty: bắt buộc chụp ảnh; công ty chịu phí chuồng, mở hồ sơ bồi thường"
+    },
+    "note": "Ghi chú",
+    "notePlaceholder": "Ví dụ: gọi 3 lần không nghe máy",
+    "photos": "Ảnh (không bắt buộc, tối đa 10)",
+    "photosRequired": "Ảnh (bắt buộc, tối đa 10)",
+    "photoRequired": "Lý do này cần ít nhất một ảnh",
+    "addPhoto": "Chụp / chọn ảnh"
+  },
+  "deliveryDecision": {
+    "title": "Chưa giao được ngựa — chọn cách xử lý",
+    "intro": "Đoàn xe đã tới điểm giao nhưng không giao được ngựa. Hãy chọn một cách xử lý trước hạn; quá hạn hệ thống sẽ gửi ngựa ở chuồng tạm.",
+    "reason": "Lý do",
+    "recordedAt": "Ghi nhận lúc",
+    "waitingFee": "Phí chờ",
+    "waitingFeeValue": "{{hours}} giờ tính phí · {{total}}",
+    "dueAt": "Hạn chọn: {{time}}",
+    "option": {
+      "AlternateRecipient": {
+        "title": "Người nhận hoặc địa chỉ khác gần đó",
+        "description": "Chỉ định người khác nhận ngựa; người mới được ký biên bản bàn giao ngay.",
+        "cost": "Bạn trả {{fee}} USD cho mỗi km đi thêm"
+      },
+      "HoldAtStable": {
+        "title": "Gửi ngựa ở chuồng tạm gần nhất",
+        "description": "Bạn tự tới chuồng tạm nhận ngựa.",
+        "cost": "Bạn trả {{fee}} USD / con / ngày phí chuồng và chăm sóc"
+      },
+      "ReturnToOrigin": {
+        "title": "Chở ngựa về nơi đi",
+        "description": "Đoàn xe chở ngựa về điểm đón ban đầu.",
+        "cost": "Bạn trả chi phí chiều về, tính như một đơn đi ngược lại"
+      }
+    },
+    "recipientName": "Họ tên người nhận mới",
+    "recipientPhone": "Số điện thoại",
+    "newAddress": "Địa chỉ giao mới",
+    "required": "Bắt buộc",
+    "phoneInvalid": "Số điện thoại không hợp lệ",
+    "addressRequired": "Chọn địa chỉ giao mới trên bản đồ",
+    "chooseOne": "Chọn một cách xử lý",
+    "defaultNote": "Không chọn trước hạn thì áp dụng gửi chuồng tạm ({{fee}} USD / con / ngày). Tiền cước không được hoàn vì dịch vụ vận chuyển đã hoàn thành.",
+    "submit": "Xác nhận lựa chọn",
+    "saved": "Đã ghi nhận lựa chọn của bạn",
+    "saveFailed": "Không ghi nhận được lựa chọn",
+    "decidedTitle": "Đã chọn cách xử lý ngựa chưa giao được",
+    "systemStable": "Đã áp dụng gửi chuồng tạm",
+    "choice": "Lựa chọn",
+    "decidedAt": "Chọn lúc",
+    "newRecipient": "Người nhận mới",
+    "extraKm": "{{km}} km thêm",
+    "cost": "Chi phí",
+    "stableCostLater": "{{fee}} USD / con / ngày, tính khi đóng chuyến",
+    "paidAsExtra": "Phí chờ và chi phí lựa chọn được cộng vào khoản phát sinh của đơn khi đóng chuyến; thanh toán ở tab Thanh toán.",
+    "companyTitle": "Chưa giao được ngựa — lỗi phía công ty",
+    "companyCovers": "Công ty chăm sóc ngựa tại chuồng tạm bằng chi phí của công ty cho tới khi xử lý xong; bạn không phải trả phí chờ hay phí chuồng.",
+    "claimOpened": "Hồ sơ bồi thường đã được mở.",
+    "viewClaims": "Xem hồ sơ bồi thường"
   }
 }

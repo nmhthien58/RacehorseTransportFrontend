@@ -252,6 +252,13 @@ export const ENDPOINTS = {
     AIR_WAYBILL: (tripId) => `/trips/${tripId}/air-waybill`,
   },
 
+  // 19. Không giao được, phí chờ, khách chọn cách xử lý (R-16, BE-16)
+  DELIVERY_FAILURES: {
+    RECORD: (tripId, bookingId) => `/trips/${tripId}/bookings/${bookingId}/delivery-failed`,
+    DECISION: (bookingId) => `/bookings/${bookingId}/delivery-decision`,
+    BY_BOOKING: (bookingId) => `/bookings/${bookingId}/delivery-failures`,
+  },
+
   PRICING: {
     ITEMS: '/pricing/items',
   },

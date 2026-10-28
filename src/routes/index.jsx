@@ -45,6 +45,8 @@ import IncidentReviewPage from '@features/manager/pages/IncidentReviewPage';
 import TripClosurePage from '@features/manager/pages/TripClosurePage';
 import ReportsPage from '@features/manager/pages/ReportsPage';
 import PaymentSettingsPage from '@features/manager/pages/PaymentSettingsPage';
+import CountriesPage from '@features/manager/pages/CountriesPage';
+import PricingPage from '@features/manager/pages/PricingPage';
 
 // Specialist pages
 import SpecialistDashboard from '@features/specialist/pages/DashboardPage';
@@ -158,6 +160,8 @@ export default function AppRoutes() {
           <Route path={ROUTES.MANAGER_TRIPS} element={<TripClosurePage />} />
           <Route path={ROUTES.MANAGER_REPORTS} element={<ReportsPage />} />
           <Route path={ROUTES.MANAGER_PAYMENT_SETTINGS} element={<PaymentSettingsPage />} />
+          <Route path={ROUTES.MANAGER_COUNTRIES} element={<CountriesPage />} />
+          <Route path={ROUTES.MANAGER_PRICING} element={<PricingPage />} />
           <Route path={ROUTES.MANAGER_PROFILE} element={<ProfilePage />} />
         </Route>
       </Route>

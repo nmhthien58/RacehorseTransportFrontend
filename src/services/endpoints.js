@@ -267,6 +267,31 @@ export const ENDPOINTS = {
   PRICING: {
     ITEMS: '/pricing/items',
   },
+  // Phạm vi dịch vụ: quốc gia, phương thức, sân bay (R-18)
+  COUNTRIES: {
+    CATALOG: '/countries/catalog',
+    LIST: '/countries',
+    DETAIL: (code) => `/countries/${code}`,
+    CREATE: '/countries',
+    UPDATE: (code) => `/countries/${code}`,
+    SET_ACTIVE: (code) => `/countries/${code}/active`,
+    SET_FREIGHT: (code, mode) => `/countries/${code}/freight/${mode}`,
+    ADD_AIRPORT: (code) => `/countries/${code}/airports`,
+    UPDATE_AIRPORT: (airportId) => `/countries/airports/${airportId}`,
+    SET_AIRPORT_ACTIVE: (airportId) => `/countries/airports/${airportId}/active`,
+  },
+  // Bảng giá (mục 17 API.md) và quy định giấy tờ theo nước (mục 16)
+  PRICE_ITEMS: {
+    LIST: '/price-items',
+    CREATE: '/price-items',
+    UPDATE: (id) => `/price-items/${id}`,
+    SET_ACTIVE: (id) => `/price-items/${id}/active`,
+  },
+  COUNTRY_DOC_REQUIREMENTS: {
+    CREATE: '/country-doc-requirements',
+    UPDATE: (id) => `/country-doc-requirements/${id}`,
+    DELETE: (id) => `/country-doc-requirements/${id}`,
+  },
   NOTIFICATIONS: {
     LIST: '/notifications',
     UNREAD_COUNT: '/notifications/unread-count',

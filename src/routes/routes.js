@@ -46,6 +46,8 @@ export const ROUTES = {
   MANAGER_INCIDENTS: '/manager/incidents',
   MANAGER_REPORTS: '/manager/reports',
   MANAGER_PAYMENT_SETTINGS: '/manager/payment-settings',
+  MANAGER_COUNTRIES: '/manager/countries',
+  MANAGER_PRICING: '/manager/pricing',
   MANAGER_PROFILE: '/manager/profile',
   MANAGER_USERS: '/manager/users',
   ADMIN_USERS: '/manager/users',

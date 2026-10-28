@@ -194,6 +194,9 @@ export default function CustomerDossierPanel({ horseId, bookingId, bookingStatus
           {!item.isMandatory && (
             <Tag style={{ marginLeft: 6 }}>{t('customerDossier.optional')}</Tag>
           )}
+          {item.providedBy === 'Company' && (
+            <Tag color="blue" style={{ marginLeft: 6 }}>{t('customerDossier.companyProvides')}</Tag>
+          )}
           <div style={{ fontSize: 12, color: '#64748b' }}>
             {(item.requiredBy || []).join(' · ')}
             {item.validityDays ? ` · ${t('customerDossier.validityDays', { days: item.validityDays })}` : ''}
@@ -207,7 +210,17 @@ export default function CustomerDossierPanel({ horseId, bookingId, bookingStatus
       dataIndex: 'state',
       key: 'state',
       width: 120,
-      render: (state) => <Tag color={CHECKLIST_STATE_COLORS[state] || 'default'}>{t(`customerDossier.state.${state}`, state)}</Tag>,
+      render: (state, item) => {
+        // R-19: giấy công ty xin thì khách chỉ theo dõi tiến độ
+        if (item.providedBy === 'Company') {
+          return state === 'Approved' ? (
+            <Tag color="success">{t('customerDossier.companyObtained')}</Tag>
+          ) : (
+            <Tag color="processing">{t('customerDossier.companyProcessing')}</Tag>
+          );
+        }
+        return <Tag color={CHECKLIST_STATE_COLORS[state] || 'default'}>{t(`customerDossier.state.${state}`, state)}</Tag>;
+      },
     },
     {
       title: t('customerDossier.columns.submitted'),
@@ -243,6 +256,7 @@ export default function CustomerDossierPanel({ horseId, bookingId, bookingStatus
       width: 130,
       align: 'right',
       render: (_, item) => {
+        if (item.providedBy === 'Company') return null;
         const blocked =
           !canUpload ||
           item.state === 'Approved' ||
@@ -348,6 +362,9 @@ export default function CustomerDossierPanel({ horseId, bookingId, bookingStatus
           )}
           {!canUpload && shownDetail.status !== 'Cleared' && shownDetail.status !== 'Issue' && (
             <Alert type="info" showIcon message={t('customerDossier.locked')} />
+          )}
+          {(shownDetail.checklist || []).some((c) => c.providedBy === 'Company') && (
+            <Alert type="info" showIcon message={t('customerDossier.companyDocsNote')} />
           )}
 
           <Table

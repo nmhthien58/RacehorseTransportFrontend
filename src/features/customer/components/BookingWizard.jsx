@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Alert,
   Button,
@@ -47,6 +47,7 @@ import bookingService from '@services/bookingService';
 import { geoService } from '@services/geoService';
 import { fileService } from '@services/fileService';
 import usePolicy from '@hooks/usePolicy';
+import useCountryCatalog, { airportLabel } from '@hooks/useCountryCatalog';
 import MapPicker from '@components/common/map/MapPicker';
 import RouteMap from '@components/common/map/RouteMap';
 import PolicyAgreement, { POLICY_PAGE_PATH } from '@components/common/PolicyAgreement';
@@ -90,7 +91,6 @@ function formatDriveTime(hours, t) {
 }
 import {
   TRANSPORT_MODES,
-  SUPPORTED_COUNTRIES,
   AIRPORTS_BY_COUNTRY,
   STALL_CLASSES,
   CITIES_BY_COUNTRY,
@@ -116,6 +116,16 @@ export default function BookingWizard({
   initialValues = {},
 }) {
   const { t, i18n } = useTranslation();
+  // R-18: nước, phương thức, sân bay do Manager cấu hình
+  const { countries: catalog, loading: catalogLoading } = useCountryCatalog();
+  const countryName = useCallback((c) => (i18n.language?.startsWith('en') ? c.nameEn : c.nameVi), [i18n.language]);
+  const airportsByCountry = useMemo(
+    () =>
+      Object.fromEntries(
+        catalog.map((c) => [c.countryCode, c.airports.map((a) => ({ code: a.iataCode, name: airportLabel(a) }))]),
+      ),
+    [catalog],
+  );
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -240,29 +250,40 @@ export default function BookingWizard({
   const handlePickupPick = (place) => {
     setPickupPlace(place);
     setValue('PickupAddress', place.address);
-    if (place.countryCode && SUPPORTED_COUNTRIES.some((c) => c.code === place.countryCode)) {
+    if (place.countryCode && catalog.some((c) => c.countryCode === place.countryCode)) {
       setValue('PickupCountryCode', place.countryCode);
     }
   };
   const handleDropoffPick = (place) => {
     setDropoffPlace(place);
     setValue('DropoffAddress', place.address);
-    if (place.countryCode && SUPPORTED_COUNTRIES.some((c) => c.code === place.countryCode)) {
+    if (place.countryCode && catalog.some((c) => c.countryCode === place.countryCode && (c.groundAvailable || c.airAvailable))) {
       setValue('DropoffCountryCode', place.countryCode);
     }
   };
 
-  // Kiểm tra quốc gia đến có hỗ trợ đường bộ không
-  const dropoffCountryObj = SUPPORTED_COUNTRIES.find((c) => c.code === dropoffCountry);
-  const isGroundAvailable = Boolean(dropoffCountryObj?.ground);
+  // R-18: phương thức đặt được theo cấu hình của công ty (cước đang bật + sân bay đang mở).
+  // Danh sách chưa tải xong thì chưa chặn gì.
+  const catalogReady = catalog.length > 0;
+  const dropoffCountryObj = catalog.find((c) => c.countryCode === dropoffCountry);
+  const pickupCountryObj = catalog.find((c) => c.countryCode === pickupCountry);
+  const isGroundAvailable = !catalogReady || Boolean(dropoffCountryObj?.groundAvailable);
+  const isAirAvailable =
+    !catalogReady || (Boolean(dropoffCountryObj?.airAvailable) && (pickupCountryObj?.airports?.length || 0) > 0);
+  // Không phương thức nào nhận được (vd đi từ Lào, nước không có sân bay, tới Nhật chỉ nhận đường bay)
+  const routeNotOffered = !isGroundAvailable && !isAirAvailable;
 
-  // Tự động chuyển mode nếu chọn quốc gia không hỗ trợ đường bộ
+  // Tự động chuyển sang phương thức còn lại khi tuyến không nhận phương thức đang chọn
   useEffect(() => {
-    if (!isGroundAvailable && transportMode === 'Ground') {
+    const dropoffName = dropoffCountryObj ? countryName(dropoffCountryObj) : dropoffCountry;
+    if (transportMode === 'Ground' && !isGroundAvailable && isAirAvailable) {
       setValue('TransportMode', 'Air');
-      message.info(`Tuyến đến ${dropoffCountryObj?.name || dropoffCountry} chỉ hỗ trợ vận chuyển hàng không.`);
+      message.info(t('bookingForm.switchedToAir', { country: dropoffName }));
+    } else if (transportMode === 'Air' && !isAirAvailable && isGroundAvailable) {
+      setValue('TransportMode', 'Ground');
+      message.info(t('bookingForm.switchedToGround', { country: dropoffName }));
     }
-  }, [dropoffCountry, isGroundAvailable, transportMode, dropoffCountryObj, setValue]);
+  }, [dropoffCountry, isGroundAvailable, isAirAvailable, transportMode, dropoffCountryObj, countryName, setValue, t]);
 
   // Cập nhật thành phố mặc định khi đổi quốc gia đích đường bộ
   useEffect(() => {
@@ -308,22 +329,25 @@ export default function BookingWizard({
   // Cập nhật địa chỉ mẫu khi chuyển đổi giữa Hàng không và Đường bộ
   useEffect(() => {
     if (transportMode === 'Air') {
-      const pAirports = AIRPORTS_BY_COUNTRY[pickupCountry] || [];
+      const pAirports = airportsByCountry[pickupCountry] || [];
       const chosenP = pAirports.find((a) => a.code === pickupAirportCode) || pAirports[0];
-      const dAirports = AIRPORTS_BY_COUNTRY[dropoffCountry] || [];
+      const dAirports = airportsByCountry[dropoffCountry] || [];
       const chosenD = dAirports.find((a) => a.code === dropoffAirportCode) || dAirports[0];
 
+      // Mã sân bay đang chọn không thuộc nước đã chọn (vd đổi nước khi đang ở đường bộ) thì lấy sân bay đầu tiên
       if (chosenP) {
+        if (chosenP.code !== pickupAirportCode) setValue('PickupAirportCode', chosenP.code);
         setValue('PickupAddress', chosenP.name);
       }
       if (chosenD) {
+        if (chosenD.code !== dropoffAirportCode) setValue('DropoffAirportCode', chosenD.code);
         setValue('DropoffAddress', chosenD.name);
       }
     } else {
       setValue('PickupAddress', pickupPlace?.address || '');
       setValue('DropoffAddress', dropoffPlace?.address || '');
     }
-  }, [transportMode, pickupCountry, dropoffCountry, pickupAirportCode, dropoffAirportCode, setValue, pickupPlace, dropoffPlace]);
+  }, [transportMode, pickupCountry, dropoffCountry, pickupAirportCode, dropoffAirportCode, airportsByCountry, setValue, pickupPlace, dropoffPlace]);
 
   // Tải danh sách ngựa của khách hàng
   useEffect(() => {
@@ -677,6 +701,10 @@ export default function BookingWizard({
 
   const handleNext = async () => {
     if (currentStep === 0) {
+      if (routeNotOffered) {
+        message.warning(t('bookingForm.routeNotOffered'));
+        return;
+      }
       if (getValues('PickupCountryCode') === getValues('DropoffCountryCode')) {
         message.error('Quốc gia xuất phát và quốc gia đích không được trùng nhau.');
         return;
@@ -750,11 +778,11 @@ export default function BookingWizard({
     let finalDropoff = values.DropoffAddress?.trim();
 
     if (mode === 'Air') {
-      const pAirports = AIRPORTS_BY_COUNTRY[pCode] || [];
+      const pAirports = airportsByCountry[pCode] || [];
       const chosenP = pAirports.find((a) => a.code === values.PickupAirportCode) || pAirports[0];
       finalPickup = chosenP?.name || finalPickup || `${pCode} International Terminal`;
 
-      const dAirports = AIRPORTS_BY_COUNTRY[dCode] || [];
+      const dAirports = airportsByCountry[dCode] || [];
       const chosenD = dAirports.find((a) => a.code === values.DropoffAirportCode) || dAirports[0];
       finalDropoff = chosenD?.name || finalDropoff || `${dCode} International Terminal`;
     }
@@ -908,7 +936,8 @@ export default function BookingWizard({
             <Row gutter={[16, 16]}>
               {TRANSPORT_MODES.map((mode) => {
                 const isSelected = transportMode === mode.value;
-                const isModeDisabled = mode.value === 'Ground' && !isGroundAvailable;
+                const isModeDisabled =
+                  (mode.value === 'Ground' && !isGroundAvailable) || (mode.value === 'Air' && !isAirAvailable);
 
                 return (
                   <Col xs={24} md={12} key={mode.value}>
@@ -957,7 +986,7 @@ export default function BookingWizard({
                       </Text>
                       {isModeDisabled && (
                         <Text type="danger" style={{ fontSize: 11.5, display: 'block', marginTop: 6 }}>
-                          Không hỗ trợ đường bộ tới quốc gia này (quốc đảo / liên lục địa).
+                          {mode.value === 'Ground' ? t('bookingForm.groundNotOffered') : t('bookingForm.airNotOffered')}
                         </Text>
                       )}
                     </div>
@@ -966,6 +995,10 @@ export default function BookingWizard({
               })}
             </Row>
           </div>
+
+          {routeNotOffered && (
+            <Alert type="warning" showIcon style={{ marginTop: 12 }} message={t('bookingForm.routeNotOffered')} />
+          )}
 
           <Divider style={{ margin: '20px 0' }} />
 
@@ -1001,14 +1034,17 @@ export default function BookingWizard({
                         <Select
                           {...field}
                           size="large"
-                          options={SUPPORTED_COUNTRIES.map((c) => ({
-                            value: c.code,
-                            label: `${c.name} (${c.code})`,
+                          loading={catalogLoading}
+                          showSearch
+                          optionFilterProp="label"
+                          options={catalog.map((c) => ({
+                            value: c.countryCode,
+                            label: `${countryName(c)} (${c.countryCode})`,
                           }))}
                           onChange={(val) => {
                             field.onChange(val);
                             if (transportMode === 'Air') {
-                              const airports = AIRPORTS_BY_COUNTRY[val] || [];
+                              const airports = airportsByCountry[val] || [];
                               setValue('PickupAirportCode', airports[0]?.code || 'HAN');
                             }
                           }}
@@ -1022,7 +1058,7 @@ export default function BookingWizard({
                       name="PickupAirportCode"
                       control={control}
                       render={({ field }) => {
-                        const airports = AIRPORTS_BY_COUNTRY[pickupCountry] || [];
+                        const airports = airportsByCountry[pickupCountry] || [];
                         return (
                           <Form.Item label="Sân bay / Cảng xuất phát" required style={{ marginBottom: 0 }}>
                             <Select
@@ -1075,14 +1111,21 @@ export default function BookingWizard({
                         <Select
                           {...field}
                           size="large"
-                          options={SUPPORTED_COUNTRIES.filter((c) => c.code !== pickupCountry).map((c) => ({
-                            value: c.code,
-                            label: `${c.name} (${c.code})${transportMode === 'Ground' && !c.ground ? ' - Chỉ có đường bay' : ''}`,
-                          }))}
+                          loading={catalogLoading}
+                          showSearch
+                          optionFilterProp="label"
+                          options={catalog
+                            .filter((c) => c.countryCode !== pickupCountry && (c.groundAvailable || c.airAvailable))
+                            .map((c) => {
+                              let note = '';
+                              if (!c.groundAvailable) note = ` - ${t('bookingForm.airOnlyNote')}`;
+                              else if (!c.airAvailable) note = ` - ${t('bookingForm.groundOnlyNote')}`;
+                              return { value: c.countryCode, label: `${countryName(c)} (${c.countryCode})${note}` };
+                            })}
                           onChange={(val) => {
                             field.onChange(val);
                             if (transportMode === 'Air') {
-                              const airports = AIRPORTS_BY_COUNTRY[val] || [];
+                              const airports = airportsByCountry[val] || [];
                               setValue('DropoffAirportCode', airports[0]?.code || 'NRT');
                             }
                           }}
@@ -1096,7 +1139,7 @@ export default function BookingWizard({
                       name="DropoffAirportCode"
                       control={control}
                       render={({ field }) => {
-                        const airports = AIRPORTS_BY_COUNTRY[dropoffCountry] || [];
+                        const airports = airportsByCountry[dropoffCountry] || [];
                         return (
                           <Form.Item label="Sân bay / Cảng tiếp nhận" required style={{ marginBottom: 0 }}>
                             <Select

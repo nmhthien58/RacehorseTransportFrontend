@@ -72,6 +72,8 @@
     "detail": "Request Detail"
   },
   "nav": {
+    "countries": "Countries & routes",
+    "pricingConfig": "General price list",
     "dashboard": "Dashboard",
     "horses": "My Horses",
     "vetRecords": "Vet Records",
@@ -1461,6 +1463,10 @@
     }
   },
   "customerDossier": {
+    "companyProvides": "Obtained by us",
+    "companyProcessing": "We are applying",
+    "companyObtained": "Obtained",
+    "companyDocsNote": "You only need to upload your horse's documents (passport, vaccination, test results). The export health certificate, import permit and transit permits are obtained by our specialist from the authorities; you can follow their progress here.",
     "title": "Quarantine dossier (Digital Dossier)",
     "empty": "No dossiers yet. A dossier is created for each horse once the booking is approved.",
     "awaitingApproval": "This request is awaiting approval. Its dossiers will appear here after a specialist is assigned.",
@@ -2525,6 +2531,13 @@
     }
   },
   "bookingForm": {
+    "routeNotOffered": "We do not currently serve this route by road or by air. Please choose another origin or destination.",
+    "switchedToAir": "Ground transport to {{country}} is not offered at the moment, switched to air.",
+    "switchedToGround": "Air transport is not offered for this route (to {{country}}) at the moment, switched to ground.",
+    "groundNotOffered": "Ground transport is not offered for this route at the moment.",
+    "airNotOffered": "Air transport is not offered for this route at the moment (both countries need an airport).",
+    "airOnlyNote": "Air only for now",
+    "groundOnlyNote": "Ground only for now",
     "pickupOnMap": "Pickup point (search an address or pick on the map)",
     "dropoffOnMap": "Drop-off point (search an address or pick on the map)",
     "pickBothPoints": "Please pick both the pickup and the drop-off point on the map.",
@@ -3102,5 +3115,169 @@
     "acceptedMsg": "Your agreement has been recorded",
     "declinedMsg": "Your refusal has been recorded",
     "failed": "Could not send your answer"
+  },
+  "companyDocs": {
+    "uploadTitle": "Upload a permit we obtained",
+    "uploadOk": "Upload",
+    "uploadHint": "A document issued by the authorities counts as approved as soon as it is uploaded. It must stay valid until the last day of the pickup window.",
+    "uploadButton": "Upload obtained permit",
+    "uploadSuccess": "Document saved and the customer was notified",
+    "notYetObtained": "Not obtained yet. The specialist applies to the authorities and uploads it here."
+  },
+  "countryConfig": {
+    "title": "Countries & transport routes",
+    "subtitle": "Which countries we pick up from and deliver to, by road or by air, and the airports and documents of each country.",
+    "rulesTitle": "Customers can book a route when:",
+    "rule1": "Both the origin and the destination country are turned on.",
+    "rule2": "The destination has the chosen mode turned on. The \"Ground\" / \"Air\" switch is that country's freight rate in the price list: turning it off keeps the rate.",
+    "rule3": "Air needs an open airport in both countries. Whether a road route between two countries is possible (e.g. across the sea) is checked by the manager when reviewing the booking.",
+    "addCountry": "Add country",
+    "addCountryHint": "A new country is on but has no freight rate yet: customers can only choose it as the origin until you enter a ground or air rate.",
+    "countryCode": "Country code (ISO, 2 letters)",
+    "countryCodeInvalid": "Exactly 2 letters, e.g. NZ",
+    "nameVi": "Vietnamese name",
+    "nameEn": "English name",
+    "sortOrder": "Order",
+    "created": "Country added",
+    "statActive": "Countries served",
+    "statGround": "By road",
+    "statAir": "By air",
+    "statWarnings": "Missing information",
+    "filters": {
+      "all": "All",
+      "ground": "Road",
+      "air": "Air",
+      "warnings": "Missing",
+      "off": "Off"
+    },
+    "search": "Search by name or code",
+    "country": "Country",
+    "ground": "Road",
+    "air": "Air",
+    "documentsCol": "Documents (export / transit / import)",
+    "warningsCol": "Missing",
+    "configure": "Configure",
+    "inactive": "Off",
+    "transitOnly": "Transit / origin only",
+    "noRateYet": "No rate yet",
+    "noOpenAirport": "No open airport",
+    "airportCount": "{{active}}/{{total}} airports open",
+    "directionsShort": {
+      "Export": "Export {{count}}",
+      "Transit": "Transit {{count}}",
+      "Import": "Import {{count}}"
+    },
+    "directions": {
+      "Export": "Export",
+      "Transit": "Transit",
+      "Import": "Import"
+    },
+    "warningsShort": {
+      "MissingImportDocuments": "No import documents",
+      "MissingExportDocuments": "No export documents",
+      "AirFreightWithoutAirport": "Air on but no open airport"
+    },
+    "warnings": {
+      "MissingImportDocuments": "This country accepts deliveries but has no import documents: dossiers will be incomplete.",
+      "MissingExportDocuments": "No export documents: bookings from this country will have incomplete dossiers.",
+      "AirFreightWithoutAirport": "The air rate is on but no airport is open, so customers cannot book by air yet."
+    },
+    "tabs": {
+      "modes": "Modes & airports",
+      "documents": "Documents ({{count}})",
+      "fees": "Country fees ({{count}})",
+      "general": "General"
+    },
+    "on": "Accepting",
+    "off": "Not accepting",
+    "groundTitle": "Road (rate per km per horse)",
+    "airTitle": "Air (rate per horse)",
+    "customersCanChoose": "Customers can choose this mode for this destination.",
+    "customersCannotChoose": "Customers cannot choose this mode for this destination yet.",
+    "accepting": "Accepting",
+    "rate": "Rate",
+    "enterRateFirst": "Enter a rate before turning this mode on.",
+    "saved": "Saved",
+    "airports": "Airports",
+    "airportsHint": "Airports that handle horses in this country. Flying from or to this country needs at least one open airport.",
+    "airportName": "Airport name",
+    "airportNameRequired": "Enter the airport name",
+    "iataInvalid": "IATA code is 3 letters",
+    "city": "City",
+    "open": "Open",
+    "addAirport": "Add airport",
+    "airportAdded": "Airport added",
+    "noAirports": "No airports",
+    "documentsHint": "Documents this country requires when a horse leaves it (export), passes through it (transit) or arrives in it (import). Each booking's dossier is built from its route: export of the origin, transit of every country passed, import of the destination. This is data entered by our specialists, not legal advice.",
+    "direction": "Direction",
+    "document": "Document",
+    "validity": "Validity",
+    "processing": "Time to obtain",
+    "days": "{{count}} days",
+    "validityDays": "Issued within (days)",
+    "processingDays": "Days to obtain",
+    "note": "Regulation note",
+    "mandatory": "Mandatory",
+    "addRequirement": "Add document",
+    "requirementAdded": "Document added",
+    "deleteRequirement": "Remove this document from the country's requirements?",
+    "feesHint": "Fees that apply only when this country is the destination, e.g. long quarantine in Japan or Australia. Fees for every country are on the General price list page.",
+    "noFees": "No country fees",
+    "inService": "This country is in our service area",
+    "inServiceHint": "When off, customers cannot choose it as origin or destination. Existing bookings are not affected."
+  },
+  "priceConfig": {
+    "title": "General price list",
+    "subtitle": "Prices that apply to every route: stall classes, discounts, surcharges, clearance fees, grooms, insurance.",
+    "howItWorks": "New prices apply to quotes calculated after saving; submitted bookings keep their prices.",
+    "countrySpecific": "Road / air rates of each country and country-specific fees (e.g. quarantine in Japan, Australia) are on the Countries & routes page.",
+    "goToCountries": "Open Countries & routes",
+    "name": "Price item",
+    "mode": "Mode",
+    "value": "Value",
+    "active": "On",
+    "fromHorses": "from {{count}} horses",
+    "modes": {
+      "Ground": "Road",
+      "Air": "Air",
+      "any": "Both"
+    },
+    "unit": {
+      "PerHorse": "/horse",
+      "PerKmPerHorse": "/km/horse",
+      "PerBooking": "/booking",
+      "PerGroom": "/groom",
+      "PerGroomDay": "/groom/day"
+    },
+    "categories": {
+      "Freight": {
+        "name": "Freight",
+        "hint": "Shared base freight (if any). Rates per country are on the Countries & routes page."
+      },
+      "StallClass": {
+        "name": "Stall classes",
+        "hint": "Multiplier on the base freight by the stall class chosen for each horse."
+      },
+      "Discount": {
+        "name": "Volume discounts",
+        "hint": "Percent off the freight; the booking gets the highest tier its horse count reaches."
+      },
+      "Surcharge": {
+        "name": "Surcharges",
+        "hint": "Percent added on the freight after discounts (fuel, climate control, express)."
+      },
+      "Clearance": {
+        "name": "Clearance fees",
+        "hint": "Documents, clearance, quarantine, transit (per country passed), vehicle dispatch."
+      },
+      "Escort": {
+        "name": "Grooms",
+        "hint": "One groom per 3 horses: per groom by air, per groom per day by road."
+      },
+      "Insurance": {
+        "name": "Insurance",
+        "hint": "Percent of the horse's declared value."
+      }
+    }
   }
 }

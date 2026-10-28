@@ -72,7 +72,7 @@ Thứ tự gợi ý: **Thắng** làm FE-15 → FE-16 → FE-08 → FE-07 → FE
 - Màn lập chuyến của Coordinator: khi chọn ngựa của một đơn, hiện tuyến đã duyệt của đơn (bản đồ `RouteMap` của FE-01) và nút "Dùng tuyến này" để chép mốc vào chuyến.
 - Hiện cảnh báo trước khi trình duyệt: "Thời gian lái dự kiến X giờ, cần ít nhất 2 tài xế" khi vi phạm; hiện lỗi "đi qua nước ngoài tuyến đã duyệt" từ backend rõ ràng.
 
-### [ ] FE-09 · Tài xế: bỏ "Rời chuyến", kiểm tra trước khi xuất phát (R-12, R-15)
+### [x] FE-09 · Tài xế: bỏ "Rời chuyến", kiểm tra trước khi xuất phát (R-12, R-15)
 - Màn `TripExecutionPage`: bỏ nút "Rời chuyến" và modal lý do. Thay bằng nút "Ngựa không thể đi tiếp" mở form báo sự cố (`EmergencyReportModal`) đã chọn sẵn loại "Sức khỏe ngựa" + con ngựa, có ô "Đã phải dỡ ngựa khẩn cấp theo chỉ định thú y" (`emergencyOffload`).
 - Màn chuẩn bị xuất phát (checklist): gọi `GET /api/trips/{id}/departure-check`, hiện danh sách vấn đề còn lại (giấy hết hạn, thiếu khám 48h, chưa thanh toán, thiếu tài xế) theo từng ngựa / đơn; nút "Xuất phát" chỉ bật khi danh sách trống.
 - Hiện trạng thái ngựa mới `Deceased` trong danh sách ngựa và trong `TripHorseStatusTag`.

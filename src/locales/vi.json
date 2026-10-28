@@ -1306,7 +1306,21 @@
       "confirmDescription": "Bạn xác nhận chuyến {{code}} đã sẵn sàng khởi hành?",
       "confirmEffect": "Sau khi xác nhận, backend sẽ chuyển chuyến sang trạng thái Đang di chuyển và ghi nhận thời điểm xuất phát thực tế.",
       "confirmStart": "Xuất bến",
-      "startSuccess": "Chuyến đã xuất bến thành công."
+      "startSuccess": "Chuyến đã xuất bến thành công.",
+      "horseStatus": "Trạng thái ngựa",
+      "departureCheck": {
+        "blockingTitle": "Có {{count}} vấn đề chặn xuất phát bắt buộc phải giải quyết",
+        "blockingHint": "Theo quy chuẩn an toàn và pháp lý vận chuyển ngựa quốc tế, toàn bộ các vấn đề bên dưới bắt buộc phải xử lý triệt để trước khi đoàn xe được phép lăn bánh:",
+        "warningTitle": "Cảnh báo lưu ý trước khi xuất phát ({{count}})",
+        "errorTag": "Bắt buộc xử lý",
+        "warningTag": "Lưu ý",
+        "category": {
+          "Crew": "Nhân sự đoàn xe",
+          "Document": "Hồ sơ kiểm dịch",
+          "Health": "Sức khỏe 48h",
+          "Payment": "Thanh toán"
+        }
+      }
     },
     "execution": {
       "title": "Vận hành lộ trình & Trạm kiểm soát",
@@ -1340,7 +1354,8 @@
       "offloadOk": "Xác nhận rời chuyến",
       "offloaded": "Đã ghi nhận {{name}} rời chuyến",
       "revisedEta": "Dự kiến mới",
-      "behindSchedule": "Đoàn xe đang trễ {{minutes}} phút so với kế hoạch; giờ dự kiến các trạm phía sau đã được lùi tương ứng."
+      "behindSchedule": "Đoàn xe đang trễ {{minutes}} phút so với kế hoạch; giờ dự kiến các trạm phía sau đã được lùi tương ứng.",
+      "horseCannotContinue": "Ngựa không thể đi tiếp"
     },
     "welfare": {
       "title": "Nhật ký thể trạng sinh trắc & Phúc lợi ngựa",
@@ -2007,7 +2022,8 @@
       "locationRequired": "Nhập vị trí xảy ra sự cố",
       "horsePlaceholder": "Không gắn với con ngựa nào",
       "descriptionPlaceholder": "Chuyện gì đã xảy ra, đoàn xe đã làm gì",
-      "descriptionRequired": "Nhập mô tả sự cố"
+      "descriptionRequired": "Nhập mô tả sự cố",
+      "emergencyOffload": "Đã phải dỡ ngựa khẩn cấp theo chỉ định thú y"
     },
     "reroute": {
       "title": "Nắn tuyến chuyến {{trip}}",
@@ -2310,7 +2326,8 @@
     "InTransit": "Trên xe",
     "Delivered": "Đã giao",
     "Offloaded": "Rớt lại giữa đường",
-    "Cancelled": "Đã hủy"
+    "Cancelled": "Đã hủy",
+    "Deceased": "Tử vong (chết)"
   },
   "customerOrders": {
     "stage": {

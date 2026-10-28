@@ -1306,8 +1306,22 @@
       "confirmTitle": "Xác nhận xuất bến",
       "confirmDescription": "Bạn xác nhận chuyến {{code}} đã sẵn sàng khởi hành?",
       "confirmEffect": "Sau khi xác nhận, backend sẽ chuyển chuyến sang trạng thái Đang di chuyển và ghi nhận thời điểm xuất phát thực tế.",
-      "confirmStart": "Xuất bến",
-      "startSuccess": "Chuyến đã xuất bến thành công."
+      "confirmStart": "Depart",
+      "startSuccess": "Trip departed successfully.",
+      "horseStatus": "Horse Status",
+      "departureCheck": {
+        "blockingTitle": "{{count}} blocking issues must be resolved before departure",
+        "blockingHint": "According to international equine transport safety and legal regulations, all issues below must be resolved before departure:",
+        "warningTitle": "Pre-departure warnings ({{count}})",
+        "errorTag": "Blocking",
+        "warningTag": "Warning",
+        "category": {
+          "Crew": "Crew",
+          "Document": "Quarantine Dossier",
+          "Health": "Health 48h",
+          "Payment": "Payment"
+        }
+      }
     },
     "execution": {
       "title": "Route Operations & Checkpoints",
@@ -1341,7 +1355,8 @@
       "offloadOk": "Confirm offload",
       "offloaded": "{{name}} was taken off the trip",
       "revisedEta": "Now expected",
-      "behindSchedule": "The trip is {{minutes}} minute(s) behind schedule; later stops have been pushed back accordingly."
+      "behindSchedule": "The trip is {{minutes}} minute(s) behind schedule; later stops have been pushed back accordingly.",
+      "horseCannotContinue": "Horse cannot continue"
     },
     "welfare": {
       "title": "Biometric Health & Equine Welfare Log",
@@ -2008,7 +2023,8 @@
       "locationRequired": "Enter where it happened",
       "horsePlaceholder": "Not tied to a specific horse",
       "descriptionPlaceholder": "What happened and what the crew did",
-      "descriptionRequired": "Describe the incident"
+      "descriptionRequired": "Describe the incident",
+      "emergencyOffload": "Emergency offloaded under veterinary instruction"
     },
     "reroute": {
       "title": "Reroute trip {{trip}}",
@@ -2311,7 +2327,8 @@
     "InTransit": "On board",
     "Delivered": "Delivered",
     "Offloaded": "Offloaded on the way",
-    "Cancelled": "Cancelled"
+    "Cancelled": "Cancelled",
+    "Deceased": "Deceased"
   },
   "customerOrders": {
     "stage": {

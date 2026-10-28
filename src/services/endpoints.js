@@ -114,6 +114,7 @@ export const ENDPOINTS = {
     // Bí danh tương thích ngược
     UPDATE_STATUS: (id) => `/trips/${id}/status`,
     CREW: (id) => `/trips/${id}/crew`,
+    DEPARTURE_CHECK: (id) => `/trips/${id}/departure-check`,
   },
 
   // 7. Vận hành trạm kiểm soát (Checkpoints - Flow 4)

@@ -13,11 +13,18 @@ export const INCIDENT_TYPES = [
   'Weather',
   'ClimateControlFailure',
   'CustomsHold',
+  // R-14 (BE-14b): cửa khẩu từ chối, biên giới đóng, tài xế / áp tải không thể tiếp tục, người nhận vắng mặt
+  'BorderRejected',
+  'BorderClosed',
+  'CrewUnavailable',
+  'RecipientUnavailable',
   'Other',
 ];
 
 /** Loại hành động của phương án xử lý (responseAction); Reroute bắt buộc kèm thay đổi tuyến */
-export const RESPONSE_ACTIONS = ['WaitAndContinue', 'RepairAndContinue', 'Reroute', 'VeterinaryCare', 'OffloadHorse', 'Other'];
+// R-14 (BE-14b): ReturnToOrigin (cả đoàn quay về, hệ thống tự dựng tuyến), HoldAtStable (chuồng tạm, tính phí khi đóng)
+// TODO(BE-14a): ReplaceVehicle / ReplaceCrew khi backend có hành động đổi xe / đổi người
+export const RESPONSE_ACTIONS = ['WaitAndContinue', 'RepairAndContinue', 'Reroute', 'VeterinaryCare', 'OffloadHorse', 'ReturnToOrigin', 'HoldAtStable', 'Other'];
 
 export const RESPONSE_ACTION_COLOR = {
   WaitAndContinue: 'default',
@@ -25,8 +32,18 @@ export const RESPONSE_ACTION_COLOR = {
   Reroute: 'purple',
   VeterinaryCare: 'magenta',
   OffloadHorse: 'red',
+  ReturnToOrigin: 'volcano',
+  HoldAtStable: 'cyan',
   Other: 'default',
 };
+
+/** Hướng xử lý tiếp của ngựa rời chuyến (phương án OffloadHorse, R-12); Deceased chỉ ở sự cố Critical, bắt buộc biên bản thú y */
+export const OFFLOAD_OUTCOMES = ['WaitRecover', 'ReturnToOrigin', 'HandOverHere', 'Deceased'];
+
+/** Nguyên nhân khi đóng sự cố (Chính sách 9.1) quyết định ai chịu chi phí */
+export const FAULT_PARTIES = ['Company', 'Customer', 'ForceMajeure'];
+
+export const FAULT_PARTY_COLOR = { Company: 'blue', Customer: 'orange', ForceMajeure: 'purple' };
 
 /**
  * Chuyển giá trị các ô sửa tuyến (RouteChangeFields) sang body backend; không có thay đổi nào thì trả null.
@@ -52,11 +69,13 @@ export const INCIDENT_SEVERITIES = ['Minor', 'Moderate', 'Major', 'Critical'];
 export const SEVERITY_COLOR = { Minor: 'default', Moderate: 'gold', Major: 'orange', Critical: 'red' };
 
 /** Trạng thái sự cố: Reported -> PlanProposed -> Approved -> Resolved (hoặc Rejected rồi đề xuất lại) */
-export const INCIDENT_STATUSES = ['Reported', 'PlanProposed', 'Approved', 'Rejected', 'Resolved'];
+// AwaitingConsent: phương án đi vòng có phí đã duyệt, chờ mọi khách có ngựa trên xe đồng ý (R-14)
+export const INCIDENT_STATUSES = ['Reported', 'PlanProposed', 'AwaitingConsent', 'Approved', 'Rejected', 'Resolved'];
 
 export const INCIDENT_STATUS_COLOR = {
   Reported: 'red',
   PlanProposed: 'gold',
+  AwaitingConsent: 'purple',
   Approved: 'blue',
   Rejected: 'volcano',
   Resolved: 'green',

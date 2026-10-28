@@ -84,13 +84,23 @@ export const incidentService = {
   },
 
   /**
-   * Hoàn tất giải quyết sự cố và đóng hồ sơ sự cố
+   * Đóng sự cố, bắt buộc chọn nguyên nhân (R-09, BE-13): quyết định ai chịu chi phí và có hoàn tiền / bồi thường trễ không
    * @param {number|string} id - IncidentID
-   * @param {{ resolutionNotes?: string }} [payload]
+   * @param {{ faultParty: 'Company'|'Customer'|'ForceMajeure', faultNote?: string }} payload
    * @returns {Promise<any>}
    */
-  async resolveIncident(id, payload = {}) {
+  async resolveIncident(id, payload) {
     return api.post(ENDPOINTS.INCIDENTS.RESOLVE(id), payload);
+  },
+
+  /**
+   * Khách đồng ý / từ chối đi đường vòng có phí (sự cố AwaitingConsent, R-14). Từ chối thì cả đoàn quay về nơi đi.
+   * @param {number|string} id - IncidentID
+   * @param {{ accept: boolean }} payload
+   * @returns {Promise<any>}
+   */
+  async customerConsent(id, payload) {
+    return api.post(ENDPOINTS.INCIDENTS.CUSTOMER_CONSENT(id), payload);
   },
 };
 

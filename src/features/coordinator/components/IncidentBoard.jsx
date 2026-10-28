@@ -15,23 +15,30 @@ import {
   Typography,
   Space,
   Select,
+  Radio,
+  Upload,
   message,
 } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { ReloadOutlined, UploadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import incidentService from '@services/incidentService';
 import tripService from '@services/tripService';
+import fileService from '@services/fileService';
 import { unwrapList, unwrapData, getErrorMessage } from '@utils/apiHelpers';
 import {
   SEVERITY_COLOR,
   INCIDENT_STATUS_COLOR,
   RESPONSE_ACTIONS,
   RESPONSE_ACTION_COLOR,
+  OFFLOAD_OUTCOMES,
+  FAULT_PARTIES,
   formatUsd,
   toRouteChangePayload,
 } from '@utils/incidents';
 import IncidentRouteChange from '@components/common/IncidentRouteChange';
+// Đang sửa IncidentBoard vì FE-10: hướng xử lý ngựa rời chuyến, quay về / chuồng tạm, phí đi vòng chờ khách đồng ý, nguyên nhân khi đóng
+import IncidentOutcome from '@components/common/IncidentOutcome';
 import RerouteModal from './RerouteModal';
 import RouteChangeFields from './RouteChangeFields';
 
@@ -44,12 +51,12 @@ const formatTime = (value) => (value ? dayjs(value).format('DD/MM/YYYY HH:mm') :
 const FILTERS = {
   coordinator: {
     todo: ['Reported', 'Rejected', 'Approved'],
-    waiting: ['PlanProposed'],
+    waiting: ['PlanProposed', 'AwaitingConsent'],
     resolved: ['Resolved'],
   },
   manager: {
     todo: ['PlanProposed'],
-    open: ['Reported', 'Rejected', 'Approved'],
+    open: ['Reported', 'Rejected', 'AwaitingConsent', 'Approved'],
     resolved: ['Resolved'],
   },
 };
@@ -69,8 +76,14 @@ export default function IncidentBoard({ role }) {
   const [acting, setActing] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rerouteOpen, setRerouteOpen] = useState(false);
+  const [resolveOpen, setResolveOpen] = useState(false);
+  const [vetReport, setVetReport] = useState(null);
   const [proposeForm] = Form.useForm();
   const [rejectForm] = Form.useForm();
+  const [resolveForm] = Form.useForm();
+  const responseAction = Form.useWatch('responseAction', proposeForm);
+  const offloadOutcome = Form.useWatch('offloadOutcome', proposeForm);
+  const faultParty = Form.useWatch('faultParty', resolveForm);
 
   // Chỉ cập nhật state trong callback của promise (không setState đồng bộ trong effect)
   const load = useCallback(
@@ -152,17 +165,45 @@ export default function IncidentBoard({ role }) {
       message.warning(t('incidents.route.requiredForReroute'));
       return;
     }
-    await run(
-      () =>
-        incidentService.proposePlan(selected.incidentId, {
-          responseAction: values.responseAction,
-          proposedAction: values.proposedAction.trim(),
-          routeChange,
-          revisedRouteNotes: values.revisedRouteNotes?.trim() || null,
-          additionalCost: values.additionalCost || 0,
-        }),
-      t('incidents.actions.proposed'),
+    const isOffload = values.responseAction === 'OffloadHorse';
+    if (isOffload && values.offloadOutcome === 'Deceased' && !vetReport) {
+      message.warning(t('incidentPlan.vetReportRequired'));
+      return;
+    }
+    const ok = await run(async () => {
+      // Biên bản thú y tải lên trước (POST /files, documents) rồi gửi path
+      const uploaded = isOffload && vetReport ? unwrapData(await fileService.upload(vetReport, 'documents')) : null;
+      return incidentService.proposePlan(selected.incidentId, {
+        responseAction: values.responseAction,
+        proposedAction: values.proposedAction.trim(),
+        // Quay về: hệ thống tự dựng tuyến về, không gửi routeChange
+        routeChange: values.responseAction === 'ReturnToOrigin' ? null : routeChange,
+        revisedRouteNotes: values.revisedRouteNotes?.trim() || null,
+        additionalCost: values.additionalCost || 0,
+        extraCostForCustomer: values.responseAction === 'Reroute' ? values.extraCostForCustomer || 0 : undefined,
+        affectedTripHorseId: isOffload ? values.affectedTripHorseId || undefined : undefined,
+        offloadOutcome: isOffload ? values.offloadOutcome : undefined,
+        vetReportPath: uploaded?.path,
+      });
+    }, t('incidents.actions.proposed'));
+    if (ok) setVetReport(null);
+  };
+
+  const handleResolve = async () => {
+    let values;
+    try {
+      values = await resolveForm.validateFields();
+    } catch {
+      return;
+    }
+    const ok = await run(
+      () => incidentService.resolveIncident(selected.incidentId, { faultParty: values.faultParty, faultNote: values.faultNote?.trim() || undefined }),
+      t('incidents.actions.resolved'),
     );
+    if (ok) {
+      setResolveOpen(false);
+      resolveForm.resetFields();
+    }
   };
 
   const handleReject = async () => {
@@ -292,7 +333,11 @@ export default function IncidentBoard({ role }) {
                 layout="vertical"
                 requiredMark={false}
                 initialValues={{
-                  responseAction: selected.responseAction || undefined,
+                  // Ngựa đã dỡ khẩn cấp: phương án bắt buộc là cho ngựa rời chuyến
+                  responseAction: selected.emergencyOffload ? 'OffloadHorse' : selected.responseAction || undefined,
+                  affectedTripHorseId: selected.affectedTripHorseId || undefined,
+                  offloadOutcome: selected.offloadOutcome || undefined,
+                  extraCostForCustomer: selected.extraCostForCustomer || 0,
                   proposedAction: selected.proposedAction || '',
                   // Đề xuất lại sau khi bị từ chối: điền sẵn tuyến của lần trước
                   routeChange: selected.routeChange
@@ -313,9 +358,67 @@ export default function IncidentBoard({ role }) {
                 >
                   <Select
                     placeholder={t('incidents.actionPlaceholder')}
+                    disabled={selected.emergencyOffload}
                     options={RESPONSE_ACTIONS.map((value) => ({ value, label: t(`incidents.action.${value}`) }))}
                   />
                 </Form.Item>
+                {selected.emergencyOffload && (
+                  <Alert type="warning" showIcon style={{ marginBottom: 12 }} title={t('incidentPlan.emergencyOffload', { horse: selected.affectedHorseName || '' })} />
+                )}
+                {responseAction && t(`incidentPlan.actionHint.${responseAction}`, '') && (
+                  <Alert type="info" showIcon style={{ marginBottom: 12 }} title={t(`incidentPlan.actionHint.${responseAction}`)} />
+                )}
+                {responseAction === 'OffloadHorse' && (
+                  <div style={{ border: '1px solid #FECACA', borderRadius: 8, padding: '12px 12px 0', marginBottom: 16, background: '#FEF2F2' }}>
+                    <Form.Item
+                      name="affectedTripHorseId"
+                      label={t('incidentPlan.horse')}
+                      rules={[{ required: true, message: t('handover.form.required') }]}
+                    >
+                      <Select
+                        disabled={selected.emergencyOffload}
+                        placeholder={t('incidentPlan.horsePlaceholder')}
+                        options={(trip?.tripId === selected.tripId ? trip.horses || [] : [])
+                          .filter((h) => ['InTransit', 'Planned', 'Offloaded'].includes(h.status) || h.tripHorseId === selected.affectedTripHorseId)
+                          .map((h) => ({ value: h.tripHorseId, label: `${h.horseName} · ${h.bookingCode}` }))}
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      name="offloadOutcome"
+                      label={t('incidentPlan.outcome')}
+                      rules={[{ required: true, message: t('handover.form.required') }]}
+                    >
+                      <Radio.Group style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {OFFLOAD_OUTCOMES.map((value) => (
+                          <Radio key={value} value={value} disabled={value === 'Deceased' && selected.severity !== 'Critical'}>
+                            {t(`incidentOutcome.outcome.${value}`)}
+                            <div style={{ fontSize: 12, color: '#6B7280' }}>
+                              {value === 'Deceased' && selected.severity !== 'Critical'
+                                ? t('incidentPlan.deceasedNeedsCritical')
+                                : t(`incidentPlan.outcomeHint.${value}`)}
+                            </div>
+                          </Radio>
+                        ))}
+                      </Radio.Group>
+                    </Form.Item>
+                    {offloadOutcome === 'Deceased' && (
+                      <Form.Item label={t('incidentPlan.vetReport')} required>
+                        <Upload
+                          maxCount={1}
+                          accept=".pdf,image/*"
+                          beforeUpload={(file) => {
+                            setVetReport(file);
+                            return false;
+                          }}
+                          onRemove={() => setVetReport(null)}
+                          fileList={vetReport ? [{ uid: '-1', name: vetReport.name, status: 'done' }] : []}
+                        >
+                          <Button icon={<UploadOutlined />}>{t('incidentPlan.chooseVetReport')}</Button>
+                        </Upload>
+                      </Form.Item>
+                    )}
+                  </div>
+                )}
                 <Form.Item
                   name="proposedAction"
                   label={t('incidents.fields.plan')}
@@ -323,21 +426,28 @@ export default function IncidentBoard({ role }) {
                 >
                   <Input placeholder={t('incidents.planPlaceholder')} />
                 </Form.Item>
-                <div style={{ border: '1px dashed #E5E7EB', borderRadius: 8, padding: '12px 12px 0', marginBottom: 16 }}>
-                  <div style={{ marginBottom: 8 }}>
-                    <Text strong>{t('incidents.route.title')}</Text>{' '}
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      {t('incidents.route.editHint')}
-                    </Text>
+                {responseAction !== 'ReturnToOrigin' && (
+                  <div style={{ border: '1px dashed #E5E7EB', borderRadius: 8, padding: '12px 12px 0', marginBottom: 16 }}>
+                    <div style={{ marginBottom: 8 }}>
+                      <Text strong>{t('incidents.route.title')}</Text>{' '}
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        {t('incidents.route.editHint')}
+                      </Text>
+                    </div>
+                    <RouteChangeFields checkpoints={routeCheckpoints} prefix={['routeChange']} />
                   </div>
-                  <RouteChangeFields checkpoints={routeCheckpoints} prefix={['routeChange']} />
-                </div>
+                )}
                 <Form.Item name="revisedRouteNotes" label={t('incidents.fields.routeNotes')} rules={[{ max: 2000 }]}>
                   <TextArea rows={3} />
                 </Form.Item>
                 <Form.Item name="additionalCost" label={t('incidents.fields.cost')}>
                   <InputNumber min={0} prefix="$" style={{ width: 200 }} />
                 </Form.Item>
+                {responseAction === 'Reroute' && (
+                  <Form.Item name="extraCostForCustomer" label={t('incidentPlan.extraCostForCustomer')} extra={t('incidentPlan.extraCostHint')}>
+                    <InputNumber min={0} prefix="$" style={{ width: 200 }} />
+                  </Form.Item>
+                )}
                 <Button type="primary" loading={acting} onClick={handlePropose}>
                   {selected.status === 'Rejected' ? t('incidents.actions.repropose') : t('incidents.actions.propose')}
                 </Button>
@@ -365,6 +475,14 @@ export default function IncidentBoard({ role }) {
               <Text type="secondary">{t('incidents.noPlan')}</Text>
             )}
 
+            {!canPropose && (
+              <div style={{ marginTop: 12 }}>
+                <IncidentOutcome incident={selected} />
+              </div>
+            )}
+            {selected.status === 'AwaitingConsent' && (
+              <Alert type="info" showIcon style={{ marginTop: 12 }} title={t('incidentPlan.awaitingConsent')} />
+            )}
             {!canPropose && selected.routeChange && (
               <div style={{ marginTop: 12 }}>
                 <IncidentRouteChange routeChange={selected.routeChange} checkpoints={routeCheckpoints} />
@@ -393,14 +511,9 @@ export default function IncidentBoard({ role }) {
                 </Text>
                 <Space>
                   <Button onClick={() => setRerouteOpen(true)}>{t('incidents.actions.reroute')}</Button>
-                  <Popconfirm
-                    title={t('incidents.actions.resolveConfirm')}
-                    onConfirm={() => run(() => incidentService.resolveIncident(selected.incidentId), t('incidents.actions.resolved'))}
-                  >
-                    <Button type="primary" loading={acting}>
-                      {t('incidents.actions.resolve')}
-                    </Button>
-                  </Popconfirm>
+                  <Button type="primary" loading={acting} onClick={() => setResolveOpen(true)}>
+                    {t('incidents.actions.resolve')}
+                  </Button>
                 </Space>
               </div>
             )}
@@ -425,6 +538,44 @@ export default function IncidentBoard({ role }) {
             rules={[{ required: true, whitespace: true, message: t('handover.form.required') }, { max: 500 }]}
           >
             <TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Đóng sự cố: bắt buộc chọn nguyên nhân, hiện hệ quả tiền của từng lựa chọn (Chính sách 9.1) */}
+      <Modal
+        title={t('incidentPlan.resolveTitle', { code: selected?.incidentCode || '' })}
+        open={resolveOpen}
+        onCancel={() => setResolveOpen(false)}
+        onOk={handleResolve}
+        okText={t('incidents.actions.resolve')}
+        okButtonProps={{ loading: acting }}
+        cancelText={t('common.cancel')}
+        width={620}
+        destroyOnHidden
+      >
+        <Form form={resolveForm} layout="vertical" requiredMark={false}>
+          <Form.Item name="faultParty" label={t('incidentOutcome.faultParty')} rules={[{ required: true, message: t('incidentPlan.faultRequired') }]}>
+            <Radio.Group style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {FAULT_PARTIES.map((value) => (
+                <Radio key={value} value={value}>
+                  <Text strong>{t(`incidentOutcome.fault.${value}.title`)}</Text>
+                  <div style={{ fontSize: 12, color: '#6B7280' }}>{t(`incidentOutcome.fault.${value}.example`)}</div>
+                  <div style={{ fontSize: 12 }}>{t(`incidentOutcome.fault.${value}.money`)}</div>
+                </Radio>
+              ))}
+            </Radio.Group>
+          </Form.Item>
+          {faultParty && selected?.responseAction && t(`incidentPlan.resolveEffect.${selected.responseAction}.${faultParty}`, '') && (
+            <Alert
+              type="warning"
+              showIcon
+              style={{ marginBottom: 12 }}
+              title={t(`incidentPlan.resolveEffect.${selected.responseAction}.${faultParty}`, { cost: formatUsd(selected.additionalCost) })}
+            />
+          )}
+          <Form.Item name="faultNote" label={t('incidentPlan.faultNote')} rules={[{ max: 500 }]}>
+            <TextArea rows={2} />
           </Form.Item>
         </Form>
       </Modal>

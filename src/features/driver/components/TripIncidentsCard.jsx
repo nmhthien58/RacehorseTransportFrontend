@@ -3,6 +3,8 @@ import { WarningOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { INCIDENT_STATUS_COLOR, SEVERITY_COLOR, RESPONSE_ACTION_COLOR } from '@utils/incidents';
 import IncidentRouteChange from '@components/common/IncidentRouteChange';
+// Đang sửa TripIncidentsCard vì đoàn xe cần thấy hướng xử lý ngựa, quay về, phí đi vòng, nguyên nhân (FE-10)
+import IncidentOutcome from '@components/common/IncidentOutcome';
 
 const { Text, Paragraph } = Typography;
 
@@ -71,6 +73,9 @@ export default function TripIncidentsCard({ incidents }) {
                       <Text strong>{t('incidents.fields.plan')}: </Text>
                       {inc.proposedAction}
                     </div>
+                    <div style={{ marginTop: 6 }}>
+                      <IncidentOutcome incident={inc} />
+                    </div>
                     {inc.routeChange && (
                       <div style={{ marginTop: 8, background: '#FFFFFF', borderRadius: 8 }}>
                         <IncidentRouteChange routeChange={inc.routeChange} />
@@ -95,7 +100,13 @@ export default function TripIncidentsCard({ incidents }) {
                 type="warning"
                 showIcon
                 style={{ borderRadius: 8 }}
-                message={inc.status === 'PlanProposed' ? t('driver.incidents.planPending') : t('driver.incidents.planDrafting')}
+                message={
+                  inc.status === 'AwaitingConsent'
+                    ? t('incidentPlan.awaitingConsent')
+                    : inc.status === 'PlanProposed'
+                      ? t('driver.incidents.planPending')
+                      : t('driver.incidents.planDrafting')
+                }
               />
             )}
           </div>

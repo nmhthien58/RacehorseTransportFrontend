@@ -39,6 +39,8 @@ import BookingContractCard from '@components/common/BookingContractCard';
 import AirWaybillCard from '@components/common/AirWaybillCard';
 // Đang sửa BookingDetailPage vì thêm thẻ không giao được / chọn cách xử lý (FE-14)
 import CustomerDeliveryFailureCard from '@features/customer/components/CustomerDeliveryFailureCard';
+// Đang sửa BookingDetailPage vì khách đồng ý / từ chối đi đường vòng có phí ngay trên trang đơn (FE-10)
+import CustomerDetourConsentCard from '@features/customer/components/CustomerDetourConsentCard';
 import OrderTimeline from '@features/customer/components/OrderTimeline';
 import TripJourney from '@features/customer/components/TripJourney';
 import { useBookingJourney } from '@features/customer/hooks/useBookingJourney';
@@ -206,6 +208,11 @@ export default function CustomerBookingDetailPage() {
 
   const overviewContent = (
     <Row gutter={[20, 20]}>
+      {['Approved', 'Assigned'].includes(status) && (
+        <Col span={24}>
+          <CustomerDetourConsentCard booking={booking} onChanged={() => setReloadKey((k) => k + 1)} />
+        </Col>
+      )}
       {['Approved', 'Assigned', 'AwaitingFinalPayment', 'Completed'].includes(status) && (
         <Col span={24}>
           <CustomerDeliveryFailureCard

@@ -95,14 +95,6 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
       afterOpenChange={(visible) => {
         if (visible) {
           locate();
-          if (presetValues) {
-            form.setFieldsValue({
-              incidentType: presetValues.incidentType || 'EquineHealthIssue',
-              severity: presetValues.severity || 'Moderate',
-              affectedTripHorseId: presetValues.affectedTripHorseId,
-              emergencyOffload: Boolean(presetValues.emergencyOffload),
-            });
-          }
         } else {
           setGeoStatus('idle');
           form.resetFields();
@@ -113,7 +105,22 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
         {t('incidents.report.hint', { trip: tripCode || '' })}
       </Text>
 
-      <Form form={form} layout="vertical" requiredMark={false} initialValues={{ severity: 'Moderate' }}>
+      {/* Form tạo lại mỗi lần mở (destroyOnHidden) nên điền sẵn qua initialValues: mở từ nút "Ngựa không thể đi tiếp" */}
+      <Form
+        form={form}
+        layout="vertical"
+        requiredMark={false}
+        initialValues={
+          presetValues
+            ? {
+                incidentType: presetValues.incidentType || 'EquineHealthIssue',
+                severity: presetValues.severity || 'Moderate',
+                affectedTripHorseId: presetValues.affectedTripHorseId,
+                emergencyOffload: Boolean(presetValues.emergencyOffload),
+              }
+            : { severity: 'Moderate' }
+        }
+      >
         <Form.Item
           name="incidentType"
           label={t('incidents.fields.type')}

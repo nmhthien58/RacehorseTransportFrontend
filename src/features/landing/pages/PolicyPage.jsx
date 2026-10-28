@@ -29,6 +29,7 @@ function toPolicyView(raw) {
       BalanceDueDaysBeforeDeparture: p.balanceDueDaysBeforeDeparture,
       ExtraPaymentDueDays: p.extraPaymentDueDays,
     },
+    Booking: { QuoteAcceptDays: raw?.booking?.quoteAcceptDays },
     Horse: { MinAgeMonths: raw?.horse?.minAgeMonths },
     Delay: { GraceHours: d.graceHours, PercentPer12Hours: d.percentPer12Hours, MaxPercent: d.maxPercent },
     Insurance: {

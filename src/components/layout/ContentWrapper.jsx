@@ -1,4 +1,5 @@
-import { Layout } from 'antd';
+// Đang sửa ContentWrapper vì lề 36px quá rộng trên điện thoại
+import { Grid, Layout } from 'antd';
 import horseWatermark from '@assets/horse-watermark.svg';
 
 const { Content } = Layout;
@@ -12,11 +13,13 @@ const { Content } = Layout;
  * @returns {JSX.Element}
  */
 export default function ContentWrapper({ children, style, className }) {
+  const screens = Grid.useBreakpoint();
+  const isMobile = screens.md === false;
   return (
     <Content
       className={className}
       style={{
-        padding: '16px 36px 48px 36px',
+        padding: isMobile ? '12px 16px 32px' : '16px 36px 48px 36px',
         background: '#FFF9EE',
         minHeight: 'calc(100vh - 76px)',
         position: 'relative',

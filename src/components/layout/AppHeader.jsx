@@ -1,8 +1,10 @@
+// Đang sửa AppHeader vì header tràn ngang (ô tìm kiếm cố định 380px) và quá chật trên điện thoại
 import {
   Avatar,
   Button,
   Dropdown,
   Flex,
+  Grid,
   Input,
   Layout,
   Space,
@@ -58,6 +60,9 @@ export default function AppHeader({
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { login } = useAuthStore();
+  // < md: ẩn ô tìm kiếm, chữ "Vai trò" và tên người dùng để header vừa màn điện thoại
+  const screens = Grid.useBreakpoint();
+  const isMobile = screens.md === false;
 
   const userFullName = user?.fullName || user?.FullName || 'Jane Smith';
   const userRole = user?.role || user?.Role;
@@ -260,7 +265,8 @@ export default function AppHeader({
   return (
     <Header
       style={{
-        padding: '0 32px',
+        padding: isMobile ? '0 12px' : '0 32px',
+        gap: 12,
         background: '#FFF9EE',
         display: 'flex',
         alignItems: 'center',
@@ -273,7 +279,7 @@ export default function AppHeader({
       }}
     >
       {/* Cụm bên trái: Toggle Sidebar & Ô tìm kiếm viên thuốc (Pill) */}
-      <Flex align="center" gap="middle">
+      <Flex align="center" gap="middle" style={{ flex: 1, minWidth: 0 }}>
         <Button
           type="text"
           icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -282,25 +288,29 @@ export default function AppHeader({
           style={{ fontSize: 18, color: '#1e293b' }}
         />
 
-        <Input
-          prefix={<SearchOutlined style={{ color: '#94a3b8', fontSize: 16 }} />}
-          placeholder={t('nav.searchPlaceholder')}
-          style={{
-            width: 380,
-            height: 42,
-            borderRadius: 9999,
-            background: '#ffffff',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
-            padding: '0 16px',
-            fontSize: 14,
-          }}
-          allowClear
-        />
+        {!isMobile && (
+          <Input
+            prefix={<SearchOutlined style={{ color: '#94a3b8', fontSize: 16 }} />}
+            placeholder={t('nav.searchPlaceholder')}
+            style={{
+              width: '100%',
+              maxWidth: 380,
+              minWidth: 120,
+              height: 42,
+              borderRadius: 9999,
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+              padding: '0 16px',
+              fontSize: 14,
+            }}
+            allowClear
+          />
+        )}
       </Flex>
 
       {/* Cụm bên phải: Ngôn ngữ, Chuông thông báo & Thông tin người dùng */}
-      <Space size="middle" align="center">
+      <Space size={isMobile ? 4 : 'middle'} align="center" style={{ flexShrink: 0 }}>
         {/* Nút chuyển đổi nhanh vai trò hệ thống (Role Switcher) để test liền mạch */}
         <Dropdown
           menu={{
@@ -338,12 +348,14 @@ export default function AppHeader({
             }}
           >
             <SwapOutlined style={{ color: '#d97706' }} />
-            <span>
-              Vai trò:{' '}
-              <strong style={{ color: '#0f172a' }}>
-                {getRoleDisplayName(userRole)}
-              </strong>
-            </span>
+            {!isMobile && (
+              <span>
+                Vai trò:{' '}
+                <strong style={{ color: '#0f172a' }}>
+                  {getRoleDisplayName(userRole)}
+                </strong>
+              </span>
+            )}
             <DownOutlined style={{ fontSize: 10, color: '#94a3b8' }} />
           </Button>
         </Dropdown>
@@ -376,7 +388,7 @@ export default function AppHeader({
             }}
           >
             <Avatar
-              size={42}
+              size={isMobile ? 36 : 42}
               style={{
                 backgroundColor: '#FBA919',
                 color: '#ffffff',
@@ -386,7 +398,7 @@ export default function AppHeader({
             >
               {getInitials(userFullName)}
             </Avatar>
-            <div style={{ lineHeight: 1.3, textAlign: 'left' }}>
+            <div style={{ lineHeight: 1.3, textAlign: 'left', display: isMobile ? 'none' : 'block' }}>
               <div style={{ fontWeight: 700, fontSize: 15, color: '#0f172a' }}>
                 {userFullName}
               </div>

@@ -34,9 +34,10 @@ const { Sider } = Layout;
  * @param {Object} props
  * @param {boolean} props.collapsed - Trạng thái thu gọn của Sider
  * @param {Object} [props.user] - Thông tin tài khoản người dùng đăng nhập
+ * @param {() => void} [props.onNavigate] - Gọi sau khi chọn mục menu (đóng Drawer trên điện thoại)
  * @returns {JSX.Element}
  */
-export default function AppSidebar({ collapsed, user }) {
+export default function AppSidebar({ collapsed, user, onNavigate }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -365,6 +366,7 @@ export default function AppSidebar({ collapsed, user }) {
           style={{
             maxHeight: collapsed ? 36 : 48,
             maxWidth: '100%',
+            minWidth: 0,
             objectFit: 'contain',
           }}
         />
@@ -381,9 +383,15 @@ export default function AppSidebar({ collapsed, user }) {
         <Menu
           theme="light"
           mode="inline"
+          // Menu nằm trong div bọc nên không tự nhận trạng thái thu gọn của Sider: truyền thẳng
+          inlineCollapsed={collapsed}
           selectedKeys={[getSelectedKey()]}
           items={menuItems}
-          onClick={({ key }) => navigate(key)}
+          onClick={({ key }) => {
+            navigate(key);
+            // Sidebar nằm trong Drawer (điện thoại): đóng sau khi chọn mục
+            onNavigate?.();
+          }}
           style={{
             borderRight: 0,
             fontSize: 15,

@@ -45,81 +45,99 @@ export default function RecipientForm({
       </Checkbox>
 
       {value.isCustomer ? (
-        <div style={{ padding: '8px 12px', background: '#F8FAFC', borderRadius: 8, marginBottom: 8 }}>
+        <div
+          style={{ padding: '8px 12px', background: '#F8FAFC', borderRadius: 8, marginBottom: 8 }}
+        >
           <Text type="secondary" style={{ fontSize: 13 }}>
-            {t('bookingForm.recipient.selfNote', 'Ngựa sẽ được bàn giao trực tiếp cho bạn theo thông tin tài khoản:')}
+            {t(
+              'bookingForm.recipient.selfNote',
+              'Ngựa sẽ được bàn giao trực tiếp cho bạn theo thông tin tài khoản:',
+            )}
           </Text>
           <div style={{ fontWeight: 600, color: '#0F172A', marginTop: 4 }}>
-            {user?.fullName || t('common.customer', 'Khách hàng')} {user?.phoneNumber ? `· ${user.phoneNumber}` : ''}
+            {user?.fullName || t('common.customer', 'Khách hàng')}{' '}
+            {user?.phoneNumber ? `· ${user.phoneNumber}` : ''}
           </div>
         </div>
       ) : (
-        <Row gutter={[12, 12]}>
-          <Col xs={24} sm={12}>
-            <Form.Item
-              label={t('bookingForm.recipient.name', 'Họ tên người nhận thay')}
-              required
-              style={{ marginBottom: 0 }}
-            >
-              <Input
-                value={value.name}
-                maxLength={100}
-                disabled={disabled}
-                placeholder={t('bookingForm.recipient.namePlaceholder', 'Nguyễn Văn A')}
-                onChange={(e) => handleChange({ name: e.target.value })}
-              />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12}>
-            <Form.Item
-              label={t('bookingForm.recipient.phone', 'Số điện thoại')}
-              required
-              validateStatus={value.phone && !PHONE_REGEX.test(value.phone.trim()) ? 'error' : undefined}
-              help={value.phone && !PHONE_REGEX.test(value.phone.trim()) ? t('bookingForm.recipient.phoneInvalid', 'Số điện thoại không hợp lệ') : undefined}
-              style={{ marginBottom: 0 }}
-            >
-              <Input
-                value={value.phone}
-                maxLength={20}
-                disabled={disabled}
-                placeholder="+84 988 123 456"
-                onChange={(e) => handleChange({ phone: e.target.value })}
-              />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12}>
-            <Form.Item
-              label={t('bookingForm.recipient.email', 'Email')}
-              style={{ marginBottom: 0 }}
-            >
-              <Input
-                value={value.email}
-                maxLength={255}
-                disabled={disabled}
-                placeholder="recipient@example.com"
-                onChange={(e) => handleChange({ email: e.target.value })}
-              />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12}>
-            <Form.Item
-              label={t('bookingForm.recipient.idNumber', 'Số CMND / CCCD / Hộ chiếu')}
-              style={{ marginBottom: 0 }}
-            >
-              <Input
-                value={value.idNumber}
-                maxLength={50}
-                disabled={disabled}
-                placeholder="001200001234"
-                onChange={(e) => handleChange({ idNumber: e.target.value })}
-              />
-            </Form.Item>
-          </Col>
-        </Row>
+        // Form riêng (không sinh thẻ <form>) để nhãn luôn nằm trên ô nhập, kể cả khi trang cha dùng layout ngang
+        <Form layout="vertical" component={false}>
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                label={t('bookingForm.recipient.name', 'Họ tên người nhận thay')}
+                required
+                style={{ marginBottom: 0 }}
+              >
+                <Input
+                  value={value.name}
+                  maxLength={100}
+                  disabled={disabled}
+                  placeholder={t('bookingForm.recipient.namePlaceholder', 'Nguyễn Văn A')}
+                  onChange={(e) => handleChange({ name: e.target.value })}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                label={t('bookingForm.recipient.phone', 'Số điện thoại')}
+                required
+                validateStatus={
+                  value.phone && !PHONE_REGEX.test(value.phone.trim()) ? 'error' : undefined
+                }
+                help={
+                  value.phone && !PHONE_REGEX.test(value.phone.trim())
+                    ? t('bookingForm.recipient.phoneInvalid', 'Số điện thoại không hợp lệ')
+                    : undefined
+                }
+                style={{ marginBottom: 0 }}
+              >
+                <Input
+                  value={value.phone}
+                  maxLength={20}
+                  disabled={disabled}
+                  placeholder="+84 988 123 456"
+                  onChange={(e) => handleChange({ phone: e.target.value })}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                label={t('bookingForm.recipient.email', 'Email')}
+                style={{ marginBottom: 0 }}
+              >
+                <Input
+                  value={value.email}
+                  maxLength={255}
+                  disabled={disabled}
+                  placeholder="recipient@example.com"
+                  onChange={(e) => handleChange({ email: e.target.value })}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                label={t('bookingForm.recipient.idNumber', 'Số CMND / CCCD / Hộ chiếu')}
+                style={{ marginBottom: 0 }}
+              >
+                <Input
+                  value={value.idNumber}
+                  maxLength={50}
+                  disabled={disabled}
+                  placeholder="001200001234"
+                  onChange={(e) => handleChange({ idNumber: e.target.value })}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
       )}
 
       <Text type="secondary" style={{ fontSize: 11.5, display: 'block', marginTop: 8 }}>
-        {t('bookingForm.recipient.hint', 'Người nhận sẽ đối chiếu thông tin và ký biên bản giao nhận e-POD với tài xế khi nhận ngựa.')}
+        {t(
+          'bookingForm.recipient.hint',
+          'Người nhận sẽ đối chiếu thông tin và ký biên bản giao nhận e-POD với tài xế khi nhận ngựa.',
+        )}
       </Text>
     </div>
   );

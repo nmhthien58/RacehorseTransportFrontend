@@ -1979,6 +1979,8 @@
       "Reroute": "Reroute",
       "VeterinaryCare": "Stop for veterinary care",
       "OffloadHorse": "Offload the horse",
+      "ReturnToOrigin": "Whole trip returns to origin",
+      "HoldAtStable": "Keep horses at a temporary stable",
       "Other": "Other"
     },
     "actionPlaceholder": "Choose an action",
@@ -2045,6 +2047,10 @@
       "Weather": "Weather",
       "ClimateControlFailure": "Climate control failure",
       "CustomsHold": "Customs hold",
+      "BorderRejected": "Refused at the border",
+      "BorderClosed": "Border closed",
+      "CrewUnavailable": "Crew member cannot continue",
+      "RecipientUnavailable": "Recipient absent / refused",
       "Other": "Other"
     },
     "severity": {
@@ -2056,6 +2062,7 @@
     "status": {
       "Reported": "Reported",
       "PlanProposed": "Plan awaiting approval",
+      "AwaitingConsent": "Awaiting customer consent",
       "Approved": "Plan approved",
       "Rejected": "Plan rejected",
       "Resolved": "Resolved"
@@ -2984,5 +2991,98 @@
       "createdAt": "Created",
       "rejection": "Rejection reason"
     }
+  },
+  "incidentOutcome": {
+    "emergencyOffload": "Offloaded in an emergency",
+    "offloadOutcome": "Horse leaves the trip",
+    "outcome": {
+      "WaitRecover": "Recover, then travel on another trip",
+      "ReturnToOrigin": "Take the horse back to origin",
+      "HandOverHere": "Customer receives the horse here",
+      "Deceased": "Horse died"
+    },
+    "vetReport": "Veterinary report",
+    "detourCost": "Detour fee for customers",
+    "accepted": "Agreed",
+    "declined": "Declined",
+    "faultParty": "Cause",
+    "fault": {
+      "Company": {
+        "title": "Company fault",
+        "example": "E.g. poor maintenance, missing documents from our specialist, wrong route",
+        "money": "The company bears the extra cost; the customer is compensated if delivery is late."
+      },
+      "Customer": {
+        "title": "Customer fault",
+        "example": "E.g. wrong / forged documents, misdeclared horse condition",
+        "money": "The customer bears the extra cost (added to extra charges when the trip closes); no late-delivery compensation."
+      },
+      "ForceMajeure": {
+        "title": "Force majeure",
+        "example": "E.g. border closure, natural disaster, epidemic, third-party accident",
+        "money": "The customer bears the extra cost; no late-delivery compensation."
+      }
+    }
+  },
+  "incidentPlan": {
+    "emergencyOffload": "{{horse}} was offloaded in an emergency: the plan must be Offload the horse with the next step.",
+    "actionHint": {
+      "ReturnToOrigin": "On approval the system builds the return route itself (pending stops removed, e-POD signed at the origin). No route edit needed.",
+      "HoldAtStable": "Stable fee = days × horses × daily rate, added to the extra cost when the incident is closed.",
+      "Reroute": "If the detour costs customers more, enter the fee below: the route changes only when every customer on board agrees; one refusal sends the whole trip back."
+    },
+    "horse": "Horse leaving the trip",
+    "horsePlaceholder": "Choose the horse",
+    "outcome": "Next step",
+    "outcomeHint": {
+      "WaitRecover": "The horse goes back to the trip planning queue",
+      "ReturnToOrigin": "Coordinator arranges the return; the horse is done with this booking",
+      "HandOverHere": "The crew signs the e-POD with the customer on the spot",
+      "Deceased": "Veterinary report required; an insurance claim opens automatically"
+    },
+    "deceasedNeedsCritical": "Only for a Critical incident",
+    "vetReport": "Veterinary report",
+    "chooseVetReport": "Choose file (PDF / image)",
+    "vetReportRequired": "A veterinary report is required when a horse died",
+    "extraCostForCustomer": "Extra cost charged to customers (detour)",
+    "extraCostHint": "Total for the trip, split by each booking's horses. Leave 0 if the company pays.",
+    "awaitingConsent": "Waiting for every customer on board to agree to the detour; the route has not changed yet.",
+    "resolveTitle": "Close incident {{code}}",
+    "faultRequired": "Choose the cause",
+    "faultNote": "Short explanation (optional)",
+    "resolveEffect": {
+      "ReturnToOrigin": {
+        "Company": "Return caused by the company: each booking is refunded 100% of what was paid.",
+        "Customer": "Return caused by the customer: no refund; the turnaround cost ({{cost}}) is charged as an extra.",
+        "ForceMajeure": "Force majeure: freight refunded in proportion to the distance not travelled (procedure fees not refunded)."
+      },
+      "OffloadHorse": {
+        "Company": "The unused freight share of the offloaded horse is refunded (except Recover).",
+        "Customer": "No refund for the offloaded horse's freight.",
+        "ForceMajeure": "The unused freight share of the offloaded horse is refunded (except Recover)."
+      },
+      "HoldAtStable": {
+        "Company": "The stable fee is calculated on closing; with a company fault the customer does not pay it.",
+        "Customer": "The stable fee is calculated on closing and added to the customer's extra charges.",
+        "ForceMajeure": "The stable fee is calculated on closing and added to the customer's extra charges."
+      }
+    }
+  },
+  "detourConsent": {
+    "title": "Trip {{trip}} needs a detour — your agreement is needed",
+    "intro": "The trip hit a problem and needs a longer route that costs more. The route changes only if every customer on board agrees.",
+    "cost": "Detour fee for the whole trip: {{amount}}",
+    "costNote": "Split by the number of horses of each booking on board and added to extra charges when the trip closes. If you agree, a new contract version is issued for you to confirm.",
+    "accept": "Agree to the detour",
+    "decline": "Decline",
+    "acceptConfirm": "Agree to the detour?",
+    "acceptConfirmDesc": "You pay your booking's share of the detour fee.",
+    "declineConfirm": "Decline the detour?",
+    "declineConfirmDesc": "The whole trip returns to the origin with no detour fee; refunds follow Policy section 9.",
+    "yourAnswer": "Your answer:",
+    "canChange": "you can change it until there is a result",
+    "acceptedMsg": "Your agreement has been recorded",
+    "declinedMsg": "Your refusal has been recorded",
+    "failed": "Could not send your answer"
   }
 }

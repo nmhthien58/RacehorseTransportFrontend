@@ -169,6 +169,8 @@ export const ENDPOINTS = {
     REJECT_PLAN: (id) => `/incidents/${id}/reject`,
     APPLY_REROUTE: (id) => `/incidents/${id}/apply-reroute`,
     RESOLVE: (id) => `/incidents/${id}/resolve`,
+    // R-14: khách đồng ý / từ chối đi đường vòng có phí
+    CUSTOMER_CONSENT: (id) => `/incidents/${id}/customer-consent`,
     // Bí danh tương thích ngược
     CREATE: '/incidents',
     APPROVE: (id) => `/incidents/${id}/approve`,

@@ -1978,6 +1978,8 @@
       "Reroute": "Đổi tuyến",
       "VeterinaryCare": "Dừng chăm sóc thú y",
       "OffloadHorse": "Cho ngựa rời chuyến",
+      "ReturnToOrigin": "Cả đoàn quay về nơi đi",
+      "HoldAtStable": "Gửi ngựa chuồng tạm",
       "Other": "Khác"
     },
     "actionPlaceholder": "Chọn hành động",
@@ -2044,6 +2046,10 @@
       "Weather": "Thời tiết",
       "ClimateControlFailure": "Hỏng điều hòa khoang",
       "CustomsHold": "Bị giữ ở hải quan",
+      "BorderRejected": "Cửa khẩu từ chối cho qua",
+      "BorderClosed": "Biên giới đóng",
+      "CrewUnavailable": "Tài xế / áp tải không thể tiếp tục",
+      "RecipientUnavailable": "Người nhận vắng mặt / từ chối",
       "Other": "Khác"
     },
     "severity": {
@@ -2055,6 +2061,7 @@
     "status": {
       "Reported": "Mới báo",
       "PlanProposed": "Chờ duyệt phương án",
+      "AwaitingConsent": "Chờ khách đồng ý đi vòng",
       "Approved": "Đã duyệt phương án",
       "Rejected": "Phương án bị từ chối",
       "Resolved": "Đã xử lý xong"
@@ -2983,5 +2990,98 @@
       "createdAt": "Lập lúc",
       "rejection": "Lý do từ chối"
     }
+  },
+  "incidentOutcome": {
+    "emergencyOffload": "Đã dỡ khẩn cấp",
+    "offloadOutcome": "Ngựa rời chuyến",
+    "outcome": {
+      "WaitRecover": "Chờ hồi phục rồi đi chuyến khác",
+      "ReturnToOrigin": "Đưa ngựa về nơi đi",
+      "HandOverHere": "Khách nhận ngựa tại nơi dỡ",
+      "Deceased": "Ngựa chết"
+    },
+    "vetReport": "Biên bản thú y",
+    "detourCost": "Phí đi vòng khách trả thêm",
+    "accepted": "Đồng ý",
+    "declined": "Không đồng ý",
+    "faultParty": "Nguyên nhân",
+    "fault": {
+      "Company": {
+        "title": "Lỗi công ty",
+        "example": "Ví dụ: xe hỏng do bảo dưỡng kém, thiếu giấy do chuyên viên, đi sai tuyến",
+        "money": "Công ty chịu chi phí phát sinh; khách được bồi thường nếu giao trễ."
+      },
+      "Customer": {
+        "title": "Lỗi khách",
+        "example": "Ví dụ: giấy sai / giả, khai sai tình trạng ngựa",
+        "money": "Khách chịu chi phí phát sinh (cộng vào khoản phát sinh khi đóng chuyến); không bồi thường giao trễ."
+      },
+      "ForceMajeure": {
+        "title": "Bất khả kháng",
+        "example": "Ví dụ: đóng biên, thiên tai, dịch bệnh, tai nạn do bên thứ ba",
+        "money": "Khách chịu chi phí phát sinh; không bồi thường giao trễ."
+      }
+    }
+  },
+  "incidentPlan": {
+    "emergencyOffload": "{{horse}} đã được dỡ khẩn cấp: phương án phải là Cho ngựa rời chuyến, kèm hướng xử lý tiếp.",
+    "actionHint": {
+      "ReturnToOrigin": "Khi duyệt, hệ thống tự dựng tuyến quay về (bỏ các mốc chưa tới, e-POD ký ở nơi đi). Không cần sửa tuyến.",
+      "HoldAtStable": "Phí chuồng tạm = số ngày × số ngựa × đơn giá, cộng vào chi phí phát sinh khi đóng sự cố.",
+      "Reroute": "Đi vòng tốn thêm tiền cho khách: nhập phí bên dưới, tuyến chỉ đổi khi mọi khách có ngựa trên xe đồng ý; một khách từ chối thì cả đoàn quay về."
+    },
+    "horse": "Ngựa rời chuyến",
+    "horsePlaceholder": "Chọn ngựa",
+    "outcome": "Hướng xử lý tiếp",
+    "outcomeHint": {
+      "WaitRecover": "Ngựa về lại hàng chờ xếp chuyến",
+      "ReturnToOrigin": "Điều phối sắp xếp chở về; ngựa xong với đơn",
+      "HandOverHere": "Đoàn xe ký e-POD tại chỗ với khách",
+      "Deceased": "Bắt buộc biên bản thú y; tự mở hồ sơ bồi thường"
+    },
+    "deceasedNeedsCritical": "Chỉ chọn được ở sự cố mức Khẩn cấp",
+    "vetReport": "Biên bản thú y",
+    "chooseVetReport": "Chọn file (PDF / ảnh)",
+    "vetReportRequired": "Ngựa chết bắt buộc kèm biên bản thú y",
+    "extraCostForCustomer": "Chi phí khách phải trả thêm (đi vòng)",
+    "extraCostHint": "Tổng cho cả chuyến, chia theo số ngựa của các đơn. Để 0 nếu công ty chịu.",
+    "awaitingConsent": "Đang chờ các khách có ngựa trên xe đồng ý đi vòng; tuyến chưa đổi.",
+    "resolveTitle": "Đóng sự cố {{code}}",
+    "faultRequired": "Chọn nguyên nhân",
+    "faultNote": "Giải thích ngắn (không bắt buộc)",
+    "resolveEffect": {
+      "ReturnToOrigin": {
+        "Company": "Quay về do lỗi công ty: hoàn 100% số khách đã trả cho từng đơn.",
+        "Customer": "Quay về do lỗi khách: không hoàn; chi phí quay đầu ({{cost}}) là khoản phát sinh của khách.",
+        "ForceMajeure": "Bất khả kháng: hoàn tiền cước theo tỉ lệ quãng đường chưa đi (không hoàn phí thủ tục)."
+      },
+      "OffloadHorse": {
+        "Company": "Hoàn phần cước chưa đi của con ngựa rời chuyến (trừ hướng Chờ hồi phục).",
+        "Customer": "Không hoàn phần cước của con ngựa rời chuyến.",
+        "ForceMajeure": "Hoàn phần cước chưa đi của con ngựa rời chuyến (trừ hướng Chờ hồi phục)."
+      },
+      "HoldAtStable": {
+        "Company": "Phí chuồng tạm được tính khi đóng; lỗi công ty thì khách không phải trả.",
+        "Customer": "Phí chuồng tạm được tính khi đóng và cộng vào khoản phát sinh của khách.",
+        "ForceMajeure": "Phí chuồng tạm được tính khi đóng và cộng vào khoản phát sinh của khách."
+      }
+    }
+  },
+  "detourConsent": {
+    "title": "Chuyến {{trip}} cần đi đường vòng — cần bạn đồng ý",
+    "intro": "Đoàn xe gặp sự cố và cần đổi sang tuyến khác tốn thêm chi phí. Tuyến chỉ đổi khi mọi khách có ngựa trên xe đồng ý.",
+    "cost": "Phí đi vòng cả chuyến: {{amount}}",
+    "costNote": "Chia theo số ngựa của các đơn trên xe và cộng vào khoản phát sinh khi đóng chuyến. Đồng ý thì có bản hợp đồng mới để bạn xác nhận.",
+    "accept": "Đồng ý đi vòng",
+    "decline": "Không đồng ý",
+    "acceptConfirm": "Đồng ý đi đường vòng?",
+    "acceptConfirmDesc": "Bạn trả phần phí đi vòng của đơn mình.",
+    "declineConfirm": "Không đồng ý đi vòng?",
+    "declineConfirmDesc": "Cả đoàn sẽ quay về nơi đi, không thu phí đi vòng; tiền hoàn theo Chính sách mục 9.",
+    "yourAnswer": "Bạn đã trả lời:",
+    "canChange": "có thể đổi tới khi có kết quả",
+    "acceptedMsg": "Đã ghi nhận bạn đồng ý đi vòng",
+    "declinedMsg": "Đã ghi nhận bạn không đồng ý",
+    "failed": "Không gửi được câu trả lời"
   }
 }

@@ -145,7 +145,7 @@ Sửa `IncidentBoard`, `RouteChangeFields`, `TripIncidentsCard`, `EmergencyRepor
 - Đóng sự cố: bắt buộc chọn **nguyên nhân** (Lỗi công ty / Lỗi khách / Bất khả kháng) kèm giải thích ngắn hệ quả tiền theo bảng 9.1 của chính sách; hiện số tiền hoàn / phát sinh backend tính trước khi xác nhận.
 - Tài xế và khách thấy kết quả (đổi xe, đổi người, quay đầu) trong khung sự cố.
 
-### [ ] FE-14 · Không giao được, phí chờ (R-16)
+### [x] FE-14 · Không giao được, phí chờ (R-16)
 - e-POD (`ArrivalHandoverPage`): nút **Không giao được** → chọn lý do (vắng mặt / từ chối / từ chối vì ngựa bị thương / giao nhầm ngựa), ghi chú, chụp ảnh (bắt buộc với 2 lý do cuối); hiện số giờ đã chờ (tính từ lúc check-in điểm trả) và mốc bắt đầu tính phí.
 - Khách: thẻ **"Chưa giao được ngựa — chọn cách xử lý"** với đếm ngược 24 giờ, 3 lựa chọn (người nhận / địa chỉ khác dùng `RecipientForm` + `MapPicker`; gửi chuồng tạm; chở về), mỗi lựa chọn ghi rõ ai trả phí; quá hạn thì hiện "Đã áp dụng gửi chuồng tạm".
 - Phí chờ hiện trong khoản phát sinh của đơn (số giờ × đơn giá), thanh toán qua luồng Extra hiện có.

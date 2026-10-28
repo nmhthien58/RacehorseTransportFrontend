@@ -39,15 +39,18 @@ export default function BookingContractCard({ bookingId, bookingStatus, mode = '
 
   useEffect(() => {
     let active = true;
-    Promise.all([
-      contractService.getCurrent(bookingId).then(unwrapData).catch(() => null),
-      contractService.getHistory(bookingId).then(unwrapList).catch(() => []),
-    ]).then(([cur, list]) => {
-      if (!active) return;
-      setCurrent(cur);
-      setHistory(list);
-      setLoaded(true);
-    });
+    // Đơn chưa có báo giá chốt thì lịch sử rỗng: không gọi bản hiện hành (backend trả 404)
+    contractService
+      .getHistory(bookingId)
+      .then(unwrapList)
+      .catch(() => [])
+      .then(async (list) => {
+        const cur = list.length ? await contractService.getCurrent(bookingId).then(unwrapData).catch(() => null) : null;
+        if (!active) return;
+        setCurrent(cur);
+        setHistory(list);
+        setLoaded(true);
+      });
     return () => {
       active = false;
     };

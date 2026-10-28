@@ -2668,5 +2668,89 @@
     "numberRequired": "Enter the waybill number",
     "saved": "Air waybill saved",
     "saveFailed": "Could not save the air waybill"
+  },
+  "deliveryFailed": {
+    "button": "Delivery failed",
+    "title": "Delivery failed: {{code}}",
+    "submit": "Record failed delivery",
+    "recorded": "Failed delivery of {{code}} recorded. The coordinator and the customer have been notified.",
+    "recordFailed": "Could not record the failed delivery",
+    "recordedTag": "Delivery failed (recorded)",
+    "arrivedAt": "Arrived at drop-off",
+    "waited": "Waited",
+    "duration": "{{hours}} h {{minutes}} min",
+    "feeStart": "Waiting fee starts",
+    "noFeeEarly": "No waiting fee (arrived before the time window given to the recipient, or no window was given)",
+    "feeEstimate": "Estimated waiting fee: {{hours}} h × {{fee}} USD = {{total}} USD (paid by the customer)",
+    "reasonLabel": "Reason",
+    "reasonRequired": "Choose a reason",
+    "reason": {
+      "RecipientAbsent": "Recipient absent",
+      "RecipientRefused": "Recipient refused",
+      "RefusedInjured": "Refused: horse injured",
+      "RefusedWrongHorse": "Refused: wrong horse"
+    },
+    "reasonHint": {
+      "RecipientAbsent": "The customer chooses what to do within 24 hours and pays the costs",
+      "RecipientRefused": "No valid reason; the customer chooses what to do and pays the costs",
+      "RefusedInjured": "Company fault: photos required; the company pays the stable, a claim is opened",
+      "RefusedWrongHorse": "Company fault: photos required; the company pays the stable, a claim is opened"
+    },
+    "note": "Note",
+    "notePlaceholder": "E.g. called 3 times, no answer",
+    "photos": "Photos (optional, up to 10)",
+    "photosRequired": "Photos (required, up to 10)",
+    "photoRequired": "This reason needs at least one photo",
+    "addPhoto": "Take / add photo"
+  },
+  "deliveryDecision": {
+    "title": "Horses not delivered — choose what to do",
+    "intro": "The crew reached the drop-off point but could not deliver. Choose an option before the deadline; otherwise the horses go to a temporary stable.",
+    "reason": "Reason",
+    "recordedAt": "Recorded at",
+    "waitingFee": "Waiting fee",
+    "waitingFeeValue": "{{hours}} chargeable h · {{total}}",
+    "dueAt": "Choose by {{time}}",
+    "option": {
+      "AlternateRecipient": {
+        "title": "Another recipient or a nearby address",
+        "description": "Name someone else to receive the horses; they can sign the handover right away.",
+        "cost": "You pay {{fee}} USD per extra km"
+      },
+      "HoldAtStable": {
+        "title": "Keep the horses at the nearest temporary stable",
+        "description": "You collect the horses from the stable yourself.",
+        "cost": "You pay {{fee}} USD per horse per day for stabling and care"
+      },
+      "ReturnToOrigin": {
+        "title": "Bring the horses back to the origin",
+        "description": "The crew takes the horses back to the original pick-up point.",
+        "cost": "You pay for the return leg, priced as a booking in the opposite direction"
+      }
+    },
+    "recipientName": "New recipient name",
+    "recipientPhone": "Phone number",
+    "newAddress": "New delivery address",
+    "required": "Required",
+    "phoneInvalid": "Invalid phone number",
+    "addressRequired": "Pick the new delivery address on the map",
+    "chooseOne": "Choose an option",
+    "defaultNote": "If you do not choose in time, the temporary stable applies ({{fee}} USD per horse per day). The freight is not refunded since the transport has been carried out.",
+    "submit": "Confirm choice",
+    "saved": "Your choice has been recorded",
+    "saveFailed": "Could not record your choice",
+    "decidedTitle": "Choice made for the undelivered horses",
+    "systemStable": "Temporary stable applied",
+    "choice": "Choice",
+    "decidedAt": "Chosen at",
+    "newRecipient": "New recipient",
+    "extraKm": "{{km}} extra km",
+    "cost": "Cost",
+    "stableCostLater": "{{fee}} USD per horse per day, calculated when the trip closes",
+    "paidAsExtra": "The waiting fee and the cost of the choice are added to the booking's extra charges when the trip closes; pay them in the Payments tab.",
+    "companyTitle": "Horses not delivered — company fault",
+    "companyCovers": "The company keeps the horses at a temporary stable at its own cost until this is resolved; you pay no waiting or stable fee.",
+    "claimOpened": "An insurance claim has been opened.",
+    "viewClaims": "View claims"
   }
 }

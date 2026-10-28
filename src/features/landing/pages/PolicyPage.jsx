@@ -1,14 +1,46 @@
-import { Anchor, Card, Col, Divider, Row, Space, Table, Tag, Typography } from 'antd';
+import { Alert, Anchor, Card, Col, Divider, Row, Space, Spin, Table, Tag, Typography } from 'antd';
 import {
   FileProtectOutlined,
   SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { usePolicy } from '@hooks/usePolicy';
+import dayjs from 'dayjs';
+import usePolicy from '@hooks/usePolicy';
 import LandingHeader from '../components/LandingHeader';
 import LandingFooter from '../components/LandingFooter';
 
 const { Title, Paragraph, Text } = Typography;
+
+/**
+ * Chuyển dữ liệu GET /api/policy (camelCase theo nhóm) sang các nhóm trang này dùng để hiển thị.
+ * @param {Object} raw - data của GET /api/policy
+ * @returns {Object}
+ */
+function toPolicyView(raw) {
+  const p = raw?.payment || {};
+  const d = raw?.delay || {};
+  const ins = raw?.insurance || {};
+  const del = raw?.delivery || {};
+  return {
+    Payment: {
+      DepositPercent: p.depositPercent,
+      CancelRefundPercent: p.cancelRefundPercent,
+      UsdVndRate: p.usdVndRate,
+      BalanceDueDaysBeforeDeparture: p.balanceDueDaysBeforeDeparture,
+      ExtraPaymentDueDays: p.extraPaymentDueDays,
+    },
+    Horse: { MinAgeMonths: raw?.horse?.minAgeMonths },
+    Delay: { GraceHours: d.graceHours, PercentPer12Hours: d.percentPer12Hours, MaxPercent: d.maxPercent },
+    Insurance: {
+      ProofThresholdUsd: ins.proofThresholdUsd,
+      PremiumPercent: ins.premiumPercent,
+      BaseLiabilityUsd: ins.baseLiabilityUsd,
+      BaseVetCapUsd: ins.baseVetCapUsd,
+      VetCapPercent: ins.vetCapPercent,
+    },
+    Delivery: { WaitingFeePerHourUsd: del.waitingFeePerHourUsd, MaxWaitingHours: del.maxWaitingHours },
+  };
+}
 
 /**
  * @file PolicyPage.jsx
@@ -18,7 +50,11 @@ const { Title, Paragraph, Text } = Typography;
  */
 export default function PolicyPage() {
   const { t } = useTranslation();
-  const { policy, policyVersion, effectiveDate } = usePolicy();
+  // Số liệu luôn lấy từ GET /api/policy (không có giá trị dự phòng viết cứng): lỗi thì báo, không hiện số sai
+  const { policy: rawPolicy, loading, error } = usePolicy();
+  const policy = toPolicyView(rawPolicy);
+  const policyVersion = rawPolicy?.version || '—';
+  const effectiveDate = rawPolicy?.updatedAt ? dayjs(rawPolicy.updatedAt).format('DD/MM/YYYY') : '—';
 
   // Định dạng số tiền
   const formatUsd = (num) => (num != null ? Number(num).toLocaleString('en-US') : '0');
@@ -168,6 +204,22 @@ export default function PolicyPage() {
       delayComp: <Tag color="default">{t('policy.incident.delayNo', 'Không')}</Tag>,
     },
   ];
+
+  if (loading || error || !rawPolicy) {
+    return (
+      <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', color: '#f8fafc' }}>
+        <LandingHeader activeKey="more" />
+        <div style={{ padding: '160px 24px', textAlign: 'center', maxWidth: 560, margin: '0 auto' }}>
+          {loading ? (
+            <Spin size="large" />
+          ) : (
+            <Alert type="error" showIcon title={t('policyAgreement.unavailable')} />
+          )}
+        </div>
+        <LandingFooter />
+      </div>
+    );
+  }
 
   return (
     <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', color: '#f8fafc' }}>

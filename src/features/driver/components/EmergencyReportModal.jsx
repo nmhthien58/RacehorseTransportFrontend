@@ -79,7 +79,7 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
     }
   };
 
-  const showEmergencyOffload = incidentType === 'HorseHealth' || Boolean(presetValues?.affectedTripHorseId);
+  const showEmergencyOffload = incidentType === 'EquineHealthIssue' || Boolean(presetValues?.affectedTripHorseId);
 
   return (
     <Modal
@@ -97,7 +97,7 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
           locate();
           if (presetValues) {
             form.setFieldsValue({
-              incidentType: presetValues.incidentType || 'HorseHealth',
+              incidentType: presetValues.incidentType || 'EquineHealthIssue',
               severity: presetValues.severity || 'Moderate',
               affectedTripHorseId: presetValues.affectedTripHorseId,
               emergencyOffload: Boolean(presetValues.emergencyOffload),

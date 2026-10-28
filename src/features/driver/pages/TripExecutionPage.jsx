@@ -24,13 +24,9 @@ import {
   LogoutOutlined,
   HeartOutlined,
   SafetyCertificateOutlined,
-<<<<<<< HEAD
   FileDoneOutlined,
+  PhoneOutlined,
   AlertOutlined,
-=======
-  FileDoneOutlined, PhoneOutlined,
-  ExportOutlined,
->>>>>>> main
 } from '@ant-design/icons';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -692,7 +688,7 @@ export default function TripExecutionPage() {
                       icon={<AlertOutlined />}
                       onClick={() => {
                         setSosPreset({
-                          incidentType: 'HorseHealth',
+                          incidentType: 'EquineHealthIssue',
                           affectedTripHorseId: h.tripHorseId,
                           severity: 'Moderate',
                           emergencyOffload: true,

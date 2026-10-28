@@ -55,7 +55,6 @@ import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import { formatDeliveryDeadline, formatPickupWindow, toLocalDateTimeString } from '@utils/bookingSchedule';
 import { formatCountryRoute } from '@utils/bookingRoute';
 import { checkHorseTransportEligibility } from '@utils/horseHealth';
-import { usePolicy } from '@hooks/usePolicy';
 import { ROUTES } from '@routes/routes';
 
 const formatUsdPlain = (v) => Number(v).toLocaleString('en-US', { maximumFractionDigits: 0 });
@@ -112,13 +111,7 @@ export default function BookingWizard({
   const [selectedHorseIds, setSelectedHorseIds] = useState([]);
   const [stallClasses, setStallClasses] = useState({});
   const [horseNotes, setHorseNotes] = useState({});
-<<<<<<< HEAD
   const [horseConditionErrors, setHorseConditionErrors] = useState({});
-
-  // Lấy chính sách dịch vụ động (tuổi tối thiểu, quy chuẩn thai sản)
-  const { policy } = usePolicy();
-  const minAgeMonths = policy?.Horse?.MinAgeMonths ?? 6;
-=======
   // R-12 / R-13: giá trị khai báo, chứng từ, gói bảo hiểm của từng con
   const [horseValues, setHorseValues] = useState({});
   const [uploadingHorseId, setUploadingHorseId] = useState(null);
@@ -141,7 +134,8 @@ export default function BookingWizard({
     toPlace(initialValues?.dropoffAddress, initialValues?.dropoffLat, initialValues?.dropoffLng, initialValues?.dropoffCountryCode));
   const [route, setRoute] = useState(null);
   const [routeLoading, setRouteLoading] = useState(false);
->>>>>>> main
+  // R-12: tuổi tối thiểu lấy từ chính sách (GET /api/policy)
+  const minAgeMonths = Number(policy?.horse?.minAgeMonths ?? 6);
 
   const {
     control,
@@ -614,7 +608,6 @@ export default function BookingWizard({
         message.warning('Vui lòng chọn ít nhất 1 cá thể ngựa đủ điều kiện.');
         return;
       }
-<<<<<<< HEAD
       const targetPickupDate = pickupWindowEnd || pickupWindowStart || null;
       const conditionErrors = {};
       let hasError = false;
@@ -638,11 +631,11 @@ export default function BookingWizard({
       if (hasError) {
         setHorseConditionErrors((prev) => ({ ...prev, ...conditionErrors }));
         message.error('Có cá thể ngựa chưa đạt điều kiện vận chuyển theo chính sách. Vui lòng kiểm tra lại!');
-=======
+        return;
+      }
       const valueProblem = validateHorseValues();
       if (valueProblem) {
         message.warning(valueProblem);
->>>>>>> main
         return;
       }
     }
@@ -675,7 +668,6 @@ export default function BookingWizard({
         message.warning('Vui lòng chọn ít nhất 1 cá thể ngựa để tiếp tục.');
         return;
       }
-<<<<<<< HEAD
       const targetPickupDate = pickupWindowEnd || pickupWindowStart || null;
       const conditionErrors = {};
       let hasError = false;
@@ -699,11 +691,11 @@ export default function BookingWizard({
       if (hasError) {
         setHorseConditionErrors((prev) => ({ ...prev, ...conditionErrors }));
         message.error('Có cá thể ngựa chưa đạt điều kiện vận chuyển theo chính sách. Vui lòng kiểm tra lại!');
-=======
+        return;
+      }
       const valueProblem = validateHorseValues();
       if (valueProblem) {
         message.warning(valueProblem);
->>>>>>> main
         return;
       }
     }

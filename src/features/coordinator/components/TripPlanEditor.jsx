@@ -34,7 +34,7 @@ import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedule';
 import tripService from '@services/tripService';
-import bookingService from '@services/bookingService';
+import routePlanService from '@services/routePlanService';
 import StatusTag from '@components/common/StatusTag';
 import RouteSuggestionPanel from '@features/coordinator/components/RouteSuggestionPanel';
 import StallMap from '@features/coordinator/components/StallMap';
@@ -83,6 +83,28 @@ function buildDefaultCheckpoints(horses, period) {
       mandatoryRestMinutes: 0,
     },
   ];
+}
+
+/**
+ * Chuyển tuyến đã duyệt (routePlan của BE-04) sang dạng màn lập chuyến dùng để hiện / chép mốc (FE-07).
+ * @param {Object} plan - routePlan: stops[] gồm name, stopType, address, countryCode, restMinutes
+ * @returns {Object}
+ */
+function toApprovedRoute(plan) {
+  return {
+    bookingId: plan.bookingId,
+    bookingCode: plan.bookingCode,
+    totalDistanceKm: plan.totalDistanceKm,
+    estimatedHours: plan.estimatedHours,
+    transitCountryCodes: plan.transitCountryCodes || [],
+    checkpoints: (plan.stops || []).map((stop) => ({
+      checkpointName: stop.name,
+      checkpointType: stop.stopType,
+      address: stop.address,
+      countryCode: stop.countryCode,
+      mandatoryRestMinutes: stop.restMinutes || 0,
+    })),
+  };
 }
 
 /**
@@ -245,8 +267,10 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
         const results = await Promise.all(
           selectedBookings.map(async (b) => {
             try {
-              const res = await bookingService.getRoutePlan(b.bookingId);
-              return { bookingId: b.bookingId, plan: unwrapData(res) };
+              // Tuyến đã duyệt của đơn (BE-04): GET /bookings/{id}/route-plans, lấy bản Approved
+              const res = await routePlanService.getForBooking(b.bookingId);
+              const approved = unwrapList(res).find((p) => p.status === 'Approved');
+              return { bookingId: b.bookingId, plan: approved ? toApprovedRoute(approved) : null };
             } catch {
               return { bookingId: b.bookingId, plan: null };
             }

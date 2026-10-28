@@ -62,6 +62,8 @@ export const ENDPOINTS = {
   // Chính sách dịch vụ công khai (BE-17): phiên bản + các giá trị cấu hình
   POLICY: {
     PUBLIC: '/policy',
+    // Màn quản trị (FE-16): xem / sửa đủ 21 khóa chính sách
+    SETTINGS: '/settings/policy',
   },
 
   // Tải file lên storage (chứng từ giá trị ngựa, biên bản...): trả về path để gửi kèm request khác
@@ -89,7 +91,6 @@ export const ENDPOINTS = {
     // Bí danh tương thích ngược
     ASSIGN: (id) => `/bookings/${id}/reassign-specialist`,
     CALCULATE_QUOTE: (id) => (id ? `/bookings/${id}/calculate-quote` : '/bookings/quote-preview'),
-    ROUTE_PLAN: (id) => `/bookings/${id}/route-plan`,
   },
 
   // 5. Hồ sơ kiểm dịch & giấy tờ (Dossiers - Flow 2)
@@ -271,11 +272,6 @@ export const ENDPOINTS = {
     MARK_ALL_READ: '/notifications/read-all',
     // SignalR hub nằm ngoài /api: https://<backend>/hubs/notifications
     HUB: '/hubs/notifications',
-  },
-
-  // 14. Chính sách dịch vụ (Policy - FE-15 / BE-17)
-  POLICY: {
-    GET: '/policy',
   },
 };
 

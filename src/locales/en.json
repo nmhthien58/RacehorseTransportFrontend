@@ -1317,6 +1317,7 @@
       "startSuccess": "Trip departed successfully.",
       "horseStatus": "Horse Status",
       "departureCheck": {
+        "unavailable": "The automatic check (document expiry, 48-hour fitness exam, payment) is not available yet. The server still re-checks these conditions when you start the trip.",
         "blockingTitle": "{{count}} blocking issues must be resolved before departure",
         "blockingHint": "According to international equine transport safety and legal regulations, all issues below must be resolved before departure:",
         "warningTitle": "Pre-departure warnings ({{count}})",
@@ -1643,16 +1644,13 @@
       "suggestNeedInput": "Choose horses and a departure time first",
       "suggestFailed": "Could not suggest a route",
       "suggested": "Route replaced with the suggestion",
-<<<<<<< HEAD
       "needTwoDrivers": "Estimated driving time is {{hours}} hours (> 9 hours). At least 2 rotating drivers are required to submit under R-14 safety rules.",
-      "routeCopied": "Copied checkpoints from approved route of booking {{code}} into trip plan!"
-=======
+      "routeCopied": "Copied checkpoints from approved route of booking {{code}} into trip plan!",
       "stopNameRequired": "Please enter stop or checkpoint name",
       "previewLoaded": "Route preview calculated",
       "previewFailed": "Failed to calculate route preview",
       "submittedSuccess": "Route plan submitted for Manager review",
       "submitFailed": "Failed to submit route plan"
->>>>>>> main
     },
     "suggestion": {
       "title": "Route suggestion",
@@ -1683,7 +1681,6 @@
       "emptySlot": "Empty stall",
       "hint": "Click a stall with a horse, then another stall, to swap them. Each escort looks after at most 3 horses; stalls left without an escort are auto-assigned on save (stalls 1-3 to the first escort, lead escort first)."
     },
-<<<<<<< HEAD
     "approvedRoute": {
       "title": "Approved Route Plan for Booking",
       "loading": "Loading approved route...",
@@ -1694,7 +1691,7 @@
     },
     "errors": {
       "unapprovedCountryTitle": "Route Error: Journey travels through unapproved transit country"
-=======
+    },
     "routePlanningEmpty": "No bookings waiting for route planning",
     "drawer": {
       "title": "Plan Route for Booking",
@@ -1711,7 +1708,6 @@
     "stopTypes": {
       "restStop": "Rest Stop",
       "borderGate": "Border Gate"
->>>>>>> main
     }
   },
   "routeApproval": {
@@ -2488,111 +2484,6 @@
     "ariaLabel": "Notifications",
     "newToast": "New notification"
   },
-<<<<<<< HEAD
-  "policy": {
-    "agreement": {
-      "prefix": "I have read and agreed to the",
-      "policyLinkText": "Service Policy",
-      "versionLabel": "version",
-      "checkboxAria": "Agree to the service policy"
-    },
-    "header": {
-      "tag": "OFFICIAL",
-      "version": "Version",
-      "effectiveDate": "Effective Date",
-      "title": "Equine Transport Service Policy",
-      "subtitle": "Detailed guidelines covering scope of liability, booking workflow, pricing, delay compensation, and customer welfare rights across International Equine Transport services."
-    },
-    "nav": {
-      "contentsTitle": "TABLE OF CONTENTS"
-    },
-    "sections": {
-      "sec1": "Scope of Application",
-      "sec2": "Booking Workflow & Quoting",
-      "sec3": "Payment Terms",
-      "sec4": "Cancellation & Refunds",
-      "sec5": "Equine Eligibility Conditions",
-      "sec6": "Documentation & Clearance",
-      "sec7": "Schedule Commitment & Delay Compensation",
-      "sec8": "Insurance & Liability Limits",
-      "sec9": "In-Transit Incidents",
-      "sec10": "Delivery & Handover",
-      "sec11": "Complaints & Claims",
-      "sec12": "Transport Contract",
-      "sec13": "Policy Amendments"
-    },
-    "table": {
-      "item": "Payment Item",
-      "amount": "Amount",
-      "deadline": "Due Time",
-      "cancelTime": "Cancellation Timing",
-      "refund": "Refund Rule",
-      "criteria": "Coverage Aspect",
-      "optDefault": "No Insurance (Standard)",
-      "optFull": "Full Value Insurance (Optional)",
-      "incidentCause": "Root Cause",
-      "incidentExample": "Examples",
-      "unusedFare": "Unused Transport Fare",
-      "extraCosts": "Extra Expenses (Stabling, Vet, Rerouting)",
-      "delayCompensation": "Delay Penalty"
-    },
-    "payment": {
-      "deposit": "Security Deposit",
-      "quoteBase": "final quote",
-      "quoteAcceptHint": "Upon accepting quote, within",
-      "balance": "Remaining Balance",
-      "balanceCalc": "Final quote − Deposit",
-      "balanceDueHint": "Prior to departure",
-      "extra": "Extra Expenses",
-      "extraDesc": "As per Sections 9 & 10 (if any)",
-      "extraDueHint": "Within",
-      "extraAfterTrip": "days after trip completion"
-    },
-    "cancel": {
-      "beforeDeposit": "Prior to paying deposit",
-      "noRefundNeeded": "No payment made; zero charge",
-      "afterDepositBeforeDeparture": "After deposit, before departure",
-      "refundDepositPrefix": "Refund",
-      "refundDepositSuffix": "deposit + 100% of remaining balance paid",
-      "afterDeparture": "After vehicle departure",
-      "cannotCancelSelf": "Self-cancellation not permitted. Handled via Section 9"
-    },
-    "insurance": {
-      "premium": "Insurance Premium",
-      "free": "None",
-      "agreedValue": "agreed insured value",
-      "whenCovered": "Coverage Trigger",
-      "companyFaultOnly": "Company fault only",
-      "allCausesCovered": "All eligible causes, including Force Majeure",
-      "lossEuthanasia": "Horse death / humane euthanasia / loss",
-      "capUpTo": "Up to",
-      "injuredHorse": "Injured horse veterinary treatment",
-      "actualVetCost": "Actual vet costs, up to"
-    },
-    "incident": {
-      "companyFault": "Company Fault",
-      "companyFaultEx": "Mechanical breakdown, agent doc errors, incorrect routing",
-      "refund100": "100% Refund",
-      "companyBears": "Borne by Company",
-      "delayYes": "Eligible (Sec 7)",
-      "customerFault": "Customer Fault",
-      "customerFaultEx": "Fraudulent/missing docs, inaccurate horse status, recipient missing",
-      "noRefund": "Non-refundable",
-      "customerBears": "Borne by Customer",
-      "delayNo": "Ineligible",
-      "forceMajeure": "Force Majeure",
-      "forceMajeureEx": "Border closure, quarantine restrictions, natural disaster, 3rd party accident",
-      "proRataRefund": "Pro-rata refund for remaining distance less non-refundable filing fees",
-      "forceMajeureExtra": "Company covers vehicle & crew; Customer covers emergency stabling & vet"
-    },
-    "units": {
-      "days": "days",
-      "hours": "hours",
-      "hour": "hour",
-      "months": "months of age",
-      "horse": "horse"
-    }
-=======
   "map": {
     "searchPlaceholder": "Search an address (e.g. Ba Vi, Hanoi)",
     "pickHint": "Type an address and pick a suggestion, or click the map / drag the pin to adjust.",
@@ -2938,6 +2829,109 @@
     "companyCovers": "The company keeps the horses at a temporary stable at its own cost until this is resolved; you pay no waiting or stable fee.",
     "claimOpened": "An insurance claim has been opened.",
     "viewClaims": "View claims"
->>>>>>> main
+  },
+  "policy": {
+    "agreement": {
+      "prefix": "I have read and agreed to the",
+      "policyLinkText": "Service Policy",
+      "versionLabel": "version",
+      "checkboxAria": "Agree to the service policy"
+    },
+    "header": {
+      "tag": "OFFICIAL",
+      "version": "Version",
+      "effectiveDate": "Effective Date",
+      "title": "Equine Transport Service Policy",
+      "subtitle": "Detailed guidelines covering scope of liability, booking workflow, pricing, delay compensation, and customer welfare rights across International Equine Transport services."
+    },
+    "nav": {
+      "contentsTitle": "TABLE OF CONTENTS"
+    },
+    "sections": {
+      "sec1": "Scope of Application",
+      "sec2": "Booking Workflow & Quoting",
+      "sec3": "Payment Terms",
+      "sec4": "Cancellation & Refunds",
+      "sec5": "Equine Eligibility Conditions",
+      "sec6": "Documentation & Clearance",
+      "sec7": "Schedule Commitment & Delay Compensation",
+      "sec8": "Insurance & Liability Limits",
+      "sec9": "In-Transit Incidents",
+      "sec10": "Delivery & Handover",
+      "sec11": "Complaints & Claims",
+      "sec12": "Transport Contract",
+      "sec13": "Policy Amendments"
+    },
+    "table": {
+      "item": "Payment Item",
+      "amount": "Amount",
+      "deadline": "Due Time",
+      "cancelTime": "Cancellation Timing",
+      "refund": "Refund Rule",
+      "criteria": "Coverage Aspect",
+      "optDefault": "No Insurance (Standard)",
+      "optFull": "Full Value Insurance (Optional)",
+      "incidentCause": "Root Cause",
+      "incidentExample": "Examples",
+      "unusedFare": "Unused Transport Fare",
+      "extraCosts": "Extra Expenses (Stabling, Vet, Rerouting)",
+      "delayCompensation": "Delay Penalty"
+    },
+    "payment": {
+      "deposit": "Security Deposit",
+      "quoteBase": "final quote",
+      "quoteAcceptHint": "Upon accepting quote, within",
+      "balance": "Remaining Balance",
+      "balanceCalc": "Final quote − Deposit",
+      "balanceDueHint": "Prior to departure",
+      "extra": "Extra Expenses",
+      "extraDesc": "As per Sections 9 & 10 (if any)",
+      "extraDueHint": "Within",
+      "extraAfterTrip": "days after trip completion"
+    },
+    "cancel": {
+      "beforeDeposit": "Prior to paying deposit",
+      "noRefundNeeded": "No payment made; zero charge",
+      "afterDepositBeforeDeparture": "After deposit, before departure",
+      "refundDepositPrefix": "Refund",
+      "refundDepositSuffix": "deposit + 100% of remaining balance paid",
+      "afterDeparture": "After vehicle departure",
+      "cannotCancelSelf": "Self-cancellation not permitted. Handled via Section 9"
+    },
+    "insurance": {
+      "premium": "Insurance Premium",
+      "free": "None",
+      "agreedValue": "agreed insured value",
+      "whenCovered": "Coverage Trigger",
+      "companyFaultOnly": "Company fault only",
+      "allCausesCovered": "All eligible causes, including Force Majeure",
+      "lossEuthanasia": "Horse death / humane euthanasia / loss",
+      "capUpTo": "Up to",
+      "injuredHorse": "Injured horse veterinary treatment",
+      "actualVetCost": "Actual vet costs, up to"
+    },
+    "incident": {
+      "companyFault": "Company Fault",
+      "companyFaultEx": "Mechanical breakdown, agent doc errors, incorrect routing",
+      "refund100": "100% Refund",
+      "companyBears": "Borne by Company",
+      "delayYes": "Eligible (Sec 7)",
+      "customerFault": "Customer Fault",
+      "customerFaultEx": "Fraudulent/missing docs, inaccurate horse status, recipient missing",
+      "noRefund": "Non-refundable",
+      "customerBears": "Borne by Customer",
+      "delayNo": "Ineligible",
+      "forceMajeure": "Force Majeure",
+      "forceMajeureEx": "Border closure, quarantine restrictions, natural disaster, 3rd party accident",
+      "proRataRefund": "Pro-rata refund for remaining distance less non-refundable filing fees",
+      "forceMajeureExtra": "Company covers vehicle & crew; Customer covers emergency stabling & vet"
+    },
+    "units": {
+      "days": "days",
+      "hours": "hours",
+      "hour": "hour",
+      "months": "months of age",
+      "horse": "horse"
+    }
   }
 }

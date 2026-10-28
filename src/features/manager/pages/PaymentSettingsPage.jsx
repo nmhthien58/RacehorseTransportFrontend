@@ -23,10 +23,14 @@ import {
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import PageHeader from '@components/layout/PageHeader';
-import paymentService, { DEFAULT_SYSTEM_SETTINGS } from '@services/paymentService';
+import paymentService from '@services/paymentService';
+import policyService from '@services/policyService';
 import { unwrapData, getErrorMessage } from '@utils/apiHelpers';
 
 const { Text } = Typography;
+// Khóa của cấu hình thanh toán (PUT /settings/payment); các khóa còn lại thuộc PUT /settings/policy (BE-17)
+const PAYMENT_KEYS = ['depositPercent', 'cancelRefundPercent', 'usdVndRate', 'balanceDueDaysBeforeDeparture', 'extraPaymentDueDays'];
+const pick = (obj, keys) => Object.fromEntries(keys.filter((k) => obj[k] !== undefined).map((k) => [k, obj[k]]));
 
 /**
  * @file PaymentSettingsPage.jsx
@@ -40,89 +44,48 @@ export default function PaymentSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Đang sửa PaymentSettingsPage vì lưu nhóm chính sách qua API riêng /settings/policy và bỏ dữ liệu giả khi lỗi
+  // Giữ đủ 21 trường của cấu hình chính sách (kể cả trường màn này không hiện) để PUT gửi lại nguyên vẹn
+  const [policySettings, setPolicySettings] = useState(null);
+  const [loadError, setLoadError] = useState(null);
+
   useEffect(() => {
-    paymentService
-      .getSettings()
-      .then((res) => {
-        const data = unwrapData(res) || DEFAULT_SYSTEM_SETTINGS;
-        setSettings(data);
-        form.setFieldsValue(data);
+    Promise.all([paymentService.getSettings(), policyService.getPolicySettings()])
+      .then(([payRes, policyRes]) => {
+        const payment = unwrapData(payRes) || {};
+        const policy = unwrapData(policyRes) || {};
+        setPolicySettings(policy);
+        setSettings({ updatedAt: policy.updatedAt || payment.updatedAt, updatedByName: policy.updatedByName || payment.updatedByName });
+        form.setFieldsValue({ ...pick(payment, PAYMENT_KEYS), ...policy });
       })
-      .catch((err) => {
-        message.error(getErrorMessage(err, t('payments.loadFailed', 'Không thể tải cấu hình hệ thống')));
-        form.setFieldsValue(DEFAULT_SYSTEM_SETTINGS);
-      })
+      .catch((err) => setLoadError(getErrorMessage(err, t('payments.loadFailed', 'Không thể tải cấu hình hệ thống'))))
       .finally(() => setLoading(false));
   }, [form, t]);
 
   const handleSave = async () => {
+    let values;
     try {
-      const values = await form.validateFields();
-      setSaving(true);
-      const res = await paymentService.updateSettings(values);
-      const data = unwrapData(res) || values;
-      const updatedData = { ...data, updatedAt: new Date().toISOString() };
-      setSettings(updatedData);
-      form.setFieldsValue(updatedData);
-
-      // Cập nhật sessionStorage để usePolicy() nhận giá trị mới ngay lập tức
-      try {
-        const cachedPolicy = sessionStorage.getItem('rht_system_policy_config');
-        if (cachedPolicy) {
-          const parsed = JSON.parse(cachedPolicy);
-          const newPolicy = {
-            ...parsed,
-            PolicyVersion: values.policyVersion || parsed.PolicyVersion,
-            EffectiveDate: values.effectiveDate || parsed.EffectiveDate,
-            Payment: {
-              ...parsed.Payment,
-              DepositPercent: values.depositPercent ?? parsed.Payment?.DepositPercent,
-              CancelRefundPercent: values.cancelRefundPercent ?? parsed.Payment?.CancelRefundPercent,
-              UsdVndRate: values.usdVndRate ?? parsed.Payment?.UsdVndRate,
-              BalanceDueDaysBeforeDeparture: values.balanceDueDaysBeforeDeparture ?? parsed.Payment?.BalanceDueDaysBeforeDeparture,
-              ExtraPaymentDueDays: values.extraPaymentDueDays ?? parsed.Payment?.ExtraPaymentDueDays,
-            },
-            Booking: {
-              ...parsed.Booking,
-              QuoteAcceptDays: values.bookingQuoteAcceptDays ?? parsed.Booking?.QuoteAcceptDays,
-            },
-            Delay: {
-              ...parsed.Delay,
-              GraceHours: values.delayGraceHours ?? parsed.Delay?.GraceHours,
-              PercentPer12Hours: values.delayPercentPer12Hours ?? parsed.Delay?.PercentPer12Hours,
-              MaxPercent: values.delayMaxPercent ?? parsed.Delay?.MaxPercent,
-            },
-            Insurance: {
-              ...parsed.Insurance,
-              ProofThresholdUsd: values.insuranceProofThresholdUsd ?? parsed.Insurance?.ProofThresholdUsd,
-              PremiumPercent: values.insurancePremiumPercent ?? parsed.Insurance?.PremiumPercent,
-              BaseLiabilityUsd: values.insuranceBaseLiabilityUsd ?? parsed.Insurance?.BaseLiabilityUsd,
-              BaseVetCapUsd: values.insuranceBaseVetCapUsd ?? parsed.Insurance?.BaseVetCapUsd,
-              VetCapPercent: values.insuranceVetCapPercent ?? parsed.Insurance?.VetCapPercent,
-            },
-            Horse: {
-              ...parsed.Horse,
-              MinAgeMonths: values.horseMinAgeMonths ?? parsed.Horse?.MinAgeMonths,
-            },
-            Delivery: {
-              ...parsed.Delivery,
-              WaitingFeePerHourUsd: values.deliveryWaitingFeePerHourUsd ?? parsed.Delivery?.WaitingFeePerHourUsd,
-              MaxWaitingHours: values.deliveryMaxWaitingHours ?? parsed.Delivery?.MaxWaitingHours,
-            },
-          };
-          sessionStorage.setItem('rht_system_policy_config', JSON.stringify(newPolicy));
-        }
-      } catch {
-        // Bỏ qua lỗi cập nhật cache
-      }
-
+      values = await form.validateFields();
+    } catch {
+      message.warning(t('payments.settings.validationWarning', 'Vui lòng kiểm tra lại các ô nhập liệu bị lỗi'));
+      return;
+    }
+    setSaving(true);
+    try {
+      const policyPayload = { ...policySettings, ...values };
+      PAYMENT_KEYS.forEach((k) => delete policyPayload[k]);
+      delete policyPayload.updatedAt;
+      delete policyPayload.updatedByName;
+      const [, policyRes] = await Promise.all([
+        paymentService.updateSettings(pick(values, PAYMENT_KEYS)),
+        policyService.updatePolicySettings(policyPayload),
+      ]);
+      const saved = unwrapData(policyRes) || policyPayload;
+      setPolicySettings(saved);
+      setSettings({ updatedAt: saved.updatedAt, updatedByName: saved.updatedByName });
       message.success(t('payments.settings.saved', 'Đã lưu cấu hình hệ thống thành công'));
     } catch (err) {
-      if (err?.errorFields) {
-        message.warning(t('payments.settings.validationWarning', 'Vui lòng kiểm tra lại các ô nhập liệu bị lỗi'));
-      } else {
-        message.error(getErrorMessage(err, t('payments.settings.saveFailed', 'Lưu cấu hình thất bại')));
-      }
+      message.error(getErrorMessage(err, t('payments.settings.saveFailed', 'Lưu cấu hình thất bại')));
     } finally {
       setSaving(false);
     }
@@ -208,7 +171,7 @@ export default function PaymentSettingsPage() {
     <Row gutter={[24, 0]}>
       <Col xs={24} md={12}>
         <Form.Item
-          name="bookingQuoteAcceptDays"
+          name="quoteAcceptDays"
           label={t('payments.settings.fields.bookingQuoteAcceptDays', 'Hạn chấp nhận báo giá (Booking.QuoteAcceptDays)')}
           extra={t('payments.settings.help.bookingQuoteAcceptDays', 'Số ngày khách có để xem hợp đồng và thanh toán tiền cọc trước khi báo giá hết hạn')}
           rules={[
@@ -395,16 +358,6 @@ export default function PaymentSettingsPage() {
         </Form.Item>
       </Col>
 
-      <Col xs={24} md={12}>
-        <Form.Item
-          name="effectiveDate"
-          label={t('payments.settings.fields.effectiveDate', 'Ngày ban hành chính sách')}
-          extra={t('payments.settings.help.effectiveDate', 'Ngày áp dụng phiên bản chính sách này')}
-          rules={[{ required: true, message: t('payments.settings.required', 'Bắt buộc nhập') }]}
-        >
-          <Input placeholder="ví dụ 26/10/2026" />
-        </Form.Item>
-      </Col>
     </Row>
   );
 
@@ -458,6 +411,8 @@ export default function PaymentSettingsPage() {
           <div style={{ textAlign: 'center', padding: 48 }}>
             <Spin size="large" />
           </div>
+        ) : loadError ? (
+          <Alert type="error" showIcon title={loadError} />
         ) : (
           <>
             <Alert

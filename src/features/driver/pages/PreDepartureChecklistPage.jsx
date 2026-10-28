@@ -65,6 +65,8 @@ export default function PreDepartureChecklistPage() {
   const [startConfirmOpen, setStartConfirmOpen] = useState(false);
   const [departureCheck, setDepartureCheck] = useState(null);
   const [checkLoading, setCheckLoading] = useState(false);
+  // Backend chưa có / lỗi kiểm tra trước khi xuất phát (BE-10): báo rõ, không tự tính thay
+  const [checkUnavailable, setCheckUnavailable] = useState(false);
 
   const loadDepartureCheck = useCallback(async () => {
     if (!tripId) return;
@@ -73,8 +75,10 @@ export default function PreDepartureChecklistPage() {
       const res = await tripService.getDepartureCheck(tripId);
       const data = res?.data || res;
       setDepartureCheck(data);
+      setCheckUnavailable(false);
     } catch {
-      // Dự phòng khi endpoint lỗi, không làm hỏng toàn bộ màn hình
+      setDepartureCheck(null);
+      setCheckUnavailable(true);
     } finally {
       setCheckLoading(false);
     }
@@ -91,7 +95,7 @@ export default function PreDepartureChecklistPage() {
           setDepartureCheck(data);
         }
       } catch {
-        // Dự phòng
+        if (!ignore) setCheckUnavailable(true);
       }
     };
     initCheck();
@@ -361,6 +365,15 @@ export default function PreDepartureChecklistPage() {
                   count: blockers.length + blockingIssues.length,
                 })
           }
+          style={{ marginBottom: 20 }}
+        />
+      )}
+
+      {!isAlreadyInTransit && checkUnavailable && (
+        <Alert
+          type="info"
+          showIcon
+          title={t('driver.checklist.departureCheck.unavailable')}
           style={{ marginBottom: 20 }}
         />
       )}

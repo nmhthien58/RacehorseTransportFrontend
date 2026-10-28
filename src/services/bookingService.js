@@ -117,72 +117,6 @@ export const bookingService = {
   },
 
   /**
-<<<<<<< HEAD
-   * Lấy tuyến đường đã duyệt của đơn (BE-07 / FE-07)
-   * @param {number|string} id - Mã định danh BookingID
-   * @returns {Promise<any>}
-   */
-  async getRoutePlan(id) {
-    try {
-      return await api.get(ENDPOINTS.BOOKINGS.ROUTE_PLAN(id));
-    } catch {
-      // TODO(BE-07): Dự phòng khi backend chưa hoàn thành endpoint /bookings/{id}/route-plan
-      const bookingRes = await this.getBookingById(id);
-      const booking = bookingRes?.data || bookingRes;
-      const transit = booking?.transitCountryCodes || [];
-      const checkpoints = [];
-
-      checkpoints.push({
-        sequenceOrder: 1,
-        checkpointType: 'PickUp',
-        checkpointName: (booking?.pickupAddress || 'Điểm đón').split(',')[0],
-        address: booking?.pickupAddress || 'Trang trại xuất phát',
-        countryCode: booking?.pickupCountryCode || 'VN',
-        mandatoryRestMinutes: 0,
-      });
-
-      transit.forEach((country) => {
-        checkpoints.push({
-          sequenceOrder: checkpoints.length + 1,
-          checkpointType: 'BorderGate',
-          checkpointName: `Cửa khẩu ${country}`,
-          address: `Trạm kiểm duyệt thú y biên giới ${country}`,
-          countryCode: country,
-          mandatoryRestMinutes: 45,
-        });
-        checkpoints.push({
-          sequenceOrder: checkpoints.length + 1,
-          checkpointType: 'RestStop',
-          checkpointName: `Trạm dừng nghỉ ${country}`,
-          address: `Điểm dừng nghỉ an toàn ${country}`,
-          countryCode: country,
-          mandatoryRestMinutes: 60,
-        });
-      });
-
-      checkpoints.push({
-        sequenceOrder: checkpoints.length + 1,
-        checkpointType: 'DropOff',
-        checkpointName: (booking?.dropoffAddress || 'Điểm giao').split(',')[0],
-        address: booking?.dropoffAddress || 'Trang trại đích đến',
-        countryCode: booking?.dropoffCountryCode || 'TH',
-        mandatoryRestMinutes: 0,
-      });
-
-      return {
-        data: {
-          bookingId: Number(id),
-          bookingCode: booking?.bookingCode || `BK-${id}`,
-          status: 'Approved',
-          transportMode: booking?.transportMode || 'Ground',
-          transitCountryCodes: transit,
-          totalDistanceKm: booking?.distanceKm || 850,
-          estimatedHours: booking?.estimatedHours || 14,
-          checkpoints,
-        },
-      };
-    }
-=======
    * Manager chốt giá trị thỏa thuận cho từng ngựa trong đơn (R-12, BE-09)
    * @param {number|string} id - BookingID
    * @param {{ horseValues: Array<{ horseId: number, agreedValue: number }> }} payload
@@ -219,7 +153,6 @@ export const bookingService = {
    */
   async declineQuote(id, payload) {
     return api.post(ENDPOINTS.BOOKINGS.DECLINE_QUOTE(id), payload);
->>>>>>> main
   },
 };
 

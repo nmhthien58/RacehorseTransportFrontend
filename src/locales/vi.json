@@ -2523,8 +2523,12 @@
     "pickPointsForRoute": "Chọn điểm đón và điểm giao để xem quãng đường và thời gian lái.",
     "driveTime": "Thời gian lái",
     "driveTimeValue": "{{hours}} giờ {{minutes}} phút",
+    "driveTimeHours": "{{hours}} giờ",
     "distance": "Quãng đường",
     "routeFailed": "Chưa tính được quãng đường; hệ thống sẽ tự tính khi gửi đơn.",
+    "transitTime": "Thời gian vận chuyển",
+    "transitBreakdown": "Gồm khoảng {{driving}} giờ lái (theo tốc độ trung bình của xe chở ngựa), {{rest}} giờ nghỉ dọc đường, {{border}} giờ làm thủ tục cửa khẩu và {{handling}} giờ bốc xếp ngựa.",
+    "transitDisclaimer": "Đây là thời gian ước tính để bạn tham khảo. Thời gian thực tế có thể thay đổi tùy tuyến đường công ty lập, tình hình giao thông, thời tiết và thủ tục tại cửa khẩu.",
     "values": {
       "declaredLabel": "Giá trị khai báo (USD, không bắt buộc)",
       "declaredPlaceholder": "Ví dụ: 40.000",

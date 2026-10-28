@@ -2524,8 +2524,12 @@
     "pickPointsForRoute": "Pick the pick-up and drop-off points to see the distance and drive time.",
     "driveTime": "Drive time",
     "driveTimeValue": "{{hours}}h {{minutes}}m",
+    "driveTimeHours": "{{hours}}h",
     "distance": "Distance",
     "routeFailed": "The distance could not be calculated yet; it will be calculated when you send the request.",
+    "transitTime": "Transit time",
+    "transitBreakdown": "About {{driving}} h of driving (at a horse truck's average speed), {{rest}} h of rest along the way, {{border}} h of border formalities and {{handling}} h of loading and unloading.",
+    "transitDisclaimer": "This is an estimate for your reference. The actual time may vary with the route the company plans, traffic, weather and border procedures.",
     "values": {
       "declaredLabel": "Declared value (USD, optional)",
       "declaredPlaceholder": "e.g. 40,000",

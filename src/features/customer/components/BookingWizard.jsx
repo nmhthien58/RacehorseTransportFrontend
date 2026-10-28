@@ -72,6 +72,10 @@ const ROUTE_STAT_STYLE = {
   fontSize: 13.5,
 };
 
+/** Số giờ một chữ số lẻ theo ngôn ngữ đang dùng (vi: 8,2 · en: 8.2) */
+const formatHoursNumber = (value, lang) =>
+  Number(value || 0).toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US', { maximumFractionDigits: 1 });
+
 /**
  * Thời gian lái dạng "41 giờ 47 phút" từ số giờ backend trả về.
  * @param {number|null|undefined} hours
@@ -80,7 +84,9 @@ const ROUTE_STAT_STYLE = {
  */
 function formatDriveTime(hours, t) {
   const totalMinutes = Math.round((Number(hours) || 0) * 60);
-  return t('bookingForm.driveTimeValue', { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60 });
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return m === 0 ? t('bookingForm.driveTimeHours', { hours: h }) : t('bookingForm.driveTimeValue', { hours: h, minutes: m });
 }
 import {
   TRANSPORT_MODES,
@@ -408,7 +414,8 @@ export default function BookingWizard({
   const [scheduleError, setScheduleError] = useState(null);
 
   useEffect(() => {
-    if (currentStep !== 1 || !dropoffCountry) return undefined;
+    // Bước 1 (đã có quãng đường) và bước 2 (chọn ngày) cùng dùng ước tính này
+    if (currentStep > 1 || !dropoffCountry) return undefined;
     if (transportMode === 'Ground' && !(Number(distanceKm) > 0)) return undefined;
     let cancelled = false;
 
@@ -1159,15 +1166,17 @@ export default function BookingWizard({
                     ) : route ? (
                       <Flex gap={8} justify="flex-end" wrap="wrap">
                         <div style={ROUTE_STAT_STYLE}>
-                          <ClockCircleOutlined style={{ color: '#b45309' }} />
-                          <span>
-                            {t('bookingForm.driveTime')}: <strong>{formatDriveTime(route.totalDurationHours, t)}</strong>
-                          </span>
-                        </div>
-                        <div style={ROUTE_STAT_STYLE}>
                           <CarOutlined style={{ color: '#b45309' }} />
                           <span>
                             {t('bookingForm.distance')}: <strong>{Math.ceil(Number(route.totalDistanceKm) || 0).toLocaleString()} km</strong>
+                          </span>
+                        </div>
+                        {/* Thời gian theo bộ ước tính xe chở ngựa của backend (cùng số dùng để kiểm tra hạn giao), không phải thời gian xe con của bản đồ */}
+                        <div style={ROUTE_STAT_STYLE}>
+                          <ClockCircleOutlined style={{ color: '#b45309' }} />
+                          <span>
+                            {t('bookingForm.transitTime')}:{' '}
+                            {schedule?.transit ? <strong>~{formatDriveTime(schedule.transit.totalHours, t)}</strong> : <Spin size="small" />}
                           </span>
                         </div>
                       </Flex>
@@ -1178,6 +1187,19 @@ export default function BookingWizard({
                     )}
                   </Col>
                 </Row>
+                {pickupPlace && dropoffPlace && route && schedule?.transit && (
+                  <div style={{ marginTop: 10, fontSize: 12.5, color: '#57534e', lineHeight: 1.6 }}>
+                    <div>
+                      {t('bookingForm.transitBreakdown', {
+                        driving: formatHoursNumber(schedule.transit.drivingHours, i18n.language),
+                        rest: formatHoursNumber(schedule.transit.restHours, i18n.language),
+                        border: formatHoursNumber(schedule.transit.borderHours, i18n.language),
+                        handling: formatHoursNumber(schedule.transit.handlingHours, i18n.language),
+                      })}
+                    </div>
+                    <div style={{ fontStyle: 'italic' }}>{t('bookingForm.transitDisclaimer')}</div>
+                  </div>
+                )}
                 {pickupPlace && dropoffPlace && (
                   <div style={{ marginTop: 12 }}>
                     <RouteMap

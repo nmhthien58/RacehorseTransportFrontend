@@ -34,6 +34,7 @@ import {
   DollarOutlined,
   PlusOutlined,
   CarOutlined,
+  ClockCircleOutlined,
   CheckCircleFilled,
   UploadOutlined,
 } from '@ant-design/icons';
@@ -58,6 +59,29 @@ import { checkHorseTransportEligibility } from '@utils/horseHealth';
 import { ROUTES } from '@routes/routes';
 
 const formatUsdPlain = (v) => Number(v).toLocaleString('en-US', { maximumFractionDigits: 0 });
+
+// Ô thông tin tuyến (thời gian lái / quãng đường) cạnh bản đồ ở bước 1
+const ROUTE_STAT_STYLE = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 6,
+  padding: '6px 12px',
+  borderRadius: 8,
+  background: '#fef3c7',
+  color: '#78350f',
+  fontSize: 13.5,
+};
+
+/**
+ * Thời gian lái dạng "41 giờ 47 phút" từ số giờ backend trả về.
+ * @param {number|null|undefined} hours
+ * @param {(key: string, opts?: Object) => string} t
+ * @returns {string}
+ */
+function formatDriveTime(hours, t) {
+  const totalMinutes = Math.round((Number(hours) || 0) * 60);
+  return t('bookingForm.driveTimeValue', { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60 });
+}
 import {
   TRANSPORT_MODES,
   SUPPORTED_COUNTRIES,
@@ -164,7 +188,8 @@ export default function BookingWizard({
           : 'Trang trại ngựa đích'),
       PickupAirportCode: initialValues?.pickupAirportCode || AIRPORTS_BY_COUNTRY[initialPickupCountry]?.[0]?.code || 'HAN',
       DropoffAirportCode: initialValues?.dropoffAirportCode || AIRPORTS_BY_COUNTRY[initialDropoffCountry]?.[0]?.code || 'NRT',
-      DistanceKm: initialValues?.distanceKm || 250,
+      // Chưa chọn đủ điểm đón / giao thì chưa có quãng đường (không gán số mặc định)
+      DistanceKm: initialValues?.distanceKm || null,
       // Khoảng ngày sẵn sàng đón [đầu, cuối] và hạn giao; điền mặc định khi đã biết ngày sớm nhất từ backend
       PickupWindow: null,
       DeliveryDeadline: null,
@@ -740,7 +765,8 @@ export default function BookingWizard({
       pickupWindowEnd: toLocalDateTimeString(values.PickupWindow?.[1]),
       deliveryDeadline: toLocalDateTimeString(values.DeliveryDeadline),
       transportMode: mode,
-      distanceKm: mode === 'Ground' ? Number(values.DistanceKm) : null,
+      // Không có quãng đường từ bản đồ thì để backend tự tính
+      distanceKm: mode === 'Ground' && Number(values.DistanceKm) > 0 ? Number(values.DistanceKm) : null,
       requiresClimateControl: Boolean(values.RequiresClimateControl),
       specialInstructions: instructions || null,
       ...coordinates,
@@ -1116,26 +1142,39 @@ export default function BookingWizard({
                     <Text type="secondary" style={{ display: 'block', fontSize: 13, lineHeight: 1.5 }}>
                       {t('bookingForm.routeHint')}
                     </Text>
-                    {route?.totalDurationHours != null && (
-                      <Text style={{ fontSize: 12.5, color: '#475569', marginTop: 4, display: 'block' }}>
-                        {t('map.hours', { value: Number(route.totalDurationHours).toFixed(1) })}
-                      </Text>
-                    )}
                   </Col>
-                  <Col xs={24} md={9} style={{ textAlign: 'right' }}>
-                    {routeLoading ? (
+                  <Col xs={24} md={9}>
+                    {/* Chỉ hiện số khi đã chọn đủ 2 điểm và backend tính xong tuyến đường bộ */}
+                    {!pickupPlace || !dropoffPlace ? (
+                      <Text type="secondary" style={{ display: 'block', textAlign: 'right', fontSize: 13 }}>
+                        {t('bookingForm.pickPointsForRoute')}
+                      </Text>
+                    ) : routeLoading ? (
                       <Flex align="center" justify="flex-end" gap={8}>
                         <Spin size="small" />
                         <Text type="secondary" style={{ fontSize: 13 }}>
                           {t('bookingForm.routeLoading')}
                         </Text>
                       </Flex>
-                    ) : (
-                      <div style={{ display: 'inline-block', textAlign: 'right' }}>
-                        <div style={{ fontSize: 32, fontWeight: 700, color: '#b45309', lineHeight: 1.1 }}>
-                          {distanceKm || 0} <span style={{ fontSize: 18, fontWeight: 500, color: '#78350f' }}>km</span>
+                    ) : route ? (
+                      <Flex gap={8} justify="flex-end" wrap="wrap">
+                        <div style={ROUTE_STAT_STYLE}>
+                          <ClockCircleOutlined style={{ color: '#b45309' }} />
+                          <span>
+                            {t('bookingForm.driveTime')}: <strong>{formatDriveTime(route.totalDurationHours, t)}</strong>
+                          </span>
                         </div>
-                      </div>
+                        <div style={ROUTE_STAT_STYLE}>
+                          <CarOutlined style={{ color: '#b45309' }} />
+                          <span>
+                            {t('bookingForm.distance')}: <strong>{Math.ceil(Number(route.totalDistanceKm) || 0).toLocaleString()} km</strong>
+                          </span>
+                        </div>
+                      </Flex>
+                    ) : (
+                      <Text type="secondary" style={{ display: 'block', textAlign: 'right', fontSize: 13 }}>
+                        {t('bookingForm.routeFailed')}
+                      </Text>
                     )}
                   </Col>
                 </Row>

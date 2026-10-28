@@ -2521,6 +2521,11 @@
     "pickBothPoints": "Please pick both the pickup and the drop-off point on the map.",
     "routeHint": "Actual road distance between the two points, from the map. The exact route (rest stops, border gates) is planned by the company after reviewing your request.",
     "routeLoading": "Calculating the distance...",
+    "pickPointsForRoute": "Pick the pick-up and drop-off points to see the distance and drive time.",
+    "driveTime": "Drive time",
+    "driveTimeValue": "{{hours}}h {{minutes}}m",
+    "distance": "Distance",
+    "routeFailed": "The distance could not be calculated yet; it will be calculated when you send the request.",
     "values": {
       "declaredLabel": "Declared value (USD, optional)",
       "declaredPlaceholder": "e.g. 40,000",

@@ -108,14 +108,14 @@ Thứ tự gợi ý: **Thắng** làm FE-15 → FE-16 → FE-08 → FE-07 → FE
 
 ## Việc của Thiên
 
-### [ ] FE-01 · Component bản đồ dùng chung (R-11) — làm đầu tiên
+### [x] FE-01 · Component bản đồ dùng chung (R-11) — làm đầu tiên
 - Cài `leaflet`, `react-leaflet`. Sửa icon marker mặc định của Leaflet khi build bằng Vite.
 - `src/components/common/map/MapPicker.jsx`: ô tìm địa chỉ có gợi ý (gọi `GET /api/geo/search`, chờ 400ms sau khi gõ), chọn gợi ý → ghim lên bản đồ; click lên bản đồ → ghim + gọi `/api/geo/reverse` để điền địa chỉ; kéo ghim để chỉnh. Trả về `{ address, lat, lng, countryCode }`.
 - `src/components/common/map/RouteMap.jsx`: nhận danh sách mốc (có tọa độ, loại, tên) + polyline; vẽ marker đánh số theo loại (đi / nghỉ / cửa khẩu / đón / trả / đích), đường đi, nhãn quãng đường từng chặng, tổng km; chế độ chỉ xem hoặc cho kéo đổi thứ tự / thêm mốc bằng click (dùng ở FE-03).
 - `geoService` gọi các endpoint `/api/geo/*` (BE-01). Thêm endpoint vào `endpoints.js`.
 - Dùng được trên điện thoại (bản đồ cao tối thiểu 280px, nút đủ lớn).
 
-### [ ] FE-02 · Làm lại form tạo đơn của khách (R-10, R-12, R-13, R-16)
+### [x] FE-02 · Làm lại form tạo đơn của khách (R-10, R-12, R-13, R-16)
 File chính: `src/features/customer/components/BookingWizard.jsx`.
 - Bước lộ trình: điểm đón, điểm trả chọn bằng `MapPicker` (FE-01); **bỏ** ô "Nước quá cảnh"; hiện quãng đường A→B từ bản đồ.
 - Thay "giá" bằng **khoảng giá ước tính** (`min – max`, USD + VND) + dòng giải thích "Giá chốt gửi sau khi công ty lập tuyến; chưa phải thanh toán".
@@ -130,7 +130,7 @@ File chính: `src/features/customer/components/BookingWizard.jsx`.
 - Hiện cảnh báo backend trả về (đổi nước mà thiếu mốc cửa khẩu) ngay tại đoạn đường liên quan; nút **Trình duyệt** khóa khi còn cảnh báo.
 - Tuyến bị Manager từ chối: hiện lý do, cho sửa và trình lại; xem được các phiên bản trước.
 
-### [ ] FE-05 · Khách xem báo giá chốt, chấp nhận, cọc (R-10)
+### [x] FE-05 · Khách xem báo giá chốt, chấp nhận, cọc (R-10)
 - Trang chi tiết đơn ở trạng thái `Quoted`: bảng báo giá chi tiết (cước theo quãng đường, hạng chuồng, phí thủ tục từng nước, bảo hiểm từng con, Express), bản đồ tuyến chỉ xem, **đếm ngược hạn chấp nhận**.
 - `PolicyAgreement` + nút **Chấp nhận & đặt cọc** (gọi accept-quote rồi chuyển sang luồng thanh toán VNPay hiện có) và **Từ chối báo giá** (xác nhận, không mất phí).
 - Trạng thái `QuoteExpired`: thông báo hết hạn, nút "Gửi lại yêu cầu" (tạo đơn mới điền sẵn thông tin cũ).
@@ -151,7 +151,7 @@ Sửa `IncidentBoard`, `RouteChangeFields`, `TripIncidentsCard`, `EmergencyRepor
 - Phí chờ hiện trong khoản phát sinh của đơn (số giờ × đơn giá), thanh toán qua luồng Extra hiện có.
 - Từ chối vì ngựa bị thương / nhầm ngựa: hiện cho khách rằng hồ sơ bồi thường đã được mở (link FE-11) và phí chuồng do công ty chịu.
 
-### [ ] FE-17 · Hợp đồng vận chuyển (R-17)
+### [x] FE-17 · Hợp đồng vận chuyển (R-17)
 Đọc `doc/PLAN_NGHIEP_VU_R09.md` mục R-17 và `doc/CHINH_SACH_DICH_VU.md` mục 12. **Không có màn ký, không OTP.**
 - Trang báo giá (FE-05): nút **Xem hợp đồng** mở PDF (modal toàn màn hình dùng `<iframe>` / `<object>`; trên điện thoại mở tab mới) từ `GET /api/bookings/{id}/contract`. Nút **Chấp nhận & đặt cọc** chỉ bật khi khách đã mở hợp đồng ít nhất một lần **và** tích "Tôi đã đọc hợp đồng và Chính sách dịch vụ" (thay checkbox của `PolicyAgreement` ở bước này). Gửi kèm `contractId`, `contractSha256` nhận được lúc mở. Backend báo hợp đồng đã đổi → thông báo và tải lại bản mới.
 - Trang chi tiết đơn: khối **Hợp đồng**: số hợp đồng, phiên bản, trạng thái, thời điểm chấp nhận, nút **Tải PDF**; danh sách các phiên bản cũ (đã thay thế) để tải lại.

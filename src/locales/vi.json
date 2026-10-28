@@ -2520,6 +2520,11 @@
     "pickBothPoints": "Vui lòng chọn điểm đón và điểm giao trên bản đồ.",
     "routeHint": "Quãng đường đường bộ thực tế giữa hai điểm, lấy từ bản đồ. Tuyến chính xác (trạm nghỉ, cửa khẩu) do công ty lập sau khi duyệt yêu cầu.",
     "routeLoading": "Đang tính quãng đường...",
+    "pickPointsForRoute": "Chọn điểm đón và điểm giao để xem quãng đường và thời gian lái.",
+    "driveTime": "Thời gian lái",
+    "driveTimeValue": "{{hours}} giờ {{minutes}} phút",
+    "distance": "Quãng đường",
+    "routeFailed": "Chưa tính được quãng đường; hệ thống sẽ tự tính khi gửi đơn.",
     "values": {
       "declaredLabel": "Giá trị khai báo (USD, không bắt buộc)",
       "declaredPlaceholder": "Ví dụ: 40.000",

@@ -76,7 +76,7 @@ export default function ReportsPage() {
   useEffect(() => {
     let active = true;
     const months = Array.from({ length: TREND_MONTHS }, (_, i) => dayjs().subtract(TREND_MONTHS - 1 - i, 'month').startOf('month'));
-    Promise.all(
+    void Promise.all(
       months.map((m) =>
         reportService
           .getSummary({ from: toIsoString(m), to: toIsoString(m.endOf('month')) })

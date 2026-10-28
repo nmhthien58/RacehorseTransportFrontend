@@ -2229,6 +2229,15 @@
     "success": "Đã đóng chuyến {{code}}, KPI {{score}} điểm"
   },
   "reports": {
+    "operatingCostHint": "Chi phí vận hành: {{cost}}",
+    "marginHint": "Biên lợi nhuận {{percent}}%",
+    "tripsHint": "{{bookings}} đơn hoàn tất · {{horses}} ngựa đã giao",
+    "incidentCostHint": "Chi phí phát sinh: {{cost}}",
+    "financeTrend": "Doanh thu, chi phí và lợi nhuận theo tháng",
+    "lastMonths": "{{count}} tháng gần nhất",
+    "performance": "Hiệu suất vận hành",
+    "tripsTrend": "Chuyến hoàn thành theo tháng",
+    "onTimeShort": "đúng giờ",
     "title": "Báo cáo",
     "subtitle": "Số liệu của các chuyến đã đóng. Bỏ trống khoảng ngày để xem toàn bộ.",
     "from": "Từ ngày",

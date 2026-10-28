@@ -2230,6 +2230,15 @@
     "success": "Closed trip {{code}}, KPI {{score}}"
   },
   "reports": {
+    "operatingCostHint": "Operating cost: {{cost}}",
+    "marginHint": "Profit margin {{percent}}%",
+    "tripsHint": "{{bookings}} bookings completed · {{horses}} horses delivered",
+    "incidentCostHint": "Extra cost: {{cost}}",
+    "financeTrend": "Revenue, cost and profit by month",
+    "lastMonths": "Last {{count}} months",
+    "performance": "Operational performance",
+    "tripsTrend": "Trips closed by month",
+    "onTimeShort": "on time",
     "title": "Reports",
     "subtitle": "Figures for closed trips. Leave the dates empty to see everything.",
     "from": "From",

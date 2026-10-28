@@ -4,6 +4,8 @@ import dayjs from 'dayjs';
 import StatusTag from '@components/common/StatusTag';
 import TripHorseStatusTag from '@components/common/TripHorseStatusTag';
 import StallMap from '@features/coordinator/components/StallMap';
+// Đang sửa TripPlanSummary vì hiện vận đơn hàng không của chuyến cho mọi vai trò xem chuyến (FE-17)
+import AirWaybillCard from '@components/common/AirWaybillCard';
 
 const { Text } = Typography;
 
@@ -203,6 +205,8 @@ export default function TripPlanSummary({ trip }) {
             }))}
         />
       </Card>
+
+      <AirWaybillCard tripId={trip.tripId} tripStatus={trip.overallStatus} />
     </Space>
   );
 }

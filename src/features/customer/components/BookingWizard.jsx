@@ -305,7 +305,13 @@ export default function BookingWizard({
         setAvailableHorses(horsesList);
 
         const specificHorseId = initialValues?.horseId || initialValues?.horseIds?.[0];
-        if (specificHorseId && horsesList.some((h) => String(h.horseId || h.HorseID) === String(specificHorseId))) {
+        // Gửi lại yêu cầu từ đơn có báo giá hết hạn (FE-05): chọn sẵn mọi ngựa còn hoạt động + hạng chuồng cũ
+        const prefillHorses = (initialValues?.horses || []).filter((ph) =>
+          horsesList.some((h) => String(h.horseId || h.HorseID) === String(ph.horseId)));
+        if (prefillHorses.length > 0) {
+          setSelectedHorseIds(prefillHorses.map((ph) => ph.horseId));
+          setStallClasses(Object.fromEntries(prefillHorses.map((ph) => [ph.horseId, ph.stallClass || 'Comfort'])));
+        } else if (specificHorseId && horsesList.some((h) => String(h.horseId || h.HorseID) === String(specificHorseId))) {
           setSelectedHorseIds([specificHorseId]);
           setStallClasses({ [specificHorseId]: 'Comfort' });
         }

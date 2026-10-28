@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Form, Select, Radio, Input, Typography, Button, message } from 'antd';
+import { Modal, Form, Select, Radio, Input, Typography, Button, Checkbox, message } from 'antd';
 import { AimOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { INCIDENT_TYPES, INCIDENT_SEVERITIES, formatCoordinates, mapLinkOf } from '@utils/incidents';
@@ -16,10 +16,11 @@ const { TextArea } = Input;
  *   tripId: number|string,
  *   tripCode: string,
  *   horses?: Array<any>,
- *   onSubmit: (incidentData: { incidentType: string, severity: string, location: string, description: string, affectedTripHorseId?: number }) => Promise<boolean>
+ *   presetValues?: { incidentType?: string, affectedTripHorseId?: number, severity?: string, emergencyOffload?: boolean },
+ *   onSubmit: (incidentData: { incidentType: string, severity: string, location: string, description: string, affectedTripHorseId?: number, emergencyOffload?: boolean }) => Promise<boolean>
  * }} props
  */
-export default function EmergencyReportModal({ open, onClose, tripCode, horses = [], onSubmit }) {
+export default function EmergencyReportModal({ open, onClose, tripCode, horses = [], presetValues = null, onSubmit }) {
   const { t } = useTranslation();
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
@@ -27,6 +28,7 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
   const [geoStatus, setGeoStatus] = useState('idle');
   const [geoError, setGeoError] = useState('');
   const location = Form.useWatch('location', form);
+  const incidentType = Form.useWatch('incidentType', form);
 
   /** Lấy tọa độ hiện tại của thiết bị và điền vào ô Vị trí (không cho gõ tay). */
   const locate = () => {
@@ -65,6 +67,7 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
         location: values.location.trim(),
         description: values.description.trim(),
         affectedTripHorseId: values.affectedTripHorseId || undefined,
+        emergencyOffload: Boolean(values.emergencyOffload),
       });
       if (success) {
         message.success(t('incidents.report.success'));
@@ -75,6 +78,8 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
       setSubmitting(false);
     }
   };
+
+  const showEmergencyOffload = incidentType === 'EquineHealthIssue' || Boolean(presetValues?.affectedTripHorseId);
 
   return (
     <Modal
@@ -88,15 +93,34 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
       destroyOnHidden
       width={560}
       afterOpenChange={(visible) => {
-        if (visible) locate();
-        else setGeoStatus('idle');
+        if (visible) {
+          locate();
+        } else {
+          setGeoStatus('idle');
+          form.resetFields();
+        }
       }}
     >
       <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
         {t('incidents.report.hint', { trip: tripCode || '' })}
       </Text>
 
-      <Form form={form} layout="vertical" requiredMark={false} initialValues={{ severity: 'Moderate' }}>
+      {/* Form tạo lại mỗi lần mở (destroyOnHidden) nên điền sẵn qua initialValues: mở từ nút "Ngựa không thể đi tiếp" */}
+      <Form
+        form={form}
+        layout="vertical"
+        requiredMark={false}
+        initialValues={
+          presetValues
+            ? {
+                incidentType: presetValues.incidentType || 'EquineHealthIssue',
+                severity: presetValues.severity || 'Moderate',
+                affectedTripHorseId: presetValues.affectedTripHorseId,
+                emergencyOffload: Boolean(presetValues.emergencyOffload),
+              }
+            : { severity: 'Moderate' }
+        }
+      >
         <Form.Item
           name="incidentType"
           label={t('incidents.fields.type')}
@@ -149,6 +173,16 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
               placeholder={t('incidents.report.horsePlaceholder')}
               options={horses.map((h) => ({ value: h.tripHorseId, label: h.horseName }))}
             />
+          </Form.Item>
+        )}
+
+        {showEmergencyOffload && (
+          <Form.Item name="emergencyOffload" valuePropName="checked" style={{ marginBottom: 16 }}>
+            <Checkbox>
+              <span style={{ color: '#DC2626', fontWeight: 500 }}>
+                {t('incidents.report.emergencyOffload')}
+              </span>
+            </Checkbox>
           </Form.Item>
         )}
 

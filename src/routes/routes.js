@@ -10,6 +10,8 @@ export const ROUTES = {
   REGISTER: '/register',
   FORGOT_PASSWORD: '/forgot-password',
   RESET_PASSWORD: '/reset-password',
+  POLICY: '/chinh-sach',
+  POLICY_EN: '/policy',
   FORBIDDEN: '/403',
   NOT_FOUND: '/404',
 

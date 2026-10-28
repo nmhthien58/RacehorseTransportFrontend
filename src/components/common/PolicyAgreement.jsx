@@ -1,9 +1,10 @@
 import { Checkbox, Spin, Typography } from 'antd';
 import { Trans, useTranslation } from 'react-i18next';
 import usePolicy from '@hooks/usePolicy';
+import { ROUTES } from '@routes/routes';
 
-// Trang Chính sách công khai (FE-15). TODO(FE-15): thêm route này
-export const POLICY_PAGE_PATH = '/chinh-sach';
+// Trang Chính sách công khai (FE-15)
+export const POLICY_PAGE_PATH = ROUTES.POLICY;
 
 /**
  * Ô "Tôi đã đọc và đồng ý với Chính sách dịch vụ (phiên bản X)" + link mở trang chính sách ở tab mới.

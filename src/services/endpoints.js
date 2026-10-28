@@ -62,6 +62,8 @@ export const ENDPOINTS = {
   // Chính sách dịch vụ công khai (BE-17): phiên bản + các giá trị cấu hình
   POLICY: {
     PUBLIC: '/policy',
+    // Màn quản trị (FE-16): xem / sửa đủ 21 khóa chính sách
+    SETTINGS: '/settings/policy',
   },
 
   // Tải file lên storage (chứng từ giá trị ngựa, biên bản...): trả về path để gửi kèm request khác
@@ -136,6 +138,7 @@ export const ENDPOINTS = {
     // Bí danh tương thích ngược
     UPDATE_STATUS: (id) => `/trips/${id}/status`,
     CREW: (id) => `/trips/${id}/crew`,
+    DEPARTURE_CHECK: (id) => `/trips/${id}/departure-check`,
   },
 
   // 7. Vận hành trạm kiểm soát (Checkpoints - Flow 4)

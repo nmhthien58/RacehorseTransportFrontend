@@ -14,8 +14,6 @@ import {
   Alert,
   message,
   Popconfirm,
-  Form,
-  Input,
   Switch,
 } from 'antd';
 import {
@@ -26,8 +24,9 @@ import {
   LogoutOutlined,
   HeartOutlined,
   SafetyCertificateOutlined,
-  FileDoneOutlined, PhoneOutlined,
-  ExportOutlined,
+  FileDoneOutlined,
+  PhoneOutlined,
+  AlertOutlined,
 } from '@ant-design/icons';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -76,7 +75,6 @@ export default function TripExecutionPage() {
     arriveCheckpoint,
     clearCheckpoint,
     departCheckpoint,
-    offloadHorse,
     reportIncident,
     fetchMission,
   } = useMissionDetail(tripId);
@@ -92,8 +90,7 @@ export default function TripExecutionPage() {
       document.getElementById('incidents')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [location.key, location.hash, incidents.length]);
-  const [offloadTarget, setOffloadTarget] = useState(null);
-  const [offloadForm] = Form.useForm();
+  const [sosPreset, setSosPreset] = useState(null);
 
   const [sosModalOpen, setSosModalOpen] = useState(false);
   const [clearModalOpen, setClearModalOpen] = useState(false);
@@ -171,20 +168,6 @@ export default function TripExecutionPage() {
   const horsesAwaitingHandover = (bookingId) =>
     (mission?.horses || []).filter((h) => h.bookingId === bookingId && (h.status === 'InTransit' || h.status === 'Planned'));
 
-  const handleOffload = async () => {
-    let values;
-    try {
-      values = await offloadForm.validateFields();
-    } catch {
-      return;
-    }
-    const success = await offloadHorse(offloadTarget.tripHorseId, values.reason.trim());
-    if (success) {
-      message.success(t('driver.execution.offloaded', { name: offloadTarget.horseName }));
-      setOffloadTarget(null);
-      offloadForm.resetFields();
-    }
-  };
 
   // Số liệu tóm tắt lấy từ dữ liệu thật của chuyến (mốc + nhật ký thể trạng), không có cảm biến GPS
   const welfareLogs = [...(mission?.welfareLogs || [])].sort((a, b) => new Date(b.loggedAt) - new Date(a.loggedAt));
@@ -702,13 +685,18 @@ export default function TripExecutionPage() {
                     <Button
                       size="small"
                       danger
-                      icon={<ExportOutlined />}
+                      icon={<AlertOutlined />}
                       onClick={() => {
-                        offloadForm.resetFields();
-                        setOffloadTarget(h);
+                        setSosPreset({
+                          incidentType: 'EquineHealthIssue',
+                          affectedTripHorseId: h.tripHorseId,
+                          severity: 'Moderate',
+                          emergencyOffload: true,
+                        });
+                        setSosModalOpen(true);
                       }}
                     >
-                      {t('driver.execution.offload')}
+                      {t('driver.execution.horseCannotContinue')}
                     </Button>
                   )}
                 </Space>
@@ -716,28 +704,6 @@ export default function TripExecutionPage() {
             </Row>
           ))}
       </Card>
-
-      <Modal
-        title={t('driver.execution.offloadTitle', { name: offloadTarget?.horseName || '' })}
-        open={Boolean(offloadTarget)}
-        onCancel={() => setOffloadTarget(null)}
-        onOk={handleOffload}
-        okText={t('driver.execution.offloadOk')}
-        cancelText={t('common.cancel')}
-        okButtonProps={{ danger: true, loading: actionLoading }}
-        destroyOnHidden
-      >
-        <Paragraph type="secondary">{t('driver.execution.offloadHint')}</Paragraph>
-        <Form form={offloadForm} layout="vertical">
-          <Form.Item
-            name="reason"
-            label={t('driver.execution.offloadReason')}
-            rules={[{ required: true, whitespace: true, message: t('driver.execution.offloadReasonRequired') }, { max: 300 }]}
-          >
-            <Input.TextArea rows={3} />
-          </Form.Item>
-        </Form>
-      </Modal>
 
       {/* Modal hoàn tất kiểm tra trạm (Clear Modal) */}
       <Modal
@@ -765,10 +731,14 @@ export default function TripExecutionPage() {
       {/* Modal Báo cáo khẩn cấp SOS */}
       <EmergencyReportModal
         open={sosModalOpen}
-        onClose={() => setSosModalOpen(false)}
+        onClose={() => {
+          setSosModalOpen(false);
+          setSosPreset(null);
+        }}
         tripId={tripId}
         tripCode={mission?.tripCode}
         horses={mission?.horses || []}
+        presetValues={sosPreset}
         onSubmit={reportIncident}
       />
     </div>

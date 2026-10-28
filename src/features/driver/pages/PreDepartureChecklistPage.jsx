@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   App as AntApp,
@@ -21,9 +21,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import PageHeader from '@components/layout/PageHeader';
+import TripHorseStatusTag from '@components/common/TripHorseStatusTag';
 import { ROUTES } from '@routes/routes';
 import { getTripStatusMeta } from '@features/driver/services/driverService';
 import { useMissionDetail } from '@features/driver/hooks/useDriverMissions';
+import { tripService } from '@services/tripService';
 
 const { Text } = Typography;
 const ACTIVE_TRIP_STATUSES = ['InTransit', 'EmergencyRerouting', 'ArrivedDestination', 'Completed'];
@@ -61,6 +63,46 @@ export default function PreDepartureChecklistPage() {
   const navigate = useNavigate();
   const { mission, loading, actionLoading, error, fetchMission, startTrip } = useMissionDetail(tripId);
   const [startConfirmOpen, setStartConfirmOpen] = useState(false);
+  const [departureCheck, setDepartureCheck] = useState(null);
+  const [checkLoading, setCheckLoading] = useState(false);
+  // Backend chưa có / lỗi kiểm tra trước khi xuất phát (BE-10): báo rõ, không tự tính thay
+  const [checkUnavailable, setCheckUnavailable] = useState(false);
+
+  const loadDepartureCheck = useCallback(async () => {
+    if (!tripId) return;
+    setCheckLoading(true);
+    try {
+      const res = await tripService.getDepartureCheck(tripId);
+      const data = res?.data || res;
+      setDepartureCheck(data);
+      setCheckUnavailable(false);
+    } catch {
+      setDepartureCheck(null);
+      setCheckUnavailable(true);
+    } finally {
+      setCheckLoading(false);
+    }
+  }, [tripId]);
+
+  useEffect(() => {
+    let ignore = false;
+    const initCheck = async () => {
+      if (!tripId) return;
+      try {
+        const res = await tripService.getDepartureCheck(tripId);
+        if (!ignore) {
+          const data = res?.data || res;
+          setDepartureCheck(data);
+        }
+      } catch {
+        if (!ignore) setCheckUnavailable(true);
+      }
+    };
+    initCheck();
+    return () => {
+      ignore = true;
+    };
+  }, [tripId]);
 
   const horses = useMemo(() => mission?.horses || [], [mission?.horses]);
   const crew = useMemo(() => mission?.crew || [], [mission?.crew]);
@@ -153,8 +195,12 @@ export default function PreDepartureChecklistPage() {
     ],
   );
 
+  const departureIssues = useMemo(() => departureCheck?.issues || [], [departureCheck?.issues]);
+  const blockingIssues = useMemo(() => departureIssues.filter((i) => i.severity === 'Error'), [departureIssues]);
+  const warningIssues = useMemo(() => departureIssues.filter((i) => i.severity === 'Warning'), [departureIssues]);
+
   const blockers = readinessItems.filter((item) => !item.ready);
-  const canStart = blockers.length === 0 && !isAlreadyInTransit;
+  const canStart = blockers.length === 0 && blockingIssues.length === 0 && !isAlreadyInTransit;
 
   const horseColumns = useMemo(
     () => [
@@ -177,6 +223,12 @@ export default function PreDepartureChecklistPage() {
         title: t('driver.checklist.bookingCode'),
         dataIndex: 'bookingCode',
         key: 'bookingCode',
+      },
+      {
+        title: t('driver.checklist.horseStatus'),
+        dataIndex: 'status',
+        key: 'status',
+        render: (status) => <TripHorseStatusTag status={status || 'Planned'} />,
       },
       {
         title: t('driver.checklist.stall'),
@@ -239,7 +291,13 @@ export default function PreDepartureChecklistPage() {
           { label: mission.tripCode },
         ]}
         actions={
-          <Button onClick={fetchMission} loading={loading}>
+          <Button
+            onClick={() => {
+              fetchMission();
+              loadDepartureCheck();
+            }}
+            loading={loading || checkLoading}
+          >
             {t('driver.checklist.refresh')}
           </Button>
         }
@@ -303,7 +361,86 @@ export default function PreDepartureChecklistPage() {
           description={
             canStart
               ? t('driver.checklist.readyDescription')
-              : t('driver.checklist.pendingDescription', { count: blockers.length })
+              : t('driver.checklist.pendingDescription', {
+                  count: blockers.length + blockingIssues.length,
+                })
+          }
+          style={{ marginBottom: 20 }}
+        />
+      )}
+
+      {!isAlreadyInTransit && checkUnavailable && (
+        <Alert
+          type="info"
+          showIcon
+          title={t('driver.checklist.departureCheck.unavailable')}
+          style={{ marginBottom: 20 }}
+        />
+      )}
+
+      {/* Cảnh báo các vấn đề chặn xuất phát từ API kiểm tra trước khi khởi hành (FE-09 / R-12 / R-15) */}
+      {!isAlreadyInTransit && blockingIssues.length > 0 && (
+        <Alert
+          type="error"
+          showIcon
+          message={t('driver.checklist.departureCheck.blockingTitle', { count: blockingIssues.length })}
+          description={
+            <div style={{ marginTop: 8 }}>
+              <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
+                {t('driver.checklist.departureCheck.blockingHint')}
+              </Text>
+              <List
+                size="small"
+                dataSource={blockingIssues}
+                renderItem={(issue, idx) => (
+                  <List.Item key={idx} style={{ padding: '6px 0' }}>
+                    <Space align="start">
+                      <Tag color="error">
+                        {issue.category
+                          ? t(`driver.checklist.departureCheck.category.${issue.category}`, issue.category)
+                          : t('driver.checklist.departureCheck.errorTag')}
+                      </Tag>
+                      <div>
+                        {issue.horseName && <Text strong style={{ marginRight: 8 }}>{issue.horseName}</Text>}
+                        {issue.bookingCode && <Tag style={{ marginRight: 8 }}>{issue.bookingCode}</Tag>}
+                        <Text>{issue.message}</Text>
+                      </div>
+                    </Space>
+                  </List.Item>
+                )}
+              />
+            </div>
+          }
+          style={{ marginBottom: 20 }}
+        />
+      )}
+
+      {!isAlreadyInTransit && warningIssues.length > 0 && (
+        <Alert
+          type="warning"
+          showIcon
+          message={t('driver.checklist.departureCheck.warningTitle', { count: warningIssues.length })}
+          description={
+            <List
+              size="small"
+              dataSource={warningIssues}
+              renderItem={(issue, idx) => (
+                <List.Item key={idx} style={{ padding: '4px 0' }}>
+                  <Space align="start">
+                    <Tag color="warning">
+                      {issue.category
+                        ? t(`driver.checklist.departureCheck.category.${issue.category}`, issue.category)
+                        : t('driver.checklist.departureCheck.warningTag')}
+                    </Tag>
+                    <div>
+                      {issue.horseName && <Text strong style={{ marginRight: 8 }}>{issue.horseName}</Text>}
+                      {issue.bookingCode && <Tag style={{ marginRight: 8 }}>{issue.bookingCode}</Tag>}
+                      <Text>{issue.message}</Text>
+                    </div>
+                  </Space>
+                </List.Item>
+              )}
+            />
           }
           style={{ marginBottom: 20 }}
         />

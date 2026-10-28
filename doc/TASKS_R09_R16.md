@@ -55,24 +55,24 @@ Thứ tự gợi ý: **Thắng** làm FE-15 → FE-16 → FE-08 → FE-07 → FE
 
 ## Việc của Thắng
 
-### [ ] FE-15 · Trang Chính sách + `usePolicy()` + ô đồng ý (Chung) — làm đầu tiên vì người khác dùng
+### [x] FE-15 · Trang Chính sách + `usePolicy()` + ô đồng ý (Chung) — làm đầu tiên vì người khác dùng
 - `policyService.getPolicy()` gọi `GET /api/policy` (không cần đăng nhập). Hook `src/hooks/usePolicy.js` (bọc `useFetch`, nhớ kết quả trong phiên).
 - Trang công khai `/chinh-sach` (thêm route, link ở footer và header trang chủ): dựng từ nội dung `CHINH_SACH_DICH_VU.md` (13 mục, giữ nguyên tiêu đề và bảng), **thay mọi giá trị `[...]` bằng số từ `usePolicy()`**, hiển thị số phiên bản. Nội dung chữ để trong locale (`policy.*`), có mục lục nhảy tới từng mục.
 - Component `src/components/common/PolicyAgreement.jsx`: checkbox "Tôi đã đọc và đồng ý với Chính sách dịch vụ (phiên bản X)" + link mở trang chính sách ở tab mới; trả về `{ accepted, policyVersion }`. FE-02 và FE-05 dùng component này.
 
-### [ ] FE-16 · Màn cấu hình các khóa mới
+### [x] FE-16 · Màn cấu hình các khóa mới
 - Mở rộng màn cấu hình thanh toán hiện có (Admin / Manager) thành các nhóm: Báo giá (`Booking.QuoteAcceptDays`), Giao trễ (`Delay.*`), Bảo hiểm (`Insurance.*`), Ngựa (`Horse.MinAgeMonths`), Giao nhận (`Delivery.*`), Phiên bản chính sách.
 - Mỗi ô có chú thích ngắn nghĩa là gì; kiểm tra số không âm, % ≤ 100 trước khi gửi.
 
-### [ ] FE-08 · Form ngựa: mang thai, hiện lỗi điều kiện (R-12)
+### [x] FE-08 · Form ngựa: mang thai, hiện lỗi điều kiện (R-12)
 - Form thêm / sửa ngựa của khách: thêm giới tính (nếu chưa có), "Đang mang thai" (chỉ hiện với ngựa cái) + ngày dự sinh; "Ngày đẻ gần nhất" (tùy chọn).
 - Trong form tạo đơn, khi backend trả lỗi điều kiện (dưới tuổi tối thiểu, mang thai quá 90%, vừa đẻ) → hiện cạnh đúng con ngựa, không chỉ toast. Hiện gợi ý tuổi tối thiểu lấy từ `usePolicy()`.
 
-### [ ] FE-07 · Xếp chuyến từ tuyến đã duyệt + cảnh báo tài xế (R-10, R-14)
+### [x] FE-07 · Xếp chuyến từ tuyến đã duyệt + cảnh báo tài xế (R-10, R-14)
 - Màn lập chuyến của Coordinator: khi chọn ngựa của một đơn, hiện tuyến đã duyệt của đơn (bản đồ `RouteMap` của FE-01) và nút "Dùng tuyến này" để chép mốc vào chuyến.
 - Hiện cảnh báo trước khi trình duyệt: "Thời gian lái dự kiến X giờ, cần ít nhất 2 tài xế" khi vi phạm; hiện lỗi "đi qua nước ngoài tuyến đã duyệt" từ backend rõ ràng.
 
-### [ ] FE-09 · Tài xế: bỏ "Rời chuyến", kiểm tra trước khi xuất phát (R-12, R-15)
+### [x] FE-09 · Tài xế: bỏ "Rời chuyến", kiểm tra trước khi xuất phát (R-12, R-15)
 - Màn `TripExecutionPage`: bỏ nút "Rời chuyến" và modal lý do. Thay bằng nút "Ngựa không thể đi tiếp" mở form báo sự cố (`EmergencyReportModal`) đã chọn sẵn loại "Sức khỏe ngựa" + con ngựa, có ô "Đã phải dỡ ngựa khẩn cấp theo chỉ định thú y" (`emergencyOffload`).
 - Màn chuẩn bị xuất phát (checklist): gọi `GET /api/trips/{id}/departure-check`, hiện danh sách vấn đề còn lại (giấy hết hạn, thiếu khám 48h, chưa thanh toán, thiếu tài xế) theo từng ngựa / đơn; nút "Xuất phát" chỉ bật khi danh sách trống.
 - Hiện trạng thái ngựa mới `Deceased` trong danh sách ngựa và trong `TripHorseStatusTag`.

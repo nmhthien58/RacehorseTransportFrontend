@@ -169,6 +169,17 @@ export const tripService = {
   },
 
   /**
+   * Kiểm tra điều kiện xuất bến trước khi khởi hành (BE-10 / BE-11 / FE-09)
+   * Kiểm tra hạn giấy tờ, giấy khám lâm sàng 48h (R-12), thanh toán, số tài xế.
+   * @param {number|string} id - TripID
+   * @returns {Promise<{ isReady: boolean, issues: Array<{ code: string, message: string, severity: 'Error'|'Warning', horseName?: string, bookingCode?: string, category: string }> }>}
+   */
+  // TODO(BE-10): endpoint chưa có ở backend; khi chưa có, màn tài xế báo "chưa kiểm tra được" (không tự tính thay backend)
+  async getDepartureCheck(id) {
+    return api.get(ENDPOINTS.TRIPS.DEPARTURE_CHECK(id));
+  },
+
+  /**
    * Ghi nhận xe đã đến một mốc lộ trình
    * @param {number|string} checkpointId
    * @returns {Promise<any>}

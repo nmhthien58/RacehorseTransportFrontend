@@ -7,11 +7,17 @@ import {
   DatePicker,
   Row,
   Col,
+  Switch,
+  Flex,
+  Typography,
 } from 'antd';
+import { HeartOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { MICROCHIP_PATTERN, UELN_PATTERN } from '@utils/constants';
 import HorsePhotoPicker from './HorsePhotoPicker';
+
+const { Text } = Typography;
 
 const HEALTH_STATUS_OPTIONS = [
   { value: 'Excellent', labelVi: 'Xuất sắc', labelEn: 'Excellent', color: '#16a34a' },
@@ -50,6 +56,8 @@ export default function EditHorseModal({
 }) {
   const { t, i18n } = useTranslation();
   const [form] = Form.useForm();
+  const selectedGender = Form.useWatch('gender', form);
+  const isPregnant = Form.useWatch('isPregnant', form);
   // undefined: giữ ảnh đang có; File: ảnh mới; null: xóa ảnh đang có
   const [photoFile, setPhotoFile] = useState(undefined);
   const isEn = i18n.language?.startsWith('en');
@@ -60,6 +68,9 @@ export default function EditHorseModal({
         name: horse.name || horse.Name || '',
         breed: horse.breed || horse.Breed || 'Thoroughbred',
         gender: horse.gender || horse.Gender || 'Stallion',
+        isPregnant: horse.isPregnant || horse.IsPregnant || false,
+        expectedFoalingDate: horse.expectedFoalingDate || horse.ExpectedFoalingDate ? dayjs(horse.expectedFoalingDate || horse.ExpectedFoalingDate) : null,
+        lastFoalingDate: horse.lastFoalingDate || horse.LastFoalingDate ? dayjs(horse.lastFoalingDate || horse.LastFoalingDate) : null,
         dateOfBirth: horse.dateOfBirth || horse.DateOfBirth ? dayjs(horse.dateOfBirth || horse.DateOfBirth) : null,
         color: horse.color || horse.Color || '',
         microchipNumber: horse.microchipNumber || horse.MicrochipNumber || '',
@@ -73,9 +84,12 @@ export default function EditHorseModal({
   }, [open, horse, form]);
 
   const handleFinish = (values) => {
-    // Trùng số Microchip / số hộ chiếu do backend kiểm tra và trả lỗi 400 kèm lý do
+    const isMare = values.gender === 'Mare';
     const formattedValues = {
       ...values,
+      isPregnant: isMare ? Boolean(values.isPregnant) : false,
+      expectedFoalingDate: isMare && values.isPregnant && values.expectedFoalingDate ? values.expectedFoalingDate.format('YYYY-MM-DD') : null,
+      lastFoalingDate: isMare && values.lastFoalingDate ? values.lastFoalingDate.format('YYYY-MM-DD') : null,
       dateOfBirth: values.dateOfBirth ? values.dateOfBirth.format('YYYY-MM-DD') : null,
       photo: photoFile || null,
       removePhoto: photoFile === null,
@@ -157,6 +171,72 @@ export default function EditHorseModal({
             </Form.Item>
           </Col>
         </Row>
+
+        {/* Khối thai sản dành cho ngựa cái (Mare) theo FE-08 / R-12 */}
+        {selectedGender === 'Mare' && (
+          <div
+            style={{
+              backgroundColor: '#fffbeb',
+              border: '1px solid #fde68a',
+              borderRadius: 8,
+              padding: '14px 16px',
+              marginBottom: 16,
+            }}
+          >
+            <Flex align="center" gap={8} style={{ marginBottom: 12 }}>
+              <HeartOutlined style={{ color: '#d97706', fontSize: 16 }} />
+              <Text strong style={{ color: '#92400e', fontSize: 13.5 }}>
+                {t('horses.pregnancy.sectionTitle', 'Thông tin thai sản & sinh nở (Ngựa cái)')}
+              </Text>
+            </Flex>
+
+            <Row gutter={16} align="middle">
+              <Col xs={24} sm={8}>
+                <Form.Item
+                  name="isPregnant"
+                  label={<span style={{ fontWeight: 600 }}>{t('horses.pregnancy.isPregnant', 'Đang mang thai?')}</span>}
+                  valuePropName="checked"
+                  style={{ marginBottom: 0 }}
+                >
+                  <Switch />
+                </Form.Item>
+              </Col>
+
+              {isPregnant && (
+                <Col xs={24} sm={8}>
+                  <Form.Item
+                    name="expectedFoalingDate"
+                    label={<span style={{ fontWeight: 600 }}>{t('horses.pregnancy.expectedFoalingDate', 'Ngày dự sinh')}</span>}
+                    rules={[{ required: isPregnant, message: t('horses.validation.expectedFoalingDateRequired', 'Vui lòng chọn ngày dự sinh') }]}
+                    style={{ marginBottom: 0 }}
+                  >
+                    <DatePicker
+                      style={{ width: '100%' }}
+                      format="DD/MM/YYYY"
+                      size="large"
+                      disabledDate={(current) => current && current < dayjs().startOf('day')}
+                    />
+                  </Form.Item>
+                </Col>
+              )}
+
+              <Col xs={24} sm={isPregnant ? 8 : 16}>
+                <Form.Item
+                  name="lastFoalingDate"
+                  label={<span style={{ fontWeight: 600 }}>{t('horses.pregnancy.lastFoalingDate', 'Ngày đẻ gần nhất (tùy chọn)')}</span>}
+                  style={{ marginBottom: 0 }}
+                >
+                  <DatePicker
+                    style={{ width: '100%' }}
+                    format="DD/MM/YYYY"
+                    size="large"
+                    disabledDate={(current) => current && current > dayjs().endOf('day')}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          </div>
+        )}
 
         <Row gutter={16}>
           <Col xs={24} sm={12}>

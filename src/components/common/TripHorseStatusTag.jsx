@@ -8,10 +8,11 @@ const COLORS = {
   Delivered: 'success',
   Offloaded: 'volcano',
   Cancelled: 'error',
+  Deceased: 'magenta',
 };
 
 /**
- * Nhãn trạng thái của một con ngựa trên chuyến: Planned / InTransit / Delivered / Offloaded / Cancelled.
+ * Nhãn trạng thái của một con ngựa trên chuyến: Planned / InTransit / Delivered / Offloaded / Cancelled / Deceased.
  * Tách khỏi StatusTag vì "InTransit" ở đây là trạng thái của ngựa, không phải của chuyến.
  * @param {Object} props
  * @param {string} props.status

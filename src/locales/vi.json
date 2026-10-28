@@ -317,7 +317,10 @@
       "color": "Màu lông",
       "photo": "Ảnh nhận diện",
       "specialCare": "Chăm sóc đặc biệt",
-      "status": "Trạng thái"
+      "status": "Trạng thái",
+      "isPregnant": "Đang mang thai",
+      "expectedFoalingDate": "Ngày dự sinh",
+      "lastFoalingDate": "Ngày đẻ gần nhất"
     },
     "placeholders": {
       "name": "Ví dụ: Midnight Gunner, Red Flash",
@@ -342,9 +345,12 @@
       "microchipRequired": "Vui lòng nhập số Microchip",
       "microchipFormat": "Số Microchip phải gồm đúng 15 chữ số",
       "passportRequired": "Vui lòng nhập số hộ chiếu vận chuyển",
-      "passportFormat": "Số hộ chiếu phải là mã UELN 15 ký tự: 6 chữ số đầu, sau đó 9 chữ hoặc số"
+      "passportFormat": "Số hộ chiếu phải là mã UELN 15 ký tự: 6 chữ số đầu, sau đó 9 chữ hoặc số",
+      "expectedFoalingDateRequired": "Vui lòng chọn ngày dự sinh khi ngựa cái đang mang thai"
     },
-    "vetRecordsLaterHint": "Hộ chiếu, kết quả xét nghiệm và giấy tiêm phòng không bắt buộc ở bước này. Bạn có thể bổ sung sau khi lưu ngựa."
+    "vetRecordsLaterHint": "Hộ chiếu, kết quả xét nghiệm và giấy tiêm phòng không bắt buộc ở bước này. Bạn có thể bổ sung sau khi lưu ngựa.",
+    "pregnancySection": "Thông tin thai sản (Áp dụng cho ngựa cái)",
+    "pregnancyHint": "Theo quy chuẩn phúc lợi động vật (R-12), cấm vận chuyển ngựa mang thai quá 90% thai kỳ hoặc vừa sinh trong vòng 7 ngày."
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -566,7 +572,11 @@
     "quoteUnitPrice": "Đơn giá",
     "quoteAmount": "Thành tiền",
     "totalEstimatedCost": "Tổng dự toán cước phí",
-    "cancelRefundDesc": "Đơn đã đặt cọc: bạn được hoàn {{percent}}% tiền cọc và toàn bộ phần còn lại đã trả. Tiền hoàn về tài khoản đã thanh toán và hiển thị trong mục Thanh toán của đơn."
+    "cancelRefundDesc": "Đơn đã đặt cọc: bạn được hoàn {{percent}}% tiền cọc và toàn bộ phần còn lại đã trả. Tiền hoàn về tài khoản đã thanh toán và hiển thị trong mục Thanh toán của đơn.",
+    "wizard": {
+      "eligibilityPolicyTitle": "Quy chuẩn điều kiện & sức khỏe vận chuyển (Chính sách Dịch vụ)",
+      "eligibilityPolicyDesc": "Ngựa tối thiểu từ {{minAge}} tháng tuổi (tính đến ngày đón), không mang thai quá 90% thai kỳ (> 306 ngày hoặc cách ngày dự sinh ≤ 34 ngày), và không vận chuyển ngựa vừa sinh trong vòng 7 ngày."
+    }
   },
   "messages": {
     "title": "Tin nhắn & Liên lạc Trực tiếp",
@@ -1303,7 +1313,22 @@
       "confirmDescription": "Bạn xác nhận chuyến {{code}} đã sẵn sàng khởi hành?",
       "confirmEffect": "Sau khi xác nhận, backend sẽ chuyển chuyến sang trạng thái Đang di chuyển và ghi nhận thời điểm xuất phát thực tế.",
       "confirmStart": "Xuất bến",
-      "startSuccess": "Chuyến đã xuất bến thành công."
+      "startSuccess": "Chuyến đã xuất bến thành công.",
+      "horseStatus": "Trạng thái ngựa",
+      "departureCheck": {
+        "unavailable": "Chưa kiểm tra được tự động (hạn giấy tờ, giấy khám 48 giờ, thanh toán) vì hệ thống chưa sẵn sàng. Khi bấm Xuất phát, máy chủ vẫn kiểm tra lại các điều kiện.",
+        "blockingTitle": "Có {{count}} vấn đề chặn xuất phát bắt buộc phải giải quyết",
+        "blockingHint": "Theo quy chuẩn an toàn và pháp lý vận chuyển ngựa quốc tế, toàn bộ các vấn đề bên dưới bắt buộc phải xử lý triệt để trước khi đoàn xe được phép lăn bánh:",
+        "warningTitle": "Cảnh báo lưu ý trước khi xuất phát ({{count}})",
+        "errorTag": "Bắt buộc xử lý",
+        "warningTag": "Lưu ý",
+        "category": {
+          "Crew": "Nhân sự đoàn xe",
+          "Document": "Hồ sơ kiểm dịch",
+          "Health": "Sức khỏe 48h",
+          "Payment": "Thanh toán"
+        }
+      }
     },
     "execution": {
       "title": "Vận hành lộ trình & Trạm kiểm soát",
@@ -1337,7 +1362,8 @@
       "offloadOk": "Xác nhận rời chuyến",
       "offloaded": "Đã ghi nhận {{name}} rời chuyến",
       "revisedEta": "Dự kiến mới",
-      "behindSchedule": "Đoàn xe đang trễ {{minutes}} phút so với kế hoạch; giờ dự kiến các trạm phía sau đã được lùi tương ứng."
+      "behindSchedule": "Đoàn xe đang trễ {{minutes}} phút so với kế hoạch; giờ dự kiến các trạm phía sau đã được lùi tương ứng.",
+      "horseCannotContinue": "Ngựa không thể đi tiếp"
     },
     "welfare": {
       "title": "Nhật ký thể trạng sinh trắc & Phúc lợi ngựa",
@@ -1617,6 +1643,8 @@
       "suggestNeedInput": "Chọn ngựa và giờ khởi hành trước khi gợi ý lộ trình",
       "suggestFailed": "Không gợi ý được lộ trình",
       "suggested": "Đã thay lộ trình bằng gợi ý",
+      "needTwoDrivers": "Thời gian lái dự kiến {{hours}} giờ (vượt quá 9 giờ). Bắt buộc cần ít nhất 2 tài xế thay phiên để trình duyệt chuyến theo quy chuẩn an toàn R-14.",
+      "routeCopied": "Đã sao chép các mốc từ tuyến đã duyệt của đơn {{code}} vào kế hoạch chuyến!",
       "stopNameRequired": "Vui lòng nhập tên điểm dừng / cửa khẩu",
       "previewLoaded": "Đã tính toán lộ trình dự kiến",
       "previewFailed": "Không thể tính lộ trình",
@@ -1638,7 +1666,9 @@
       "PickupsFarApart": "Điểm đón của {{bookingCode}} cách điểm xuất phát {{km}} km (ngưỡng {{limit}} km).",
       "Detour": "{{bookingCode}} phải đi {{routeKm}} km thay vì {{directKm}} km nếu đi thẳng (×{{ratio}}, ngưỡng ×{{limit}}).",
       "DossierNotCleared": "Hồ sơ của {{horseName}} ({{bookingCode}}) chưa thông quan; xe chỉ xuất phát khi đã Cleared.",
-      "OvernightRest": "Chặng {{from}} → {{to}} ({{km}} km) cần {{count}} lần nghỉ qua đêm; nên thêm mốc Trạm nghỉ."
+      "OvernightRest": "Chặng {{from}} → {{to}} ({{km}} km) cần {{count}} lần nghỉ qua đêm; nên thêm mốc Trạm nghỉ.",
+      "twoDriversRequiredTitle": "Cảnh báo: Yêu cầu ít nhất 2 tài xế (R-14)",
+      "twoDriversRequiredDesc": "Thời gian chạy dự kiến {{hours}} giờ (vượt quá 9 giờ/ngày). Bắt buộc phải có ít nhất 2 tài xế thay phiên để trình duyệt chuyến."
     },
     "stallMap": {
       "load": "{{count}}/{{max}} ngựa",
@@ -1649,6 +1679,17 @@
       "autoPlaceholder": "Tự phân khi lưu",
       "emptySlot": "Ô trống",
       "hint": "Bấm một ô có ngựa rồi bấm ô khác để đổi chỗ. Mỗi người áp tải phụ trách tối đa 3 con; ô để trống áp tải sẽ được tự phân khi lưu (ô 1-3 cho người đầu tiên, trưởng nhóm trước)."
+    },
+    "approvedRoute": {
+      "title": "Tuyến đường đã được phê duyệt của đơn",
+      "loading": "Đang tải tuyến đã duyệt...",
+      "planSummary": "Đơn {{code}}: {{km}} km · ~{{hours}} giờ chạy",
+      "transitCountries": "Quá cảnh qua:",
+      "useThisRoute": "Dùng tuyến này",
+      "empty": "Chưa có thông tin tuyến được duyệt cho đơn này."
+    },
+    "errors": {
+      "unapprovedCountryTitle": "Lỗi lộ trình: Đi qua nước ngoài tuyến đã duyệt"
     },
     "routePlanningEmpty": "Hiện không có đơn nào chờ lập tuyến",
     "drawer": {
@@ -2057,7 +2098,8 @@
       "locationRequired": "Nhập vị trí xảy ra sự cố",
       "horsePlaceholder": "Không gắn với con ngựa nào",
       "descriptionPlaceholder": "Chuyện gì đã xảy ra, đoàn xe đã làm gì",
-      "descriptionRequired": "Nhập mô tả sự cố"
+      "descriptionRequired": "Nhập mô tả sự cố",
+      "emergencyOffload": "Đã phải dỡ ngựa khẩn cấp theo chỉ định thú y"
     },
     "reroute": {
       "title": "Nắn tuyến chuyến {{trip}}",
@@ -2314,14 +2356,48 @@
         "cancelRefundPercent": "Tỉ lệ hoàn cọc khi khách hủy",
         "usdVndRate": "Tỉ giá USD → VND",
         "balanceDueDaysBeforeDeparture": "Hạn trả phần còn lại (trước khởi hành)",
-        "extraPaymentDueDays": "Hạn trả chi phí phát sinh (sau khi đóng chuyến)"
+        "extraPaymentDueDays": "Hạn trả chi phí phát sinh (sau khi đóng chuyến)",
+        "bookingQuoteAcceptDays": "Hạn chấp nhận báo giá",
+        "delayGraceHours": "Giờ trễ miễn trừ bồi thường",
+        "delayPercentPer12Hours": "Tỷ lệ hoàn tiền mỗi 12h trễ",
+        "delayMaxPercent": "Trần hoàn cước do trễ",
+        "insuranceProofThresholdUsd": "Ngưỡng bắt buộc chứng từ",
+        "insurancePremiumPercent": "Tỷ lệ phí bảo hiểm toàn giá",
+        "insuranceBaseLiabilityUsd": "Trần trách nhiệm cơ bản ngựa chết",
+        "insuranceBaseVetCapUsd": "Trần chi phí thú y cơ bản",
+        "insuranceVetCapPercent": "Trần chi phí thú y bảo hiểm toàn giá",
+        "horseMinAgeMonths": "Độ tuổi tối thiểu của ngựa",
+        "deliveryWaitingFeePerHourUsd": "Phí chờ mỗi giờ",
+        "deliveryMaxWaitingHours": "Số giờ chờ tối đa tại điểm giao",
+        "policyVersion": "Phiên bản chính sách hiện hành",
+        "effectiveDate": "Ngày ban hành chính sách"
       },
       "help": {
         "depositPercent": "0% = duyệt là xác nhận ngay; 100% = thu toàn bộ khi duyệt.",
         "cancelRefundPercent": "Phần còn lại đã trả luôn được hoàn 100%.",
         "usdVndRate": "Dùng để quy đổi báo giá USD sang số tiền VND thanh toán qua VNPay.",
         "balanceDueDaysBeforeDeparture": "Số ngày trước ngày khởi hành của chuyến.",
-        "extraPaymentDueDays": "Quá hạn sẽ nhắc nợ và chặn khách tạo đơn mới."
+        "extraPaymentDueDays": "Quá hạn sẽ nhắc nợ và chặn khách tạo đơn mới.",
+        "bookingQuoteAcceptDays": "Số ngày khách có để xem hợp đồng và cọc trước khi báo giá hết hạn.",
+        "delayGraceHours": "Giao trễ dưới số giờ này do vận hành được miễn trừ bồi thường.",
+        "delayPercentPer12Hours": "Tỷ lệ % tiền cước vận chuyển hoàn cho khách mỗi 12 giờ trễ sau ân hạn.",
+        "delayMaxPercent": "Mức bồi thường tối đa không quá % này của tổng tiền cước vận chuyển.",
+        "insuranceProofThresholdUsd": "Ngựa khai báo giá trị từ mức này trở lên bắt buộc phải tải chứng từ định giá / hóa đơn.",
+        "insurancePremiumPercent": "Mức phí khách phải trả tính trên giá trị thỏa thuận của ngựa.",
+        "insuranceBaseLiabilityUsd": "Mức đền bù tối đa cho một con ngựa khi không mua bảo hiểm và xảy ra lỗi công ty.",
+        "insuranceBaseVetCapUsd": "Chi phí chữa trị tối đa cho mỗi con ngựa bị thương khi không mua bảo hiểm.",
+        "insuranceVetCapPercent": "Mức bồi thường tối đa chi phí thú y tính theo % giá trị thỏa thuận.",
+        "horseMinAgeMonths": "Ngựa dưới số tháng tuổi này sẽ bị hệ thống từ chối vận chuyển theo quy chuẩn IATA/EU.",
+        "deliveryWaitingFeePerHourUsd": "Phí chờ áp dụng cho mỗi giờ xe phải đợi tại điểm giao (sau 2 giờ miễn phí).",
+        "deliveryMaxWaitingHours": "Sau số giờ này người nhận không có mặt, ngựa sẽ được đưa vào chuồng tạm lưu trú.",
+        "policyVersion": "Số hiệu phiên bản hiển thị trên trang Chính sách và ghi nhận khi khách đồng ý.",
+        "effectiveDate": "Ngày áp dụng phiên bản chính sách này."
+      },
+      "tabs": {
+        "payment": "Thanh toán & Tỉ giá",
+        "bookingHorse": "Báo giá & Ngựa",
+        "delayDelivery": "Giao trễ & Giao nhận",
+        "insurancePolicy": "Bảo hiểm & Chính sách"
       }
     }
   },
@@ -2330,7 +2406,8 @@
     "InTransit": "Trên xe",
     "Delivered": "Đã giao",
     "Offloaded": "Rớt lại giữa đường",
-    "Cancelled": "Đã hủy"
+    "Cancelled": "Đã hủy",
+    "Deceased": "Tử vong (chết)"
   },
   "customerOrders": {
     "stage": {
@@ -2751,5 +2828,109 @@
     "companyCovers": "Công ty chăm sóc ngựa tại chuồng tạm bằng chi phí của công ty cho tới khi xử lý xong; bạn không phải trả phí chờ hay phí chuồng.",
     "claimOpened": "Hồ sơ bồi thường đã được mở.",
     "viewClaims": "Xem hồ sơ bồi thường"
+  },
+  "policy": {
+    "agreement": {
+      "prefix": "Tôi đã đọc và đồng ý với",
+      "policyLinkText": "Chính sách dịch vụ",
+      "versionLabel": "phiên bản",
+      "checkboxAria": "Đồng ý với chính sách dịch vụ"
+    },
+    "header": {
+      "tag": "CHÍNH THỨC",
+      "version": "Phiên bản",
+      "effectiveDate": "Ngày ban hành",
+      "title": "Chính Sách Dịch Vụ Vận Chuyển Ngựa",
+      "subtitle": "Quy định chi tiết về phạm vi trách nhiệm, quy trình đặt chuyến, cước phí, bồi thường và quyền lợi của khách hàng khi sử dụng dịch vụ của International Equine Transport."
+    },
+    "nav": {
+      "contentsTitle": "MỤC LỤC CHÍNH SÁCH"
+    },
+    "sections": {
+      "sec1": "Phạm vi áp dụng",
+      "sec2": "Quy trình đặt chuyến & báo giá",
+      "sec3": "Thanh toán",
+      "sec4": "Hủy đơn & hoàn tiền",
+      "sec5": "Điều kiện ngựa được vận chuyển",
+      "sec6": "Giấy tờ & thủ tục",
+      "sec7": "Cam kết thời gian & bồi thường giao trễ",
+      "sec8": "Bảo hiểm & giới hạn trách nhiệm",
+      "sec9": "Sự cố trong hành trình",
+      "sec10": "Giao nhận",
+      "sec11": "Khiếu nại",
+      "sec12": "Hợp đồng vận chuyển",
+      "sec13": "Thay đổi chính sách"
+    },
+    "table": {
+      "item": "Khoản",
+      "amount": "Số tiền",
+      "deadline": "Thời hạn",
+      "cancelTime": "Thời điểm Khách hủy",
+      "refund": "Hoàn tiền",
+      "criteria": "Tiêu chí",
+      "optDefault": "Không mua bảo hiểm (mặc định)",
+      "optFull": "Bảo hiểm toàn giá trị (tùy chọn)",
+      "incidentCause": "Nguyên nhân",
+      "incidentExample": "Ví dụ",
+      "unusedFare": "Tiền cước phần chưa đi",
+      "extraCosts": "Chi phí phát sinh (chờ, quay đầu, chuồng, thú y)",
+      "delayCompensation": "Bồi thường trễ"
+    },
+    "payment": {
+      "deposit": "Tiền cọc",
+      "quoteBase": "báo giá chốt",
+      "quoteAcceptHint": "Khi chấp nhận báo giá, trong",
+      "balance": "Phần còn lại",
+      "balanceCalc": "Báo giá chốt − tiền cọc",
+      "balanceDueHint": "Trước ngày xuất phát",
+      "extra": "Chi phí phát sinh",
+      "extraDesc": "Theo mục 9, 10 (nếu có)",
+      "extraDueHint": "Trong",
+      "extraAfterTrip": "ngày kể từ khi kết thúc chuyến"
+    },
+    "cancel": {
+      "beforeDeposit": "Trước khi đặt cọc",
+      "noRefundNeeded": "Không có khoản nào phải hoàn",
+      "afterDepositBeforeDeparture": "Sau khi cọc, trước khi xuất phát",
+      "refundDepositPrefix": "Hoàn",
+      "refundDepositSuffix": "tiền cọc + 100% phần còn lại đã trả",
+      "afterDeparture": "Sau khi xuất phát",
+      "cannotCancelSelf": "Khách không tự hủy được. Mọi thay đổi xử lý theo mục 9"
+    },
+    "insurance": {
+      "premium": "Phí bảo hiểm",
+      "free": "Không",
+      "agreedValue": "giá trị thỏa thuận",
+      "whenCovered": "Khi nào được bồi thường",
+      "companyFaultOnly": "Chỉ khi do lỗi công ty",
+      "allCausesCovered": "Mọi nguyên nhân trong phạm vi, kể cả bất khả kháng",
+      "lossEuthanasia": "Ngựa chết / an tử / mất",
+      "capUpTo": "Tối đa",
+      "injuredHorse": "Ngựa bị thương",
+      "actualVetCost": "Chi phí thú y thực tế, tối đa"
+    },
+    "incident": {
+      "companyFault": "Lỗi công ty",
+      "companyFaultEx": "Xe hỏng do bảo dưỡng, thiếu giấy do chuyên viên, đi sai tuyến",
+      "refund100": "Hoàn 100%",
+      "companyBears": "Công ty chịu",
+      "delayYes": "Có (mục 7)",
+      "customerFault": "Lỗi Khách",
+      "customerFaultEx": "Giấy sai / giả, khai sai tình trạng ngựa, người nhận vắng mặt / từ chối",
+      "noRefund": "Không hoàn",
+      "customerBears": "Khách chịu",
+      "delayNo": "Không",
+      "forceMajeure": "Bất khả kháng",
+      "forceMajeureEx": "Đóng biên giới, đổi chính sách nhập khẩu, thiên tai, dịch bệnh, tai nạn bên thứ 3",
+      "proRataRefund": "Hoàn theo tỉ lệ quãng đường chưa đi, trừ phí thủ tục không lấy lại được",
+      "forceMajeureExtra": "Công ty chịu chi phí xe & nhân sự; Khách chịu chuồng tạm & thú y"
+    },
+    "units": {
+      "days": "ngày",
+      "hours": "giờ",
+      "hour": "giờ",
+      "months": "tháng tuổi",
+      "horse": "con"
+    }
   }
 }

@@ -153,6 +153,20 @@ export default function LandingFooter() {
                   {t('landing.features.doorToDoorTitle')}
                 </a>
               </li>
+              <li>
+                <a
+                  href={ROUTES.POLICY}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(ROUTES.POLICY);
+                  }}
+                  style={{ color: '#94a3b8', fontSize: 14, cursor: 'pointer', transition: 'color 0.2s' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#FBA919')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}
+                >
+                  {t('landing.nav.policy', 'Chính sách dịch vụ')}
+                </a>
+              </li>
             </ul>
           </Col>
 
@@ -310,6 +324,18 @@ export default function LandingFooter() {
             {t('landing.footer.copyright')}
           </Text>
           <Space size="large">
+            <a
+              href={ROUTES.POLICY}
+              onClick={(e) => {
+                e.preventDefault();
+                navigate(ROUTES.POLICY);
+              }}
+              style={{ color: '#64748b', fontSize: 13, cursor: 'pointer', transition: 'color 0.2s' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#FBA919')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+            >
+              {t('landing.nav.policy', 'Chính sách dịch vụ')}
+            </a>
             <span style={{ color: '#64748b', fontSize: 13, cursor: 'pointer' }}>
               {t('landing.footer.terms')}
             </span>

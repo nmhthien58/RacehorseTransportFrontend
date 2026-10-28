@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
  * Ô sửa nhanh một con số (giá, hệ số, %) kèm nút lưu; nút chỉ bật khi giá trị đã đổi.
  * @param {Object} props
  * @param {number} props.value - Giá trị đang lưu
- * @param {(next: number) => Promise<void>} props.onSave
+ * @param {(next: number) => Promise<boolean>} props.onSave - Trả false khi lưu không được (giữ giá trị đang sửa)
  * @param {number} [props.min]
  * @param {number} [props.step]
  * @param {string} [props.prefix]
@@ -26,8 +26,8 @@ export default function PriceValueEditor({ value, onSave, min = 0, step = 1, pre
     setSaving(true);
     try {
       // onSave trả false (hoặc lỗi) thì giữ giá trị đang sửa để người dùng thử lại
-      const ok = await onSave(Number(draft));
-      if (ok !== false) setDraft(null);
+      const saved = await onSave(Number(draft));
+      if (saved) setDraft(null);
     } catch {
       // Lỗi đã được báo ở nơi gọi
     } finally {

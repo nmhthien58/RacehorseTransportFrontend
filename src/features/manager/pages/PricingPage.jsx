@@ -56,9 +56,10 @@ export default function PricingPage() {
       }
       message.success(t('countryConfig.saved'));
       reload();
+      return true;
     } catch (err) {
       message.error(getErrorMessage(err));
-      throw err;
+      return false;
     }
   };
 

@@ -4,6 +4,8 @@
  */
 export const CUSTOMER_STAGES = [
   'PendingReview',
+  // R-10 (FE-05): có báo giá chốt, chờ khách chấp nhận
+  'QuoteReady',
   'AwaitingDeposit',
   'PreparingDossier',
   'AwaitingTrip',
@@ -18,6 +20,7 @@ export const CUSTOMER_STAGES = [
 /** Màu Tag của từng giai đoạn */
 export const CUSTOMER_STAGE_COLOR = {
   PendingReview: 'gold',
+  QuoteReady: 'purple',
   AwaitingDeposit: 'orange',
   PreparingDossier: 'blue',
   AwaitingTrip: 'geekblue',
@@ -36,7 +39,7 @@ export const CUSTOMER_ACTION_STAGES = ['AwaitingDeposit', 'AwaitingPayment'];
  * Các bước trên timeline dọc của chi tiết đơn, theo thứ tự đi.
  * Giai đoạn AwaitingPayment trước khi chạy nằm ở bước "balance"; sau khi giao (phí phát sinh) thì ở bước "done".
  */
-export const TIMELINE_STEPS = ['review', 'deposit', 'dossier', 'planning', 'balance', 'ready', 'transit', 'handover', 'done'];
+export const TIMELINE_STEPS = ['review', 'quote', 'deposit', 'dossier', 'planning', 'balance', 'ready', 'transit', 'handover', 'done'];
 
 /**
  * Bước hiện tại trên timeline từ giai đoạn và trạng thái đơn.
@@ -48,6 +51,8 @@ export function currentTimelineStep(stage, status) {
   switch (stage) {
     case 'PendingReview':
       return 'review';
+    case 'QuoteReady':
+      return 'quote';
     case 'AwaitingDeposit':
       return 'deposit';
     case 'PreparingDossier':

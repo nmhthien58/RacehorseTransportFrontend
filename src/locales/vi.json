@@ -2335,6 +2335,7 @@
   "customerOrders": {
     "stage": {
       "PendingReview": "Chờ duyệt",
+      "QuoteReady": "Có báo giá",
       "AwaitingDeposit": "Chờ đặt cọc",
       "PreparingDossier": "Đang làm hồ sơ",
       "AwaitingTrip": "Chờ xếp chuyến",
@@ -2370,10 +2371,12 @@
       "closedTitle": {
         "Rejected": "Đơn bị từ chối",
         "Cancelled": "Đơn đã hủy",
-        "Expired": "Đơn đã quá hạn"
+        "Expired": "Đơn đã quá hạn",
+        "QuoteExpired": "Báo giá đã hết hạn"
       },
       "steps": {
         "review": "Gửi yêu cầu & chờ duyệt",
+        "quote": "Báo giá chốt & hợp đồng",
         "deposit": "Đặt cọc",
         "dossier": "Hồ sơ kiểm dịch",
         "planning": "Xếp chuyến",
@@ -2385,6 +2388,7 @@
       },
       "now": {
         "PendingReview": "Quản lý đang xem xét yêu cầu",
+        "QuoteReady": "Xem báo giá, hợp đồng và chấp nhận trước hạn",
         "AwaitingDeposit": "Hãy đặt cọc để bắt đầu làm hồ sơ",
         "PreparingDossier": "Bổ sung giấy tờ ở tab Hồ sơ",
         "AwaitingTrip": "Hồ sơ đã xong, đang chờ xếp chuyến",
@@ -2568,5 +2572,100 @@
     "payForm": {
       "title": "Ghi nhận chi trả bồi thường"
     }
+  },
+  "quote": {
+    "title": "Báo giá chốt",
+    "intro": "Giá chốt tính theo tuyến công ty đã duyệt. Xem hợp đồng, tích đồng ý rồi chấp nhận và đặt cọc trước hạn; quá hạn báo giá tự đóng, không mất phí.",
+    "unitPrice": "Đơn giá",
+    "agreedValue": "Giá trị thỏa thuận",
+    "insurance": "Bảo hiểm",
+    "insurancePlan": {
+      "None": "Không mua",
+      "Full": "Toàn giá trị"
+    },
+    "route": "Tuyến đã duyệt",
+    "transitCountries": "Nước quá cảnh",
+    "noTransit": "Không có",
+    "total": "Tổng giá chốt",
+    "deposit": "Tiền cọc ({{percent}}%)",
+    "balance": "Phần còn lại (trả trước khi khởi hành)",
+    "expiresAt": "Hạn chấp nhận và đặt cọc: {{time}}",
+    "countdownFormat": "D [ngày] HH:mm:ss",
+    "acceptAndPay": "Chấp nhận & đặt cọc",
+    "acceptNote": "Bấm nút này là giao kết hợp đồng theo hình thức điện tử, không cần ký thêm. Sau đó bạn được chuyển sang VNPay để đặt cọc.",
+    "decline": "Từ chối báo giá",
+    "declineTitle": "Từ chối báo giá này?",
+    "declineDescription": "Đơn sẽ bị hủy và bạn không mất phí nào. Có thể cho chúng tôi biết lý do (không bắt buộc).",
+    "declineReasonPlaceholder": "Ví dụ: giá cao hơn dự kiến",
+    "accepted": "Đã chấp nhận báo giá và hợp đồng",
+    "acceptFailed": "Không chấp nhận được báo giá",
+    "declined": "Đã từ chối báo giá, đơn đã hủy",
+    "declineFailed": "Không từ chối được báo giá",
+    "viewQuote": "Xem báo giá",
+    "expired": {
+      "title": "Báo giá đã hết hạn",
+      "description": "Báo giá hết hạn lúc {{time}} mà chưa được chấp nhận và đặt cọc nên đơn đã đóng, bạn không mất phí. Bạn có thể gửi lại yêu cầu với thông tin cũ.",
+      "resubmit": "Gửi lại yêu cầu"
+    },
+    "awaitingDeposit": {
+      "title": "Đã chấp nhận báo giá, chờ đặt cọc",
+      "description": "Hãy đặt cọc {{amount}} trước {{time}}; quá hạn thì đơn tự đóng.",
+      "pay": "Đặt cọc qua VNPay"
+    }
+  },
+  "contract": {
+    "title": "Hợp đồng vận chuyển",
+    "viewerTitle": "Hợp đồng {{code}} · phiên bản {{version}}",
+    "openNewTab": "Mở ở tab mới",
+    "view": "Xem hợp đồng",
+    "download": "Tải",
+    "downloadPdf": "Tải PDF",
+    "history": "Các phiên bản trước",
+    "noFile": "Chưa có file hợp đồng, vui lòng tải lại trang",
+    "loadFailed": "Không tải được hợp đồng",
+    "downloadFailed": "Không tải được file hợp đồng",
+    "openFirst": "Hãy mở và đọc hợp đồng trước khi tích ô đồng ý.",
+    "agreementLabel": "Tôi đã đọc hợp đồng và <policyLink>Chính sách dịch vụ</policyLink> (phiên bản {{version}})",
+    "changedReload": "Hợp đồng vừa được cập nhật. Đã tải bản mới, vui lòng xem lại trước khi chấp nhận.",
+    "pendingWithQuote": "Hợp đồng này được chấp nhận cùng báo giá chốt.",
+    "status": {
+      "Draft": "Chờ chấp nhận",
+      "Accepted": "Đang hiệu lực",
+      "Superseded": "Đã thay thế"
+    },
+    "reason": {
+      "Initial": "Bản đầu theo báo giá chốt",
+      "PickupDropoffChanged": "Đổi điểm đón / giao",
+      "DetourAccepted": "Đồng ý đi đường vòng có phí",
+      "RecipientChanged": "Đổi người nhận"
+    },
+    "fields": {
+      "code": "Số hợp đồng",
+      "status": "Trạng thái",
+      "reason": "Lý do lập",
+      "createdAt": "Ngày lập",
+      "acceptedAt": "Thời điểm chấp nhận",
+      "acceptedBy": "Người chấp nhận",
+      "policyVersion": "Phiên bản chính sách"
+    },
+    "amendment": {
+      "title": "Hợp đồng cần xác nhận lại",
+      "description": "Có bản hợp đồng mới do: {{reason}}. Thay đổi chỉ được áp dụng sau khi bạn xem và chấp nhận bản này.",
+      "accept": "Chấp nhận hợp đồng mới",
+      "accepted": "Đã chấp nhận hợp đồng mới",
+      "acceptFailed": "Không chấp nhận được hợp đồng"
+    }
+  },
+  "airWaybill": {
+    "title": "Vận đơn hàng không",
+    "edit": "Cập nhật",
+    "number": "Số vận đơn",
+    "file": "Bản scan",
+    "openFile": "Xem file",
+    "notEntered": "Chưa nhập",
+    "chooseFile": "Chọn file (PDF / ảnh)",
+    "numberRequired": "Nhập số vận đơn",
+    "saved": "Đã lưu vận đơn",
+    "saveFailed": "Không lưu được vận đơn"
   }
 }

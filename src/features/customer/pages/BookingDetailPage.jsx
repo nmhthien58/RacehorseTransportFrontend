@@ -33,6 +33,10 @@ import CustomerDossierPanel from '@features/customer/components/CustomerDossierP
 import CustomerRecipientSection from '@features/customer/components/CustomerRecipientSection';
 import CustomerDelayCompensationCard from '@features/customer/components/CustomerDelayCompensationCard';
 import CustomerClaimsPanel from '@features/customer/components/CustomerClaimsPanel';
+// Đang sửa BookingDetailPage vì thêm báo giá chốt + chấp nhận & đặt cọc (FE-05), khối hợp đồng và vận đơn hàng không (FE-17)
+import CustomerQuoteCard from '@features/customer/components/CustomerQuoteCard';
+import BookingContractCard from '@components/common/BookingContractCard';
+import AirWaybillCard from '@components/common/AirWaybillCard';
 import OrderTimeline from '@features/customer/components/OrderTimeline';
 import TripJourney from '@features/customer/components/TripJourney';
 import { useBookingJourney } from '@features/customer/hooks/useBookingJourney';
@@ -200,6 +204,11 @@ export default function CustomerBookingDetailPage() {
 
   const overviewContent = (
     <Row gutter={[20, 20]}>
+      {['Quoted', 'AwaitingDeposit', 'QuoteExpired'].includes(status) && (
+        <Col span={24}>
+          <CustomerQuoteCard booking={booking} onChanged={() => setReloadKey((k) => k + 1)} />
+        </Col>
+      )}
       <Col xs={24} xl={8}>
         <Card title={t('customerOrders.timeline.title')} style={{ height: '100%' }}>
           <OrderTimeline booking={booking} />
@@ -254,6 +263,15 @@ export default function CustomerBookingDetailPage() {
         <CustomerDelayCompensationCard bookingId={bookingId} />
       </Col>
       <Col span={24}>
+        <BookingContractCard
+          bookingId={bookingId}
+          bookingStatus={status}
+          mode="customer"
+          reloadKey={reloadKey}
+          onChanged={() => setReloadKey((k) => k + 1)}
+        />
+      </Col>
+      <Col span={24}>
         <Card title={t('bookings.detailPage.horses')}>
           <Table
             rowKey={(record) => record.horseId || record.HorseID}
@@ -264,7 +282,7 @@ export default function CustomerBookingDetailPage() {
           />
         </Card>
       </Col>
-      {quoteLines.length > 0 && (
+      {quoteLines.length > 0 && status !== 'Quoted' && (
         <Col span={24}>
           <Card title={t('bookings.detailPage.quote')}>
             <Table
@@ -317,6 +335,7 @@ export default function CustomerBookingDetailPage() {
           />
         )}
         {shownTrip && <TripJourney trip={shownTrip} lastLoadedAt={journey.lastLoadedAt} onRefresh={journey.refetch} />}
+        {shownTrip && <AirWaybillCard tripId={shownTrip.tripId} tripStatus={shownTrip.overallStatus} />}
       </Flex>
     );
 

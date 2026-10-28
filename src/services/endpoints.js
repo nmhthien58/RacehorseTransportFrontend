@@ -83,6 +83,9 @@ export const ENDPOINTS = {
     REASSIGN_SPECIALIST: (id) => `/bookings/${id}/reassign-specialist`,
     HORSE_VALUES: (id) => `/bookings/${id}/horse-values`,
     CANCEL_ROUTE_CHANGE: (id) => `/bookings/${id}/cancel-route-change`,
+    // Báo giá chốt (R-10, BE-05): khách chấp nhận (kèm hợp đồng) / từ chối
+    ACCEPT_QUOTE: (id) => `/bookings/${id}/accept-quote`,
+    DECLINE_QUOTE: (id) => `/bookings/${id}/decline-quote`,
     // Bí danh tương thích ngược
     ASSIGN: (id) => `/bookings/${id}/reassign-specialist`,
     CALCULATE_QUOTE: (id) => (id ? `/bookings/${id}/calculate-quote` : '/bookings/quote-preview'),
@@ -238,6 +241,15 @@ export const ENDPOINTS = {
     APPROVE: (id) => `/claims/${id}/approve`,
     REJECT: (id) => `/claims/${id}/reject`,
     PAY: (id) => `/claims/${id}/pay`,
+  },
+
+  // 18. Hợp đồng vận chuyển + vận đơn hàng không (R-17, BE-20)
+  CONTRACTS: {
+    CURRENT: (bookingId) => `/bookings/${bookingId}/contract`,
+    HISTORY: (bookingId) => `/bookings/${bookingId}/contracts`,
+    FILE: (contractId) => `/contracts/${contractId}/file`,
+    ACCEPT: (contractId) => `/contracts/${contractId}/accept`,
+    AIR_WAYBILL: (tripId) => `/trips/${tripId}/air-waybill`,
   },
 
   PRICING: {

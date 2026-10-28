@@ -2336,6 +2336,7 @@
   "customerOrders": {
     "stage": {
       "PendingReview": "Pending review",
+      "QuoteReady": "Quote ready",
       "AwaitingDeposit": "Awaiting deposit",
       "PreparingDossier": "Preparing documents",
       "AwaitingTrip": "Awaiting trip",
@@ -2371,10 +2372,12 @@
       "closedTitle": {
         "Rejected": "Order rejected",
         "Cancelled": "Order cancelled",
-        "Expired": "Order expired"
+        "Expired": "Order expired",
+        "QuoteExpired": "Quote expired"
       },
       "steps": {
         "review": "Request & review",
+        "quote": "Final quote & contract",
         "deposit": "Deposit",
         "dossier": "Quarantine documents",
         "planning": "Trip planning",
@@ -2386,6 +2389,7 @@
       },
       "now": {
         "PendingReview": "The manager is reviewing your request",
+        "QuoteReady": "Review the quote and contract and accept before the deadline",
         "AwaitingDeposit": "Pay the deposit to start the documents",
         "PreparingDossier": "Upload documents in the Documents tab",
         "AwaitingTrip": "Documents are done, waiting for a trip",
@@ -2569,5 +2573,100 @@
     "payForm": {
       "title": "Record Claim Payment"
     }
+  },
+  "quote": {
+    "title": "Final quote",
+    "intro": "The final price is based on the route approved by the company. Read the contract, tick the box, then accept and pay the deposit before the deadline; an expired quote closes on its own at no cost.",
+    "unitPrice": "Unit price",
+    "agreedValue": "Agreed value",
+    "insurance": "Insurance",
+    "insurancePlan": {
+      "None": "None",
+      "Full": "Full value"
+    },
+    "route": "Approved route",
+    "transitCountries": "Transit countries",
+    "noTransit": "None",
+    "total": "Final price",
+    "deposit": "Deposit ({{percent}}%)",
+    "balance": "Balance (paid before departure)",
+    "expiresAt": "Accept and pay the deposit by {{time}}",
+    "countdownFormat": "D [d] HH:mm:ss",
+    "acceptAndPay": "Accept & pay deposit",
+    "acceptNote": "Clicking this concludes the contract electronically; no further signature is needed. You will then be taken to VNPay to pay the deposit.",
+    "decline": "Decline quote",
+    "declineTitle": "Decline this quote?",
+    "declineDescription": "The booking will be cancelled at no cost. You may tell us why (optional).",
+    "declineReasonPlaceholder": "E.g. the price is higher than expected",
+    "accepted": "Quote and contract accepted",
+    "acceptFailed": "Could not accept the quote",
+    "declined": "Quote declined, the booking is cancelled",
+    "declineFailed": "Could not decline the quote",
+    "viewQuote": "View quote",
+    "expired": {
+      "title": "The quote has expired",
+      "description": "The quote expired at {{time}} before it was accepted and paid, so the booking was closed at no cost. You can send the request again with the same details.",
+      "resubmit": "Send the request again"
+    },
+    "awaitingDeposit": {
+      "title": "Quote accepted, deposit pending",
+      "description": "Please pay the {{amount}} deposit before {{time}}, otherwise the booking closes.",
+      "pay": "Pay deposit via VNPay"
+    }
+  },
+  "contract": {
+    "title": "Transport contract",
+    "viewerTitle": "Contract {{code}} · version {{version}}",
+    "openNewTab": "Open in new tab",
+    "view": "View contract",
+    "download": "Download",
+    "downloadPdf": "Download PDF",
+    "history": "Previous versions",
+    "noFile": "The contract file is not available, please reload the page",
+    "loadFailed": "Could not load the contract",
+    "downloadFailed": "Could not download the contract file",
+    "openFirst": "Open and read the contract before ticking the box.",
+    "agreementLabel": "I have read the contract and the <policyLink>Service Policy</policyLink> (version {{version}})",
+    "changedReload": "The contract has just been updated. The new version is loaded; please review it before accepting.",
+    "pendingWithQuote": "This contract is accepted together with the final quote.",
+    "status": {
+      "Draft": "Awaiting acceptance",
+      "Accepted": "In force",
+      "Superseded": "Superseded"
+    },
+    "reason": {
+      "Initial": "Initial (final quote)",
+      "PickupDropoffChanged": "Pick-up / drop-off changed",
+      "DetourAccepted": "Paid detour accepted",
+      "RecipientChanged": "Recipient changed"
+    },
+    "fields": {
+      "code": "Contract no.",
+      "status": "Status",
+      "reason": "Reason",
+      "createdAt": "Created",
+      "acceptedAt": "Accepted at",
+      "acceptedBy": "Accepted by",
+      "policyVersion": "Policy version"
+    },
+    "amendment": {
+      "title": "The contract needs your confirmation",
+      "description": "A new contract version was issued because: {{reason}}. The change applies only after you review and accept it.",
+      "accept": "Accept the new contract",
+      "accepted": "New contract accepted",
+      "acceptFailed": "Could not accept the contract"
+    }
+  },
+  "airWaybill": {
+    "title": "Air waybill",
+    "edit": "Update",
+    "number": "Waybill number",
+    "file": "Scanned copy",
+    "openFile": "Open file",
+    "notEntered": "Not entered",
+    "chooseFile": "Choose file (PDF / image)",
+    "numberRequired": "Enter the waybill number",
+    "saved": "Air waybill saved",
+    "saveFailed": "Could not save the air waybill"
   }
 }

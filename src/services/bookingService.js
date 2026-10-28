@@ -134,6 +134,26 @@ export const bookingService = {
   async cancelRouteChange(id) {
     return api.post(ENDPOINTS.BOOKINGS.CANCEL_ROUTE_CHANGE(id));
   },
+
+  /**
+   * Khách chấp nhận báo giá chốt + bản hợp đồng đang xem (R-10, R-17); đơn chuyển AwaitingDeposit
+   * @param {number|string} id - BookingID
+   * @param {{ contractId: number, contractSha256: string, acceptPolicy: boolean, policyVersion: string }} payload
+   * @returns {Promise<any>}
+   */
+  async acceptQuote(id, payload) {
+    return api.post(ENDPOINTS.BOOKINGS.ACCEPT_QUOTE(id), payload);
+  },
+
+  /**
+   * Khách từ chối báo giá chốt (không mất phí); đơn chuyển Cancelled
+   * @param {number|string} id - BookingID
+   * @param {{ reason?: string }} payload
+   * @returns {Promise<any>}
+   */
+  async declineQuote(id, payload) {
+    return api.post(ENDPOINTS.BOOKINGS.DECLINE_QUOTE(id), payload);
+  },
 };
 
 export default bookingService;

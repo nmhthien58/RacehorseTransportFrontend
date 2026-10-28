@@ -199,7 +199,8 @@ export default function BookingRoutePlanModal({ open, booking, onClose, onSucces
       restMinutes: 30,
     };
     updateStops([...stops, stop]);
-    if (!place) resolvePlace(stop.key, stop.lat, stop.lng);
+    // Lấy địa chỉ chạy nền (resolvePlace tự bắt lỗi), không chặn thao tác thêm mốc
+    if (!place) void resolvePlace(stop.key, stop.lat, stop.lng);
   };
 
   // Chỉ số trên bản đồ tính cả điểm đón ở đầu: mốc giữa thứ i nằm ở vị trí i + 1
@@ -467,7 +468,7 @@ export default function BookingRoutePlanModal({ open, booking, onClose, onSucces
                 if (!target) return;
                 const next = stops.map((s) => (s.key === target.key ? { ...s, lat: point.lat, lng: point.lng, address: '', countryCode: '' } : s));
                 updateStops(next);
-                resolvePlace(target.key, point.lat, point.lng);
+                void resolvePlace(target.key, point.lat, point.lng);
               }}
               onReorder={(next) => updateStops(next.slice(1, -1).map((s) => stops.find((x) => x.key === s.key) || s))}
               onRemoveStop={(index) => updateStops(stops.filter((_, i) => i !== index - 1))}

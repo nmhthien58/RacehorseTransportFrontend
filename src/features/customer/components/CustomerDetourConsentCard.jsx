@@ -41,9 +41,11 @@ export default function CustomerDetourConsentCard({ booking, onChanged }) {
     let active = true;
     Promise.all(
       tripKey.split(',').map((id) => incidentService.getIncidents({ tripId: id, size: 50 }).then(unwrapList).catch(() => [])),
-    ).then((lists) => {
-      if (active) setIncidents(lists.flat().filter((i) => i.status === 'AwaitingConsent'));
-    });
+    )
+      .then((lists) => {
+        if (active) setIncidents(lists.flat().filter((i) => i.status === 'AwaitingConsent'));
+      })
+      .catch(() => active && setIncidents([]));
     return () => {
       active = false;
     };

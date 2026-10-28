@@ -77,16 +77,18 @@ export default function MissionHeaderCard({
       }}
       bodyStyle={{ padding: '20px 24px' }}
     >
-      {/* Breadcrumb & Nút quay lại */}
+      {/* Breadcrumb & Nút quay lại; màn hẹp (điện thoại) thì tự xuống dòng để nút SOS không bị đẩy ra ngoài */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 8,
           marginBottom: 16,
         }}
       >
-        <Space size="middle">
+        <Space size="middle" wrap>
           <Button
             type="text"
             icon={<ArrowLeftOutlined />}

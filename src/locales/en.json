@@ -2933,5 +2933,56 @@
       "months": "months of age",
       "horse": "horse"
     }
+  },
+  "routePlan": {
+    "title": "Plan the route for booking {{code}}",
+    "origin": "Pick-up (from the booking)",
+    "destination": "Drop-off (from the booking)",
+    "searchPlaceholder": "Search a rest stop / border gate to add it, or click the map",
+    "transitCountries": "Transit countries",
+    "noTransit": "None",
+    "recalculating": "Recalculating the route...",
+    "warningLeg": "Leg {{from}} → {{to}} crosses {{countries}}",
+    "noStops": "No stops yet: the route goes straight from pick-up to drop-off",
+    "noCoordinates": "The booking has no pick-up / drop-off coordinates, so the route cannot be drawn.",
+    "notesPlaceholder": "Notes for the manager (optional)",
+    "nameRequired": "Every stop needs a name",
+    "saveDraft": "Save draft",
+    "submit": "Save & submit",
+    "submitHint": "Each time you add, drag or remove a stop, the distance and transit countries are recalculated.",
+    "submitBlocked": "Border warnings remain: add a Border gate stop on each cross-border leg before submitting.",
+    "hasWarnings": "Saved, but the route still has border warnings so it was not submitted.",
+    "saved": "Route draft saved",
+    "submitted": "Route of {{code}} submitted for the manager's approval",
+    "saveFailed": "Could not save the route",
+    "loadFailed": "Could not load the booking's routes",
+    "previewFailed": "Could not calculate the route",
+    "rejected": "Version v{{version}} was rejected by the manager",
+    "newVersion": "Plan a new version",
+    "newVersionHint": "The new route replaces the approved one once the manager approves it; the quote is recalculated if it has not been accepted yet.",
+    "readOnly": {
+      "Submitted": "The route is waiting for the manager's approval.",
+      "Approved": "The route has been approved."
+    },
+    "versions": "Versions",
+    "status": {
+      "Draft": "Draft",
+      "Submitted": "Submitted",
+      "Approved": "Approved",
+      "Rejected": "Rejected",
+      "Superseded": "Superseded"
+    },
+    "fields": {
+      "type": "Type",
+      "name": "Name",
+      "address": "Address",
+      "rest": "Rest (min)",
+      "version": "Version",
+      "status": "Status",
+      "stops": "Stops",
+      "km": "km",
+      "createdAt": "Created",
+      "rejection": "Rejection reason"
+    }
   }
 }

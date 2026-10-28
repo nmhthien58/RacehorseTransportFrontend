@@ -2932,5 +2932,56 @@
       "months": "tháng tuổi",
       "horse": "con"
     }
+  },
+  "routePlan": {
+    "title": "Lập tuyến dự kiến cho đơn {{code}}",
+    "origin": "Điểm đón (lấy từ đơn)",
+    "destination": "Điểm giao (lấy từ đơn)",
+    "searchPlaceholder": "Tìm địa chỉ trạm nghỉ / cửa khẩu để thêm mốc, hoặc bấm lên bản đồ",
+    "transitCountries": "Nước quá cảnh",
+    "noTransit": "Không có",
+    "recalculating": "Đang tính lại tuyến...",
+    "warningLeg": "Chặng {{from}} → {{to}} đi qua {{countries}}",
+    "noStops": "Chưa có mốc giữa đường: tuyến đi thẳng từ điểm đón tới điểm giao",
+    "noCoordinates": "Đơn chưa có tọa độ điểm đón / giao nên không vẽ được tuyến.",
+    "notesPlaceholder": "Ghi chú cho quản lý (không bắt buộc)",
+    "nameRequired": "Mốc nào cũng cần có tên",
+    "saveDraft": "Lưu nháp",
+    "submit": "Lưu & trình duyệt",
+    "submitHint": "Mỗi lần thêm / kéo / xóa mốc, hệ thống tính lại quãng đường và nước quá cảnh.",
+    "submitBlocked": "Còn cảnh báo cửa khẩu: thêm mốc Cửa khẩu ở chặng qua biên giới rồi mới trình được.",
+    "hasWarnings": "Đã lưu nhưng tuyến còn cảnh báo cửa khẩu nên chưa trình.",
+    "saved": "Đã lưu bản nháp tuyến",
+    "submitted": "Đã trình tuyến của đơn {{code}} cho quản lý duyệt",
+    "saveFailed": "Không lưu được tuyến",
+    "loadFailed": "Không tải được tuyến của đơn",
+    "previewFailed": "Không tính được tuyến",
+    "rejected": "Phiên bản v{{version}} bị quản lý từ chối",
+    "newVersion": "Lập phiên bản mới",
+    "newVersionHint": "Tuyến mới sẽ thay tuyến đã duyệt khi quản lý duyệt; báo giá được tính lại nếu đơn chưa chấp nhận báo giá.",
+    "readOnly": {
+      "Submitted": "Tuyến đang chờ quản lý duyệt.",
+      "Approved": "Tuyến đã được duyệt."
+    },
+    "versions": "Các phiên bản",
+    "status": {
+      "Draft": "Đang soạn",
+      "Submitted": "Chờ duyệt",
+      "Approved": "Đã duyệt",
+      "Rejected": "Bị từ chối",
+      "Superseded": "Đã thay thế"
+    },
+    "fields": {
+      "type": "Loại mốc",
+      "name": "Tên mốc",
+      "address": "Địa chỉ",
+      "rest": "Nghỉ (phút)",
+      "version": "Phiên bản",
+      "status": "Trạng thái",
+      "stops": "Các mốc",
+      "km": "km",
+      "createdAt": "Lập lúc",
+      "rejection": "Lý do từ chối"
+    }
   }
 }

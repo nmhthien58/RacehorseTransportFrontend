@@ -124,7 +124,7 @@ File chính: `src/features/customer/components/BookingWizard.jsx`.
 - Bước xem lại: tóm tắt + `PolicyAgreement` (FE-15) bắt buộc tích mới gửi được; gửi kèm `acceptPolicy`, `policyVersion`.
 - Giữ phần lịch đón / hạn giao đã sửa (hạn giao tính từ cuối khoảng đón).
 
-### [ ] FE-03 · Coordinator lập tuyến dự kiến cho đơn (R-10)
+### [x] FE-03 · Coordinator lập tuyến dự kiến cho đơn (R-10)
 - Danh sách đơn `PreApproved` cần lập tuyến (thêm mục vào menu Coordinator).
 - Màn lập tuyến: `RouteMap` ở chế độ sửa; điểm đầu / cuối lấy từ đơn (không sửa được); thêm mốc nghỉ / cửa khẩu bằng tìm địa chỉ hoặc click; kéo đổi thứ tự; mỗi lần đổi gọi backend tính lại từng chặng, tổng km, giờ dự kiến, **nước quá cảnh** (hiện dạng cờ / chip theo thứ tự).
 - Hiện cảnh báo backend trả về (đổi nước mà thiếu mốc cửa khẩu) ngay tại đoạn đường liên quan; nút **Trình duyệt** khóa khi còn cảnh báo.

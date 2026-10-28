@@ -1,3 +1,4 @@
+// Đang sửa TripExecutionPage vì hiển thị thông tin người nhận ngựa và trạng thái có mặt theo FE-13 (R-16)
 import { useEffect, useState } from 'react';
 import {
   Card,
@@ -23,8 +24,13 @@ import {
   LogoutOutlined,
   HeartOutlined,
   SafetyCertificateOutlined,
+<<<<<<< HEAD
   FileDoneOutlined,
   AlertOutlined,
+=======
+  FileDoneOutlined, PhoneOutlined,
+  ExportOutlined,
+>>>>>>> main
 } from '@ant-design/icons';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -540,6 +546,32 @@ export default function TripExecutionPage() {
                         )}
 
                         {/* 2b. Điểm trả của một đơn giữa đường (R-04): ký e-POD cho đơn đó trước khi rời */}
+                        
+                        {/* Thông tin người nhận tại điểm trả theo FE-13 */}
+                        {(handoverPendingHere || isDestination) && (
+                          <div style={{ marginTop: 8, padding: '8px 12px', background: '#F8FAFC', borderRadius: 8, width: '100%', border: '1px solid #E2E8F0' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                              <div>
+                                <span style={{ fontSize: 12, color: '#64748B' }}>{t('handover.form.recipientTitle', 'Người nhận')}: </span>
+                                <Text strong>{cp.recipientName || mission?.bookings?.find((b) => b.bookingId === cp.bookingId)?.recipientName || mission?.bookings?.find((b) => b.bookingId === cp.bookingId)?.customerName || '—'}</Text>
+                                {(cp.recipientPhone || mission?.bookings?.find((b) => b.bookingId === cp.bookingId)?.recipientPhone) && (
+                                  <a
+                                    href={`tel:${cp.recipientPhone || mission?.bookings?.find((b) => b.bookingId === cp.bookingId)?.recipientPhone}`}
+                                    style={{ marginLeft: 8, color: '#2563EB', fontWeight: 600, fontSize: 12 }}
+                                  >
+                                    <PhoneOutlined /> {cp.recipientPhone || mission?.bookings?.find((b) => b.bookingId === cp.bookingId)?.recipientPhone}
+                                  </a>
+                                )}
+                              </div>
+                              <Tag color={cp.recipientConfirmedAt || mission?.bookings?.find((b) => b.bookingId === cp.bookingId)?.recipientConfirmedAt ? 'green' : 'orange'}>
+                                {cp.recipientConfirmedAt || mission?.bookings?.find((b) => b.bookingId === cp.bookingId)?.recipientConfirmedAt
+                                  ? t('handover.form.presenceConfirmed', 'Đã xác nhận có mặt')
+                                  : t('handover.form.presenceUnconfirmed', 'Chưa xác nhận có mặt')}
+                              </Tag>
+                            </div>
+                          </div>
+                        )}
+
                         {handoverPendingHere && (
                           <Button
                             type="primary"

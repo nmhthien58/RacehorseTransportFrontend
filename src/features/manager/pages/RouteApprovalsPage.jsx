@@ -23,7 +23,11 @@ import dayjs from 'dayjs';
 import PageHeader from '@components/layout/PageHeader';
 import StatusTag from '@components/common/StatusTag';
 import tripService from '@services/tripService';
+// Đang sửa RouteApprovalsPage vì bổ sung tab Duyệt tuyến đơn hàng và chốt giá trị ngựa theo FE-04 (R-10, BE-04, BE-09)
 import TripPlanSummary from '@features/coordinator/components/TripPlanSummary';
+import BookingRouteApprovalCard from '@features/manager/components/BookingRouteApprovalCard';
+import bookingService from '@services/bookingService';
+import { Tabs } from 'antd';
 import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 
 const { Text } = Typography;
@@ -45,6 +49,9 @@ export default function RouteApprovalsPage() {
 
   const [statusFilter, setStatusFilter] = useState('PendingApproval');
   const [trips, setTrips] = useState([]);
+  const [routeBookings, setRouteBookings] = useState([]);
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
+  const [approvalTab, setApprovalTab] = useState('bookingRoutes');
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -56,10 +63,19 @@ export default function RouteApprovalsPage() {
 
   useEffect(() => {
     let active = true;
-    tripService
-      .getTrips({ status: statusFilter, size: 100 })
-      .then((res) => {
-        if (active) setTrips(unwrapList(res));
+    Promise.all([
+      tripService.getTrips({ status: statusFilter, size: 100 }),
+      bookingService.getBookings(),
+    ])
+      .then(([tRes, bRes]) => {
+        if (!active) return;
+        setTrips(unwrapList(tRes));
+        const allB = unwrapList(bRes);
+        const planned = allB.filter((b) => (b.status || b.Status) === 'RoutePlanned');
+        setRouteBookings(planned);
+        if (planned.length > 0) {
+          setSelectedBookingId((prev) => prev || planned[0].bookingId || planned[0].BookingID);
+        }
       })
       .catch((err) => {
         if (active) message.error(getErrorMessage(err, t('tripPlan.messages.loadFailed')));
@@ -130,6 +146,7 @@ export default function RouteApprovalsPage() {
     }
   };
 
+const selectedBooking = routeBookings.find((b) => (b.bookingId || b.BookingID) === selectedBookingId) || routeBookings[0] || null;
   const isPending = shownDetail?.overallStatus === 'PendingApproval';
   const lastChance = (shownDetail?.planRejectionCount || 0) >= MAX_PLAN_REJECTIONS - 1;
 
@@ -145,6 +162,74 @@ export default function RouteApprovalsPage() {
         }
       />
 
+
+        <Tabs
+          activeKey={approvalTab}
+          onChange={setApprovalTab}
+          style={{ marginBottom: 16 }}
+          items={[
+            {
+              key: 'bookingRoutes',
+              label: `${t('routeApproval.tabs.bookingRoutes', 'Tuyến đơn hàng (R-10)')} (${routeBookings.length})`,
+              children: (
+                <Row gutter={[16, 16]}>
+                  <Col xs={24} lg={8}>
+                    <Card style={{ borderRadius: 14 }} styles={{ body: { padding: 12 } }}>
+                      <div style={{ marginBottom: 8, fontWeight: 600, color: '#0F172A' }}>
+                        {t('routeApproval.pendingListTitle', 'Đơn đã lập tuyến chờ duyệt')}
+                      </div>
+                      <List
+                        loading={loading}
+                        dataSource={routeBookings}
+                        locale={{ emptyText: <Empty description={t('routeApproval.emptyBookingRoutes', 'Không có đơn nào chờ duyệt tuyến')} /> }}
+                        renderItem={(b) => {
+                          const bId = b.bookingId || b.BookingID;
+                          const isSel = bId === (selectedBooking?.bookingId || selectedBooking?.BookingID);
+                          return (
+                            <List.Item
+                              onClick={() => setSelectedBookingId(bId)}
+                              style={{
+                                cursor: 'pointer',
+                                padding: '10px 12px',
+                                borderRadius: 10,
+                                backgroundColor: isSel ? '#EFF6FF' : undefined,
+                                border: isSel ? '1px solid #BFDBFE' : '1px solid transparent',
+                              }}
+                            >
+                              <div style={{ width: '100%' }}>
+                                <Flex justify="space-between" align="center">
+                                  <Text strong>{b.bookingCode || b.BookingCode || '#' + bId}</Text>
+                                  <StatusTag status={b.status || b.Status} />
+                                </Flex>
+                                <div style={{ fontSize: 12, color: '#64748B' }}>
+                                  {b.customerName || b.CustomerName} · {b.totalHorses || b.TotalHorses || (b.horses ? b.horses.length : 1)} ngựa
+                                </div>
+                                <div style={{ fontSize: 12, color: '#64748B' }}>
+                                  {b.pickupCountryCode || 'VN'} → {b.dropoffCountryCode || 'CN'}
+                                </div>
+                              </div>
+                            </List.Item>
+                          );
+                        }}
+                      />
+                    </Card>
+                  </Col>
+                  <Col xs={24} lg={16}>
+                    {selectedBooking ? (
+                      <BookingRouteApprovalCard booking={selectedBooking} onRefresh={refresh} />
+                    ) : (
+                      <Card style={{ borderRadius: 14 }}>
+                        <Empty description={t('routeApproval.noBookingSelected', 'Chọn một đơn hàng để xem tuyến và chốt giá trị ngựa')} />
+                      </Card>
+                    )}
+                  </Col>
+                </Row>
+              ),
+            },
+            {
+              key: 'tripPlans',
+              label: `${t('routeApproval.tabs.tripPlans', 'Kế hoạch chuyến xe')} (${trips.length})`,
+              children: (
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={8}>
           <Card style={{ borderRadius: 14 }} styles={{ body: { padding: 12 } }}>
@@ -239,8 +324,12 @@ export default function RouteApprovalsPage() {
           )}
         </Col>
       </Row>
+              ),
+            },
+          ]}
+        />
 
-      <Modal
+<Modal
         title={t('routeApproval.rejectTitle', { code: shownDetail?.tripCode || '' })}
         open={rejectOpen}
         onCancel={() => setRejectOpen(false)}

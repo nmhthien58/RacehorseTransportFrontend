@@ -3,6 +3,7 @@ import { ENDPOINTS } from './endpoints';
 
 /**
  * @file policyService.js
+<<<<<<< HEAD
  * @description Tầng Service xử lý chính sách dịch vụ hệ thống (FE-15 / BE-17).
  * Cung cấp cấu hình chính sách động và dữ liệu fallback chuẩn hóa từ doc/CHINH_SACH_DICH_VU.md.
  */
@@ -71,6 +72,18 @@ export const policyService = {
       // TODO(BE-17): Trả về dữ liệu mặc định khi backend chưa hoàn tất endpoint /api/policy
       return DEFAULT_POLICY;
     }
+=======
+ * @description Chính sách dịch vụ công khai (BE-17): phiên bản hiện hành và các giá trị cấu hình.
+ */
+
+export const policyService = {
+  /**
+   * Lấy chính sách hiện hành (không cần đăng nhập)
+   * @returns {Promise<{ data: { version: string, payment: Object, booking: Object, delay: Object, insurance: Object, horse: Object, delivery: Object, values: Object<string, number|string> } }>}
+   */
+  async getPolicy() {
+    return api.get(ENDPOINTS.POLICY.PUBLIC);
+>>>>>>> main
   },
 };
 

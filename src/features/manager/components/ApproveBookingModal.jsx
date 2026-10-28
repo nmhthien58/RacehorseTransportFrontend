@@ -1,3 +1,4 @@
+// Đang sửa ApproveBookingModal vì đổi nhãn thành Duyệt sơ bộ theo FE-04 (R-10)
 import { useEffect } from 'react';
 import { Modal, Alert, Form, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
@@ -47,12 +48,12 @@ export default function ApproveBookingModal({
 
   return (
     <Modal
-      title={t('manager.bookings.modals.approveTitle')}
+      title={t('manager.bookings.modals.preApproveTitle', 'Duyệt sơ bộ yêu cầu vận chuyển')}
       open={open}
       onCancel={onCancel}
       onOk={handleOk}
       confirmLoading={confirmLoading}
-      okText={t('manager.bookings.actions.approve')}
+      okText={t('manager.bookings.actions.preApprove', 'Duyệt sơ bộ')}
       okButtonProps={{
         style: { backgroundColor: '#F59E0B', borderColor: '#F59E0B', color: '#0f172a', fontWeight: 700 },
       }}
@@ -65,7 +66,7 @@ export default function ApproveBookingModal({
           message={t('manager.bookings.modals.approveConfirmText', {
             code: `#${bookingCode || ''}`,
           })}
-          description={t('manager.bookings.modals.approveConfirmNote')}
+          description={t('manager.bookings.modals.preApproveConfirmNote', 'Đơn sẽ được duyệt sơ bộ tính khả thi và chuyển đến Điều phối viên để lập tuyến chi tiết trên bản đồ. Báo giá chốt và giá trị ngựa sẽ được duyệt ở bước sau.')}
           style={{ marginBottom: 16, borderRadius: 8 }}
         />
 

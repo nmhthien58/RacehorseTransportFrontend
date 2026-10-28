@@ -32,6 +32,8 @@ import { formatCountryRoute, getTransitCountryCodes } from '@utils/bookingRoute'
 import { TRANSIT_COUNTRY_OPTIONS } from '@features/customer/constants/bookingOptions';
 import StatusTag from '@components/common/StatusTag';
 import BookingPaymentPanel from '@components/common/BookingPaymentPanel';
+// Đang sửa BookingDetailPage (manager) vì nhân sự cần xem / tải hợp đồng hiện hành của đơn (FE-17)
+import BookingContractCard from '@components/common/BookingContractCard';
 import bookingService from '@services/bookingService';
 import userService from '@services/userService';
 import { ROUTES } from '@routes/routes';
@@ -685,6 +687,9 @@ export default function BookingDetailPage() {
             mode="manager"
             onChanged={handleRefresh}
           />
+        </Col>
+        <Col span={24}>
+          <BookingContractCard bookingId={booking.bookingId} bookingStatus={booking.status} mode="staff" />
         </Col>
       </Row>
 

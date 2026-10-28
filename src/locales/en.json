@@ -102,10 +102,17 @@
     "tripClosure": "Trip closing & KPI",
     "reports": "Reports",
     "paymentSettings": "Payment settings",
-    "transportOrders": "Transport orders"
+    "transportOrders": "Transport orders",
+    "insuranceClaims": "Insurance Claims"
   },
   "status": {
     "submitted": "Submitted",
+    "preApproved": "Pre-Approved",
+    "routePlanned": "Route Planned",
+    "quoted": "Quoted",
+    "quoteExpired": "Quote Expired",
+    "underReview": "Under Review",
+    "paid": "Paid",
     "awaitingDeposit": "Awaiting deposit",
     "awaitingFinalPayment": "Awaiting final payment",
     "approved": "Approved",
@@ -1509,7 +1516,9 @@
     "queueEmpty": "No horses are waiting to be planned",
     "tabs": {
       "queue": "Planning queue",
-      "trips": "Trip plans"
+      "trips": "Trip plans",
+      "routePlanning": "Route Planning Queue",
+      "routePlanningHint": "List of transport requests pre-approved by Manager waiting for Coordinator to map route and stops before quoting."
     },
     "filters": {
       "allModes": "All modes",
@@ -1560,7 +1569,14 @@
       "deliveredCount": "Delivered {{done}}/{{total}}",
       "pickupAt": "Pick-up",
       "routeKm": "Distance",
-      "escort": "Escort in charge"
+      "escort": "Escort in charge",
+      "stopType": "Stop Type",
+      "stopName": "Stop Name",
+      "country": "Country",
+      "stopNamePlaceholder": "Stop name or checkpoint",
+      "addressPlaceholder": "Address",
+      "notes": "Route Notes",
+      "notesPlaceholder": "Notes for specialist or manager..."
     },
     "crewRole": {
       "Driver": "Driver",
@@ -1597,7 +1613,11 @@
       "resetRoute": "Rebuild default route",
       "saveDraft": "Save draft",
       "saveAndSubmit": "Save & submit",
-      "suggestRoute": "Suggest route"
+      "suggestRoute": "Suggest route",
+      "planRoute": "Plan Route",
+      "viewEditRoute": "View / Edit Route",
+      "previewRoute": "Preview Route",
+      "submitRoute": "Save & Submit"
     },
     "confirm": {
       "cancel": "Cancel trip {{code}}? Its horses go back to the queue."
@@ -1623,8 +1643,16 @@
       "suggestNeedInput": "Choose horses and a departure time first",
       "suggestFailed": "Could not suggest a route",
       "suggested": "Route replaced with the suggestion",
+<<<<<<< HEAD
       "needTwoDrivers": "Estimated driving time is {{hours}} hours (> 9 hours). At least 2 rotating drivers are required to submit under R-14 safety rules.",
       "routeCopied": "Copied checkpoints from approved route of booking {{code}} into trip plan!"
+=======
+      "stopNameRequired": "Please enter stop or checkpoint name",
+      "previewLoaded": "Route preview calculated",
+      "previewFailed": "Failed to calculate route preview",
+      "submittedSuccess": "Route plan submitted for Manager review",
+      "submitFailed": "Failed to submit route plan"
+>>>>>>> main
     },
     "suggestion": {
       "title": "Route suggestion",
@@ -1655,6 +1683,7 @@
       "emptySlot": "Empty stall",
       "hint": "Click a stall with a horse, then another stall, to swap them. Each escort looks after at most 3 horses; stalls left without an escort are auto-assigned on save (stalls 1-3 to the first escort, lead escort first)."
     },
+<<<<<<< HEAD
     "approvedRoute": {
       "title": "Approved Route Plan for Booking",
       "loading": "Loading approved route...",
@@ -1665,6 +1694,24 @@
     },
     "errors": {
       "unapprovedCountryTitle": "Route Error: Journey travels through unapproved transit country"
+=======
+    "routePlanningEmpty": "No bookings waiting for route planning",
+    "drawer": {
+      "title": "Plan Route for Booking",
+      "origin": "Pickup Origin (Locked)",
+      "destination": "Dropoff Destination (Locked)",
+      "stops": "Rest Stops & Border Gates",
+      "noStops": "No intermediate stops added",
+      "previewInfo": "Preview Route Summary",
+      "totalDistance": "Total Distance",
+      "totalHours": "Estimated Duration",
+      "transitCountries": "Transit Countries",
+      "rejectionAlert": "Previous route plan was rejected by Manager"
+    },
+    "stopTypes": {
+      "restStop": "Rest Stop",
+      "borderGate": "Border Gate"
+>>>>>>> main
     }
   },
   "routeApproval": {
@@ -1678,7 +1725,11 @@
     },
     "actions": {
       "approve": "Approve plan",
-      "reject": "Return"
+      "reject": "Return",
+      "rejectRoute": "Reject Route",
+      "approveAndQuote": "Approve Route & Send Quote",
+      "previewQuote": "Preview Final Quote",
+      "confirmReject": "Confirm Rejection"
     },
     "rejectTitle": "Return plan {{code}} to the coordinator",
     "reasonPlaceholder": "Reason (required, up to 500 characters)",
@@ -1688,7 +1739,34 @@
       "rejected": "Plan {{code}} returned to the coordinator",
       "rejectedCancelled": "Trip {{code}} was cancelled after 3 returns",
       "failed": "The action failed",
-      "reasonRequired": "Please enter a reason"
+      "reasonRequired": "Please enter a reason",
+      "quotePreviewLoaded": "Final quote preview loaded",
+      "quotePreviewFailed": "Failed to calculate quote preview",
+      "noPlanToApprove": "No route plan found to approve",
+      "approvedAndQuoted": "Route approved and final quote sent to customer",
+      "rejectedSuccess": "Route plan returned to Coordinator for revisions"
+    },
+    "tabs": {
+      "bookingRoutes": "Booking Route Plans (R-10)",
+      "tripPlans": "Trip Plans"
+    },
+    "pendingListTitle": "Route-Planned Bookings",
+    "emptyBookingRoutes": "No bookings pending route approval",
+    "noBookingSelected": "Select a booking to review route and agree horse values",
+    "bookingTitle": "Review Booking Route",
+    "fields": {
+      "agreedValue": "Agreed Value ($)"
+    },
+    "horsesCardTitle": "Agree Horse Values (R-12)",
+    "quoteSummaryTitle": "Estimated Final Quote to Customer",
+    "freight": "Freight Fee",
+    "clearance": "Border Clearance",
+    "insurance": "Insurance Fee",
+    "total": "Total Agreed Price",
+    "rejectModal": {
+      "title": "Reject Route Plan",
+      "hint": "Rejection reason will be returned to Coordinator to redraw route or adjust checkpoints.",
+      "placeholder": "Enter rejection reason (required: e.g. missing rest stop, invalid border checkpoint...)"
     }
   },
   "tracking": {
@@ -1733,8 +1811,10 @@
       "queue": "HORSES TO PLAN",
       "planning": "DRAFT / PENDING",
       "scheduled": "SCHEDULED",
-      "onTheRoad": "ON THE ROAD / ARRIVED"
-    }
+      "onTheRoad": "ON THE ROAD / ARRIVED",
+      "pendingRoutes": "Pending Routes"
+    },
+    "planRoute": "Plan Route"
   },
   "horseDocs": {
     "pageTitle": "Vet Records",
@@ -2090,7 +2170,11 @@
       "verified": "Checked",
       "noPhoto": "No photo",
       "microchip": "Microchip",
-      "horsesNotVerified": "Some horses have not been checked yet"
+      "horsesNotVerified": "Some horses have not been checked yet",
+      "presenceConfirmed": "Presence Confirmed",
+      "presenceUnconfirmed": "Presence Unconfirmed",
+      "alternateApproved": "Customer approved this alternate recipient.",
+      "alternateWait": "Signer differs from booking recipient. Customer confirmation is required."
     },
     "dropoffAt": "Drop-off: {{name}} · planned {{time}}",
     "waitingDropoff": "Waiting to reach the drop-off",
@@ -2333,6 +2417,7 @@
   "customerOrders": {
     "stage": {
       "PendingReview": "Pending review",
+      "QuoteReady": "Quote ready",
       "AwaitingDeposit": "Awaiting deposit",
       "PreparingDossier": "Preparing documents",
       "AwaitingTrip": "Awaiting trip",
@@ -2368,10 +2453,12 @@
       "closedTitle": {
         "Rejected": "Order rejected",
         "Cancelled": "Order cancelled",
-        "Expired": "Order expired"
+        "Expired": "Order expired",
+        "QuoteExpired": "Quote expired"
       },
       "steps": {
         "review": "Request & review",
+        "quote": "Final quote & contract",
         "deposit": "Deposit",
         "dossier": "Quarantine documents",
         "planning": "Trip planning",
@@ -2383,6 +2470,7 @@
       },
       "now": {
         "PendingReview": "The manager is reviewing your request",
+        "QuoteReady": "Review the quote and contract and accept before the deadline",
         "AwaitingDeposit": "Pay the deposit to start the documents",
         "PreparingDossier": "Upload documents in the Documents tab",
         "AwaitingTrip": "Documents are done, waiting for a trip",
@@ -2400,6 +2488,7 @@
     "ariaLabel": "Notifications",
     "newToast": "New notification"
   },
+<<<<<<< HEAD
   "policy": {
     "agreement": {
       "prefix": "I have read and agreed to the",
@@ -2503,5 +2592,352 @@
       "months": "months of age",
       "horse": "horse"
     }
+=======
+  "map": {
+    "searchPlaceholder": "Search an address (e.g. Ba Vi, Hanoi)",
+    "pickHint": "Type an address and pick a suggestion, or click the map / drag the pin to adjust.",
+    "resolving": "Looking up the address...",
+    "reverseFailed": "No address was found here. Pick a point on land or search by address.",
+    "country": "Country",
+    "km": "{{value}} km",
+    "hours": "about {{value}} driving hours",
+    "total": "Total",
+    "estimateNote": "* Some legs are estimated (straight line × 1.3)",
+    "addHint": "Click the map to add a stop.",
+    "moveUp": "Up",
+    "moveDown": "Down",
+    "remove": "Remove stop",
+    "distanceAB": "Road distance A → B",
+    "stopType": {
+      "Origin": "Pickup",
+      "Pickup": "Pickup",
+      "RestStop": "Rest stop",
+      "BorderGate": "Border gate",
+      "Dropoff": "Drop-off",
+      "Destination": "Destination"
+    }
+  },
+  "bookingForm": {
+    "pickupOnMap": "Pickup point (search an address or pick on the map)",
+    "dropoffOnMap": "Drop-off point (search an address or pick on the map)",
+    "pickBothPoints": "Please pick both the pickup and the drop-off point on the map.",
+    "routeHint": "Actual road distance between the two points, from the map. The exact route (rest stops, border gates) is planned by the company after reviewing your request.",
+    "routeLoading": "Calculating the distance...",
+    "values": {
+      "declaredLabel": "Declared value (USD, optional)",
+      "declaredPlaceholder": "e.g. 40,000",
+      "allOrNone": "If you declare the value of one horse, declare it for every horse. Missing: {{names}}.",
+      "fullNeedsValue": "{{name}}: full-value insurance needs the horse's value.",
+      "proofRequired": "{{name}}: a value from {{threshold}} USD needs a proof document (purchase invoice, valuation or auction result).",
+      "uploadProof": "Upload value proof",
+      "proofHint": "Values from {{threshold}} USD need a proof: purchase invoice, vet / expert valuation, or auction result.",
+      "proofUploaded": "Uploaded: {{name}}",
+      "uploadFailed": "Could not upload the proof file."
+    },
+    "insurance": {
+      "label": "Insurance plan",
+      "none": "No insurance",
+      "noneHint": "Compensation only when the company is at fault: up to {{liability}} USD if the horse dies / is lost, vet costs up to {{vet}} USD.",
+      "full": "Full-value insurance",
+      "fullHint": "Premium {{premium}}% of the agreed value. Pays 100% of the value if the horse dies / is lost, vet costs up to {{vetPercent}}% of the value, including force majeure.",
+      "policyLink": "See the Service Policy section 8 (Insurance)"
+    },
+    "range": {
+      "title": "Estimated price range",
+      "label": "Estimated price",
+      "note": "The final price is sent after the company plans the route; you do not pay anything at this step.",
+      "linesNote": "The breakdown above is the low end of the range (without transit fees and detours)."
+    },
+    "recipient": {
+      "title": "Horse recipient",
+      "self": "I will receive the horses myself (use the name and phone in my profile)",
+      "name": "Recipient full name *",
+      "phone": "Recipient phone *",
+      "email": "Recipient email (recommended)",
+      "idNumber": "ID card / passport (optional)",
+      "hint": "The recipient is emailed when the trip is scheduled, when the vehicle departs and when it is about to arrive. You can change the recipient until the vehicle reaches the drop-off point."
+    }
+  },
+  "policyAgreement": {
+    "label": "I have read and agree to the <policyLink>Service Policy</policyLink> (version {{version}})",
+    "unavailable": "Could not load the Service Policy. Please reload the page."
+  },
+  "delayCompensation": {
+    "title": "Delay Compensation (R-09)",
+    "none": "No delayed bookings",
+    "delayHours": "Delay Hours",
+    "amount": "Compensation Amount",
+    "status": "Status",
+    "reason": "Reason",
+    "actions": {
+      "adjust": "Adjust Amount"
+    },
+    "adjustModal": {
+      "title": "Adjust Delay Compensation Amount",
+      "currentAmount": "System calculated amount",
+      "newAmount": "New approved amount (USD)",
+      "reason": "Adjustment reason (required)",
+      "reasonPlaceholder": "Specify basis or agreement with customer..."
+    },
+    "messages": {
+      "approved": "Delay compensation approved",
+      "approveFailed": "Approval failed",
+      "reasonRequired": "Please enter adjustment reason",
+      "adjustedSuccess": "Compensation adjusted and approved",
+      "adjustFailed": "Adjustment failed"
+    }
+  },
+  "claims": {
+    "title": "Insurance Claims (R-13)",
+    "tabTitle": "Insurance Claims",
+    "managerTitle": "Insurance Claims Management (R-13)",
+    "managerSubtitle": "Review, appraise, and disburse horse transit loss claims according to service policy terms.",
+    "timeRemaining": "Claim submission deadline: until {{time}} (within 24 hours after delivery).",
+    "expiredNotice": "The 24-hour deadline since e-POD signature has expired.",
+    "empty": "No insurance claims found for this booking.",
+    "loadFailed": "Failed to load claims list",
+    "detailTitle": "Appraise Insurance Claim",
+    "actions": {
+      "newClaim": "File Claim",
+      "startReview": "Start Appraisal",
+      "approve": "Approve Claim",
+      "reject": "Reject",
+      "markPaid": "Mark as Paid",
+      "uploadFiles": "Attach Files"
+    },
+    "modal": {
+      "title": "Submit Insurance Claim"
+    },
+    "fields": {
+      "claimCode": "Claim Code",
+      "booking": "Booking",
+      "horse": "Horse",
+      "selectHorse": "Select damaged / injured horse",
+      "horsePlaceholder": "Select horse...",
+      "type": "Claim Type",
+      "typePlaceholder": "Select loss type...",
+      "insurancePlan": "Insurance Plan",
+      "agreedValue": "Agreed Value",
+      "requestedAmount": "Requested",
+      "amountUsd": "Requested Amount (USD)",
+      "approvedAmount": "Approved",
+      "maxCap": "Policy Liability Cap",
+      "status": "Status",
+      "description": "Incident Description & Cause",
+      "descPlaceholder": "Describe symptoms, circumstances, or cause of injury...",
+      "evidence": "Supporting Documents (Vet report, invoice, photos)",
+      "decisionNote": "Decision Notes",
+      "paymentRef": "Payment Reference",
+      "rejectReason": "Rejection Reason (Exclusion clause)",
+      "note": "Notes / Basis"
+    },
+    "types": {
+      "injury": "Injury (Vet Expenses)",
+      "death": "Death",
+      "loss": "Loss"
+    },
+    "messages": {
+      "createSuccess": "Insurance claim submitted successfully",
+      "createFailed": "Failed to submit claim",
+      "reviewed": "Claim marked as under review",
+      "approvedSuccess": "Claim amount approved successfully",
+      "rejectedSuccess": "Claim rejected based on policy terms",
+      "paidSuccess": "Claim payout recorded successfully"
+    },
+    "errors": {
+      "horseRequired": "Please select a horse",
+      "typeRequired": "Please select claim type",
+      "amountRequired": "Please enter amount",
+      "descRequired": "Please describe incident"
+    },
+    "approveForm": {
+      "title": "Approve Claim Amount"
+    },
+    "rejectForm": {
+      "title": "Reject Insurance Claim"
+    },
+    "payForm": {
+      "title": "Record Claim Payment"
+    }
+  },
+  "quote": {
+    "title": "Final quote",
+    "intro": "The final price is based on the route approved by the company. Read the contract, tick the box, then accept and pay the deposit before the deadline; an expired quote closes on its own at no cost.",
+    "unitPrice": "Unit price",
+    "agreedValue": "Agreed value",
+    "insurance": "Insurance",
+    "insurancePlan": {
+      "None": "None",
+      "Full": "Full value"
+    },
+    "route": "Approved route",
+    "transitCountries": "Transit countries",
+    "noTransit": "None",
+    "total": "Final price",
+    "deposit": "Deposit ({{percent}}%)",
+    "balance": "Balance (paid before departure)",
+    "expiresAt": "Accept and pay the deposit by {{time}}",
+    "countdownFormat": "D [d] HH:mm:ss",
+    "acceptAndPay": "Accept & pay deposit",
+    "acceptNote": "Clicking this concludes the contract electronically; no further signature is needed. You will then be taken to VNPay to pay the deposit.",
+    "decline": "Decline quote",
+    "declineTitle": "Decline this quote?",
+    "declineDescription": "The booking will be cancelled at no cost. You may tell us why (optional).",
+    "declineReasonPlaceholder": "E.g. the price is higher than expected",
+    "accepted": "Quote and contract accepted",
+    "acceptFailed": "Could not accept the quote",
+    "declined": "Quote declined, the booking is cancelled",
+    "declineFailed": "Could not decline the quote",
+    "viewQuote": "View quote",
+    "expired": {
+      "title": "The quote has expired",
+      "description": "The quote expired at {{time}} before it was accepted and paid, so the booking was closed at no cost. You can send the request again with the same details.",
+      "resubmit": "Send the request again"
+    },
+    "awaitingDeposit": {
+      "title": "Quote accepted, deposit pending",
+      "description": "Please pay the {{amount}} deposit before {{time}}, otherwise the booking closes.",
+      "pay": "Pay deposit via VNPay"
+    }
+  },
+  "contract": {
+    "title": "Transport contract",
+    "viewerTitle": "Contract {{code}} · version {{version}}",
+    "openNewTab": "Open in new tab",
+    "view": "View contract",
+    "download": "Download",
+    "downloadPdf": "Download PDF",
+    "history": "Previous versions",
+    "noFile": "The contract file is not available, please reload the page",
+    "loadFailed": "Could not load the contract",
+    "downloadFailed": "Could not download the contract file",
+    "openFirst": "Open and read the contract before ticking the box.",
+    "agreementLabel": "I have read the contract and the <policyLink>Service Policy</policyLink> (version {{version}})",
+    "changedReload": "The contract has just been updated. The new version is loaded; please review it before accepting.",
+    "pendingWithQuote": "This contract is accepted together with the final quote.",
+    "status": {
+      "Draft": "Awaiting acceptance",
+      "Accepted": "In force",
+      "Superseded": "Superseded"
+    },
+    "reason": {
+      "Initial": "Initial (final quote)",
+      "PickupDropoffChanged": "Pick-up / drop-off changed",
+      "DetourAccepted": "Paid detour accepted",
+      "RecipientChanged": "Recipient changed"
+    },
+    "fields": {
+      "code": "Contract no.",
+      "status": "Status",
+      "reason": "Reason",
+      "createdAt": "Created",
+      "acceptedAt": "Accepted at",
+      "acceptedBy": "Accepted by",
+      "policyVersion": "Policy version"
+    },
+    "amendment": {
+      "title": "The contract needs your confirmation",
+      "description": "A new contract version was issued because: {{reason}}. The change applies only after you review and accept it.",
+      "accept": "Accept the new contract",
+      "accepted": "New contract accepted",
+      "acceptFailed": "Could not accept the contract"
+    }
+  },
+  "airWaybill": {
+    "title": "Air waybill",
+    "edit": "Update",
+    "number": "Waybill number",
+    "file": "Scanned copy",
+    "openFile": "Open file",
+    "notEntered": "Not entered",
+    "chooseFile": "Choose file (PDF / image)",
+    "numberRequired": "Enter the waybill number",
+    "saved": "Air waybill saved",
+    "saveFailed": "Could not save the air waybill"
+  },
+  "deliveryFailed": {
+    "button": "Delivery failed",
+    "title": "Delivery failed: {{code}}",
+    "submit": "Record failed delivery",
+    "recorded": "Failed delivery of {{code}} recorded. The coordinator and the customer have been notified.",
+    "recordFailed": "Could not record the failed delivery",
+    "recordedTag": "Delivery failed (recorded)",
+    "arrivedAt": "Arrived at drop-off",
+    "waited": "Waited",
+    "duration": "{{hours}} h {{minutes}} min",
+    "feeStart": "Waiting fee starts",
+    "noFeeEarly": "No waiting fee (arrived before the time window given to the recipient, or no window was given)",
+    "feeEstimate": "Estimated waiting fee: {{hours}} h × {{fee}} USD = {{total}} USD (paid by the customer)",
+    "reasonLabel": "Reason",
+    "reasonRequired": "Choose a reason",
+    "reason": {
+      "RecipientAbsent": "Recipient absent",
+      "RecipientRefused": "Recipient refused",
+      "RefusedInjured": "Refused: horse injured",
+      "RefusedWrongHorse": "Refused: wrong horse"
+    },
+    "reasonHint": {
+      "RecipientAbsent": "The customer chooses what to do within 24 hours and pays the costs",
+      "RecipientRefused": "No valid reason; the customer chooses what to do and pays the costs",
+      "RefusedInjured": "Company fault: photos required; the company pays the stable, a claim is opened",
+      "RefusedWrongHorse": "Company fault: photos required; the company pays the stable, a claim is opened"
+    },
+    "note": "Note",
+    "notePlaceholder": "E.g. called 3 times, no answer",
+    "photos": "Photos (optional, up to 10)",
+    "photosRequired": "Photos (required, up to 10)",
+    "photoRequired": "This reason needs at least one photo",
+    "addPhoto": "Take / add photo"
+  },
+  "deliveryDecision": {
+    "title": "Horses not delivered — choose what to do",
+    "intro": "The crew reached the drop-off point but could not deliver. Choose an option before the deadline; otherwise the horses go to a temporary stable.",
+    "reason": "Reason",
+    "recordedAt": "Recorded at",
+    "waitingFee": "Waiting fee",
+    "waitingFeeValue": "{{hours}} chargeable h · {{total}}",
+    "dueAt": "Choose by {{time}}",
+    "option": {
+      "AlternateRecipient": {
+        "title": "Another recipient or a nearby address",
+        "description": "Name someone else to receive the horses; they can sign the handover right away.",
+        "cost": "You pay {{fee}} USD per extra km"
+      },
+      "HoldAtStable": {
+        "title": "Keep the horses at the nearest temporary stable",
+        "description": "You collect the horses from the stable yourself.",
+        "cost": "You pay {{fee}} USD per horse per day for stabling and care"
+      },
+      "ReturnToOrigin": {
+        "title": "Bring the horses back to the origin",
+        "description": "The crew takes the horses back to the original pick-up point.",
+        "cost": "You pay for the return leg, priced as a booking in the opposite direction"
+      }
+    },
+    "recipientName": "New recipient name",
+    "recipientPhone": "Phone number",
+    "newAddress": "New delivery address",
+    "required": "Required",
+    "phoneInvalid": "Invalid phone number",
+    "addressRequired": "Pick the new delivery address on the map",
+    "chooseOne": "Choose an option",
+    "defaultNote": "If you do not choose in time, the temporary stable applies ({{fee}} USD per horse per day). The freight is not refunded since the transport has been carried out.",
+    "submit": "Confirm choice",
+    "saved": "Your choice has been recorded",
+    "saveFailed": "Could not record your choice",
+    "decidedTitle": "Choice made for the undelivered horses",
+    "systemStable": "Temporary stable applied",
+    "choice": "Choice",
+    "decidedAt": "Chosen at",
+    "newRecipient": "New recipient",
+    "extraKm": "{{km}} extra km",
+    "cost": "Cost",
+    "stableCostLater": "{{fee}} USD per horse per day, calculated when the trip closes",
+    "paidAsExtra": "The waiting fee and the cost of the choice are added to the booking's extra charges when the trip closes; pay them in the Payments tab.",
+    "companyTitle": "Horses not delivered — company fault",
+    "companyCovers": "The company keeps the horses at a temporary stable at its own cost until this is resolved; you pay no waiting or stable fee.",
+    "claimOpened": "An insurance claim has been opened.",
+    "viewClaims": "View claims"
+>>>>>>> main
   }
 }

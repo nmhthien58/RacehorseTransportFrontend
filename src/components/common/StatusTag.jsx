@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 const STATUS_COLORS = {
   // Thành công / Hoàn thành (Green)
   Approved: 'success',
+  Paid: 'success',
   Cleared: 'success',
   Completed: 'success',
   Resolved: 'success',
@@ -15,6 +16,10 @@ const STATUS_COLORS = {
 
   // Đang xử lý / Thông tin (Blue / Cyan)
   Submitted: 'processing',
+  PreApproved: 'cyan',
+  RoutePlanned: 'geekblue',
+  Quoted: 'purple',
+  UnderReview: 'processing',
   AwaitingDeposit: 'gold',
   AwaitingFinalPayment: 'gold',
   Assigned: 'cyan',
@@ -35,6 +40,7 @@ const STATUS_COLORS = {
   Rejected: 'error',
   Cancelled: 'error',
   Expired: 'error',
+  QuoteExpired: 'error',
   Issue: 'error',
 
   // Khởi tạo / Mặc định (Default)
@@ -48,6 +54,12 @@ const STATUS_COLORS = {
  */
 const STATUS_I18N_KEYS = {
   Submitted: 'status.submitted',
+  PreApproved: 'status.preApproved',
+  RoutePlanned: 'status.routePlanned',
+  Quoted: 'status.quoted',
+  QuoteExpired: 'status.quoteExpired',
+  UnderReview: 'status.underReview',
+  Paid: 'status.paid',
   AwaitingDeposit: 'status.awaitingDeposit',
   AwaitingFinalPayment: 'status.awaitingFinalPayment',
   Approved: 'status.approved',

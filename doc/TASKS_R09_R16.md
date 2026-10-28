@@ -81,41 +81,41 @@ Thứ tự gợi ý: **Thắng** làm FE-15 → FE-16 → FE-08 → FE-07 → FE
 
 ## Việc của Vũ
 
-### [ ] FE-13 · Người nhận ngựa (R-16)
+### [x] FE-13 · Người nhận ngựa (R-16)
 - Component `RecipientForm` (họ tên, SĐT bắt buộc; email; số giấy tờ; ô "Tôi tự nhận ngựa" điền từ hồ sơ tài khoản). FE-02 dùng component này trong form tạo đơn.
 - Trang chi tiết đơn của khách: khối "Người nhận" + nút sửa (khóa khi xe đã tới điểm trả); khi tới hạn (backend gửi thông báo) hiện thẻ "Xác nhận người nhận sẽ có mặt" + khung giờ dự kiến, nút **Xác nhận** / **Đổi người nhận**; khi tài xế báo người ký khác tên, hiện yêu cầu "Đồng ý cho [tên] nhận thay".
 - App tài xế: ở mốc DropOff hiện tên, SĐT người nhận + nút **Gọi** (`<a href="tel:...">`), trạng thái "khách đã xác nhận có mặt" hoặc chưa.
 - e-POD (`ArrivalHandoverPage`): điền sẵn thông tin người nhận từ đơn; tài xế sửa tên người ký nếu khác → hiện cảnh báo cần khách xác nhận, nút ký bị khóa cho tới khi khách xác nhận (tự tải lại mỗi 15 giây hoặc khi có thông báo realtime).
 
-### [ ] FE-06 · Giấy cần nộp theo tuyến, hạn nộp (R-10)
+### [x] FE-06 · Giấy cần nộp theo tuyến, hạn nộp (R-10)
 - Màn hồ sơ của khách: hiện danh sách giấy theo **từng nước** (nước đi / quá cảnh / nước đến) của tuyến đã duyệt, **hạn nộp** đếm ngược, số lần đã nhắc; giấy nào còn thiếu nổi bật.
 - Khi công ty đổi tuyến làm phát sinh giấy mới: thẻ thông báo "Tuyến đã thay đổi, cần thêm các giấy sau…" + hạn mới + nút **Hủy đơn (hoàn 100%)** có hộp xác nhận.
 - Đơn bị hủy vì quá hạn nộp giấy: hiện lý do và số tiền được hoàn.
 
-### [ ] FE-04 · Manager duyệt sơ bộ, duyệt tuyến, chốt giá trị ngựa (R-10)
+### [x] FE-04 · Manager duyệt sơ bộ, duyệt tuyến, chốt giá trị ngựa (R-10)
 - Màn duyệt đơn hiện tại đổi nhãn thành **duyệt sơ bộ** (kiểm tra khả thi), giữ từ chối kèm lý do.
 - Màn duyệt tuyến: `RouteMap` chỉ xem + bảng chặng (km, giờ), nước quá cảnh, mốc cửa khẩu; bảng ngựa với giá trị khai báo, chứng từ (mở xem), ô **giá trị thỏa thuận** (mặc định = khai báo); **xem trước báo giá chốt** (gọi backend) trước khi bấm **Duyệt tuyến & gửi báo giá** / **Từ chối** (bắt buộc lý do).
 
-### [ ] FE-12 · Bồi thường giao trễ (R-09)
+### [x] FE-12 · Bồi thường giao trễ (R-09)
 - Manager, màn đóng chuyến (`TripClosurePage`): danh sách đơn trễ do lỗi công ty, số giờ trễ, số tiền bù hệ thống tính; Manager **duyệt** hoặc **sửa số tiền** (bắt buộc lý do).
 - Khách: trang thanh toán / chi tiết đơn hiện dòng "Bồi thường giao trễ" với số giờ trễ, số tiền, trạng thái hoàn.
 
 
-### [ ] FE-11 · Hồ sơ bồi thường bảo hiểm (R-13)
+### [x] FE-11 · Hồ sơ bồi thường bảo hiểm (R-13)
 - Khách: mục "Bồi thường" trong trang đơn: danh sách hồ sơ (tự mở hoặc tự tạo), nút **Yêu cầu bồi thường** (chỉ trong 24 giờ sau khi ký e-POD; hiện đếm ngược), tải chứng từ (biên bản thú y, hóa đơn, ảnh), xem quyết định + số tiền.
 - Manager: màn danh sách hồ sơ (lọc trạng thái), chi tiết: thông tin ngựa, gói bảo hiểm, giá trị thỏa thuận, **trần chi trả** theo gói, sự cố liên quan, chứng từ; **Duyệt** (nhập số tiền ≤ trần) / **Từ chối** (chọn lý do theo điều khoản loại trừ) / **Đánh dấu đã trả** (mã tham chiếu khi chuyển khoản thủ công).
 ---
 
 ## Việc của Thiên
 
-### [ ] FE-01 · Component bản đồ dùng chung (R-11) — làm đầu tiên
+### [x] FE-01 · Component bản đồ dùng chung (R-11) — làm đầu tiên
 - Cài `leaflet`, `react-leaflet`. Sửa icon marker mặc định của Leaflet khi build bằng Vite.
 - `src/components/common/map/MapPicker.jsx`: ô tìm địa chỉ có gợi ý (gọi `GET /api/geo/search`, chờ 400ms sau khi gõ), chọn gợi ý → ghim lên bản đồ; click lên bản đồ → ghim + gọi `/api/geo/reverse` để điền địa chỉ; kéo ghim để chỉnh. Trả về `{ address, lat, lng, countryCode }`.
 - `src/components/common/map/RouteMap.jsx`: nhận danh sách mốc (có tọa độ, loại, tên) + polyline; vẽ marker đánh số theo loại (đi / nghỉ / cửa khẩu / đón / trả / đích), đường đi, nhãn quãng đường từng chặng, tổng km; chế độ chỉ xem hoặc cho kéo đổi thứ tự / thêm mốc bằng click (dùng ở FE-03).
 - `geoService` gọi các endpoint `/api/geo/*` (BE-01). Thêm endpoint vào `endpoints.js`.
 - Dùng được trên điện thoại (bản đồ cao tối thiểu 280px, nút đủ lớn).
 
-### [ ] FE-02 · Làm lại form tạo đơn của khách (R-10, R-12, R-13, R-16)
+### [x] FE-02 · Làm lại form tạo đơn của khách (R-10, R-12, R-13, R-16)
 File chính: `src/features/customer/components/BookingWizard.jsx`.
 - Bước lộ trình: điểm đón, điểm trả chọn bằng `MapPicker` (FE-01); **bỏ** ô "Nước quá cảnh"; hiện quãng đường A→B từ bản đồ.
 - Thay "giá" bằng **khoảng giá ước tính** (`min – max`, USD + VND) + dòng giải thích "Giá chốt gửi sau khi công ty lập tuyến; chưa phải thanh toán".
@@ -130,7 +130,7 @@ File chính: `src/features/customer/components/BookingWizard.jsx`.
 - Hiện cảnh báo backend trả về (đổi nước mà thiếu mốc cửa khẩu) ngay tại đoạn đường liên quan; nút **Trình duyệt** khóa khi còn cảnh báo.
 - Tuyến bị Manager từ chối: hiện lý do, cho sửa và trình lại; xem được các phiên bản trước.
 
-### [ ] FE-05 · Khách xem báo giá chốt, chấp nhận, cọc (R-10)
+### [x] FE-05 · Khách xem báo giá chốt, chấp nhận, cọc (R-10)
 - Trang chi tiết đơn ở trạng thái `Quoted`: bảng báo giá chi tiết (cước theo quãng đường, hạng chuồng, phí thủ tục từng nước, bảo hiểm từng con, Express), bản đồ tuyến chỉ xem, **đếm ngược hạn chấp nhận**.
 - `PolicyAgreement` + nút **Chấp nhận & đặt cọc** (gọi accept-quote rồi chuyển sang luồng thanh toán VNPay hiện có) và **Từ chối báo giá** (xác nhận, không mất phí).
 - Trạng thái `QuoteExpired`: thông báo hết hạn, nút "Gửi lại yêu cầu" (tạo đơn mới điền sẵn thông tin cũ).
@@ -145,13 +145,13 @@ Sửa `IncidentBoard`, `RouteChangeFields`, `TripIncidentsCard`, `EmergencyRepor
 - Đóng sự cố: bắt buộc chọn **nguyên nhân** (Lỗi công ty / Lỗi khách / Bất khả kháng) kèm giải thích ngắn hệ quả tiền theo bảng 9.1 của chính sách; hiện số tiền hoàn / phát sinh backend tính trước khi xác nhận.
 - Tài xế và khách thấy kết quả (đổi xe, đổi người, quay đầu) trong khung sự cố.
 
-### [ ] FE-14 · Không giao được, phí chờ (R-16)
+### [x] FE-14 · Không giao được, phí chờ (R-16)
 - e-POD (`ArrivalHandoverPage`): nút **Không giao được** → chọn lý do (vắng mặt / từ chối / từ chối vì ngựa bị thương / giao nhầm ngựa), ghi chú, chụp ảnh (bắt buộc với 2 lý do cuối); hiện số giờ đã chờ (tính từ lúc check-in điểm trả) và mốc bắt đầu tính phí.
 - Khách: thẻ **"Chưa giao được ngựa — chọn cách xử lý"** với đếm ngược 24 giờ, 3 lựa chọn (người nhận / địa chỉ khác dùng `RecipientForm` + `MapPicker`; gửi chuồng tạm; chở về), mỗi lựa chọn ghi rõ ai trả phí; quá hạn thì hiện "Đã áp dụng gửi chuồng tạm".
 - Phí chờ hiện trong khoản phát sinh của đơn (số giờ × đơn giá), thanh toán qua luồng Extra hiện có.
 - Từ chối vì ngựa bị thương / nhầm ngựa: hiện cho khách rằng hồ sơ bồi thường đã được mở (link FE-11) và phí chuồng do công ty chịu.
 
-### [ ] FE-17 · Hợp đồng vận chuyển (R-17)
+### [x] FE-17 · Hợp đồng vận chuyển (R-17)
 Đọc `doc/PLAN_NGHIEP_VU_R09.md` mục R-17 và `doc/CHINH_SACH_DICH_VU.md` mục 12. **Không có màn ký, không OTP.**
 - Trang báo giá (FE-05): nút **Xem hợp đồng** mở PDF (modal toàn màn hình dùng `<iframe>` / `<object>`; trên điện thoại mở tab mới) từ `GET /api/bookings/{id}/contract`. Nút **Chấp nhận & đặt cọc** chỉ bật khi khách đã mở hợp đồng ít nhất một lần **và** tích "Tôi đã đọc hợp đồng và Chính sách dịch vụ" (thay checkbox của `PolicyAgreement` ở bước này). Gửi kèm `contractId`, `contractSha256` nhận được lúc mở. Backend báo hợp đồng đã đổi → thông báo và tải lại bản mới.
 - Trang chi tiết đơn: khối **Hợp đồng**: số hợp đồng, phiên bản, trạng thái, thời điểm chấp nhận, nút **Tải PDF**; danh sách các phiên bản cũ (đã thay thế) để tải lại.

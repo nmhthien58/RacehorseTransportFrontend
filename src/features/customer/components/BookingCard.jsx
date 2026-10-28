@@ -9,6 +9,7 @@ import {
   FileProtectOutlined,
   DollarOutlined,
   NodeIndexOutlined,
+  FileDoneOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
@@ -209,6 +210,19 @@ export default function BookingCard({ booking, onCancel, onViewDetail, onManageD
 
         {/* NÚT THAO TÁC */}
         <Space size="small" wrap>
+          {/* Đang sửa BookingCard vì đơn có báo giá chốt cần nút mở trang báo giá (FE-05) */}
+          {stage === 'QuoteReady' && onViewDetail && (
+            <Button
+              type="primary"
+              icon={<FileDoneOutlined />}
+              size="middle"
+              onClick={() => onViewDetail(booking)}
+              style={{ borderRadius: 6, fontWeight: 600 }}
+            >
+              {t('quote.viewQuote')}
+            </Button>
+          )}
+
           {needsPayment && onOpenTab && (
             <Button
               type="primary"

@@ -8,9 +8,11 @@
  * @param {any} res
  * @returns {any}
  */
+// Đang sửa unwrapData và unwrapList vì hỗ trợ cả camelCase, PascalCase và phân trang items/Items
 export function unwrapData(res) {
-  if (res && typeof res === 'object' && 'data' in res && 'success' in res) {
-    return res.data;
+  if (res && typeof res === 'object') {
+    if ('data' in res) return res.data;
+    if ('Data' in res) return res.Data;
   }
   return res;
 }
@@ -22,7 +24,12 @@ export function unwrapData(res) {
  */
 export function unwrapList(res) {
   const data = unwrapData(res);
-  return Array.isArray(data) ? data : [];
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === 'object') {
+    if (Array.isArray(data.items)) return data.items;
+    if (Array.isArray(data.Items)) return data.Items;
+  }
+  return [];
 }
 
 /**

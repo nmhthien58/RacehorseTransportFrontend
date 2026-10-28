@@ -1,3 +1,4 @@
+// Đang sửa constants.js vì bổ sung trạng thái đơn hàng mới theo quy trình R-10
 export const ROLES = {
   CUSTOMER: 'Customer',
   MANAGER: 'LogisticsManager',
@@ -11,6 +12,9 @@ export const ROLES = {
 // Vòng đời đơn đặt chuyến (st1_booking.png & Script 04)
 export const BOOKING_STATUS = {
   SUBMITTED: 'Submitted',
+  PRE_APPROVED: 'PreApproved',
+  ROUTE_PLANNED: 'RoutePlanned',
+  QUOTED: 'Quoted',
   AWAITING_DEPOSIT: 'AwaitingDeposit', // đã duyệt, chờ khách đặt cọc
   APPROVED: 'Approved',
   ASSIGNED: 'Assigned',
@@ -18,6 +22,7 @@ export const BOOKING_STATUS = {
   COMPLETED: 'Completed',
   REJECTED: 'Rejected',
   EXPIRED: 'Expired',
+  QUOTE_EXPIRED: 'QuoteExpired',
   CANCELLED: 'Cancelled',
 };
 

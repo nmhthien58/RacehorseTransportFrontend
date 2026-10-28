@@ -1,5 +1,7 @@
 import { Layout, Menu } from 'antd';
 import {
+// Đang sửa AppSidebar.jsx vì bổ sung SafetyCertificateOutlined cho mục Bồi thường bảo hiểm
+  SafetyCertificateOutlined,
   AppstoreOutlined,
   ClockCircleOutlined,
   MedicineBoxOutlined,
@@ -32,9 +34,10 @@ const { Sider } = Layout;
  * @param {Object} props
  * @param {boolean} props.collapsed - Trạng thái thu gọn của Sider
  * @param {Object} [props.user] - Thông tin tài khoản người dùng đăng nhập
+ * @param {() => void} [props.onNavigate] - Gọi sau khi chọn mục menu (đóng Drawer trên điện thoại)
  * @returns {JSX.Element}
  */
-export default function AppSidebar({ collapsed, user }) {
+export default function AppSidebar({ collapsed, user, onNavigate }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -99,6 +102,11 @@ export default function AppSidebar({ collapsed, user }) {
           key: ROUTES.MANAGER_PENDING_REQUESTS,
           icon: <ClockCircleOutlined style={{ fontSize: 18 }} />,
           label: t('nav.pendingRequests', 'Yêu cầu chờ duyệt'),
+        },
+        {
+          key: ROUTES.MANAGER_INSURANCE_CLAIMS,
+          icon: <SafetyCertificateOutlined />,
+          label: t('nav.insuranceClaims', 'Bồi thường bảo hiểm'),
         },
         {
           key: ROUTES.MANAGER_ROUTE_APPROVALS,
@@ -285,6 +293,7 @@ export default function AppSidebar({ collapsed, user }) {
     if (current.startsWith('/customer/messages')) return ROUTES.CUSTOMER_MESSAGES;
     if (current.startsWith('/customer/profile')) return ROUTES.CUSTOMER_PROFILE;
     if (current.startsWith('/customer/billing') || current.startsWith('/billing')) return ROUTES.CUSTOMER_BILLING;
+    if (current.startsWith('/manager/insurance-claims')) return ROUTES.MANAGER_INSURANCE_CLAIMS;
     if (current.startsWith('/manager/route-approvals')) return ROUTES.MANAGER_ROUTE_APPROVALS;
     if (current.startsWith('/manager/incidents')) return ROUTES.MANAGER_INCIDENTS;
     if (current.startsWith('/manager/trips')) return ROUTES.MANAGER_TRIPS;
@@ -357,6 +366,7 @@ export default function AppSidebar({ collapsed, user }) {
           style={{
             maxHeight: collapsed ? 36 : 48,
             maxWidth: '100%',
+            minWidth: 0,
             objectFit: 'contain',
           }}
         />
@@ -373,9 +383,15 @@ export default function AppSidebar({ collapsed, user }) {
         <Menu
           theme="light"
           mode="inline"
+          // Menu nằm trong div bọc nên không tự nhận trạng thái thu gọn của Sider: truyền thẳng
+          inlineCollapsed={collapsed}
           selectedKeys={[getSelectedKey()]}
           items={menuItems}
-          onClick={({ key }) => navigate(key)}
+          onClick={({ key }) => {
+            navigate(key);
+            // Sidebar nằm trong Drawer (điện thoại): đóng sau khi chọn mục
+            onNavigate?.();
+          }}
           style={{
             borderRight: 0,
             fontSize: 15,

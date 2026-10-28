@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
   Alert,
-  AutoComplete,
   Button,
   Card,
   Checkbox,
@@ -13,6 +12,7 @@ import {
   Form,
   Input,
   InputNumber,
+  Radio,
   Row,
   Select,
   Space,
@@ -21,6 +21,7 @@ import {
   Table,
   Tag,
   Typography,
+  Upload,
   message,
 } from 'antd';
 import {
@@ -34,6 +35,7 @@ import {
   PlusOutlined,
   CarOutlined,
   CheckCircleFilled,
+  UploadOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller, useWatch } from 'react-hook-form';
@@ -41,20 +43,28 @@ import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import horseService from '@services/horseService';
 import bookingService from '@services/bookingService';
-import { useAuthStore } from '@features/auth/store/authStore';
+import { geoService } from '@services/geoService';
+import { fileService } from '@services/fileService';
+import usePolicy from '@hooks/usePolicy';
+import MapPicker from '@components/common/map/MapPicker';
+import RouteMap from '@components/common/map/RouteMap';
+import PolicyAgreement, { POLICY_PAGE_PATH } from '@components/common/PolicyAgreement';
+import RecipientForm from '@components/common/RecipientForm';
+import { isRecipientValid } from '@utils/recipient';
 import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import { formatDeliveryDeadline, formatPickupWindow, toLocalDateTimeString } from '@utils/bookingSchedule';
 import { formatCountryRoute } from '@utils/bookingRoute';
 import { checkHorseTransportEligibility } from '@utils/horseHealth';
 import { usePolicy } from '@hooks/usePolicy';
 import { ROUTES } from '@routes/routes';
+
+const formatUsdPlain = (v) => Number(v).toLocaleString('en-US', { maximumFractionDigits: 0 });
 import {
   TRANSPORT_MODES,
   SUPPORTED_COUNTRIES,
   AIRPORTS_BY_COUNTRY,
   STALL_CLASSES,
   CITIES_BY_COUNTRY,
-  TRANSIT_COUNTRY_OPTIONS,
 } from '@features/customer/constants/bookingOptions';
 
 const { Title, Text } = Typography;
@@ -78,7 +88,6 @@ export default function BookingWizard({
 }) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
   const [currentStep, setCurrentStep] = useState(0);
 
   // Danh sách ngựa của khách hàng
@@ -98,17 +107,41 @@ export default function BookingWizard({
     initialValues?.dropoffCountryCode ||
     (initialMode === 'Ground' ? 'CN' : 'JP');
 
-  const userFarmAddress = user?.farmAddress || user?.address || 'Trang trại ngựa xuất phát, Việt Nam';
 
   // State các ngựa được chọn và cấu hình chuồng
   const [selectedHorseIds, setSelectedHorseIds] = useState([]);
   const [stallClasses, setStallClasses] = useState({});
   const [horseNotes, setHorseNotes] = useState({});
+<<<<<<< HEAD
   const [horseConditionErrors, setHorseConditionErrors] = useState({});
 
   // Lấy chính sách dịch vụ động (tuổi tối thiểu, quy chuẩn thai sản)
   const { policy } = usePolicy();
   const minAgeMonths = policy?.Horse?.MinAgeMonths ?? 6;
+=======
+  // R-12 / R-13: giá trị khai báo, chứng từ, gói bảo hiểm của từng con
+  const [horseValues, setHorseValues] = useState({});
+  const [uploadingHorseId, setUploadingHorseId] = useState(null);
+  // R-10: khách phải tích đồng ý Chính sách dịch vụ đúng phiên bản hiện hành
+  const [policyAgreement, setPolicyAgreement] = useState({ accepted: false, policyVersion: null });
+  // R-16 (BE-15): người nhận ngựa; mặc định khách tự nhận. TODO(FE-13): thay bằng RecipientForm dùng chung
+  const [recipient, setRecipient] = useState({ isCustomer: true, name: '', phone: '', email: '', idNumber: '' });
+  // Đang sửa BookingWizard vì tích hợp RecipientForm dùng chung theo FE-13 (R-16)
+  const recipientValid = isRecipientValid(recipient);
+  const { policy } = usePolicy();
+  const proofThreshold = Number(policy?.insurance?.proofThresholdUsd ?? 50000);
+  const usdVndRate = Number(policy?.payment?.usdVndRate ?? 0);
+
+  // R-11: điểm đón / trả chọn trên bản đồ { address, lat, lng, countryCode }
+  const toPlace = (address, lat, lng, countryCode) =>
+    lat != null && lng != null ? { address: address || '', lat: Number(lat), lng: Number(lng), countryCode: countryCode || '' } : null;
+  const [pickupPlace, setPickupPlace] = useState(() =>
+    toPlace(initialValues?.pickupAddress, initialValues?.pickupLat, initialValues?.pickupLng, initialValues?.pickupCountryCode));
+  const [dropoffPlace, setDropoffPlace] = useState(() =>
+    toPlace(initialValues?.dropoffAddress, initialValues?.dropoffLat, initialValues?.dropoffLng, initialValues?.dropoffCountryCode));
+  const [route, setRoute] = useState(null);
+  const [routeLoading, setRouteLoading] = useState(false);
+>>>>>>> main
 
   const {
     control,
@@ -119,7 +152,7 @@ export default function BookingWizard({
       TransportMode: initialMode,
       PickupCountryCode: initialPickupCountry,
       PickupCity: initialValues?.pickupCity || 'TP. Hồ Chí Minh',
-      PickupAddress: initialValues?.pickupAddress || userFarmAddress,
+      PickupAddress: initialValues?.pickupAddress || '',
       DropoffCountryCode: initialDropoffCountry,
       DropoffCity:
         initialValues?.dropoffCity ||
@@ -141,9 +174,6 @@ export default function BookingWizard({
       // Khoảng ngày sẵn sàng đón [đầu, cuối] và hạn giao; điền mặc định khi đã biết ngày sớm nhất từ backend
       PickupWindow: null,
       DeliveryDeadline: null,
-      TransitCountries: initialValues?.transitCountryCodes || [],
-      InsurancePackage: initialValues?.declaredValue === null ? 'none' : 'transit',
-      DeclaredValue: initialValues?.declaredValue || 50000,
       RequiresClimateControl: initialValues?.requiresClimateControl ?? true,
       SpecialInstructions: initialValues?.specialInstructions || '',
     },
@@ -152,31 +182,50 @@ export default function BookingWizard({
 
   const transportMode = useWatch({ control, name: 'TransportMode' });
   const pickupCountry = useWatch({ control, name: 'PickupCountryCode' });
-  const pickupCity = useWatch({ control, name: 'PickupCity' });
-  const pickupAddress = useWatch({ control, name: 'PickupAddress' });
   const dropoffCountry = useWatch({ control, name: 'DropoffCountryCode' });
-  const dropoffCity = useWatch({ control, name: 'DropoffCity' });
-  const dropoffAddress = useWatch({ control, name: 'DropoffAddress' });
   const pickupAirportCode = useWatch({ control, name: 'PickupAirportCode' });
   const dropoffAirportCode = useWatch({ control, name: 'DropoffAirportCode' });
   const pickupWindow = useWatch({ control, name: 'PickupWindow' });
-  const transitCountries = useWatch({ control, name: 'TransitCountries' });
-  // Chỉ đường bộ mới có nước quá cảnh
-  const transitCodes = useMemo(
-    () => (transportMode === 'Ground' ? transitCountries || [] : []),
-    [transportMode, transitCountries],
-  );
   const deliveryDeadline = useWatch({ control, name: 'DeliveryDeadline' });
   const pickupWindowStart = pickupWindow?.[0] || null;
   const pickupWindowEnd = pickupWindow?.[1] || null;
-  const insurancePackage = useWatch({ control, name: 'InsurancePackage' });
-  const declaredValue = useWatch({ control, name: 'DeclaredValue' });
   const distanceKm = useWatch({ control, name: 'DistanceKm' });
   const requiresClimateControl = useWatch({ control, name: 'RequiresClimateControl' });
 
-  // State tính quãng đường tự động từ backend
-  const [isEstimatingDistance, setIsEstimatingDistance] = useState(false);
-  const [routeEstimateInfo, setRouteEstimateInfo] = useState(null);
+  // Tọa độ gửi kèm xem giá / tạo đơn (chỉ đường bộ): đủ 4 số thì backend lấy quãng đường + nước đi qua từ bản đồ
+  const coordinates = useMemo(
+    () =>
+      transportMode === 'Ground' && pickupPlace && dropoffPlace
+        ? { pickupLat: pickupPlace.lat, pickupLng: pickupPlace.lng, dropoffLat: dropoffPlace.lat, dropoffLng: dropoffPlace.lng }
+        : {},
+    [transportMode, pickupPlace, dropoffPlace],
+  );
+
+  // Giá trị của đơn = tổng giá trị khai báo khi khai đủ mọi con (backend tính giống vậy khi tạo đơn)
+  const orderDeclaredValue = useMemo(() => {
+    if (selectedHorseIds.length === 0) return null;
+    const values = selectedHorseIds.map((id) => Number(horseValues[id]?.declaredValue) || 0);
+    return values.every((v) => v > 0) ? values.reduce((a, b) => a + b, 0) : null;
+  }, [selectedHorseIds, horseValues]);
+
+  const updateHorseValue = (horseId, patch) =>
+    setHorseValues((prev) => ({ ...prev, [horseId]: { insurancePlan: 'None', ...prev[horseId], ...patch } }));
+
+  // Chọn điểm trên bản đồ: điền địa chỉ + nước theo điểm đã chọn
+  const handlePickupPick = (place) => {
+    setPickupPlace(place);
+    setValue('PickupAddress', place.address);
+    if (place.countryCode && SUPPORTED_COUNTRIES.some((c) => c.code === place.countryCode)) {
+      setValue('PickupCountryCode', place.countryCode);
+    }
+  };
+  const handleDropoffPick = (place) => {
+    setDropoffPlace(place);
+    setValue('DropoffAddress', place.address);
+    if (place.countryCode && SUPPORTED_COUNTRIES.some((c) => c.code === place.countryCode)) {
+      setValue('DropoffCountryCode', place.countryCode);
+    }
+  };
 
   // Kiểm tra quốc gia đến có hỗ trợ đường bộ không
   const dropoffCountryObj = SUPPORTED_COUNTRIES.find((c) => c.code === dropoffCountry);
@@ -203,49 +252,33 @@ export default function BookingWizard({
     }
   }, [dropoffCountry, transportMode, setValue, getValues]);
 
-  // Tự động gọi Backend tính quãng đường khi các trường lộ trình thay đổi (chỉ cho Đường bộ)
+  // Quãng đường đường bộ A -> B từ bản đồ (BE-01) mỗi khi đổi điểm đón / trả
   useEffect(() => {
-    if (transportMode !== 'Ground') return undefined;
-    if (!dropoffCountry) return undefined;
-
+    if (transportMode !== 'Ground' || !pickupPlace || !dropoffPlace) return undefined;
     let cancelled = false;
     const timer = setTimeout(async () => {
-      setIsEstimatingDistance(true);
+      setRouteLoading(true);
       try {
-        const res = await bookingService.estimateDistance({
-          pickupCountryCode: pickupCountry || 'VN',
-          pickupCity: pickupCity || '',
-          pickupAddress: pickupAddress || '',
-          dropoffCountryCode: dropoffCountry,
-          dropoffCity: dropoffCity || '',
-          dropoffAddress: dropoffAddress || '',
-        });
+        const res = await geoService.route([
+          { lat: pickupPlace.lat, lng: pickupPlace.lng, countryCode: pickupPlace.countryCode || undefined },
+          { lat: dropoffPlace.lat, lng: dropoffPlace.lng, countryCode: dropoffPlace.countryCode || undefined },
+        ]);
         const data = unwrapData(res);
-        if (!cancelled && data?.distanceKm) {
-          setValue('DistanceKm', data.distanceKm);
-          setRouteEstimateInfo(data);
+        if (!cancelled && data) {
+          setRoute(data);
+          setValue('DistanceKm', Math.ceil(Number(data.totalDistanceKm) || 0));
         }
       } catch {
-        // Giữ nguyên cự ly hiện có nếu lỗi mạng
+        if (!cancelled) setRoute(null);
       } finally {
-        if (!cancelled) setIsEstimatingDistance(false);
+        if (!cancelled) setRouteLoading(false);
       }
-    }, 450);
-
+    }, 300);
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [
-    transportMode,
-    pickupCountry,
-    pickupCity,
-    pickupAddress,
-    dropoffCountry,
-    dropoffCity,
-    dropoffAddress,
-    setValue,
-  ]);
+  }, [transportMode, pickupPlace, dropoffPlace, setValue]);
 
   // Cập nhật địa chỉ mẫu khi chuyển đổi giữa Hàng không và Đường bộ
   useEffect(() => {
@@ -262,16 +295,10 @@ export default function BookingWizard({
         setValue('DropoffAddress', chosenD.name);
       }
     } else {
-      const curPickup = getValues('PickupAddress');
-      if (!curPickup || curPickup.includes('Sân bay') || curPickup.includes('Airport') || curPickup.includes('Terminal')) {
-        setValue('PickupAddress', userFarmAddress);
-      }
-      const curDrop = getValues('DropoffAddress');
-      if (!curDrop || curDrop.includes('Sân bay') || curDrop.includes('Airport') || curDrop.includes('Terminal')) {
-        setValue('DropoffAddress', `Trường đua trung tâm / Trang trại đích, ${dropoffCountryObj?.name || dropoffCountry}`);
-      }
+      setValue('PickupAddress', pickupPlace?.address || '');
+      setValue('DropoffAddress', dropoffPlace?.address || '');
     }
-  }, [transportMode, pickupCountry, dropoffCountry, pickupAirportCode, dropoffAirportCode, setValue, getValues, userFarmAddress, dropoffCountryObj]);
+  }, [transportMode, pickupCountry, dropoffCountry, pickupAirportCode, dropoffAirportCode, setValue, pickupPlace, dropoffPlace]);
 
   // Tải danh sách ngựa của khách hàng
   useEffect(() => {
@@ -287,7 +314,13 @@ export default function BookingWizard({
         setAvailableHorses(horsesList);
 
         const specificHorseId = initialValues?.horseId || initialValues?.horseIds?.[0];
-        if (specificHorseId && horsesList.some((h) => String(h.horseId || h.HorseID) === String(specificHorseId))) {
+        // Gửi lại yêu cầu từ đơn có báo giá hết hạn (FE-05): chọn sẵn mọi ngựa còn hoạt động + hạng chuồng cũ
+        const prefillHorses = (initialValues?.horses || []).filter((ph) =>
+          horsesList.some((h) => String(h.horseId || h.HorseID) === String(ph.horseId)));
+        if (prefillHorses.length > 0) {
+          setSelectedHorseIds(prefillHorses.map((ph) => ph.horseId));
+          setStallClasses(Object.fromEntries(prefillHorses.map((ph) => [ph.horseId, ph.stallClass || 'Comfort'])));
+        } else if (specificHorseId && horsesList.some((h) => String(h.horseId || h.HorseID) === String(specificHorseId))) {
           setSelectedHorseIds([specificHorseId]);
           setStallClasses({ [specificHorseId]: 'Comfort' });
         }
@@ -369,7 +402,7 @@ export default function BookingWizard({
           pickupCountryCode: pickupCountry,
           dropoffCountryCode: dropoffCountry,
           distanceKm: transportMode === 'Ground' ? Number(distanceKm) : null,
-          transitCountryCodes: transitCodes,
+          ...coordinates,
           horses: [{ stallClass: 'Shared' }],
         });
         if (!cancelled) setSchedule(unwrapData(res));
@@ -387,7 +420,7 @@ export default function BookingWizard({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [currentStep, transportMode, pickupCountry, dropoffCountry, distanceKm, transitCodes]);
+  }, [currentStep, transportMode, pickupCountry, dropoffCountry, distanceKm, coordinates]);
 
   const earliestPickup = schedule?.earliestPickupDate ? dayjs(schedule.earliestPickupDate) : null;
   const maxTransitHours = Number(schedule?.transit?.maxHours || 0);
@@ -439,6 +472,44 @@ export default function BookingWizard({
     return null;
   };
 
+  // Quy tắc giá trị từng con (khớp backend BE-09): khai cho một con thì phải khai mọi con; từ ngưỡng phải có chứng từ;
+  // gói Toàn giá trị cần có giá trị để tính phí và bồi thường
+  const horseName = (id) => {
+    const h = availableHorses.find((x) => String(x.horseId || x.HorseID) === String(id));
+    return h?.name || h?.Name || `#${id}`;
+  };
+  const validateHorseValues = () => {
+    const declared = selectedHorseIds.filter((id) => Number(horseValues[id]?.declaredValue) > 0);
+    if (declared.length > 0 && declared.length < selectedHorseIds.length) {
+      const missing = selectedHorseIds.filter((id) => !declared.includes(id)).map(horseName).join(', ');
+      return t('bookingForm.values.allOrNone', { names: missing });
+    }
+    for (const id of selectedHorseIds) {
+      const v = horseValues[id] || {};
+      if (v.insurancePlan === 'Full' && !(Number(v.declaredValue) > 0)) {
+        return t('bookingForm.values.fullNeedsValue', { name: horseName(id) });
+      }
+      if (Number(v.declaredValue) >= proofThreshold && !v.valueProofPath) {
+        return t('bookingForm.values.proofRequired', { name: horseName(id), threshold: formatUsdPlain(proofThreshold) });
+      }
+    }
+    return null;
+  };
+
+  // Tải chứng từ giá trị (hóa đơn, giấy định giá, kết quả đấu giá) lên storage, giữ path để gửi kèm đơn
+  const uploadProof = async (horseId, file) => {
+    setUploadingHorseId(horseId);
+    try {
+      const res = await fileService.upload(file, 'documents');
+      const data = unwrapData(res);
+      updateHorseValue(horseId, { valueProofPath: data?.path, valueProofName: data?.fileName || file.name });
+    } catch (err) {
+      message.error(getErrorMessage(err, t('bookingForm.values.uploadFailed')));
+    } finally {
+      setUploadingHorseId(null);
+    }
+  };
+
   // State báo giá tính từ backend
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
@@ -454,11 +525,11 @@ export default function BookingWizard({
       dropoffCountryCode: dropoffCountry,
       distanceKm: transportMode === 'Ground' ? Number(distanceKm) : null,
       requiresClimateControl: Boolean(requiresClimateControl),
-      declaredValue: insurancePackage === 'none' ? null : Number(declaredValue) || null,
+      declaredValue: orderDeclaredValue,
       pickupWindowStart: toLocalDateTimeString(pickupWindowStart),
       pickupWindowEnd: toLocalDateTimeString(pickupWindowEnd),
       deliveryDeadline: toLocalDateTimeString(deliveryDeadline),
-      transitCountryCodes: transitCodes,
+      ...coordinates,
       horses: selectedHorseIds.map((hId) => ({ stallClass: stallClasses[hId] || 'Comfort' })),
     };
   }, [
@@ -469,12 +540,11 @@ export default function BookingWizard({
     dropoffCountry,
     distanceKm,
     requiresClimateControl,
-    insurancePackage,
-    declaredValue,
+    orderDeclaredValue,
     pickupWindowStart,
     pickupWindowEnd,
     deliveryDeadline,
-    transitCodes,
+    coordinates,
   ]);
 
   // Gọi API tính báo giá ở bước Review
@@ -505,8 +575,12 @@ export default function BookingWizard({
   }, [currentStep, quoteRequest]);
 
   const quoteItems = (quote?.lines || []).map((line, idx) => ({ key: `${line.code}-${idx}`, ...line }));
-  const totalCost = Number(quote?.total || 0);
   const currencyCode = quote?.currencyCode || 'USD';
+  // R-10: khoảng giá ước tính (giá chốt gửi sau khi công ty lập tuyến)
+  const quoteMin = Number(quote?.quoteMin ?? quote?.total ?? 0);
+  const quoteMax = Number(quote?.quoteMax ?? quote?.total ?? 0);
+  const formatUsd = (v) => v.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  const formatVnd = (v) => Math.round(v * usdVndRate).toLocaleString('vi-VN');
 
   // Kiểm tra điều kiện khi nhảy bước
   const handleStepClick = async (targetStep) => {
@@ -521,27 +595,9 @@ export default function BookingWizard({
         message.error('Quốc gia xuất phát và quốc gia đích không được trùng nhau.');
         return;
       }
-      if (transportMode === 'Ground') {
-        const pCity = getValues('PickupCity');
-        const pAddr = getValues('PickupAddress');
-        const dCity = getValues('DropoffCity');
-        const dAddr = getValues('DropoffAddress');
-        if (!pCity || !pCity.trim()) {
-          message.warning('Vui lòng chọn hoặc nhập tỉnh / thành phố đón.');
-          return;
-        }
-        if (!pAddr || !pAddr.trim()) {
-          message.warning('Vui lòng nhập địa chỉ đón chi tiết tại trang trại.');
-          return;
-        }
-        if (!dCity || !dCity.trim()) {
-          message.warning('Vui lòng chọn hoặc nhập tỉnh / thành phố giao.');
-          return;
-        }
-        if (!dAddr || !dAddr.trim()) {
-          message.warning('Vui lòng nhập địa chỉ giao chi tiết tại đích đến.');
-          return;
-        }
+      if (transportMode === 'Ground' && (!pickupPlace || !dropoffPlace)) {
+        message.warning(t('bookingForm.pickBothPoints'));
+        return;
       }
     }
 
@@ -558,6 +614,7 @@ export default function BookingWizard({
         message.warning('Vui lòng chọn ít nhất 1 cá thể ngựa đủ điều kiện.');
         return;
       }
+<<<<<<< HEAD
       const targetPickupDate = pickupWindowEnd || pickupWindowStart || null;
       const conditionErrors = {};
       let hasError = false;
@@ -581,6 +638,11 @@ export default function BookingWizard({
       if (hasError) {
         setHorseConditionErrors((prev) => ({ ...prev, ...conditionErrors }));
         message.error('Có cá thể ngựa chưa đạt điều kiện vận chuyển theo chính sách. Vui lòng kiểm tra lại!');
+=======
+      const valueProblem = validateHorseValues();
+      if (valueProblem) {
+        message.warning(valueProblem);
+>>>>>>> main
         return;
       }
     }
@@ -594,27 +656,9 @@ export default function BookingWizard({
         message.error('Quốc gia xuất phát và quốc gia đích không được trùng nhau.');
         return;
       }
-      if (transportMode === 'Ground') {
-        const pCity = getValues('PickupCity');
-        const pAddr = getValues('PickupAddress');
-        const dCity = getValues('DropoffCity');
-        const dAddr = getValues('DropoffAddress');
-        if (!pCity || !pCity.trim()) {
-          message.warning('Vui lòng chọn hoặc nhập tỉnh / thành phố đón.');
-          return;
-        }
-        if (!pAddr || !pAddr.trim()) {
-          message.warning('Vui lòng nhập địa chỉ đón chi tiết tại trang trại.');
-          return;
-        }
-        if (!dCity || !dCity.trim()) {
-          message.warning('Vui lòng chọn hoặc nhập tỉnh / thành phố giao.');
-          return;
-        }
-        if (!dAddr || !dAddr.trim()) {
-          message.warning('Vui lòng nhập địa chỉ giao chi tiết tại đích đến.');
-          return;
-        }
+      if (transportMode === 'Ground' && (!pickupPlace || !dropoffPlace)) {
+        message.warning(t('bookingForm.pickBothPoints'));
+        return;
       }
     }
 
@@ -631,6 +675,7 @@ export default function BookingWizard({
         message.warning('Vui lòng chọn ít nhất 1 cá thể ngựa để tiếp tục.');
         return;
       }
+<<<<<<< HEAD
       const targetPickupDate = pickupWindowEnd || pickupWindowStart || null;
       const conditionErrors = {};
       let hasError = false;
@@ -654,6 +699,11 @@ export default function BookingWizard({
       if (hasError) {
         setHorseConditionErrors((prev) => ({ ...prev, ...conditionErrors }));
         message.error('Có cá thể ngựa chưa đạt điều kiện vận chuyển theo chính sách. Vui lòng kiểm tra lại!');
+=======
+      const valueProblem = validateHorseValues();
+      if (valueProblem) {
+        message.warning(valueProblem);
+>>>>>>> main
         return;
       }
     }
@@ -671,8 +721,6 @@ export default function BookingWizard({
     const mode = values.TransportMode;
     const pCode = values.PickupCountryCode;
     const dCode = values.DropoffCountryCode;
-    const pCity = values.PickupCity?.trim();
-    const dCity = values.DropoffCity?.trim();
 
     let finalPickup = values.PickupAddress?.trim();
     let finalDropoff = values.DropoffAddress?.trim();
@@ -691,25 +739,38 @@ export default function BookingWizard({
 
     const payload = {
       pickupAddress: finalPickup,
-      pickupCity: mode === 'Ground' ? pCity : null,
+      pickupCity: null,
       pickupCountryCode: pCode,
       dropoffAddress: finalDropoff,
-      dropoffCity: mode === 'Ground' ? dCity : null,
+      dropoffCity: null,
       dropoffCountryCode: dCode,
       pickupWindowStart: toLocalDateTimeString(values.PickupWindow?.[0]),
       pickupWindowEnd: toLocalDateTimeString(values.PickupWindow?.[1]),
       deliveryDeadline: toLocalDateTimeString(values.DeliveryDeadline),
-      transitCountryCodes: mode === 'Ground' ? values.TransitCountries || [] : [],
       transportMode: mode,
       distanceKm: mode === 'Ground' ? Number(values.DistanceKm) : null,
       requiresClimateControl: Boolean(values.RequiresClimateControl),
-      declaredValue: values.InsurancePackage === 'none' ? null : Number(values.DeclaredValue) || null,
       specialInstructions: instructions || null,
-      horses: selectedHorseIds.map((hId) => ({
-        horseId: Number(hId),
-        stallClass: stallClasses[hId] || 'Comfort',
-        notes: horseNotes[hId]?.trim().slice(0, 300) || null,
-      })),
+      ...coordinates,
+      // R-10: đồng ý Chính sách dịch vụ đúng phiên bản đang hiển thị
+      recipientIsCustomer: recipient.isCustomer,
+      recipientName: recipient.isCustomer ? null : recipient.name.trim(),
+      recipientPhone: recipient.isCustomer ? null : recipient.phone.trim(),
+      recipientEmail: recipient.isCustomer ? null : recipient.email.trim() || null,
+      recipientIdNumber: recipient.idNumber.trim() || null,
+      acceptPolicy: policyAgreement.accepted,
+      policyVersion: policyAgreement.policyVersion,
+      horses: selectedHorseIds.map((hId) => {
+        const v = horseValues[hId] || {};
+        return {
+          horseId: Number(hId),
+          stallClass: stallClasses[hId] || 'Comfort',
+          notes: horseNotes[hId]?.trim().slice(0, 300) || null,
+          declaredValue: Number(v.declaredValue) > 0 ? Number(v.declaredValue) : null,
+          valueProofPath: v.valueProofPath || null,
+          insurancePlan: v.insurancePlan || 'None',
+        };
+      }),
     };
 
     try {
@@ -957,56 +1018,9 @@ export default function BookingWizard({
                       }}
                     />
                   ) : (
-                    <>
-                      <Controller
-                        name="PickupCity"
-                        control={control}
-                        rules={{ required: 'Vui lòng chọn hoặc nhập tỉnh / thành phố đón' }}
-                        render={({ field, fieldState: { error } }) => (
-                          <Form.Item
-                            label="Tỉnh / Thành phố đón"
-                            required
-                            validateStatus={error ? 'error' : ''}
-                            help={error?.message}
-                            style={{ marginBottom: 12 }}
-                          >
-                            <AutoComplete
-                              {...field}
-                              size="large"
-                              options={(CITIES_BY_COUNTRY[pickupCountry] || CITIES_BY_COUNTRY.VN).map((c) => ({
-                                value: c,
-                              }))}
-                              placeholder="Chọn hoặc nhập tỉnh / thành phố..."
-                              filterOption={(inputValue, option) =>
-                                (option?.value || '').toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                              }
-                            />
-                          </Form.Item>
-                        )}
-                      />
-
-                      <Controller
-                        name="PickupAddress"
-                        control={control}
-                        rules={{ required: 'Vui lòng nhập địa chỉ đón chi tiết' }}
-                        render={({ field, fieldState: { error } }) => (
-                          <Form.Item
-                            label="Địa chỉ chi tiết (Trang trại / Số nhà, đường)"
-                            required
-                            validateStatus={error ? 'error' : ''}
-                            help={error?.message}
-                            style={{ marginBottom: 0 }}
-                          >
-                            <Input
-                              {...field}
-                              size="large"
-                              placeholder="Ví dụ: Trang trại ngựa Đua Củ Chi, Xã An Nhơn Tây..."
-                              style={{ borderRadius: 8 }}
-                            />
-                          </Form.Item>
-                        )}
-                      />
-                    </>
+                    <Form.Item label={t('bookingForm.pickupOnMap')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginBottom: 0 }}>
+                      <MapPicker value={pickupPlace} onChange={handlePickupPick} height={280} />
+                    </Form.Item>
                   )}
                 </Card>
               </Col>
@@ -1078,89 +1092,13 @@ export default function BookingWizard({
                       }}
                     />
                   ) : (
-                    <>
-                      <Controller
-                        name="DropoffCity"
-                        control={control}
-                        rules={{ required: 'Vui lòng chọn hoặc nhập tỉnh / thành phố giao' }}
-                        render={({ field, fieldState: { error } }) => (
-                          <Form.Item
-                            label="Tỉnh / Thành phố giao"
-                            required
-                            validateStatus={error ? 'error' : ''}
-                            help={error?.message}
-                            style={{ marginBottom: 12 }}
-                          >
-                            <AutoComplete
-                              {...field}
-                              size="large"
-                              options={(CITIES_BY_COUNTRY[dropoffCountry] || []).map((c) => ({
-                                value: c,
-                              }))}
-                              placeholder="Chọn hoặc nhập thành phố đến..."
-                              filterOption={(inputValue, option) =>
-                                (option?.value || '').toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                              }
-                            />
-                          </Form.Item>
-                        )}
-                      />
-
-                      <Controller
-                        name="DropoffAddress"
-                        control={control}
-                        rules={{ required: 'Vui lòng nhập địa chỉ giao chi tiết' }}
-                        render={({ field, fieldState: { error } }) => (
-                          <Form.Item
-                            label="Địa chỉ chi tiết (Trường đua / Trang trại đích)"
-                            required
-                            validateStatus={error ? 'error' : ''}
-                            help={error?.message}
-                            style={{ marginBottom: 0 }}
-                          >
-                            <Input
-                              {...field}
-                              size="large"
-                              placeholder="Ví dụ: Trường đua Chroy Changvar, Số 12 Đường Quốc Lộ..."
-                              style={{ borderRadius: 8 }}
-                            />
-                          </Form.Item>
-                        )}
-                      />
-                    </>
+                    <Form.Item label={t('bookingForm.dropoffOnMap')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginBottom: 0 }}>
+                      <MapPicker value={dropoffPlace} onChange={handleDropoffPick} height={280} />
+                    </Form.Item>
                   )}
                 </Card>
               </Col>
             </Row>
-
-            {/* Nước quá cảnh (chỉ đường bộ): chọn theo thứ tự đi qua, Manager sẽ xác nhận khi duyệt */}
-            {transportMode === 'Ground' && (
-              <Controller
-                name="TransitCountries"
-                control={control}
-                render={({ field }) => (
-                  <Form.Item
-                    label={t('bookings.transit.label')}
-                    extra={t('bookings.transit.hint')}
-                    labelCol={{ span: 24 }}
-                    wrapperCol={{ span: 24 }}
-                  >
-                    <Select
-                      mode="multiple"
-                      size="large"
-                      allowClear
-                      optionFilterProp="label"
-                      value={field.value || []}
-                      onChange={(codes) => field.onChange(codes)}
-                      placeholder={t('bookings.transit.placeholder')}
-                      options={TRANSIT_COUNTRY_OPTIONS.filter(
-                        (c) => c.code !== pickupCountry && c.code !== dropoffCountry,
-                      ).map((c) => ({ value: c.code, label: `${c.name} (${c.code})` }))}
-                    />
-                  </Form.Item>
-                )}
-              />
-            )}
 
             {/* Quãng đường dự kiến do Backend tự động tính */}
             {transportMode === 'Ground' && (
@@ -1179,28 +1117,25 @@ export default function BookingWizard({
                     <Flex align="center" gap={8} style={{ marginBottom: 6 }}>
                       <CarOutlined style={{ color: '#d97706', fontSize: 20 }} />
                       <Text strong style={{ color: '#92400e', fontSize: 15 }}>
-                        Quãng đường vận chuyển dự kiến
+                        {t('map.distanceAB')}
                       </Text>
-                      <Tag color="gold" style={{ margin: 0, fontWeight: 600 }}>
-                        Backend tự động tính
-                      </Tag>
+
                     </Flex>
                     <Text type="secondary" style={{ display: 'block', fontSize: 13, lineHeight: 1.5 }}>
-                      {routeEstimateInfo?.routeSummary ||
-                        'Hệ thống tự động phân tích tuyến đường bộ, cửa khẩu hải quan và tính toán cự ly thực tế giữa hai địa điểm.'}
+                      {t('bookingForm.routeHint')}
                     </Text>
-                    {routeEstimateInfo?.estimatedHours && (
+                    {route?.totalDurationHours != null && (
                       <Text style={{ fontSize: 12.5, color: '#475569', marginTop: 4, display: 'block' }}>
-                        Thời gian di chuyển đường bộ dự kiến: <strong>~{routeEstimateInfo.estimatedHours} giờ</strong> (chạy tốc độ an toàn cho sức khỏe ngựa)
+                        {t('map.hours', { value: Number(route.totalDurationHours).toFixed(1) })}
                       </Text>
                     )}
                   </Col>
                   <Col xs={24} md={9} style={{ textAlign: 'right' }}>
-                    {isEstimatingDistance ? (
+                    {routeLoading ? (
                       <Flex align="center" justify="flex-end" gap={8}>
                         <Spin size="small" />
                         <Text type="secondary" style={{ fontSize: 13 }}>
-                          Đang tính cự ly từ Backend...
+                          {t('bookingForm.routeLoading')}
                         </Text>
                       </Flex>
                     ) : (
@@ -1208,13 +1143,24 @@ export default function BookingWizard({
                         <div style={{ fontSize: 32, fontWeight: 700, color: '#b45309', lineHeight: 1.1 }}>
                           {distanceKm || 0} <span style={{ fontSize: 18, fontWeight: 500, color: '#78350f' }}>km</span>
                         </div>
-                        <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 2 }}>
-                          Đơn giá: $1.00 USD/km/ngựa
-                        </Text>
                       </div>
                     )}
                   </Col>
                 </Row>
+                {pickupPlace && dropoffPlace && (
+                  <div style={{ marginTop: 12 }}>
+                    <RouteMap
+                      height={280}
+                      stops={[
+                        { ...pickupPlace, stopType: 'Origin', name: pickupPlace.address },
+                        { ...dropoffPlace, stopType: 'Destination', name: dropoffPlace.address },
+                      ]}
+                      polyline={route?.polyline}
+                      legs={route?.legs}
+                      isEstimate={route?.isEstimate}
+                    />
+                  </div>
+                )}
               </Card>
             )}
           </div>
@@ -1390,73 +1336,8 @@ export default function BookingWizard({
                 />
               </Col>
 
-              {/* Bảo hiểm hành trình */}
-              <Col xs={24} md={12}>
-                <Controller
-                  name="InsurancePackage"
-                  control={control}
-                  render={({ field }) => {
-                    const isOn = field.value !== 'none';
-                    return (
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => field.onChange(isOn ? 'none' : 'transit')}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') field.onChange(isOn ? 'none' : 'transit');
-                        }}
-                        style={{
-                          padding: '16px 18px',
-                          borderRadius: 12,
-                          border: isOn ? '1.5px solid #d97706' : '1px solid #e2e8f0',
-                          backgroundColor: isOn ? '#fffdf7' : '#ffffff',
-                          cursor: 'pointer',
-                          height: '100%',
-                        }}
-                      >
-                        <Flex justify="space-between" align="center" style={{ marginBottom: 6 }}>
-                          <strong style={{ fontSize: 14, color: '#0f172a' }}>
-                            Bảo hiểm hành trình (Transit Insurance)
-                          </strong>
-                          <Checkbox checked={isOn} />
-                        </Flex>
-                        <Text type="secondary" style={{ fontSize: 12.5, lineHeight: 1.45, display: 'block' }}>
-                          Bảo hiểm rủi ro vận chuyển toàn diện (tính phí 1% trên giá trị khai báo của ngựa).
-                        </Text>
-                      </div>
-                    );
-                  }}
-                />
-              </Col>
             </Row>
 
-            {/* Nhập giá trị khai báo nếu mua bảo hiểm */}
-            {insurancePackage !== 'none' && (
-              <div style={{ marginTop: 16 }}>
-                <Controller
-                  name="DeclaredValue"
-                  control={control}
-                  render={({ field }) => (
-                    <Form.Item
-                      label="Giá trị khai báo của ngựa (USD)"
-                      extra="Mức khai báo làm căn cứ xác định phí bảo hiểm và hạn mức bồi thường."
-                      style={{ marginBottom: 0 }}
-                    >
-                      <InputNumber
-                        {...field}
-                        size="large"
-                        min={1000}
-                        max={100000000}
-                        step={5000}
-                        style={{ width: '100%', maxWidth: 360, borderRadius: 8 }}
-                        formatter={(val) => (val ? `$ ${Number(val).toLocaleString('en-US')}` : '')}
-                        parser={(val) => (val ? String(val).replace(/[^\d.]/g, '') : '')}
-                      />
-                    </Form.Item>
-                  )}
-                />
-              </div>
-            )}
           </div>
 
           <Divider style={{ margin: '20px 0' }} />
@@ -1694,6 +1575,77 @@ export default function BookingWizard({
                             placeholder="Ghi chú khẩu phần hoặc thể trạng riêng cho con này..."
                             style={{ borderRadius: 6, marginTop: 8 }}
                           />
+
+                          {/* R-12 / R-13: giá trị khai báo + chứng từ + gói bảo hiểm của con này */}
+                          <div style={{ marginTop: 12 }}>
+                            <Text strong style={{ fontSize: 12.5, color: '#0f172a', display: 'block', marginBottom: 6 }}>
+                              {t('bookingForm.values.declaredLabel')}
+                            </Text>
+                            <InputNumber
+                              size="middle"
+                              min={0}
+                              max={100000000}
+                              step={5000}
+                              value={horseValues[horseId]?.declaredValue ?? null}
+                              onChange={(v) => updateHorseValue(horseId, { declaredValue: v })}
+                              placeholder={t('bookingForm.values.declaredPlaceholder')}
+                              style={{ width: '100%' }}
+                              formatter={(val) => (val ? `$ ${Number(val).toLocaleString('en-US')}` : '')}
+                              parser={(val) => (val ? String(val).replace(/[^\d.]/g, '') : '')}
+                            />
+                            {Number(horseValues[horseId]?.declaredValue) >= proofThreshold && (
+                              <div style={{ marginTop: 8 }}>
+                                <Upload
+                                  accept=".pdf,.jpg,.jpeg,.png"
+                                  showUploadList={false}
+                                  beforeUpload={(file) => {
+                                    void uploadProof(horseId, file);
+                                    return false;
+                                  }}
+                                >
+                                  <Button icon={<UploadOutlined />} loading={uploadingHorseId === horseId}>
+                                    {t('bookingForm.values.uploadProof')}
+                                  </Button>
+                                </Upload>
+                                <Text type={horseValues[horseId]?.valueProofPath ? 'success' : 'warning'} style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
+                                  {horseValues[horseId]?.valueProofPath
+                                    ? t('bookingForm.values.proofUploaded', { name: horseValues[horseId]?.valueProofName || '' })
+                                    : t('bookingForm.values.proofHint', { threshold: formatUsdPlain(proofThreshold) })}
+                                </Text>
+                              </div>
+                            )}
+
+                            <Text strong style={{ fontSize: 12.5, color: '#0f172a', display: 'block', margin: '10px 0 6px' }}>
+                              {t('bookingForm.insurance.label')}
+                            </Text>
+                            <Radio.Group
+                              value={horseValues[horseId]?.insurancePlan || 'None'}
+                              onChange={(e) => updateHorseValue(horseId, { insurancePlan: e.target.value })}
+                              style={{ display: 'flex', flexDirection: 'column', gap: 6 }}
+                            >
+                              <Radio value="None">
+                                <strong>{t('bookingForm.insurance.none')}</strong>
+                                <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
+                                  {t('bookingForm.insurance.noneHint', {
+                                    liability: formatUsdPlain(policy?.insurance?.baseLiabilityUsd ?? 5000),
+                                    vet: formatUsdPlain(policy?.insurance?.baseVetCapUsd ?? 1000),
+                                  })}
+                                </Text>
+                              </Radio>
+                              <Radio value="Full">
+                                <strong>{t('bookingForm.insurance.full')}</strong>
+                                <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
+                                  {t('bookingForm.insurance.fullHint', {
+                                    premium: policy?.insurance?.premiumPercent ?? 1,
+                                    vetPercent: policy?.insurance?.vetCapPercent ?? 20,
+                                  })}
+                                </Text>
+                              </Radio>
+                            </Radio.Group>
+                            <a href={`${POLICY_PAGE_PATH}#8`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12 }}>
+                              {t('bookingForm.insurance.policyLink')}
+                            </a>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1752,14 +1704,14 @@ export default function BookingWizard({
                   </div>
                 </div>
 
-                {transitCodes.length > 0 && (
+                {(quote?.transitCountryCodes || []).length > 0 && (
                   <div style={{ marginBottom: 12 }}>
                     <Text type="secondary" style={{ fontSize: 12 }}>{t('bookings.fields.route')}:</Text>
                     <div style={{ fontSize: 13.5, fontWeight: 600, color: '#0f172a' }}>
                       {formatCountryRoute({
                         pickupCountryCode: pickupCountry,
                         dropoffCountryCode: dropoffCountry,
-                        transitCountryCodes: transitCodes,
+                        transitCountryCodes: quote.transitCountryCodes,
                       })}
                     </div>
                   </div>
@@ -1779,13 +1731,11 @@ export default function BookingWizard({
                       <span style={{ fontSize: 12.5, color: '#92400e', fontWeight: 600 }}>
                         Quãng đường cước phí: {distanceKm || quote?.distanceKm || 0} km
                       </span>
-                      <Tag color="gold" style={{ margin: 0, fontSize: 11 }}>
-                        Backend định tuyến
-                      </Tag>
+
                     </Flex>
-                    {(quote?.routeSummary || routeEstimateInfo?.routeSummary) && (
+                    {quote?.routeSummary && (
                       <Text type="secondary" style={{ fontSize: 11.5, display: 'block', marginTop: 3 }}>
-                        {quote?.routeSummary || routeEstimateInfo?.routeSummary}
+                        {quote.routeSummary}
                       </Text>
                     )}
                   </div>
@@ -1832,9 +1782,17 @@ export default function BookingWizard({
                           <div>
                             <strong>{h.name || h.Name}</strong> ({h.breed || 'Ngựa đua'})
                           </div>
-                          <Tag color="gold" style={{ fontWeight: 600, margin: 0 }}>
-                            {stallClasses[hId] || 'Comfort'}
-                          </Tag>
+                          <Space size={4}>
+                            <Tag color="gold" style={{ fontWeight: 600, margin: 0 }}>
+                              {stallClasses[hId] || 'Comfort'}
+                            </Tag>
+                            {Number(horseValues[hId]?.declaredValue) > 0 && (
+                              <Tag style={{ margin: 0 }}>${formatUsdPlain(horseValues[hId].declaredValue)}</Tag>
+                            )}
+                            {horseValues[hId]?.insurancePlan === 'Full' && (
+                              <Tag color="blue" style={{ margin: 0 }}>{t('bookingForm.insurance.full')}</Tag>
+                            )}
+                          </Space>
                         </Flex>
                       );
                     })}
@@ -1855,7 +1813,7 @@ export default function BookingWizard({
                 styles={{ body: { padding: '16px 18px' } }}
               >
                 <Text strong style={{ fontSize: 14, color: '#0f172a', display: 'block', marginBottom: 12 }}>
-                  Bảng dự toán cước phí (Estimated Quote)
+                  {t('bookingForm.range.title')}
                 </Text>
 
                 {quoteError && (
@@ -1907,19 +1865,38 @@ export default function BookingWizard({
 
                 <Divider style={{ margin: '14px 0' }} />
 
-                <Flex justify="space-between" align="baseline">
-                  <div>
-                    <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
-                      Tổng chi phí dự kiến
-                    </Text>
-                    <Text type="secondary" style={{ fontSize: 11 }}>
-                      Đã bao gồm cước, phụ phí và phí kiểm dịch
-                    </Text>
-                  </div>
+                <div>
+                  <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
+                    {t('bookingForm.range.label')}
+                  </Text>
                   <div style={{ fontSize: 22, fontWeight: 800, color: '#d97706' }}>
-                    ${totalCost.toLocaleString('en-US', { maximumFractionDigits: 2 })} {currencyCode}
+                    {quote
+                      ? quoteMin === quoteMax
+                        ? `$${formatUsd(quoteMin)} ${currencyCode}`
+                        : `$${formatUsd(quoteMin)} – $${formatUsd(quoteMax)} ${currencyCode}`
+                      : '---'}
                   </div>
-                </Flex>
+                  {quote && usdVndRate > 0 && (
+                    <Text type="secondary" style={{ fontSize: 12.5, display: 'block' }}>
+                      {quoteMin === quoteMax
+                        ? `≈ ${formatVnd(quoteMin)} đ`
+                        : `≈ ${formatVnd(quoteMin)} – ${formatVnd(quoteMax)} đ`}
+                    </Text>
+                  )}
+                  <Alert type="info" showIcon style={{ marginTop: 10, borderRadius: 8 }} title={t('bookingForm.range.note')} />
+                  <Text type="secondary" style={{ fontSize: 11.5, display: 'block', marginTop: 6 }}>
+                    {t('bookingForm.range.linesNote')}
+                  </Text>
+                </div>
+
+                <Divider style={{ margin: '14px 0' }} />
+                <Text strong style={{ fontSize: 13, color: '#0f172a', display: 'block', marginBottom: 8 }}>
+                  {t('bookingForm.recipient.title')}
+                </Text>
+                <div style={{ marginBottom: 12 }}>
+                  <RecipientForm value={recipient} onChange={setRecipient} />
+                </div>
+                <PolicyAgreement accepted={policyAgreement.accepted} onChange={setPolicyAgreement} />
               </Card>
             </Col>
           </Row>
@@ -1963,7 +1940,7 @@ export default function BookingWizard({
             size="large"
             icon={<CheckCircleFilled />}
             loading={loading}
-            disabled={!quote || quoteLoading}
+            disabled={!quote || quoteLoading || !policyAgreement.accepted || !recipientValid}
             onClick={handleFinalSubmit}
             style={{
               minWidth: 180,

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Card, Row, Col, Typography, Tag, Button, Form, Input, Radio, Spin, Alert, Empty, Image, Space, Checkbox, message } from 'antd';
-import { FileDoneOutlined } from '@ant-design/icons';
+import { FileDoneOutlined, StopOutlined } from '@ant-design/icons';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
@@ -9,6 +9,9 @@ import driverService from '../services/driverService';
 import MissionHeaderCard from '../components/MissionHeaderCard';
 import DigitalSignaturePad from '../components/DigitalSignaturePad';
 import EmergencyReportModal from '../components/EmergencyReportModal';
+// Đang sửa ArrivalHandoverPage vì thêm nút "Không giao được" + đồng hồ chờ ở điểm giao (FE-14, R-16)
+import DeliveryFailedModal from '@features/driver/components/DeliveryFailedModal';
+import recipientService from '@services/recipientService';
 import TripHorseStatusTag from '@components/common/TripHorseStatusTag';
 import { unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import { HANDOVER_CONDITIONS, HANDOVER_CONDITION_COLOR } from '@utils/incidents';
@@ -40,6 +43,32 @@ export default function ArrivalHandoverPage() {
   const [signature, setSignature] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [sosModalOpen, setSosModalOpen] = useState(false);
+  // R-16: đơn đang mở hộp "Không giao được"; khung giờ đã báo người nhận (căn cứ tính phí chờ); đơn đã ghi không giao được
+  const [failedBookingId, setFailedBookingId] = useState(null);
+  const [recipients, setRecipients] = useState([]);
+  const [failedCodes, setFailedCodes] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    recipientService
+      .getTripRecipients(tripId)
+      .then((res) => active && setRecipients(unwrapList(res)))
+      .catch(() => active && setRecipients([]));
+    // Ghi không giao được tự mở một sự cố "Failed delivery of booking <mã>": dùng để biết đơn nào đã ghi (tài xế không đọc được API của đơn)
+    driverService
+      .getIncidents(tripId)
+      .then((res) => {
+        if (!active) return;
+        const codes = unwrapList(res)
+          .map((i) => /^Failed delivery of booking (\S+?):/.exec(i.description || '')?.[1])
+          .filter(Boolean);
+        setFailedCodes(codes);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [tripId]);
 
   const loadHandovers = useCallback(
     () =>
@@ -53,6 +82,24 @@ export default function ArrivalHandoverPage() {
   useEffect(() => {
     loadHandovers();
   }, [loadHandovers]);
+
+  const watchedRecipientName = Form.useWatch('recipientName', form);
+  const activeBooking = (mission?.bookings || []).find((b) => b.bookingId === activeBookingId);
+  const originalRecipientName = activeBooking?.recipientName || activeBooking?.customerName || '';
+  const isDifferentRecipient = Boolean(
+    watchedRecipientName &&
+    originalRecipientName &&
+    watchedRecipientName.trim().toLowerCase() !== originalRecipientName.trim().toLowerCase()
+  );
+  const isAlternateApproved = Boolean(activeBooking?.alternateRecipientApproved);
+
+  useEffect(() => {
+    if (!isDifferentRecipient || isAlternateApproved) return undefined;
+    const interval = setInterval(() => {
+      fetchMission();
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [isDifferentRecipient, isAlternateApproved, fetchMission]);
 
   if (loading && !mission) {
     return (
@@ -79,15 +126,23 @@ export default function ArrivalHandoverPage() {
     return dropoff.status === 'Arrived' && onBoardOf(booking.bookingId).length > 0;
   };
 
-  const activeBooking = bookings.find((b) => b.bookingId === activeBookingId);
+
+
   const activeHorses = activeBooking ? onBoardOf(activeBooking.bookingId) : [];
   const allVerified = activeHorses.length > 0 && activeHorses.every((h) => verified[h.tripHorseId]);
 
+  // Đang sửa ArrivalHandoverPage vì tự điền người nhận và chặn hoàn tất nếu ký thay chưa duyệt theo FE-13 (R-16)
   const openForm = (bookingId) => {
     setActiveBookingId(bookingId);
     setVerified({});
     setSignature(null);
-    form.resetFields();
+    const b = bookings.find((item) => item.bookingId === bookingId);
+    form.setFieldsValue({
+      recipientName: b?.recipientName || b?.customerName || '',
+      recipientPhone: b?.recipientPhone || b?.customerPhone || '',
+      recipientIdCard: b?.recipientIdNumber || b?.recipientIdCard || '',
+      overallCondition: 'Excellent',
+    });
   };
 
   const handleSubmit = async () => {
@@ -130,6 +185,7 @@ export default function ArrivalHandoverPage() {
     }
   };
 
+  const failedBooking = bookings.find((b) => b.bookingId === failedBookingId);
   const doneCount = bookings.filter((b) => b.handoverCompleted || handoverOf(b.bookingId)).length;
   const anyAvailable = bookings.some((b) => !(b.handoverCompleted || handoverOf(b.bookingId)) && canHandoverBooking(b));
 
@@ -201,13 +257,23 @@ export default function ArrivalHandoverPage() {
                   <Col xs={24} md={8} style={{ textAlign: 'right' }}>
                     {!done && !available && tripUnderWay && <Tag>{t('handover.waitingDropoff')}</Tag>}
                     {available && (
-                      <Button
-                        type={activeBookingId === booking.bookingId ? 'default' : 'primary'}
-                        icon={<FileDoneOutlined />}
-                        onClick={() => openForm(booking.bookingId)}
-                      >
-                        {t('handover.create')}
-                      </Button>
+                      <Space wrap style={{ justifyContent: 'flex-end' }}>
+                        {/* Đã ghi không giao được: vẫn cho lập e-POD (khách chọn người nhận khác thì người mới ký ngay) */}
+                        {failedCodes.includes(booking.bookingCode) ? (
+                          <Tag color="red">{t('deliveryFailed.recordedTag')}</Tag>
+                        ) : (
+                          <Button danger icon={<StopOutlined />} onClick={() => setFailedBookingId(booking.bookingId)}>
+                            {t('deliveryFailed.button')}
+                          </Button>
+                        )}
+                        <Button
+                          type={activeBookingId === booking.bookingId ? 'default' : 'primary'}
+                          icon={<FileDoneOutlined />}
+                          onClick={() => openForm(booking.bookingId)}
+                        >
+                          {t('handover.create')}
+                        </Button>
+                      </Space>
                     )}
                   </Col>
                 </Row>
@@ -317,6 +383,19 @@ export default function ArrivalHandoverPage() {
               </div>
             ))}
 
+            
+            {isDifferentRecipient && (
+              <Alert
+                type={isAlternateApproved ? 'success' : 'warning'}
+                showIcon
+                style={{ marginBottom: 16 }}
+                message={
+                  isAlternateApproved
+                    ? t('handover.form.alternateApproved', 'Khách hàng đã chấp thuận cho người này nhận thay.')
+                    : t('handover.form.alternateWait', 'Người ký khác người nhận trên đơn. Cần khách hàng xác nhận nhận thay trên ứng dụng trước khi hoàn tất.')
+                }
+              />
+            )}
             <Title level={5}>{t('handover.form.recipientTitle')}</Title>
             <Row gutter={16}>
               <Col xs={24} md={8}>
@@ -370,6 +449,21 @@ export default function ArrivalHandoverPage() {
           </Form>
         </Card>
       )}
+
+      <DeliveryFailedModal
+        open={Boolean(failedBooking)}
+        tripId={tripId}
+        booking={failedBooking}
+        arrivedAt={failedBooking ? dropoffOf(failedBooking)?.actualArrivalTime : null}
+        notifiedWindowStart={recipients.find((r) => r.bookingId === failedBookingId)?.notifiedWindowStart}
+        onClose={() => setFailedBookingId(null)}
+        onRecorded={() => {
+          setFailedCodes((prev) => [...prev, failedBooking.bookingCode]);
+          setFailedBookingId(null);
+          if (activeBookingId === failedBooking.bookingId) setActiveBookingId(null);
+          fetchMission();
+        }}
+      />
 
       <EmergencyReportModal
         open={sosModalOpen}

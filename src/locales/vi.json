@@ -101,10 +101,17 @@
     "tripClosure": "Đóng chuyến & KPI",
     "reports": "Báo cáo",
     "paymentSettings": "Cấu hình thanh toán",
-    "transportOrders": "Đơn vận chuyển"
+    "transportOrders": "Đơn vận chuyển",
+    "insuranceClaims": "Bồi thường bảo hiểm"
   },
   "status": {
     "submitted": "Đã gửi",
+    "preApproved": "Chờ lập tuyến",
+    "routePlanned": "Chờ duyệt tuyến",
+    "quoted": "Đã báo giá",
+    "quoteExpired": "Báo giá hết hạn",
+    "underReview": "Đang thẩm định",
+    "paid": "Đã chi trả",
     "awaitingDeposit": "Chờ đặt cọc",
     "awaitingFinalPayment": "Chờ thanh toán phát sinh",
     "approved": "Đã duyệt",
@@ -1508,7 +1515,9 @@
     "queueEmpty": "Không có ngựa nào đang chờ xếp chuyến",
     "tabs": {
       "queue": "Hàng chờ xếp chuyến",
-      "trips": "Kế hoạch chuyến"
+      "trips": "Kế hoạch chuyến",
+      "routePlanning": "Đơn chờ lập tuyến",
+      "routePlanningHint": "Danh sách các đơn vận chuyển đã được Manager duyệt sơ bộ và chuyển đến Coordinator để vẽ / lập lộ trình chi tiết trước khi gửi báo giá chốt."
     },
     "filters": {
       "allModes": "Mọi phương thức",
@@ -1559,7 +1568,14 @@
       "deliveredCount": "Đã giao {{done}}/{{total}}",
       "pickupAt": "Giờ đón",
       "routeKm": "Quãng đường",
-      "escort": "Áp tải phụ trách"
+      "escort": "Áp tải phụ trách",
+      "stopType": "Loại điểm",
+      "stopName": "Tên trạm / Mốc",
+      "country": "Nước",
+      "stopNamePlaceholder": "Tên điểm dừng / cửa khẩu",
+      "addressPlaceholder": "Địa chỉ",
+      "notes": "Ghi chú tuyến",
+      "notesPlaceholder": "Ghi chú cho bộ phận kiểm dịch hoặc quản lý..."
     },
     "crewRole": {
       "Driver": "Lái xe",
@@ -1596,7 +1612,11 @@
       "resetRoute": "Tạo lại mốc mặc định",
       "saveDraft": "Lưu nháp",
       "saveAndSubmit": "Lưu & trình duyệt",
-      "suggestRoute": "Gợi ý lộ trình"
+      "suggestRoute": "Gợi ý lộ trình",
+      "planRoute": "Lập tuyến",
+      "viewEditRoute": "Xem / Sửa tuyến",
+      "previewRoute": "Xem trước tuyến",
+      "submitRoute": "Lưu & Trình duyệt"
     },
     "confirm": {
       "cancel": "Hủy chuyến {{code}}? Ngựa sẽ quay lại hàng chờ."
@@ -1622,8 +1642,16 @@
       "suggestNeedInput": "Chọn ngựa và giờ khởi hành trước khi gợi ý lộ trình",
       "suggestFailed": "Không gợi ý được lộ trình",
       "suggested": "Đã thay lộ trình bằng gợi ý",
+<<<<<<< HEAD
       "needTwoDrivers": "Thời gian lái dự kiến {{hours}} giờ (vượt quá 9 giờ). Bắt buộc cần ít nhất 2 tài xế thay phiên để trình duyệt chuyến theo quy chuẩn an toàn R-14.",
       "routeCopied": "Đã sao chép các mốc từ tuyến đã duyệt của đơn {{code}} vào kế hoạch chuyến!"
+=======
+      "stopNameRequired": "Vui lòng nhập tên điểm dừng / cửa khẩu",
+      "previewLoaded": "Đã tính toán lộ trình dự kiến",
+      "previewFailed": "Không thể tính lộ trình",
+      "submittedSuccess": "Đã trình duyệt tuyến thành công cho Manager",
+      "submitFailed": "Trình duyệt tuyến thất bại"
+>>>>>>> main
     },
     "suggestion": {
       "title": "Kết quả gợi ý lộ trình",
@@ -1654,6 +1682,7 @@
       "emptySlot": "Ô trống",
       "hint": "Bấm một ô có ngựa rồi bấm ô khác để đổi chỗ. Mỗi người áp tải phụ trách tối đa 3 con; ô để trống áp tải sẽ được tự phân khi lưu (ô 1-3 cho người đầu tiên, trưởng nhóm trước)."
     },
+<<<<<<< HEAD
     "approvedRoute": {
       "title": "Tuyến đường đã được phê duyệt của đơn",
       "loading": "Đang tải tuyến đã duyệt...",
@@ -1664,6 +1693,24 @@
     },
     "errors": {
       "unapprovedCountryTitle": "Lỗi lộ trình: Đi qua nước ngoài tuyến đã duyệt"
+=======
+    "routePlanningEmpty": "Hiện không có đơn nào chờ lập tuyến",
+    "drawer": {
+      "title": "Lập tuyến vận chuyển cho đơn",
+      "origin": "Điểm đón (Khóa từ đơn)",
+      "destination": "Điểm trả (Khóa từ đơn)",
+      "stops": "Các mốc dừng chân & Cửa khẩu quốc tế",
+      "noStops": "Chưa thêm điểm dừng trung gian nào",
+      "previewInfo": "Thông số lộ trình dự kiến",
+      "totalDistance": "Tổng quãng đường",
+      "totalHours": "Thời gian ước tính",
+      "transitCountries": "Nước quá cảnh",
+      "rejectionAlert": "Tuyến trước đó đã bị Manager từ chối"
+    },
+    "stopTypes": {
+      "restStop": "Trạm nghỉ",
+      "borderGate": "Cửa khẩu"
+>>>>>>> main
     }
   },
   "routeApproval": {
@@ -1677,7 +1724,11 @@
     },
     "actions": {
       "approve": "Duyệt kế hoạch",
-      "reject": "Trả về"
+      "reject": "Trả về",
+      "rejectRoute": "Từ chối tuyến",
+      "approveAndQuote": "Duyệt tuyến & gửi báo giá",
+      "previewQuote": "Xem trước báo giá chốt",
+      "confirmReject": "Xác nhận từ chối"
     },
     "rejectTitle": "Trả kế hoạch {{code}} về cho điều phối",
     "reasonPlaceholder": "Lý do (bắt buộc, tối đa 500 ký tự)",
@@ -1687,7 +1738,34 @@
       "rejected": "Đã trả kế hoạch {{code}} về cho điều phối",
       "rejectedCancelled": "Chuyến {{code}} đã bị hủy sau 3 lần trả về",
       "failed": "Thao tác không thành công",
-      "reasonRequired": "Vui lòng nhập lý do"
+      "reasonRequired": "Vui lòng nhập lý do",
+      "quotePreviewLoaded": "Đã tính toán báo giá chốt",
+      "quotePreviewFailed": "Không thể tính báo giá",
+      "noPlanToApprove": "Không tìm thấy bản lộ trình cần duyệt",
+      "approvedAndQuoted": "Đã duyệt tuyến và gửi báo giá chốt cho khách hàng",
+      "rejectedSuccess": "Đã trả tuyến về cho Điều phối viên chỉnh sửa"
+    },
+    "tabs": {
+      "bookingRoutes": "Tuyến đơn hàng (R-10)",
+      "tripPlans": "Kế hoạch chuyến xe"
+    },
+    "pendingListTitle": "Đơn đã lập tuyến chờ duyệt",
+    "emptyBookingRoutes": "Không có đơn nào chờ duyệt tuyến",
+    "noBookingSelected": "Chọn một đơn hàng để xem tuyến và chốt giá trị ngựa",
+    "bookingTitle": "Duyệt tuyến đơn hàng",
+    "fields": {
+      "agreedValue": "Giá trị thỏa thuận ($)"
+    },
+    "horsesCardTitle": "Chốt giá trị thỏa thuận từng con ngựa (R-12)",
+    "quoteSummaryTitle": "Báo giá chốt dự kiến gửi cho khách hàng",
+    "freight": "Cước vận chuyển",
+    "clearance": "Phí thông quan",
+    "insurance": "Phí bảo hiểm",
+    "total": "Tổng tiền chốt",
+    "rejectModal": {
+      "title": "Từ chối phương án tuyến",
+      "hint": "Lý do từ chối sẽ được gửi lại cho Coordinator để vẽ lại tuyến hoặc thêm bớt điểm dừng phù hợp.",
+      "placeholder": "Nhập lý do từ chối (bắt buộc: vd thiếu trạm nghỉ, quá xa cửa khẩu...)"
     }
   },
   "tracking": {
@@ -1732,8 +1810,10 @@
       "queue": "NGỰA CHỜ XẾP CHUYẾN",
       "planning": "NHÁP / CHỜ DUYỆT",
       "scheduled": "ĐÃ LÊN LỊCH",
-      "onTheRoad": "ĐANG CHẠY / ĐÃ TỚI"
-    }
+      "onTheRoad": "ĐANG CHẠY / ĐÃ TỚI",
+      "pendingRoutes": "Chờ lập tuyến"
+    },
+    "planRoute": "Lập tuyến đơn"
   },
   "horseDocs": {
     "pageTitle": "Hồ sơ thú y",
@@ -2089,7 +2169,11 @@
       "verified": "Đã đối chiếu",
       "noPhoto": "Chưa có ảnh",
       "microchip": "Mã vi mạch",
-      "horsesNotVerified": "Còn ngựa chưa được đối chiếu"
+      "horsesNotVerified": "Còn ngựa chưa được đối chiếu",
+      "presenceConfirmed": "Đã xác nhận có mặt",
+      "presenceUnconfirmed": "Chưa xác nhận có mặt",
+      "alternateApproved": "Khách hàng đã chấp thuận cho người này nhận thay.",
+      "alternateWait": "Người ký khác người nhận trên đơn. Cần khách hàng xác nhận nhận thay trên ứng dụng trước khi hoàn tất."
     },
     "dropoffAt": "Điểm trả: {{name}} · dự kiến {{time}}",
     "waitingDropoff": "Chờ xe tới điểm trả",
@@ -2332,6 +2416,7 @@
   "customerOrders": {
     "stage": {
       "PendingReview": "Chờ duyệt",
+      "QuoteReady": "Có báo giá",
       "AwaitingDeposit": "Chờ đặt cọc",
       "PreparingDossier": "Đang làm hồ sơ",
       "AwaitingTrip": "Chờ xếp chuyến",
@@ -2367,10 +2452,12 @@
       "closedTitle": {
         "Rejected": "Đơn bị từ chối",
         "Cancelled": "Đơn đã hủy",
-        "Expired": "Đơn đã quá hạn"
+        "Expired": "Đơn đã quá hạn",
+        "QuoteExpired": "Báo giá đã hết hạn"
       },
       "steps": {
         "review": "Gửi yêu cầu & chờ duyệt",
+        "quote": "Báo giá chốt & hợp đồng",
         "deposit": "Đặt cọc",
         "dossier": "Hồ sơ kiểm dịch",
         "planning": "Xếp chuyến",
@@ -2382,6 +2469,7 @@
       },
       "now": {
         "PendingReview": "Quản lý đang xem xét yêu cầu",
+        "QuoteReady": "Xem báo giá, hợp đồng và chấp nhận trước hạn",
         "AwaitingDeposit": "Hãy đặt cọc để bắt đầu làm hồ sơ",
         "PreparingDossier": "Bổ sung giấy tờ ở tab Hồ sơ",
         "AwaitingTrip": "Hồ sơ đã xong, đang chờ xếp chuyến",
@@ -2399,6 +2487,7 @@
     "ariaLabel": "Thông báo",
     "newToast": "Thông báo mới"
   },
+<<<<<<< HEAD
   "policy": {
     "agreement": {
       "prefix": "Tôi đã đọc và đồng ý với",
@@ -2502,5 +2591,352 @@
       "months": "tháng tuổi",
       "horse": "con"
     }
+=======
+  "map": {
+    "searchPlaceholder": "Tìm địa chỉ (ví dụ: Ba Vì, Hà Nội)",
+    "pickHint": "Gõ địa chỉ để chọn gợi ý, hoặc bấm lên bản đồ / kéo ghim để chỉnh vị trí.",
+    "resolving": "Đang lấy địa chỉ...",
+    "reverseFailed": "Không tìm thấy địa chỉ tại điểm này. Hãy chọn điểm trên đất liền hoặc tìm theo địa chỉ.",
+    "country": "Nước",
+    "km": "{{value}} km",
+    "hours": "khoảng {{value}} giờ lái",
+    "total": "Tổng",
+    "estimateNote": "* Có chặng tính ước tính (đường chim bay × 1,3)",
+    "addHint": "Bấm lên bản đồ để thêm mốc.",
+    "moveUp": "Lên",
+    "moveDown": "Xuống",
+    "remove": "Xóa mốc",
+    "distanceAB": "Quãng đường đường bộ A → B",
+    "stopType": {
+      "Origin": "Điểm đón",
+      "Pickup": "Điểm đón",
+      "RestStop": "Trạm nghỉ",
+      "BorderGate": "Cửa khẩu",
+      "Dropoff": "Điểm trả",
+      "Destination": "Điểm giao"
+    }
+  },
+  "bookingForm": {
+    "pickupOnMap": "Điểm đón (tìm địa chỉ hoặc chọn trên bản đồ)",
+    "dropoffOnMap": "Điểm giao (tìm địa chỉ hoặc chọn trên bản đồ)",
+    "pickBothPoints": "Vui lòng chọn điểm đón và điểm giao trên bản đồ.",
+    "routeHint": "Quãng đường đường bộ thực tế giữa hai điểm, lấy từ bản đồ. Tuyến chính xác (trạm nghỉ, cửa khẩu) do công ty lập sau khi duyệt yêu cầu.",
+    "routeLoading": "Đang tính quãng đường...",
+    "values": {
+      "declaredLabel": "Giá trị khai báo (USD, không bắt buộc)",
+      "declaredPlaceholder": "Ví dụ: 40.000",
+      "allOrNone": "Đã khai giá trị cho một con thì phải khai cho mọi con. Còn thiếu: {{names}}.",
+      "fullNeedsValue": "{{name}}: gói Bảo hiểm toàn giá trị cần khai giá trị của ngựa.",
+      "proofRequired": "{{name}}: giá trị từ {{threshold}} USD cần tải chứng từ (hóa đơn mua, giấy định giá hoặc kết quả đấu giá).",
+      "uploadProof": "Tải chứng từ giá trị",
+      "proofHint": "Giá trị từ {{threshold}} USD cần chứng từ: hóa đơn mua, giấy định giá của bác sĩ thú y / chuyên gia, hoặc kết quả đấu giá.",
+      "proofUploaded": "Đã tải: {{name}}",
+      "uploadFailed": "Không tải được file chứng từ."
+    },
+    "insurance": {
+      "label": "Gói bảo hiểm",
+      "none": "Không mua bảo hiểm",
+      "noneHint": "Chỉ bồi thường khi lỗi do công ty: tối đa {{liability}} USD nếu ngựa chết / mất, chi phí thú y tối đa {{vet}} USD.",
+      "full": "Bảo hiểm toàn giá trị",
+      "fullHint": "Phí {{premium}}% giá trị thỏa thuận. Bồi thường 100% giá trị nếu ngựa chết / mất, chi phí thú y tối đa {{vetPercent}}% giá trị, kể cả bất khả kháng.",
+      "policyLink": "Xem Chính sách dịch vụ mục 8 (Bảo hiểm)"
+    },
+    "range": {
+      "title": "Khoảng giá ước tính",
+      "label": "Giá ước tính",
+      "note": "Giá chốt gửi sau khi công ty lập tuyến; bạn chưa phải thanh toán ở bước này.",
+      "linesNote": "Bảng chi tiết ở trên là mức thấp của khoảng giá (chưa có phí quá cảnh và quãng đường đi vòng)."
+    },
+    "recipient": {
+      "title": "Người nhận ngựa",
+      "self": "Tôi tự nhận ngựa (dùng tên, số điện thoại trong hồ sơ của tôi)",
+      "name": "Họ tên người nhận *",
+      "phone": "Số điện thoại người nhận *",
+      "email": "Email người nhận (nên có)",
+      "idNumber": "CMND / CCCD / hộ chiếu (không bắt buộc)",
+      "hint": "Người nhận được báo qua email khi chuyến được lên lịch, khi xe xuất phát và khi xe sắp tới. Bạn sửa được người nhận tới khi xe tới điểm giao."
+    }
+  },
+  "policyAgreement": {
+    "label": "Tôi đã đọc và đồng ý với <policyLink>Chính sách dịch vụ</policyLink> (phiên bản {{version}})",
+    "unavailable": "Không tải được Chính sách dịch vụ. Vui lòng tải lại trang."
+  },
+  "delayCompensation": {
+    "title": "Bồi thường giao trễ (R-09)",
+    "none": "Không có đơn nào bị giao trễ",
+    "delayHours": "Thời gian trễ",
+    "amount": "Số tiền bồi thường",
+    "status": "Trạng thái",
+    "reason": "Nguyên nhân",
+    "actions": {
+      "adjust": "Sửa số tiền"
+    },
+    "adjustModal": {
+      "title": "Điều chỉnh số tiền bồi thường giao trễ",
+      "currentAmount": "Số tiền hệ thống tính",
+      "newAmount": "Số tiền duyệt mới (USD)",
+      "reason": "Lý do điều chỉnh (bắt buộc)",
+      "reasonPlaceholder": "Ghi rõ căn cứ / thỏa thuận với khách hàng..."
+    },
+    "messages": {
+      "approved": "Đã duyệt bồi thường giao trễ",
+      "approveFailed": "Duyệt thất bại",
+      "reasonRequired": "Vui lòng nhập lý do điều chỉnh số tiền",
+      "adjustedSuccess": "Đã điều chỉnh và duyệt số tiền bồi thường",
+      "adjustFailed": "Điều chỉnh thất bại"
+    }
+  },
+  "claims": {
+    "title": "Hồ sơ bồi thường bảo hiểm (R-13)",
+    "tabTitle": "Bồi thường bảo hiểm",
+    "managerTitle": "Hồ sơ bồi thường bảo hiểm (R-13)",
+    "managerSubtitle": "Tiếp nhận, thẩm định và chi trả các yêu cầu bồi thường tổn thất theo điều khoản chính sách dịch vụ.",
+    "timeRemaining": "Thời hạn gửi yêu cầu bồi thường: đến {{time}} (trong vòng 24 giờ sau khi bàn giao).",
+    "expiredNotice": "Đã quá thời hạn 24 giờ kể từ khi ký biên bản giao nhận e-POD.",
+    "empty": "Chưa có hồ sơ bồi thường bảo hiểm nào cho đơn này.",
+    "loadFailed": "Không thể tải danh sách hồ sơ bồi thường",
+    "detailTitle": "Thẩm định hồ sơ bồi thường",
+    "actions": {
+      "newClaim": "Yêu cầu bồi thường",
+      "startReview": "Bắt đầu thẩm định",
+      "approve": "Duyệt bồi thường",
+      "reject": "Từ chối",
+      "markPaid": "Đánh dấu đã chi trả",
+      "uploadFiles": "Chọn tệp đính kèm"
+    },
+    "modal": {
+      "title": "Nộp yêu cầu bồi thường bảo hiểm"
+    },
+    "fields": {
+      "claimCode": "Mã hồ sơ",
+      "booking": "Đơn hàng",
+      "horse": "Ngựa",
+      "selectHorse": "Chọn con ngựa bị tổn thất / thương tích",
+      "horsePlaceholder": "Chọn ngựa...",
+      "type": "Loại bồi thường",
+      "typePlaceholder": "Chọn loại tổn thất...",
+      "insurancePlan": "Gói bảo hiểm",
+      "agreedValue": "Giá trị thỏa thuận",
+      "requestedAmount": "Yêu cầu",
+      "amountUsd": "Số tiền yêu cầu bồi thường (USD)",
+      "approvedAmount": "Được duyệt",
+      "maxCap": "Trần chi trả theo chính sách",
+      "status": "Trạng thái",
+      "description": "Mô tả diễn biến & nguyên nhân",
+      "descPlaceholder": "Mô tả diễn biến, triệu chứng hoặc nguyên nhân thương tích...",
+      "evidence": "Chứng từ bổ sung (biên bản thú y, hóa đơn, ảnh hiện trường)",
+      "decisionNote": "Phản hồi / Ghi chú duyệt",
+      "paymentRef": "Mã tham chiếu thanh toán",
+      "rejectReason": "Lý do từ chối theo điều khoản loại trừ",
+      "note": "Căn cứ / Ghi chú"
+    },
+    "types": {
+      "injury": "Chấn thương (chi phí thú y)",
+      "death": "Tử vong",
+      "loss": "Thất lạc"
+    },
+    "messages": {
+      "createSuccess": "Đã gửi yêu cầu bồi thường bảo hiểm thành công",
+      "createFailed": "Gửi yêu cầu thất bại",
+      "reviewed": "Đã chuyển hồ sơ sang trạng thái thẩm định",
+      "approvedSuccess": "Đã phê duyệt số tiền bồi thường",
+      "rejectedSuccess": "Đã từ chối bồi thường theo điều khoản",
+      "paidSuccess": "Đã ghi nhận chi trả tiền bồi thường"
+    },
+    "errors": {
+      "horseRequired": "Vui lòng chọn ngựa",
+      "typeRequired": "Vui lòng chọn loại",
+      "amountRequired": "Vui lòng nhập số tiền",
+      "descRequired": "Vui lòng mô tả sự cố"
+    },
+    "approveForm": {
+      "title": "Phê duyệt số tiền bồi thường"
+    },
+    "rejectForm": {
+      "title": "Từ chối yêu cầu bồi thường"
+    },
+    "payForm": {
+      "title": "Ghi nhận chi trả bồi thường"
+    }
+  },
+  "quote": {
+    "title": "Báo giá chốt",
+    "intro": "Giá chốt tính theo tuyến công ty đã duyệt. Xem hợp đồng, tích đồng ý rồi chấp nhận và đặt cọc trước hạn; quá hạn báo giá tự đóng, không mất phí.",
+    "unitPrice": "Đơn giá",
+    "agreedValue": "Giá trị thỏa thuận",
+    "insurance": "Bảo hiểm",
+    "insurancePlan": {
+      "None": "Không mua",
+      "Full": "Toàn giá trị"
+    },
+    "route": "Tuyến đã duyệt",
+    "transitCountries": "Nước quá cảnh",
+    "noTransit": "Không có",
+    "total": "Tổng giá chốt",
+    "deposit": "Tiền cọc ({{percent}}%)",
+    "balance": "Phần còn lại (trả trước khi khởi hành)",
+    "expiresAt": "Hạn chấp nhận và đặt cọc: {{time}}",
+    "countdownFormat": "D [ngày] HH:mm:ss",
+    "acceptAndPay": "Chấp nhận & đặt cọc",
+    "acceptNote": "Bấm nút này là giao kết hợp đồng theo hình thức điện tử, không cần ký thêm. Sau đó bạn được chuyển sang VNPay để đặt cọc.",
+    "decline": "Từ chối báo giá",
+    "declineTitle": "Từ chối báo giá này?",
+    "declineDescription": "Đơn sẽ bị hủy và bạn không mất phí nào. Có thể cho chúng tôi biết lý do (không bắt buộc).",
+    "declineReasonPlaceholder": "Ví dụ: giá cao hơn dự kiến",
+    "accepted": "Đã chấp nhận báo giá và hợp đồng",
+    "acceptFailed": "Không chấp nhận được báo giá",
+    "declined": "Đã từ chối báo giá, đơn đã hủy",
+    "declineFailed": "Không từ chối được báo giá",
+    "viewQuote": "Xem báo giá",
+    "expired": {
+      "title": "Báo giá đã hết hạn",
+      "description": "Báo giá hết hạn lúc {{time}} mà chưa được chấp nhận và đặt cọc nên đơn đã đóng, bạn không mất phí. Bạn có thể gửi lại yêu cầu với thông tin cũ.",
+      "resubmit": "Gửi lại yêu cầu"
+    },
+    "awaitingDeposit": {
+      "title": "Đã chấp nhận báo giá, chờ đặt cọc",
+      "description": "Hãy đặt cọc {{amount}} trước {{time}}; quá hạn thì đơn tự đóng.",
+      "pay": "Đặt cọc qua VNPay"
+    }
+  },
+  "contract": {
+    "title": "Hợp đồng vận chuyển",
+    "viewerTitle": "Hợp đồng {{code}} · phiên bản {{version}}",
+    "openNewTab": "Mở ở tab mới",
+    "view": "Xem hợp đồng",
+    "download": "Tải",
+    "downloadPdf": "Tải PDF",
+    "history": "Các phiên bản trước",
+    "noFile": "Chưa có file hợp đồng, vui lòng tải lại trang",
+    "loadFailed": "Không tải được hợp đồng",
+    "downloadFailed": "Không tải được file hợp đồng",
+    "openFirst": "Hãy mở và đọc hợp đồng trước khi tích ô đồng ý.",
+    "agreementLabel": "Tôi đã đọc hợp đồng và <policyLink>Chính sách dịch vụ</policyLink> (phiên bản {{version}})",
+    "changedReload": "Hợp đồng vừa được cập nhật. Đã tải bản mới, vui lòng xem lại trước khi chấp nhận.",
+    "pendingWithQuote": "Hợp đồng này được chấp nhận cùng báo giá chốt.",
+    "status": {
+      "Draft": "Chờ chấp nhận",
+      "Accepted": "Đang hiệu lực",
+      "Superseded": "Đã thay thế"
+    },
+    "reason": {
+      "Initial": "Bản đầu theo báo giá chốt",
+      "PickupDropoffChanged": "Đổi điểm đón / giao",
+      "DetourAccepted": "Đồng ý đi đường vòng có phí",
+      "RecipientChanged": "Đổi người nhận"
+    },
+    "fields": {
+      "code": "Số hợp đồng",
+      "status": "Trạng thái",
+      "reason": "Lý do lập",
+      "createdAt": "Ngày lập",
+      "acceptedAt": "Thời điểm chấp nhận",
+      "acceptedBy": "Người chấp nhận",
+      "policyVersion": "Phiên bản chính sách"
+    },
+    "amendment": {
+      "title": "Hợp đồng cần xác nhận lại",
+      "description": "Có bản hợp đồng mới do: {{reason}}. Thay đổi chỉ được áp dụng sau khi bạn xem và chấp nhận bản này.",
+      "accept": "Chấp nhận hợp đồng mới",
+      "accepted": "Đã chấp nhận hợp đồng mới",
+      "acceptFailed": "Không chấp nhận được hợp đồng"
+    }
+  },
+  "airWaybill": {
+    "title": "Vận đơn hàng không",
+    "edit": "Cập nhật",
+    "number": "Số vận đơn",
+    "file": "Bản scan",
+    "openFile": "Xem file",
+    "notEntered": "Chưa nhập",
+    "chooseFile": "Chọn file (PDF / ảnh)",
+    "numberRequired": "Nhập số vận đơn",
+    "saved": "Đã lưu vận đơn",
+    "saveFailed": "Không lưu được vận đơn"
+  },
+  "deliveryFailed": {
+    "button": "Không giao được",
+    "title": "Không giao được đơn {{code}}",
+    "submit": "Ghi nhận không giao được",
+    "recorded": "Đã ghi nhận không giao được đơn {{code}}. Điều phối và khách đã được báo.",
+    "recordFailed": "Không ghi nhận được",
+    "recordedTag": "Đã ghi không giao được",
+    "arrivedAt": "Tới điểm giao lúc",
+    "waited": "Đã chờ",
+    "duration": "{{hours}} giờ {{minutes}} phút",
+    "feeStart": "Bắt đầu tính phí chờ",
+    "noFeeEarly": "Không tính phí chờ (xe tới trước khung giờ đã báo người nhận hoặc chưa báo khung giờ)",
+    "feeEstimate": "Phí chờ tạm tính: {{hours}} giờ × {{fee}} USD = {{total}} USD (khách trả)",
+    "reasonLabel": "Lý do",
+    "reasonRequired": "Chọn lý do",
+    "reason": {
+      "RecipientAbsent": "Người nhận vắng mặt",
+      "RecipientRefused": "Người nhận từ chối nhận",
+      "RefusedInjured": "Từ chối vì ngựa bị thương",
+      "RefusedWrongHorse": "Từ chối vì giao nhầm ngựa"
+    },
+    "reasonHint": {
+      "RecipientAbsent": "Khách chọn cách xử lý trong 24 giờ, khách trả phí",
+      "RecipientRefused": "Không có lý do chính đáng; khách chọn cách xử lý, khách trả phí",
+      "RefusedInjured": "Lỗi công ty: bắt buộc chụp ảnh; công ty chịu phí chuồng, mở hồ sơ bồi thường",
+      "RefusedWrongHorse": "Lỗi công ty: bắt buộc chụp ảnh; công ty chịu phí chuồng, mở hồ sơ bồi thường"
+    },
+    "note": "Ghi chú",
+    "notePlaceholder": "Ví dụ: gọi 3 lần không nghe máy",
+    "photos": "Ảnh (không bắt buộc, tối đa 10)",
+    "photosRequired": "Ảnh (bắt buộc, tối đa 10)",
+    "photoRequired": "Lý do này cần ít nhất một ảnh",
+    "addPhoto": "Chụp / chọn ảnh"
+  },
+  "deliveryDecision": {
+    "title": "Chưa giao được ngựa — chọn cách xử lý",
+    "intro": "Đoàn xe đã tới điểm giao nhưng không giao được ngựa. Hãy chọn một cách xử lý trước hạn; quá hạn hệ thống sẽ gửi ngựa ở chuồng tạm.",
+    "reason": "Lý do",
+    "recordedAt": "Ghi nhận lúc",
+    "waitingFee": "Phí chờ",
+    "waitingFeeValue": "{{hours}} giờ tính phí · {{total}}",
+    "dueAt": "Hạn chọn: {{time}}",
+    "option": {
+      "AlternateRecipient": {
+        "title": "Người nhận hoặc địa chỉ khác gần đó",
+        "description": "Chỉ định người khác nhận ngựa; người mới được ký biên bản bàn giao ngay.",
+        "cost": "Bạn trả {{fee}} USD cho mỗi km đi thêm"
+      },
+      "HoldAtStable": {
+        "title": "Gửi ngựa ở chuồng tạm gần nhất",
+        "description": "Bạn tự tới chuồng tạm nhận ngựa.",
+        "cost": "Bạn trả {{fee}} USD / con / ngày phí chuồng và chăm sóc"
+      },
+      "ReturnToOrigin": {
+        "title": "Chở ngựa về nơi đi",
+        "description": "Đoàn xe chở ngựa về điểm đón ban đầu.",
+        "cost": "Bạn trả chi phí chiều về, tính như một đơn đi ngược lại"
+      }
+    },
+    "recipientName": "Họ tên người nhận mới",
+    "recipientPhone": "Số điện thoại",
+    "newAddress": "Địa chỉ giao mới",
+    "required": "Bắt buộc",
+    "phoneInvalid": "Số điện thoại không hợp lệ",
+    "addressRequired": "Chọn địa chỉ giao mới trên bản đồ",
+    "chooseOne": "Chọn một cách xử lý",
+    "defaultNote": "Không chọn trước hạn thì áp dụng gửi chuồng tạm ({{fee}} USD / con / ngày). Tiền cước không được hoàn vì dịch vụ vận chuyển đã hoàn thành.",
+    "submit": "Xác nhận lựa chọn",
+    "saved": "Đã ghi nhận lựa chọn của bạn",
+    "saveFailed": "Không ghi nhận được lựa chọn",
+    "decidedTitle": "Đã chọn cách xử lý ngựa chưa giao được",
+    "systemStable": "Đã áp dụng gửi chuồng tạm",
+    "choice": "Lựa chọn",
+    "decidedAt": "Chọn lúc",
+    "newRecipient": "Người nhận mới",
+    "extraKm": "{{km}} km thêm",
+    "cost": "Chi phí",
+    "stableCostLater": "{{fee}} USD / con / ngày, tính khi đóng chuyến",
+    "paidAsExtra": "Phí chờ và chi phí lựa chọn được cộng vào khoản phát sinh của đơn khi đóng chuyến; thanh toán ở tab Thanh toán.",
+    "companyTitle": "Chưa giao được ngựa — lỗi phía công ty",
+    "companyCovers": "Công ty chăm sóc ngựa tại chuồng tạm bằng chi phí của công ty cho tới khi xử lý xong; bạn không phải trả phí chờ hay phí chuồng.",
+    "claimOpened": "Hồ sơ bồi thường đã được mở.",
+    "viewClaims": "Xem hồ sơ bồi thường"
+>>>>>>> main
   }
 }

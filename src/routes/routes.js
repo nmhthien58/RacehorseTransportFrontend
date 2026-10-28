@@ -39,7 +39,9 @@ export const ROUTES = {
   MANAGER_BOOKINGS: '/manager/bookings',
   MANAGER_BOOKING_DETAIL: '/manager/bookings/:id',
   MANAGER_PENDING_REQUESTS: '/manager/pending-requests',
+  // Đang sửa routes.js vì bổ sung route Bồi thường bảo hiểm cho Manager theo FE-11 (R-13)
   MANAGER_ROUTE_APPROVALS: '/manager/route-approvals',
+  MANAGER_INSURANCE_CLAIMS: '/manager/insurance-claims',
   MANAGER_TRIPS: '/manager/trips',
   MANAGER_INCIDENTS: '/manager/incidents',
   MANAGER_REPORTS: '/manager/reports',

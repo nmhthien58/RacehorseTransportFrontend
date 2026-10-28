@@ -1,3 +1,4 @@
+// Đang sửa endpoints.js vì khai báo endpoints cho route-plans, recipients, delay-compensations, claims
 /**
  * @file endpoints.js
  * @description Danh mục đường dẫn (endpoints) API đồng bộ 100% với tài liệu backend (doc/API_Huong_dan_Frontend.md)
@@ -51,6 +52,23 @@ export const ENDPOINTS = {
     DOCUMENT: (id, documentId) => `/horses/${id}/documents/${documentId}`,
   },
 
+  // Bản đồ (BE-01, R-11): tìm địa chỉ, tọa độ -> địa chỉ, chỉ đường qua nhiều điểm
+  GEO: {
+    SEARCH: '/geo/search',
+    REVERSE: '/geo/reverse',
+    ROUTE: '/geo/route',
+  },
+
+  // Chính sách dịch vụ công khai (BE-17): phiên bản + các giá trị cấu hình
+  POLICY: {
+    PUBLIC: '/policy',
+  },
+
+  // Tải file lên storage (chứng từ giá trị ngựa, biên bản...): trả về path để gửi kèm request khác
+  FILES: {
+    UPLOAD: '/files',
+  },
+
   // 4. Đặt chuyến (Bookings - Flow 1)
   BOOKINGS: {
     LIST: '/bookings',
@@ -63,6 +81,11 @@ export const ENDPOINTS = {
     REJECT: (id) => `/bookings/${id}/reject`,
     TRANSIT_COUNTRIES: (id) => `/bookings/${id}/transit-countries`,
     REASSIGN_SPECIALIST: (id) => `/bookings/${id}/reassign-specialist`,
+    HORSE_VALUES: (id) => `/bookings/${id}/horse-values`,
+    CANCEL_ROUTE_CHANGE: (id) => `/bookings/${id}/cancel-route-change`,
+    // Báo giá chốt (R-10, BE-05): khách chấp nhận (kèm hợp đồng) / từ chối
+    ACCEPT_QUOTE: (id) => `/bookings/${id}/accept-quote`,
+    DECLINE_QUOTE: (id) => `/bookings/${id}/decline-quote`,
     // Bí danh tương thích ngược
     ASSIGN: (id) => `/bookings/${id}/reassign-specialist`,
     CALCULATE_QUOTE: (id) => (id ? `/bookings/${id}/calculate-quote` : '/bookings/quote-preview'),
@@ -182,6 +205,62 @@ export const ENDPOINTS = {
     LIST: '/assets',
     DETAIL: (id) => `/assets/${id}`,
   },
+  // 14. Người nhận ngựa (R-16, BE-15)
+  RECIPIENTS: {
+    UPDATE: (bookingId) => `/bookings/${bookingId}/recipient`,
+    CONFIRM_PRESENCE: (bookingId) => `/bookings/${bookingId}/confirm-presence`,
+    APPROVE_ALTERNATE: (bookingId) => `/bookings/${bookingId}/approve-alternate-recipient`,
+    BY_TRIP: (tripId) => `/trips/${tripId}/recipients`,
+  },
+
+  // 15. Tuyến dự kiến của đơn (R-10, BE-04)
+  ROUTE_PLANS: {
+    GET_FOR_BOOKING: (bookingId) => `/bookings/${bookingId}/route-plans`,
+    GET_BY_ID: (id) => `/route-plans/${id}`,
+    PREVIEW: (bookingId) => `/bookings/${bookingId}/route-plans/preview`,
+    CREATE: (bookingId) => `/bookings/${bookingId}/route-plans`,
+    UPDATE: (id) => `/route-plans/${id}`,
+    SUBMIT: (id) => `/route-plans/${id}/submit`,
+    APPROVE: (id) => `/route-plans/${id}/approve`,
+    REJECT: (id) => `/route-plans/${id}/reject`,
+  },
+
+  // 16. Bồi thường giao trễ (R-09, BE-13)
+  DELAY_COMPENSATIONS: {
+    LIST: '/delay-compensations',
+    BY_BOOKING: (bookingId) => `/bookings/${bookingId}/delay-compensations`,
+    APPROVE: (id) => `/delay-compensations/${id}/approve`,
+    REJECT: (id) => `/delay-compensations/${id}/reject`,
+  },
+
+  // 17. Hồ sơ bồi thường bảo hiểm (R-13, BE-12)
+  CLAIMS: {
+    LIST: '/claims',
+    DETAIL: (id) => `/claims/${id}`,
+    CREATE: (bookingId) => `/bookings/${bookingId}/claims`,
+    EVIDENCE: (id) => `/claims/${id}/evidence`,
+    REVIEW: (id) => `/claims/${id}/review`,
+    APPROVE: (id) => `/claims/${id}/approve`,
+    REJECT: (id) => `/claims/${id}/reject`,
+    PAY: (id) => `/claims/${id}/pay`,
+  },
+
+  // 18. Hợp đồng vận chuyển + vận đơn hàng không (R-17, BE-20)
+  CONTRACTS: {
+    CURRENT: (bookingId) => `/bookings/${bookingId}/contract`,
+    HISTORY: (bookingId) => `/bookings/${bookingId}/contracts`,
+    FILE: (contractId) => `/contracts/${contractId}/file`,
+    ACCEPT: (contractId) => `/contracts/${contractId}/accept`,
+    AIR_WAYBILL: (tripId) => `/trips/${tripId}/air-waybill`,
+  },
+
+  // 19. Không giao được, phí chờ, khách chọn cách xử lý (R-16, BE-16)
+  DELIVERY_FAILURES: {
+    RECORD: (tripId, bookingId) => `/trips/${tripId}/bookings/${bookingId}/delivery-failed`,
+    DECISION: (bookingId) => `/bookings/${bookingId}/delivery-decision`,
+    BY_BOOKING: (bookingId) => `/bookings/${bookingId}/delivery-failures`,
+  },
+
   PRICING: {
     ITEMS: '/pricing/items',
   },

@@ -539,6 +539,7 @@ export default function RoutePlanningPage() {
         />
       </Card>
       <BookingRoutePlanModal
+        key={selectedBookingForPlan?.bookingId || 'none'}
         open={routePlanModalOpen}
         booking={selectedBookingForPlan}
         onClose={() => {

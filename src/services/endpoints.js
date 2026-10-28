@@ -66,6 +66,7 @@ export const ENDPOINTS = {
     // Bí danh tương thích ngược
     ASSIGN: (id) => `/bookings/${id}/reassign-specialist`,
     CALCULATE_QUOTE: (id) => (id ? `/bookings/${id}/calculate-quote` : '/bookings/quote-preview'),
+    ROUTE_PLAN: (id) => `/bookings/${id}/route-plan`,
   },
 
   // 5. Hồ sơ kiểm dịch & giấy tờ (Dossiers - Flow 2)

@@ -1606,7 +1606,9 @@
       "needBookingForStop": "Mốc Điểm đón / Điểm trả phải chọn đơn",
       "suggestNeedInput": "Chọn ngựa và giờ khởi hành trước khi gợi ý lộ trình",
       "suggestFailed": "Không gợi ý được lộ trình",
-      "suggested": "Đã thay lộ trình bằng gợi ý"
+      "suggested": "Đã thay lộ trình bằng gợi ý",
+      "needTwoDrivers": "Thời gian lái dự kiến {{hours}} giờ (vượt quá 9 giờ). Bắt buộc cần ít nhất 2 tài xế thay phiên để trình duyệt chuyến theo quy chuẩn an toàn R-14.",
+      "routeCopied": "Đã sao chép các mốc từ tuyến đã duyệt của đơn {{code}} vào kế hoạch chuyến!"
     },
     "suggestion": {
       "title": "Kết quả gợi ý lộ trình",
@@ -1623,7 +1625,9 @@
       "PickupsFarApart": "Điểm đón của {{bookingCode}} cách điểm xuất phát {{km}} km (ngưỡng {{limit}} km).",
       "Detour": "{{bookingCode}} phải đi {{routeKm}} km thay vì {{directKm}} km nếu đi thẳng (×{{ratio}}, ngưỡng ×{{limit}}).",
       "DossierNotCleared": "Hồ sơ của {{horseName}} ({{bookingCode}}) chưa thông quan; xe chỉ xuất phát khi đã Cleared.",
-      "OvernightRest": "Chặng {{from}} → {{to}} ({{km}} km) cần {{count}} lần nghỉ qua đêm; nên thêm mốc Trạm nghỉ."
+      "OvernightRest": "Chặng {{from}} → {{to}} ({{km}} km) cần {{count}} lần nghỉ qua đêm; nên thêm mốc Trạm nghỉ.",
+      "twoDriversRequiredTitle": "Cảnh báo: Yêu cầu ít nhất 2 tài xế (R-14)",
+      "twoDriversRequiredDesc": "Thời gian chạy dự kiến {{hours}} giờ (vượt quá 9 giờ/ngày). Bắt buộc phải có ít nhất 2 tài xế thay phiên để trình duyệt chuyến."
     },
     "stallMap": {
       "load": "{{count}}/{{max}} ngựa",
@@ -1634,6 +1638,17 @@
       "autoPlaceholder": "Tự phân khi lưu",
       "emptySlot": "Ô trống",
       "hint": "Bấm một ô có ngựa rồi bấm ô khác để đổi chỗ. Mỗi người áp tải phụ trách tối đa 3 con; ô để trống áp tải sẽ được tự phân khi lưu (ô 1-3 cho người đầu tiên, trưởng nhóm trước)."
+    },
+    "approvedRoute": {
+      "title": "Tuyến đường đã được phê duyệt của đơn",
+      "loading": "Đang tải tuyến đã duyệt...",
+      "planSummary": "Đơn {{code}}: {{km}} km · ~{{hours}} giờ chạy",
+      "transitCountries": "Quá cảnh qua:",
+      "useThisRoute": "Dùng tuyến này",
+      "empty": "Chưa có thông tin tuyến được duyệt cho đơn này."
+    },
+    "errors": {
+      "unapprovedCountryTitle": "Lỗi lộ trình: Đi qua nước ngoài tuyến đã duyệt"
     }
   },
   "routeApproval": {

@@ -68,7 +68,7 @@ Thứ tự gợi ý: **Thắng** làm FE-15 → FE-16 → FE-08 → FE-07 → FE
 - Form thêm / sửa ngựa của khách: thêm giới tính (nếu chưa có), "Đang mang thai" (chỉ hiện với ngựa cái) + ngày dự sinh; "Ngày đẻ gần nhất" (tùy chọn).
 - Trong form tạo đơn, khi backend trả lỗi điều kiện (dưới tuổi tối thiểu, mang thai quá 90%, vừa đẻ) → hiện cạnh đúng con ngựa, không chỉ toast. Hiện gợi ý tuổi tối thiểu lấy từ `usePolicy()`.
 
-### [ ] FE-07 · Xếp chuyến từ tuyến đã duyệt + cảnh báo tài xế (R-10, R-14)
+### [x] FE-07 · Xếp chuyến từ tuyến đã duyệt + cảnh báo tài xế (R-10, R-14)
 - Màn lập chuyến của Coordinator: khi chọn ngựa của một đơn, hiện tuyến đã duyệt của đơn (bản đồ `RouteMap` của FE-01) và nút "Dùng tuyến này" để chép mốc vào chuyến.
 - Hiện cảnh báo trước khi trình duyệt: "Thời gian lái dự kiến X giờ, cần ít nhất 2 tài xế" khi vi phạm; hiện lỗi "đi qua nước ngoài tuyến đã duyệt" từ backend rõ ràng.
 

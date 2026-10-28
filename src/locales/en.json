@@ -1607,7 +1607,9 @@
       "needBookingForStop": "Pick-up / Drop-off stops need a booking",
       "suggestNeedInput": "Choose horses and a departure time first",
       "suggestFailed": "Could not suggest a route",
-      "suggested": "Route replaced with the suggestion"
+      "suggested": "Route replaced with the suggestion",
+      "needTwoDrivers": "Estimated driving time is {{hours}} hours (> 9 hours). At least 2 rotating drivers are required to submit under R-14 safety rules.",
+      "routeCopied": "Copied checkpoints from approved route of booking {{code}} into trip plan!"
     },
     "suggestion": {
       "title": "Route suggestion",
@@ -1624,7 +1626,9 @@
       "PickupsFarApart": "The pick-up of {{bookingCode}} is {{km}} km from the origin (limit {{limit}} km).",
       "Detour": "{{bookingCode}} travels {{routeKm}} km instead of {{directKm}} km direct (×{{ratio}}, limit ×{{limit}}).",
       "DossierNotCleared": "Clearance of {{horseName}} ({{bookingCode}}) is not complete; the trip departs only when it is Cleared.",
-      "OvernightRest": "The leg {{from}} → {{to}} ({{km}} km) needs {{count}} overnight rest(s); add Rest stop checkpoints."
+      "OvernightRest": "The leg {{from}} → {{to}} ({{km}} km) needs {{count}} overnight rest(s); add Rest stop checkpoints.",
+      "twoDriversRequiredTitle": "Warning: At least 2 drivers required (R-14)",
+      "twoDriversRequiredDesc": "Estimated trip duration is {{hours}} hours (exceeds 9 hours/day). At least 2 rotating drivers are required before submission."
     },
     "stallMap": {
       "load": "{{count}}/{{max}} horses",
@@ -1635,6 +1639,17 @@
       "autoPlaceholder": "Auto on save",
       "emptySlot": "Empty stall",
       "hint": "Click a stall with a horse, then another stall, to swap them. Each escort looks after at most 3 horses; stalls left without an escort are auto-assigned on save (stalls 1-3 to the first escort, lead escort first)."
+    },
+    "approvedRoute": {
+      "title": "Approved Route Plan for Booking",
+      "loading": "Loading approved route...",
+      "planSummary": "Booking {{code}}: {{km}} km · ~{{hours}} driving hours",
+      "transitCountries": "Transit through:",
+      "useThisRoute": "Use this route",
+      "empty": "No approved route plan available for this booking."
+    },
+    "errors": {
+      "unapprovedCountryTitle": "Route Error: Journey travels through unapproved transit country"
     }
   },
   "routeApproval": {

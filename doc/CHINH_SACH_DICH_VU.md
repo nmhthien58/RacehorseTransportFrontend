@@ -1,6 +1,6 @@
 # CHÍNH SÁCH DỊCH VỤ VẬN CHUYỂN NGỰA — RACEHORSE TRANSPORT
 
-Phiên bản: 1.0 (bản nháp, 26/10/2026)
+Phiên bản: 1.1 (29/10/2026: thêm ngày dự phòng cho hạn giao, mục 7)
 
 > Ghi chú cho nhóm phát triển (không hiển thị cho khách):
 > - Các con số trong ngoặc vuông `[...]` là **giá trị cấu hình**, trang web phải đọc từ cấu hình hệ thống thay vì viết cứng. Tên khóa cấu hình ghi bên cạnh.
@@ -72,7 +72,7 @@ Công ty **từ chối vận chuyển** ngựa thuộc một trong các trườn
 - Ngựa cái mang thai **đã quá 90% thai kỳ** tại ngày đi, hoặc **vừa đẻ trong 7 ngày**.
 - Ngựa ốm, bị thương, suy yếu hoặc có dấu hiệu bệnh lúc nhận ngựa.
 
-Công ty **không giới hạn tuổi tối đa**. Thay vào đó, **mọi con ngựa** phải có giấy khám lâm sàng của bác sĩ thú y xác nhận đủ sức khỏe để đi, cấp trong vòng **48 giờ** trước giờ xuất phát.
+Công ty **không giới hạn tuổi tối đa**. Thay vào đó, **mọi con ngựa** phải có giấy khám lâm sàng của bác sĩ thú y xác nhận đủ sức khỏe để đi, cấp trong vòng **48 giờ** trước giờ xuất phát. Khách tải giấy khám lên hồ sơ kiểm dịch của đơn và chuyên viên của Công ty duyệt; ngựa chỉ được xuất phát khi giấy khám đã được duyệt.
 
 **Khách cam kết khai báo trung thực** về tuổi, tình trạng mang thai, tiền sử bệnh và giá trị của ngựa. Khai sai là lỗi của Khách (mục 9) và có thể làm mất quyền bồi thường bảo hiểm (mục 8).
 
@@ -93,6 +93,7 @@ Công ty **không giới hạn tuổi tối đa**. Thay vào đó, **mọi con n
 ## 7. Cam kết thời gian giao và bồi thường giao trễ
 
 - Công ty cam kết giao ngựa **trước hạn giao trễ nhất** Khách đã chọn. Hạn giao được hệ thống kiểm tra để đủ thời gian cho trường hợp ngựa được đón vào **ngày cuối** của khoảng ngày đón.
+- Thời gian vận chuyển chỉ là ước tính, nên **hạn giao sớm nhất** Khách được chọn tính theo **ngày**: hết ngày ngựa tới nơi trong trường hợp chậm nhất, cộng thêm `[Delivery.DeadlineBufferDays = 2]` ngày dự phòng.
 - **Bồi thường giao trễ** (chỉ khi trễ do lỗi của công ty):
   - Trễ không quá `[Delay.GraceHours = 6]` giờ: không bồi thường.
   - Sau đó, hoàn `[Delay.PercentPer12Hours = 5]`% **tiền cước vận chuyển** cho mỗi 12 giờ trễ (chưa đủ 12 giờ tính tròn lên 12 giờ), tối đa `[Delay.MaxPercent = 25]`%.

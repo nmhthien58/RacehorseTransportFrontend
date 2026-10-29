@@ -212,7 +212,7 @@ export default function PolicyPage() {
 
   if (loading || error || !rawPolicy) {
     return (
-      <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', color: '#f8fafc' }}>
+      <div style={{ backgroundColor: '#fffaf0', minHeight: '100vh', color: '#1c1917' }}>
         <LandingHeader activeKey="more" />
         <div style={{ padding: '160px 24px', textAlign: 'center', maxWidth: 560, margin: '0 auto' }}>
           {loading ? (
@@ -227,15 +227,15 @@ export default function PolicyPage() {
   }
 
   return (
-    <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', color: '#f8fafc' }}>
+    <div style={{ backgroundColor: '#fffaf0', minHeight: '100vh', color: '#1c1917' }}>
       <LandingHeader activeKey="more" />
 
       {/* Hero Header */}
       <div
         style={{
-          background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
+          background: 'linear-gradient(180deg, #fff3dc 0%, #fffaf0 100%)',
           padding: '130px 24px 48px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          borderBottom: '1px solid #ede4d3',
           textAlign: 'center',
         }}
       >
@@ -244,10 +244,10 @@ export default function PolicyPage() {
             <Tag color="#FBA919" style={{ color: '#0f172a', fontWeight: 700, borderRadius: 9999 }}>
               <FileProtectOutlined /> {t('policy.header.tag', 'CHÍNH THỨC')}
             </Tag>
-            <Tag style={{ borderRadius: 9999, background: 'rgba(255,255,255,0.1)', color: '#94a3b8', borderColor: 'transparent' }}>
+            <Tag style={{ borderRadius: 9999, background: '#f5efe3', color: '#57534e', borderColor: 'transparent' }}>
               {t('policy.header.version', 'Phiên bản')}: {policyVersion}
             </Tag>
-            <Tag style={{ borderRadius: 9999, background: 'rgba(255,255,255,0.1)', color: '#94a3b8', borderColor: 'transparent' }}>
+            <Tag style={{ borderRadius: 9999, background: '#f5efe3', color: '#57534e', borderColor: 'transparent' }}>
               {t('policy.header.effectiveDate', 'Ngày ban hành')}: {effectiveDate}
             </Tag>
           </Space>
@@ -255,7 +255,7 @@ export default function PolicyPage() {
           <Title
             level={1}
             style={{
-              color: '#ffffff',
+              color: '#1c1917',
               fontSize: 'clamp(28px, 4vw, 42px)',
               fontWeight: 800,
               marginBottom: 16,
@@ -267,7 +267,7 @@ export default function PolicyPage() {
 
           <Paragraph
             style={{
-              color: '#94a3b8',
+              color: '#78716c',
               fontSize: 'clamp(14px, 2vw, 17px)',
               maxWidth: 760,
               margin: '0 auto',
@@ -291,14 +291,14 @@ export default function PolicyPage() {
               style={{
                 position: 'sticky',
                 top: 100,
-                background: '#1e293b',
+                background: '#ffffff',
                 padding: '24px 20px',
                 borderRadius: 16,
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+                border: '1px solid #ede4d3',
+                boxShadow: '0 10px 25px rgba(120, 90, 40, 0.1)',
               }}
             >
-              <Title level={5} style={{ color: '#FBA919', marginBottom: 16, fontSize: 15, fontWeight: 700 }}>
+              <Title level={5} style={{ color: '#b45309', marginBottom: 16, fontSize: 15, fontWeight: 700 }}>
                 {t('policy.nav.contentsTitle', 'MỤC LỤC CHÍNH SÁCH')}
               </Title>
               <Anchor
@@ -341,54 +341,47 @@ export default function PolicyPage() {
                 <Title level={3} style={sectionTitleStyle}>
                   2. {t('policy.sections.sec2', 'Quy trình đặt chuyến và báo giá')}
                 </Title>
-                <ol style={{ paddingLeft: 20, margin: 0, color: '#cbd5e1', lineHeight: 1.8 }}>
+                <ol style={{ paddingLeft: 20, margin: 0, color: '#44403c', lineHeight: 1.8 }}>
+                  {[
+                    ['step1', 'Gửi yêu cầu:', 'Khách chọn điểm đón, điểm giao trên bản đồ, chọn ngựa, khoảng ngày ngựa sẵn sàng được đón và hạn giao trễ nhất. Hệ thống hiển thị khoảng giá ước tính (thấp nhất – cao nhất) để tham khảo, không phải giá cuối cùng. Ở bước này Khách chưa phải trả tiền.'],
+                    ['step2', 'Duyệt sơ bộ:', 'Quản lý kiểm tra tính khả thi của yêu cầu (ngựa đủ điều kiện, tuyến phục vụ, lịch xe). Yêu cầu có thể bị từ chối kèm lý do cụ thể.'],
+                    ['step3', 'Lập tuyến và báo giá chốt:', 'Công ty lập lộ trình cụ thể (các điểm dừng nghỉ, cửa khẩu, nước quá cảnh) và gửi báo giá chốt qua ứng dụng và email. Báo giá chốt bao gồm: cước theo quãng đường thực tế, hạng chuồng, phí thủ tục từng nước, bảo hiểm và phụ phí gấp (nếu có).'],
+                  ].map(([key, title, desc]) => (
+                    <li key={key} style={{ marginBottom: 12 }}>
+                      <Text strong style={{ color: '#1c1917' }}>{t(`policy.sec2.${key}_title`, title)}</Text>{' '}
+                      {t(`policy.sec2.${key}_desc`, desc)}
+                    </li>
+                  ))}
                   <li style={{ marginBottom: 12 }}>
-                    <Text strong style={{ color: '#f8fafc' }}>{t('policy.sec2.step1_title', 'Gửi yêu cầu:')}</Text>{' '}
-                    {t('policy.sec2.step1_desc', 'Khách chọn điểm đón, điểm giao trên bản đồ, chọn ngựa, khoảng ngày ngựa sẵn sàng được đón và hạn giao trễ nhất. Hệ thống hiển thị khoảng giá ước tính (thấp nhất – cao nhất) để tham khảo, không phải giá cuối cùng. Ở bước này Khách chưa phải trả tiền.')}
-                  </li>
-                  <li style={{ marginBottom: 12 }}>
-                    <Text strong style={{ color: '#f8fafc' }}>{t('policy.sec2.step2_title', 'Duyệt sơ bộ:')}</Text>{' '}
-                    {t('policy.sec2.step2_desc', 'Quản lý kiểm tra tính khả thi của yêu cầu (ngựa đủ điều kiện, tuyến phục vụ, lịch xe). Yêu cầu có thể bị từ chối kèm lý do cụ thể.')}
-                  </li>
-                  <li style={{ marginBottom: 12 }}>
-                    <Text strong style={{ color: '#f8fafc' }}>{t('policy.sec2.step3_title', 'Lập tuyến và báo giá chốt:')}</Text>{' '}
-                    {t('policy.sec2.step3_desc', 'Công ty lập lộ trình cụ thể (các điểm dừng nghỉ, cửa khẩu, nước quá cảnh) và gửi báo giá chốt qua ứng dụng và email. Báo giá chốt bao gồm: cước theo quãng đường thực tế, hạng chuồng, phí thủ tục từng nước, bảo hiểm và phụ phí gấp (nếu có).')}
-                  </li>
-                  <li style={{ marginBottom: 12 }}>
-                    <Text strong style={{ color: '#f8fafc' }}>{t('policy.sec2.step4_title', 'Xem hợp đồng, chấp nhận báo giá và đặt cọc:')}</Text>{' '}
+                    <Text strong style={{ color: '#1c1917' }}>{t('policy.sec2.step4_title', 'Xem hợp đồng, chấp nhận báo giá và đặt cọc:')}</Text>{' '}
                     {t('policy.sec2.step4_desc_pre', 'Hệ thống tự động phát hành Hợp đồng vận chuyển điện tử. Khách có')}{' '}
-                    <Text strong style={{ color: '#FBA919' }}>{policy.Booking.QuoteAcceptDays} {t('policy.units.days', 'ngày')}</Text>{' '}
+                    <Text strong style={{ color: '#b45309' }}>{policy.Booking.QuoteAcceptDays} {t('policy.units.days', 'ngày')}</Text>{' '}
                     {t('policy.sec2.step4_desc_post', 'để xem hợp đồng, chấp nhận báo giá và đặt cọc. Quá hạn, đơn tự động hủy và Khách không mất phí.')}
                   </li>
-                  <li style={{ marginBottom: 12 }}>
-                    <Text strong style={{ color: '#f8fafc' }}>{t('policy.sec2.step5_title', 'Làm hồ sơ:')}</Text>{' '}
-                    {t('policy.sec2.step5_desc', 'Sau khi cọc, chuyên viên thông báo danh mục giấy tờ kiểm dịch cần thiết theo nước đi, quá cảnh và nước đến. Khách nộp chứng từ trực tiếp trên ứng dụng theo thời hạn quy định.')}
-                  </li>
-                  <li style={{ marginBottom: 12 }}>
-                    <Text strong style={{ color: '#f8fafc' }}>{t('policy.sec2.step6_title', 'Xếp chuyến:')}</Text>{' '}
-                    {t('policy.sec2.step6_desc', 'Công ty xếp ngựa vào chuyến phù hợp (phương tiện, đoàn xe, bác sĩ thú y theo xe).')}
-                  </li>
-                  <li style={{ marginBottom: 12 }}>
-                    <Text strong style={{ color: '#f8fafc' }}>{t('policy.sec2.step7_title', 'Thanh toán phần còn lại:')}</Text>{' '}
-                    {t('policy.sec2.step7_desc', 'Hoàn tất thanh toán số dư trước ngày xuất phát theo quy định tại mục 3.')}
-                  </li>
-                  <li>
-                    <Text strong style={{ color: '#f8fafc' }}>{t('policy.sec2.step8_title', 'Vận chuyển và giao nhận:')}</Text>{' '}
-                    {t('policy.sec2.step8_desc', 'Khách theo dõi hành trình GPS và nhật ký phúc lợi ngựa trên ứng dụng. Người nhận kiểm tra ngựa và ký e-POD khi nhận bàn giao.')}
-                  </li>
+                  {[
+                    ['step5', 'Làm hồ sơ:', 'Sau khi cọc, chuyên viên thông báo danh mục giấy tờ kiểm dịch cần thiết theo nước đi, quá cảnh và nước đến. Khách nộp chứng từ trực tiếp trên ứng dụng theo thời hạn quy định.'],
+                    ['step6', 'Xếp chuyến:', 'Công ty xếp ngựa vào chuyến phù hợp (phương tiện, đoàn xe, bác sĩ thú y theo xe).'],
+                    ['step7', 'Thanh toán phần còn lại:', 'Hoàn tất thanh toán số dư trước ngày xuất phát theo quy định tại mục 3.'],
+                    ['step8', 'Vận chuyển và giao nhận:', 'Khách theo dõi hành trình GPS và nhật ký phúc lợi ngựa trên ứng dụng. Người nhận kiểm tra ngựa và ký e-POD khi nhận bàn giao.'],
+                  ].map(([key, title, desc]) => (
+                    <li key={key} style={{ marginBottom: 12 }}>
+                      <Text strong style={{ color: '#1c1917' }}>{t(`policy.sec2.${key}_title`, title)}</Text>{' '}
+                      {t(`policy.sec2.${key}_desc`, desc)}
+                    </li>
+                  ))}
                 </ol>
 
-                <Divider style={{ borderColor: 'rgba(255,255,255,0.08)' }} />
-                <Title level={4} style={{ color: '#FBA919', fontSize: 16, marginBottom: 8 }}>
+                <Divider style={{ borderColor: '#ede4d3' }} />
+                <Title level={4} style={{ color: '#b45309', fontSize: 16, marginBottom: 8 }}>
                   {t('policy.sec2.routeChangeTitle', 'Đổi tuyến sau khi đã chốt giá:')}
                 </Title>
-                <ul style={{ paddingLeft: 20, margin: 0, color: '#cbd5e1', lineHeight: 1.8 }}>
+                <ul style={{ paddingLeft: 20, margin: 0, color: '#44403c', lineHeight: 1.8 }}>
                   <li>
-                    <Text strong style={{ color: '#f8fafc' }}>{t('policy.sec2.changeByCompany', 'Công ty đổi tuyến vì lý do vận hành:')}</Text>{' '}
+                    <Text strong style={{ color: '#1c1917' }}>{t('policy.sec2.changeByCompany', 'Công ty đổi tuyến vì lý do vận hành:')}</Text>{' '}
                     {t('policy.sec2.changeByCompanyDesc', 'Giá đã chốt được giữ nguyên, công ty chịu toàn bộ chi phí chênh lệch. Nếu tuyến mới qua nước mới cần giấy tờ mà Khách không thể cung cấp, Khách được hủy đơn và nhận lại 100% số tiền đã trả.')}
                   </li>
                   <li>
-                    <Text strong style={{ color: '#f8fafc' }}>{t('policy.sec2.changeByCustomer', 'Khách đổi điểm đón / điểm giao / lịch:')}</Text>{' '}
+                    <Text strong style={{ color: '#1c1917' }}>{t('policy.sec2.changeByCustomer', 'Khách đổi điểm đón / điểm giao / lịch:')}</Text>{' '}
                     {t('policy.sec2.changeByCustomerDesc', 'Công ty phát hành báo giá mới. Khách chấp nhận báo giá mới thì đơn mới tiếp tục.')}
                   </li>
                 </ul>
@@ -406,7 +399,7 @@ export default function PolicyPage() {
                   bordered
                   style={{ marginBottom: 20 }}
                 />
-                <ul style={{ paddingLeft: 20, margin: 0, color: '#cbd5e1', lineHeight: 1.8 }}>
+                <ul style={{ paddingLeft: 20, margin: 0, color: '#44403c', lineHeight: 1.8 }}>
                   <li>{t('policy.sec3.rule1', 'Ngựa tuyệt đối không được đưa lên xe nếu đơn chưa thanh toán đủ phần còn lại.')}</li>
                   <li>{t('policy.sec3.rule2', 'Trường hợp có chi phí phát sinh chưa trả quá hạn: hệ thống sẽ nhắc nợ và Khách không tạo được đơn mới cho tới khi hoàn tất.')}</li>
                   <li>{t('policy.sec3.rule3', 'Tài xế và nhân viên áp tải tuyệt đối không thu tiền mặt. Mọi khoản thanh toán phải thực hiện qua ứng dụng.')}</li>
@@ -426,13 +419,13 @@ export default function PolicyPage() {
                   style={{ marginBottom: 20 }}
                 />
                 <Paragraph style={paragraphStyle}>
-                  <Text strong style={{ color: '#f8fafc' }}>{t('policy.sec4.missingDocsTitle', 'Khách không nộp đủ giấy tờ đúng hạn:')}</Text>{' '}
+                  <Text strong style={{ color: '#1c1917' }}>{t('policy.sec4.missingDocsTitle', 'Khách không nộp đủ giấy tờ đúng hạn:')}</Text>{' '}
                   {t('policy.sec4.missingDocsDesc_pre', 'Hệ thống gửi thông báo nhắc 2 lần. Hết hạn mà vẫn thiếu chứng từ bắt buộc, đơn sẽ bị hủy và xử lý như Khách hủy sau khi cọc (hoàn')}{' '}
                   <Text strong style={{ color: '#059669' }}>{policy.Payment.CancelRefundPercent}%</Text>{' '}
                   {t('policy.sec4.missingDocsDesc_post', 'tiền cọc).')}
                 </Paragraph>
                 <Paragraph style={paragraphStyle}>
-                  <Text strong style={{ color: '#f8fafc' }}>{t('policy.sec4.companyCancelTitle', 'Công ty hủy đơn vì lý do nội bộ:')}</Text>{' '}
+                  <Text strong style={{ color: '#1c1917' }}>{t('policy.sec4.companyCancelTitle', 'Công ty hủy đơn vì lý do nội bộ:')}</Text>{' '}
                   {t('policy.sec4.companyCancelDesc', 'Khách được hoàn lại 100% toàn bộ số tiền đã trả.')}
                 </Paragraph>
               </Card>
@@ -445,7 +438,7 @@ export default function PolicyPage() {
                 <Paragraph style={paragraphStyle}>
                   {t('policy.sec5.intro', 'Công ty từ chối vận chuyển ngựa thuộc một trong các trường hợp sau:')}
                 </Paragraph>
-                <ul style={{ paddingLeft: 20, margin: '0 0 16px 0', color: '#cbd5e1', lineHeight: 1.8 }}>
+                <ul style={{ paddingLeft: 20, margin: '0 0 16px 0', color: '#44403c', lineHeight: 1.8 }}>
                   <li>
                     {t('policy.sec5.ruleAge_pre', 'Ngựa dưới')}{' '}
                     <Text strong style={{ color: '#ef4444' }}>{policy.Horse.MinAgeMonths} {t('policy.units.months', 'tháng tuổi')}</Text>{' '}
@@ -468,12 +461,12 @@ export default function PolicyPage() {
                     gap: 12,
                   }}
                 >
-                  <SafetyCertificateOutlined style={{ color: '#FBA919', fontSize: 20, marginTop: 2 }} />
+                  <SafetyCertificateOutlined style={{ color: '#b45309', fontSize: 20, marginTop: 2 }} />
                   <div>
                     <Text strong style={{ color: '#FBA919', display: 'block', marginBottom: 4 }}>
                       {t('policy.sec5.noMaxAgeTitle', 'Không giới hạn tuổi tối đa — Bắt buộc khám 48h')}
                     </Text>
-                    <Text style={{ color: '#cbd5e1', fontSize: 13, lineHeight: 1.6 }}>
+                    <Text style={{ color: '#44403c', fontSize: 13, lineHeight: 1.6 }}>
                       {t('policy.sec5.noMaxAgeDesc', 'Công ty không giới hạn độ tuổi tối đa của ngựa. Mọi con ngựa vận chuyển đều bắt buộc phải có Giấy chứng nhận khám lâm sàng thú y xác nhận đủ điều kiện di chuyển đường dài, được cấp trong vòng 48 giờ trước giờ xuất phát.')}
                     </Text>
                   </div>
@@ -485,7 +478,7 @@ export default function PolicyPage() {
                 <Title level={3} style={sectionTitleStyle}>
                   6. {t('policy.sections.sec6', 'Giấy tờ và thủ tục')}
                 </Title>
-                <ul style={{ paddingLeft: 20, margin: 0, color: '#cbd5e1', lineHeight: 1.8 }}>
+                <ul style={{ paddingLeft: 20, margin: 0, color: '#44403c', lineHeight: 1.8 }}>
                   <li>{t('policy.sec6.item1', 'Khách cung cấp hồ sơ ngựa (hộ chiếu ngựa, chip vi mạch, chứng nhận tiêm phòng, kết quả xét nghiệm máu/dịch tễ) theo danh mục chuyên viên yêu cầu đối với từng quốc gia đi qua.')}</li>
                   <li>{t('policy.sec6.item2', 'Công ty đại diện Khách hàng thực hiện các thủ tục xin giấy phép nhập khẩu, quá cảnh và giấy chứng nhận kiểm dịch thú y quốc tế với cơ quan có thẩm quyền.')}</li>
                   <li>{t('policy.sec6.item3', 'Giấy phép trước khi đi không bảo đảm 100% qua được cửa khẩu. Tại cửa khẩu biên giới, cơ quan thú y và hải quan nước sở tại vẫn kiểm tra thực tế và có toàn quyền ra quyết định.')}</li>
@@ -505,20 +498,20 @@ export default function PolicyPage() {
                 </Paragraph>
                 <div
                   style={{
-                    background: 'rgba(30, 41, 59, 0.7)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    background: '#fffbf2',
+                    border: '1px solid #ede4d3',
                     borderRadius: 12,
                     padding: 20,
                     marginBottom: 16,
                   }}
                 >
-                  <Title level={4} style={{ color: '#FBA919', fontSize: 16, marginBottom: 12 }}>
+                  <Title level={4} style={{ color: '#b45309', fontSize: 16, marginBottom: 12 }}>
                     {t('policy.sec7.formulaTitle', 'Mức bồi thường giao trễ (chỉ áp dụng khi trễ do lỗi của công ty):')}
                   </Title>
-                  <ul style={{ paddingLeft: 20, margin: 0, color: '#cbd5e1', lineHeight: 1.8 }}>
+                  <ul style={{ paddingLeft: 20, margin: 0, color: '#44403c', lineHeight: 1.8 }}>
                     <li>
                       {t('policy.sec7.grace_pre', 'Trễ không quá')}{' '}
-                      <Text strong style={{ color: '#38bdf8' }}>{policy.Delay.GraceHours} {t('policy.units.hours', 'giờ')}</Text>: {t('policy.sec7.grace_post', 'miễn trừ bồi thường.')}
+                      <Text strong style={{ color: '#0369a1' }}>{policy.Delay.GraceHours} {t('policy.units.hours', 'giờ')}</Text>: {t('policy.sec7.grace_post', 'miễn trừ bồi thường.')}
                     </li>
                     <li>
                       {t('policy.sec7.calc_pre', 'Sau 6 giờ, hoàn')}{' '}
@@ -538,16 +531,16 @@ export default function PolicyPage() {
                 <Title level={3} style={sectionTitleStyle}>
                   8. {t('policy.sections.sec8', 'Bảo hiểm và giới hạn trách nhiệm')}
                 </Title>
-                <Title level={4} style={{ color: '#f8fafc', fontSize: 16, marginBottom: 8 }}>
+                <Title level={4} style={{ color: '#1c1917', fontSize: 16, marginBottom: 8 }}>
                   8.1 {t('policy.sec8.sec81Title', 'Khai báo giá trị ngựa')}
                 </Title>
                 <Paragraph style={paragraphStyle}>
                   {t('policy.sec8.sec81Desc_pre', 'Khách khai báo giá trị cho từng con ngựa. Ngựa có giá trị từ')}{' '}
-                  <Text strong style={{ color: '#FBA919' }}>{formatUsd(policy.Insurance.ProofThresholdUsd)} USD</Text>{' '}
+                  <Text strong style={{ color: '#b45309' }}>{formatUsd(policy.Insurance.ProofThresholdUsd)} USD</Text>{' '}
                   {t('policy.sec8.sec81Desc_post', 'trở lên bắt buộc phải đính kèm chứng từ chứng minh: hóa đơn mua bán, chứng thư giám định định giá độc lập hoặc kết quả đấu giá chính thức.')}
                 </Paragraph>
 
-                <Title level={4} style={{ color: '#f8fafc', fontSize: 16, marginBottom: 12 }}>
+                <Title level={4} style={{ color: '#1c1917', fontSize: 16, marginBottom: 12 }}>
                   8.2 {t('policy.sec8.sec82Title', 'Hai lựa chọn bảo hiểm')}
                 </Title>
                 <Table
@@ -558,7 +551,7 @@ export default function PolicyPage() {
                   style={{ marginBottom: 20 }}
                 />
 
-                <Title level={4} style={{ color: '#f8fafc', fontSize: 16, marginBottom: 8 }}>
+                <Title level={4} style={{ color: '#1c1917', fontSize: 16, marginBottom: 8 }}>
                   8.3 {t('policy.sec8.sec83Title', 'Thời hạn bảo hiểm & Quy trình khiếu nại bồi thường')}
                 </Title>
                 <Paragraph style={paragraphStyle}>
@@ -571,7 +564,7 @@ export default function PolicyPage() {
                 <Title level={3} style={sectionTitleStyle}>
                   9. {t('policy.sections.sec9', 'Sự cố trong hành trình')}
                 </Title>
-                <Title level={4} style={{ color: '#f8fafc', fontSize: 16, marginBottom: 8 }}>
+                <Title level={4} style={{ color: '#1c1917', fontSize: 16, marginBottom: 8 }}>
                   9.1 {t('policy.sec9.sec91Title', 'Nguyên tắc chung: Ai chịu lỗi thì người đó chịu chi phí')}
                 </Title>
                 <Table
@@ -582,11 +575,11 @@ export default function PolicyPage() {
                   style={{ marginBottom: 20 }}
                 />
                 <Paragraph style={paragraphStyle}>
-                  <Text strong style={{ color: '#f8fafc' }}>{t('policy.sec9.crewRuleTitle', 'Quy tắc an toàn nhân sự đoàn xe:')}</Text>{' '}
+                  <Text strong style={{ color: '#1c1917' }}>{t('policy.sec9.crewRuleTitle', 'Quy tắc an toàn nhân sự đoàn xe:')}</Text>{' '}
                   {t('policy.sec9.crewRuleDesc', 'Chuyến đi có thời gian lái thực tế dự kiến trên 9 giờ luôn được bố trí tối thiểu 2 tài xế luân phiên. Khi một tài xế gặp vấn đề sức khỏe, đoàn tạm dừng chờ nhân sự thay thế theo đúng quy chuẩn an toàn.')}
                 </Paragraph>
                 <Paragraph style={paragraphStyle}>
-                  <Text strong style={{ color: '#f8fafc' }}>{t('policy.sec9.horseHealthTitle', 'Sức khỏe ngựa giữa đường:')}</Text>{' '}
+                  <Text strong style={{ color: '#1c1917' }}>{t('policy.sec9.horseHealthTitle', 'Sức khỏe ngựa giữa đường:')}</Text>{' '}
                   {t('policy.sec9.horseHealthDesc', 'Ngựa có thể được chỉ định dỡ khẩn cấp tại phòng khám thú y hoặc chuồng lưu trú gần nhất theo quyết định của bác sĩ thú y áp tải để đảm bảo an toàn tính mạng.')}
                 </Paragraph>
               </Card>
@@ -596,26 +589,26 @@ export default function PolicyPage() {
                 <Title level={3} style={sectionTitleStyle}>
                   10. {t('policy.sections.sec10', 'Giao nhận')}
                 </Title>
-                <ul style={{ paddingLeft: 20, margin: '0 0 16px 0', color: '#cbd5e1', lineHeight: 1.8 }}>
+                <ul style={{ paddingLeft: 20, margin: '0 0 16px 0', color: '#44403c', lineHeight: 1.8 }}>
                   <li>
-                    <Text strong style={{ color: '#f8fafc' }}>{t('policy.sec10.recipientTitle', 'Người nhận ngựa:')}</Text>{' '}
+                    <Text strong style={{ color: '#1c1917' }}>{t('policy.sec10.recipientTitle', 'Người nhận ngựa:')}</Text>{' '}
                     {t('policy.sec10.recipientDesc', 'Khách khai báo thông tin người nhận khi tạo đơn (họ tên, số điện thoại bắt buộc). Khách được quyền cập nhật người nhận cho tới trước khi xe đến điểm giao.')}
                   </li>
                   <li>
-                    <Text strong style={{ color: '#f8fafc' }}>{t('policy.sec10.notificationTitle', 'Thông báo trước:')}</Text>{' '}
+                    <Text strong style={{ color: '#1c1917' }}>{t('policy.sec10.notificationTitle', 'Thông báo trước:')}</Text>{' '}
                     {t('policy.sec10.notificationDesc', 'Trước 24 giờ dự kiến tới, hệ thống gửi thông báo nhắc khách hàng xác nhận người nhận sẽ có mặt.')}
                   </li>
                 </ul>
 
                 <div
                   style={{
-                    background: 'rgba(30, 41, 59, 0.7)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    background: '#fffbf2',
+                    border: '1px solid #ede4d3',
                     borderRadius: 12,
                     padding: 20,
                   }}
                 >
-                  <Title level={4} style={{ color: '#FBA919', fontSize: 16, marginBottom: 8 }}>
+                  <Title level={4} style={{ color: '#b45309', fontSize: 16, marginBottom: 8 }}>
                     {t('policy.sec10.waitingFeeTitle', 'Quy định phí chờ tại điểm giao:')}
                   </Title>
                   <Paragraph style={paragraphStyle}>
@@ -624,7 +617,7 @@ export default function PolicyPage() {
                       {policy.Delivery.WaitingFeePerHourUsd} USD / {t('policy.units.hour', 'giờ')}
                     </Tag>
                     , {t('policy.sec10.waitingFeeP2_pre', 'thời gian chờ tối đa không quá')}{' '}
-                    <Text strong style={{ color: '#f8fafc' }}>{policy.Delivery.MaxWaitingHours} {t('policy.units.hours', 'giờ')}</Text>.{' '}
+                    <Text strong style={{ color: '#1c1917' }}>{policy.Delivery.MaxWaitingHours} {t('policy.units.hours', 'giờ')}</Text>.{' '}
                     {t('policy.sec10.waitingFeeP2_post', 'Phí chờ do người đặt đơn thanh toán qua ứng dụng.')}
                   </Paragraph>
                   <Paragraph style={paragraphStyle}>
@@ -680,10 +673,10 @@ export default function PolicyPage() {
 
 // Inline styling tokens
 const cardStyle = {
-  background: '#1e293b',
+  background: '#ffffff',
   borderRadius: 16,
-  border: '1px solid rgba(255, 255, 255, 0.08)',
-  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+  border: '1px solid #ede4d3',
+  boxShadow: '0 4px 20px rgba(120, 90, 40, 0.08)',
 };
 
 const cardBodyStyle = {
@@ -691,16 +684,16 @@ const cardBodyStyle = {
 };
 
 const sectionTitleStyle = {
-  color: '#ffffff',
+  color: '#1c1917',
   fontSize: 22,
   fontWeight: 700,
   marginBottom: 20,
-  borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+  borderBottom: '1px solid #ede4d3',
   paddingBottom: 12,
 };
 
 const paragraphStyle = {
-  color: '#cbd5e1',
+  color: '#44403c',
   fontSize: 15,
   lineHeight: 1.8,
   marginBottom: 16,

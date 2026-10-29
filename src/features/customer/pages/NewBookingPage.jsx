@@ -25,6 +25,16 @@ const { Title, Text } = Typography;
  *
  * @returns {JSX.Element}
  */
+/** Khoảng giá ước tính lúc gửi đơn; giá chốt có sau khi công ty lập tuyến */
+const formatEstimate = (estimate) => {
+  const min = Number(estimate?.min) || 0;
+  const max = Number(estimate?.max) || 0;
+  if (min <= 0 && max <= 0) return 'Chờ báo giá';
+  const fmt = (v) => `$${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+  const currency = estimate.currencyCode || 'USD';
+  return min === max ? `${fmt(min)} ${currency}` : `${fmt(min)} – ${fmt(max)} ${currency}`;
+};
+
 export default function NewBookingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -41,14 +51,14 @@ export default function NewBookingPage() {
    * Xử lý gọi API tạo mới đơn đặt chuyến
    * @param {Partial<import('@types/database').BookingRequest>} payload
    */
-  const handleCreateBooking = async (payload) => {
+  const handleCreateBooking = async (payload, estimate) => {
     try {
       setSubmitting(true);
       // Khách hàng được backend lấy từ token, không gửi kèm thông tin khách
       const res = await bookingService.createBooking(payload);
       const newBookingData = unwrapData(res) || payload;
 
-      setCreatedBooking(newBookingData);
+      setCreatedBooking({ ...newBookingData, estimate });
       setSuccessModalVisible(true);
       message.success(t('bookings.createSuccess') || 'Tạo yêu cầu vận chuyển thành công!');
     } catch (error) {
@@ -191,11 +201,12 @@ export default function NewBookingPage() {
             <Divider style={{ margin: '12px 0' }} />
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text type="secondary">{t('bookings.fields.estimatedCost') || 'Dự toán cước phí'}:</Text>
-              <span style={{ fontSize: 20, fontWeight: 800, color: '#d97706' }}>
-                ${Number(createdBooking.estimatedCost || createdBooking.EstimatedCost || 0).toLocaleString()} USD
-              </span>
+              <Text type="secondary">Khoảng giá ước tính:</Text>
+              <span style={{ fontSize: 20, fontWeight: 800, color: '#d97706' }}>{formatEstimate(createdBooking.estimate)}</span>
             </div>
+            <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 6 }}>
+              Giá chốt sẽ gửi sau khi công ty duyệt và lập tuyến.
+            </Text>
           </div>
         )}
 

@@ -4,7 +4,7 @@
  * Tuân thủ quy chuẩn FEI Equine Transport Standards và chính sách an toàn R-12/R-14.
  *
  * @example
- * import { detectBiometricAnomaly, calculateWelfareScore } from '@utils/welfareCheck';
+ * import welfareHelper, { detectBiometricAnomaly, calculateWelfareScore } from '@utils/welfareCheck';
  * const anomaly = detectBiometricAnomaly({ heartRate: 58, bodyTemp: 38.8 });
  * const score = calculateWelfareScore({ heartRate: 38, bodyTemp: 37.9, stressLevel: 'Low' });
  */
@@ -202,3 +202,14 @@ export function evaluateTripWelfareSummary(logs = []) {
     overallScore: Math.round(totalScore / logs.length),
   };
 }
+
+const welfareHelper = {
+  WELFARE_THRESHOLDS,
+  detectBiometricAnomaly,
+  evaluateHydrationStatus,
+  calculateWelfareScore,
+  validateRestWindow,
+  evaluateTripWelfareSummary,
+};
+
+export default welfareHelper;

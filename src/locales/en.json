@@ -2537,6 +2537,7 @@
     }
   },
   "bookingForm": {
+    "climateFee": "+10% of the freight (after volume discount)",
     "routeNotOffered": "We do not currently serve this route by road or by air. Please choose another origin or destination.",
     "switchedToAir": "Ground transport to {{country}} is not offered at the moment, switched to air.",
     "switchedToGround": "Air transport is not offered for this route (to {{country}}) at the moment, switched to ground.",

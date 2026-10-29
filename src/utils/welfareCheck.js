@@ -1,6 +1,12 @@
 /**
  * @file welfareCheck.js
- * Tiện ích đánh giá thể trạng sinh trắc học và phúc lợi ngựa đua trên hành trình (FEI Equine Transport Standards).
+ * Tiện ích đánh giá thể trạng sinh trắc học và phúc lợi ngựa đua trên hành trình.
+ * Tuân thủ quy chuẩn FEI Equine Transport Standards và chính sách an toàn R-12/R-14.
+ *
+ * @example
+ * import { detectBiometricAnomaly, calculateWelfareScore } from '@utils/welfareCheck';
+ * const anomaly = detectBiometricAnomaly({ heartRate: 58, bodyTemp: 38.8 });
+ * const score = calculateWelfareScore({ heartRate: 38, bodyTemp: 37.9, stressLevel: 'Low' });
  */
 
 /**
@@ -31,8 +37,8 @@ export const WELFARE_THRESHOLDS = {
 
 /**
  * Phát hiện bất thường sinh trắc học cơ bản từ nhịp tim và nhiệt độ thân nhiệt.
- * @param {{ heartRate?: number, bodyTemp?: number }} vitals
- * @returns {{ hasAnomaly: boolean, severity: 'Normal'|'Warning'|'Critical', reasons: string[] }}
+ * @param {{ heartRate?: number, bodyTemp?: number }} [vitals={}] - Chỉ số sinh trắc học của ngựa
+ * @returns {{ hasAnomaly: boolean, severity: 'Normal'|'Warning'|'Critical', reasons: string[] }} Kết quả đánh giá
  */
 export function detectBiometricAnomaly(vitals = {}) {
   if (!vitals || typeof vitals !== 'object') {
@@ -72,9 +78,9 @@ export function detectBiometricAnomaly(vitals = {}) {
 
 /**
  * Đánh giá mức độ tiếp nhận nước và dấu hiệu mất nước (Hydration Status).
- * @param {number} [skinTentSeconds=1] - Thời gian da trở lại bình thường (giây)
+ * @param {number} [skinTentSeconds=1] - Thời gian da trở lại bình thường khi véo da cổ (giây)
  * @param {number} [capillaryRefillSeconds=2] - Thời gian hồi máu mao mạch nướu răng (giây)
- * @returns {'Optimal'|'MildDehydration'|'SevereDehydration'}
+ * @returns {'Optimal'|'MildDehydration'|'SevereDehydration'} Mức độ ngậm nước
  */
 export function evaluateHydrationStatus(skinTentSeconds = 1, capillaryRefillSeconds = 2) {
   const safeSkinTent = Number(skinTentSeconds) || 1;
@@ -91,8 +97,8 @@ export function evaluateHydrationStatus(skinTentSeconds = 1, capillaryRefillSeco
 
 /**
  * Tính điểm phúc lợi tổng hợp (Welfare Index: 0 - 100, 100 là tối ưu).
- * @param {{ heartRate?: number, bodyTemp?: number, cabinTemp?: number, stressLevel?: string }} log
- * @returns {number}
+ * @param {{ heartRate?: number, bodyTemp?: number, cabinTemp?: number, stressLevel?: string }} [log={}] - Nhật ký thể trạng
+ * @returns {number} Điểm phúc lợi tổng hợp từ 0 đến 100
  */
 export function calculateWelfareScore(log = {}) {
   if (!log || typeof log !== 'object') return 100;
@@ -122,9 +128,9 @@ export function calculateWelfareScore(log = {}) {
 
 /**
  * Kiểm tra xem xe có đang vi phạm thời gian chạy liên tục mà chưa cho ngựa nghỉ (R-14).
- * @param {Date|string|number} lastRestTime
- * @param {Date|string|number} [currentTime=new Date()]
- * @returns {{ mustRestNow: boolean, hoursElapsed: number, remainingAllowedMinutes: number }}
+ * @param {Date|string|number} lastRestTime - Thời điểm bắt đầu chặng chạy liên tục
+ * @param {Date|string|number} [currentTime=new Date()] - Thời điểm hiện tại
+ * @returns {{ mustRestNow: boolean, hoursElapsed: number, remainingAllowedMinutes: number }} Trạng thái yêu cầu nghỉ
  */
 export function validateRestWindow(lastRestTime, currentTime = new Date()) {
   if (!lastRestTime) {

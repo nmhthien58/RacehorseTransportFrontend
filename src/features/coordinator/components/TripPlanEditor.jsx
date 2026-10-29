@@ -36,6 +36,7 @@ import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedu
 import tripService from '@services/tripService';
 import RouteMap from '@components/common/map/RouteMap';
 import routePlanService from '@services/routePlanService';
+import geoService from '@services/geoService';
 import StatusTag from '@components/common/StatusTag';
 import RouteSuggestionPanel from '@features/coordinator/components/RouteSuggestionPanel';
 import StallMap from '@features/coordinator/components/StallMap';
@@ -91,6 +92,9 @@ function buildDefaultCheckpoints(horses, period) {
  * @param {Object} plan - routePlan: stops[] gồm name, stopType, address, countryCode, restMinutes
  * @returns {Object}
  */
+// Loại mốc của chuyến -> loại mốc của bản đồ (màu marker)
+const TRIP_STOP_MAP_TYPES = { PickUp: 'Pickup', DropOff: 'Dropoff' };
+
 function toApprovedRoute(plan) {
   return {
     bookingId: plan.bookingId,
@@ -107,6 +111,8 @@ function toApprovedRoute(plan) {
       checkpointType: stop.stopType,
       address: stop.address,
       countryCode: stop.countryCode,
+      latitude: stop.lat,
+      longitude: stop.lng,
       mandatoryRestMinutes: stop.restMinutes || 0,
     })),
   };
@@ -190,6 +196,39 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
   const [saving, setSaving] = useState(false);
   const [suggestion, setSuggestion] = useState(null);
   const [suggesting, setSuggesting] = useState(false);
+
+  // Bản đồ các mốc của chuyến: mốc có tọa độ (từ gợi ý lộ trình / tuyến đã duyệt), vẽ đường bộ qua /geo/route
+  const tripMapStops = useMemo(
+    () =>
+      checkpoints
+        .filter((c) => c.latitude != null && c.longitude != null)
+        .map((c) => ({
+          lat: Number(c.latitude),
+          lng: Number(c.longitude),
+          stopType: TRIP_STOP_MAP_TYPES[c.checkpointType] || c.checkpointType,
+          name: c.checkpointName,
+        })),
+    [checkpoints],
+  );
+  const tripMapKey = tripMapStops.map((p) => `${p.lat},${p.lng}`).join('|');
+  const [tripRoute, setTripRoute] = useState({ key: null, data: null });
+  useEffect(() => {
+    if (tripMapStops.length < 2) return undefined;
+    let active = true;
+    const timer = setTimeout(() => {
+      geoService
+        .route(tripMapStops.map((p) => ({ lat: p.lat, lng: p.lng })))
+        .then((res) => active && setTripRoute({ key: tripMapKey, data: unwrapData(res) }))
+        .catch(() => active && setTripRoute({ key: tripMapKey, data: null }));
+    }, 500);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+    // tripMapKey đại diện cho tọa độ các mốc
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tripMapKey]);
+  const tripRouteData = tripRoute.key === tripMapKey ? tripRoute.data : null;
 
   // Các đơn có ngựa đang được chọn: dùng cho cột "Đơn" của mốc Điểm đón / Điểm trả
   const selectedBookings = useMemo(() => {
@@ -337,6 +376,8 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
         plannedTime,
         mandatoryRestMinutes: Number(cp.mandatoryRestMinutes) || 0,
         bookingId: BOOKING_STOP_TYPES.includes(type) ? bookingId : null,
+        latitude: cp.latitude ?? null,
+        longitude: cp.longitude ?? null,
       };
     });
 
@@ -447,6 +488,8 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
           plannedTime: dayjs(c.plannedTime),
           mandatoryRestMinutes: c.mandatoryRestMinutes,
           bookingId: c.bookingId,
+          latitude: c.latitude ?? null,
+          longitude: c.longitude ?? null,
         })),
       );
       if (result.suggestedEndDate) setPeriod([period[0], dayjs(result.suggestedEndDate)]);
@@ -502,6 +545,8 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
       plannedTime: toIsoString(c.plannedTime),
       mandatoryRestMinutes: Number(c.mandatoryRestMinutes) || 0,
       bookingId: BOOKING_STOP_TYPES.includes(c.checkpointType) ? c.bookingId || null : null,
+      latitude: c.latitude ?? null,
+      longitude: c.longitude ?? null,
     })),
   });
 
@@ -1071,6 +1116,24 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
         <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
           {t('tripPlan.hints.route')}
         </Text>
+        {tripMapStops.length >= 2 && (
+          <div style={{ marginTop: 12 }}>
+            <RouteMap
+              stops={tripMapStops}
+              polyline={tripRouteData?.polyline}
+              legs={(tripRouteData?.legs || []).map((l) => ({ distanceKm: l.distanceKm, durationHours: l.durationHours }))}
+              totalDistanceKm={tripRouteData?.totalDistanceKm}
+              totalDurationHours={tripRouteData?.totalDurationHours}
+              isEstimate={!tripRouteData || tripRouteData.isEstimate}
+              height={320}
+            />
+            {tripMapStops.length < checkpoints.length && (
+              <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 6 }}>
+                Mốc nhập tay chưa có tọa độ không hiện trên bản đồ.
+              </Text>
+            )}
+          </div>
+        )}
       </Card>
 
       <Flex justify="flex-end" gap={8} wrap="wrap">

@@ -32,6 +32,7 @@ import StatusTag from '@components/common/StatusTag';
 import bookingService from '@services/bookingService';
 import userService from '@services/userService';
 import { BOOKING_STATUS, TRANSPORT_MODE } from '@utils/constants';
+import { formatBookingCost } from '@utils/bookingCost';
 
 const { Text, Title } = Typography;
 const { RangePicker } = DatePicker;
@@ -227,16 +228,6 @@ export default function ManagerBookings({ isDashboardView = false }) {
     [specialists],
   );
 
-  // Định dạng số tiền USD
-  const formatCost = (cost, currency = 'USD') => {
-    if (cost == null) return '—';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || 'USD',
-      maximumFractionDigits: 0,
-    }).format(cost);
-  };
-
   // Điều hướng sang trang chi tiết đơn riêng
   const handleNavigateDetail = (record) => {
     if (record.status === BOOKING_STATUS.SUBMITTED) {
@@ -327,7 +318,7 @@ export default function ManagerBookings({ isDashboardView = false }) {
       align: 'right',
       render: (cost, record) => (
         <Text strong style={{ color: '#0f172a', fontSize: 13 }}>
-          {formatCost(cost, record.currencyCode)}
+          {formatBookingCost(record)}
         </Text>
       ),
     },

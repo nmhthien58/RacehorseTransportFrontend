@@ -1330,6 +1330,10 @@
           "Document": "Quarantine Dossier",
           "Health": "Health 48h",
           "Payment": "Payment"
+        },
+        "code": {
+          "FitExamMissing": "Missing a fit-to-travel clinical exam issued within 48 hours before departure",
+          "FitExamPendingReview": "The clinical exam certificate is awaiting specialist review"
         }
       }
     },
@@ -3297,5 +3301,15 @@
         "hint": "Percent of the horse's declared value."
       }
     }
+  },
+  "fitExam": {
+    "window": "Exam window {{window}}",
+    "windowPending": "We will notify you once the trip is scheduled",
+    "issueDate": "Issue date",
+    "issueDateRequired": "Please select the exam issue date",
+    "customerNote": "The dossier has been submitted / cleared, but you still need to upload the vet clinical exam issued within 48 hours before departure.",
+    "uploadOnBehalf": "Upload exam on behalf",
+    "uploadTitle": "Upload clinical exam on behalf",
+    "uploadHint": "The exam must be issued by a vet within 48 hours before departure. After uploading it still needs approval."
   }
 }

@@ -39,7 +39,11 @@ function toPolicyView(raw) {
       BaseVetCapUsd: ins.baseVetCapUsd,
       VetCapPercent: ins.vetCapPercent,
     },
-    Delivery: { WaitingFeePerHourUsd: del.waitingFeePerHourUsd, MaxWaitingHours: del.maxWaitingHours },
+    Delivery: {
+      WaitingFeePerHourUsd: del.waitingFeePerHourUsd,
+      MaxWaitingHours: del.maxWaitingHours,
+      DeadlineBufferDays: raw?.values?.['Delivery.DeadlineBufferDays'] ?? del.deadlineBufferDays ?? 2,
+    },
   };
 }
 
@@ -622,6 +626,9 @@ export default function PolicyPage() {
                     , {t('policy.sec10.waitingFeeP2_pre', 'thời gian chờ tối đa không quá')}{' '}
                     <Text strong style={{ color: '#f8fafc' }}>{policy.Delivery.MaxWaitingHours} {t('policy.units.hours', 'giờ')}</Text>.{' '}
                     {t('policy.sec10.waitingFeeP2_post', 'Phí chờ do người đặt đơn thanh toán qua ứng dụng.')}
+                  </Paragraph>
+                  <Paragraph style={paragraphStyle}>
+                    {t('policy.deadlineBufferNote', { days: policy.Delivery.DeadlineBufferDays })}
                   </Paragraph>
                 </div>
               </Card>

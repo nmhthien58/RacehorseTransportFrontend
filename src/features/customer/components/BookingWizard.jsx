@@ -40,7 +40,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller, useWatch } from 'react-hook-form';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import horseService from '@services/horseService';
 import bookingService from '@services/bookingService';
@@ -522,17 +522,31 @@ export default function BookingWizard({
 
   const earliestPickup = schedule?.earliestPickupDate ? dayjs(schedule.earliestPickupDate) : null;
   const maxTransitHours = Number(schedule?.transit?.maxHours || 0);
-  // Hạn giao sớm nhất = hết ngày cuối của khoảng đón (đón muộn nhất) + thời gian vận chuyển chậm nhất (khớp backend)
+  // Số ngày dự phòng hạn giao: ưu tiên backend trả trong quote-preview, rồi policy (Delivery.DeadlineBufferDays), mặc định 2
+  const bufferDays = [schedule?.deliveryBufferDays, policy?.values?.['Delivery.DeadlineBufferDays'], policy?.delivery?.deadlineBufferDays, 2]
+    .map((v) => (v === null || v === undefined || v === '' ? Number.NaN : Number(v)))
+    .find((v) => Number.isFinite(v));
+  // Ngày nên chọn hạn giao (khớp backend earliestDeliveryDate) = hết ngày cuối của khoảng đón + thời gian vận chuyển
+  // chậm nhất, làm tròn lên hết ngày, + số ngày dự phòng. Chỉ tính theo ngày vì thời gian chỉ là ước tính.
   const latestPickup = pickupWindowEnd || pickupWindowStart;
-  const earliestDeadline = latestPickup
-    ? dayjs(latestPickup).add(1, 'day').startOf('day').add(maxTransitHours, 'hour')
-    : null;
+  const computeMinDeadlineDate = (lastPickupDay) =>
+    dayjs(lastPickupDay)
+      .add(1, 'day')
+      .startOf('day')
+      .add(maxTransitHours, 'hour')
+      .subtract(1, 'millisecond')
+      .startOf('day')
+      .add(bufferDays, 'day');
+  const earliestDeadline = latestPickup ? computeMinDeadlineDate(latestPickup) : null;
+  // Khoảng dự kiến tới nơi nếu đón ngày cuối của khoảng đón (chỉ để tham khảo)
+  const arrivalFrom = latestPickup ? dayjs(latestPickup).startOf('day').add(Number(schedule?.transit?.totalHours || 0), 'hour') : null;
+  const arrivalTo = latestPickup ? dayjs(latestPickup).add(1, 'day').startOf('day').add(maxTransitHours, 'hour').subtract(1, 'millisecond') : null;
 
-  // Đổi khoảng đón làm hạn giao đang chọn không còn đủ thời gian: tự lùi hạn giao về ngày sớm nhất hợp lệ
+  // Đổi khoảng đón làm hạn giao đang chọn sớm hơn ngày nên chọn: tự đẩy hạn giao lên ngày đó
   useEffect(() => {
     if (!earliestDeadline) return;
     const current = getValues('DeliveryDeadline');
-    if (current && dayjs(current).isBefore(earliestDeadline)) {
+    if (current && dayjs(current).isBefore(earliestDeadline, 'day')) {
       setValue('DeliveryDeadline', toLocalDateTimeString(earliestDeadline.endOf('day')));
     }
   }, [earliestDeadline?.valueOf(), getValues, setValue]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -550,9 +564,9 @@ export default function BookingWizard({
     setValue('PickupWindow', [toLocalDateTimeString(start), toLocalDateTimeString(start.add(3, 'day'))]);
     setValue(
       'DeliveryDeadline',
-      toLocalDateTimeString(start.add(Number(schedule.transit?.maxHours || 0), 'hour').add(3, 'day').endOf('day')),
+      toLocalDateTimeString(computeMinDeadlineDate(start.add(3, 'day')).endOf('day')),
     );
-  }, [schedule, preferredPickup, getValues, setValue]);
+  }, [schedule, preferredPickup, getValues, setValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Kiểm tra lịch khách chọn; trả về thông báo lỗi hoặc null
   const validateSchedule = () => {
@@ -563,9 +577,9 @@ export default function BookingWizard({
     if (earliestPickup && dayjs(start).isBefore(earliestPickup, 'day')) {
       return t('bookings.schedule.tooEarly', { date: earliestPickup.format('DD/MM/YYYY') });
     }
-    const minDeadline = dayjs(end).add(1, 'day').startOf('day').add(maxTransitHours, 'hour');
-    if (dayjs(deadline).isBefore(minDeadline)) {
-      return t('bookings.schedule.deadlineTooEarly', { date: minDeadline.format('DD/MM/YYYY HH:mm') });
+    const minDeadline = computeMinDeadlineDate(end);
+    if (dayjs(deadline).isBefore(minDeadline, 'day')) {
+      return t('bookings.schedule.deadlineTooEarly', { date: minDeadline.format('DD/MM/YYYY') });
     }
     return null;
   };
@@ -1368,9 +1382,12 @@ export default function BookingWizard({
                     </div>
                     {earliestDeadline && (
                       <div>
-                        {t('bookings.schedule.deadlineHint', {
-                          date: earliestDeadline.format('DD/MM/YYYY HH:mm'),
-                        })}
+                        <Trans i18nKey="bookings.schedule.deadlineFromHint" values={{ date: earliestDeadline.format('DD/MM/YYYY'), days: bufferDays }} components={{ b: <strong /> }} />
+                      </div>
+                    )}
+                    {arrivalFrom && arrivalTo && (
+                      <div>
+                        <Trans i18nKey="bookings.schedule.arrivalHint" values={{ from: arrivalFrom.format('DD/MM'), to: arrivalTo.format('DD/MM') }} components={{ b: <strong /> }} />
                       </div>
                     )}
                   </div>
@@ -1421,7 +1438,7 @@ export default function BookingWizard({
                         onChange={(date) => field.onChange(date ? toLocalDateTimeString(date.endOf('day')) : null)}
                         disabledDate={(current) =>
                           current &&
-                          current.endOf('day') < (earliestDeadline || earliestPickup || dayjs())
+                          current.startOf('day') < (earliestDeadline || earliestPickup || dayjs()).startOf('day')
                         }
                         format="DD/MM/YYYY"
                         size="large"

@@ -271,6 +271,20 @@ export default function PaymentSettingsPage() {
           <InputNumber min={1} max={72} precision={0} suffix={t('payments.settings.hours', 'giờ')} style={{ width: '100%' }} />
         </Form.Item>
       </Col>
+
+      <Col xs={24} md={12}>
+        <Form.Item
+          name="deliveryDeadlineBufferDays"
+          label={t('payments.settings.fields.deliveryDeadlineBufferDays')}
+          extra={t('payments.settings.help.deliveryDeadlineBufferDays')}
+          rules={[
+            { required: true, message: t('payments.settings.required', 'Bắt buộc nhập') },
+            { type: 'number', min: 0, max: 30, message: t('payments.settings.help.deliveryDeadlineBufferDaysRange') },
+          ]}
+        >
+          <InputNumber min={0} max={30} precision={0} suffix={t('policy.units.days', 'ngày')} style={{ width: '100%' }} />
+        </Form.Item>
+      </Col>
     </Row>
   );
 

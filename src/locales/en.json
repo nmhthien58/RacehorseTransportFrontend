@@ -540,6 +540,8 @@
       "earliestHint": "Earliest pickup date: {{date}} (about {{days}} days are needed for review, deposit, quarantine clearance and trip planning).",
       "expressHint": "A pickup before {{date}} adds the Express surcharge because the documents must be rushed.",
       "transitHint": "Estimated transit time: about {{hours}} hours (up to {{maxHours}} hours, ~{{days}} days).",
+      "deadlineFromHint": "Choose a latest delivery date of <b>{{date}}</b> or later (includes the estimated transit time and {{days}} buffer days).",
+      "arrivalHint": "Expected arrival around <b>{{from}} – {{to}}</b> if picked up on the last day of the pickup window (estimate; actual times may vary).",
       "deadlineHint": "Earliest possible delivery deadline: {{date}}.",
       "tooEarly": "The pickup date must be on or after {{date}}.",
       "deadlineTooEarly": "The delivery deadline must be on or after {{date}} to allow for transit.",
@@ -1672,7 +1674,7 @@
     },
     "warnings": {
       "DeadlineMissed": "{{bookingCode}} is expected at {{eta}}, after its deadline {{deadline}}.",
-      "PickupOutsideWindow": "{{bookingCode}} would be picked up at {{pickupAt}}, outside its window {{from}} – {{to}}.",
+      "PickupOutsideWindow": "{{bookingCode}} would be picked up at {{pickupAt}}, outside its window <b>{{from}} – {{to}}</b>.",
       "DifferentPickupCountry": "The bookings are picked up in different countries ({{countries}}).",
       "PickupsFarApart": "The pick-up of {{bookingCode}} is {{km}} km from the origin (limit {{limit}} km).",
       "Detour": "{{bookingCode}} travels {{routeKm}} km instead of {{directKm}} km direct (×{{ratio}}, limit ×{{limit}}).",
@@ -2397,6 +2399,7 @@
         "insuranceVetCapPercent": "Full insurance vet expense cap",
         "horseMinAgeMonths": "Minimum horse age",
         "deliveryWaitingFeePerHourUsd": "Waiting fee per hour",
+        "deliveryDeadlineBufferDays": "Delivery deadline buffer days (Delivery.DeadlineBufferDays)",
         "deliveryMaxWaitingHours": "Maximum delivery waiting hours",
         "policyVersion": "Active policy version",
         "effectiveDate": "Policy effective date"
@@ -2418,6 +2421,8 @@
         "insuranceVetCapPercent": "Maximum vet care compensation as percentage of agreed horse value.",
         "horseMinAgeMonths": "Horses under this age in months are refused transport per IATA/EU regulations.",
         "deliveryWaitingFeePerHourUsd": "Hourly fee applied when waiting at drop-off point beyond 2 free hours.",
+        "deliveryDeadlineBufferDays": "Days added after the estimated transit time when suggesting the latest delivery date to customers (0 – 30 days)",
+        "deliveryDeadlineBufferDaysRange": "Buffer days must be between 0 and 30",
         "deliveryMaxWaitingHours": "Maximum hours vehicle waits before transferring horse to emergency temporary stable.",
         "policyVersion": "Version identifier shown on Policy page and recorded upon customer acceptance.",
         "effectiveDate": "Date when this policy version took effect."
@@ -2974,6 +2979,7 @@
       "proRataRefund": "Pro-rata refund for remaining distance less non-refundable filing fees",
       "forceMajeureExtra": "Company covers vehicle & crew; Customer covers emergency stabling & vet"
     },
+    "deadlineBufferNote": "The latest delivery date must allow for the estimated transit time plus {{days}} buffer days.",
     "units": {
       "days": "days",
       "hours": "hours",

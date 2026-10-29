@@ -40,6 +40,7 @@ import RejectBookingModal from '@features/manager/components/RejectBookingModal'
 import ApproveBookingModal from '@features/manager/components/ApproveBookingModal';
 import BookingDecisionButtons from '@features/manager/components/BookingDecisionButtons';
 import { formatBookingCost } from '@utils/bookingCost';
+import RouteMap from '@components/common/map/RouteMap';
 
 const { Text, Title } = Typography;
 
@@ -202,6 +203,16 @@ export default function PendingRequestsPage() {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }, [activeBooking]);
 
+  // Điểm đón / giao khách chọn trên bản đồ (đơn cũ không có tọa độ thì không vẽ)
+  const requestStops = useMemo(() => {
+    const b = activeBooking;
+    if (!b || b.pickupLat == null || b.pickupLng == null || b.dropoffLat == null || b.dropoffLng == null) return [];
+    return [
+      { lat: Number(b.pickupLat), lng: Number(b.pickupLng), stopType: 'Origin', name: b.pickupAddress, countryCode: b.pickupCountryCode },
+      { lat: Number(b.dropoffLat), lng: Number(b.dropoffLng), stopType: 'Destination', name: b.dropoffAddress, countryCode: b.dropoffCountryCode },
+    ];
+  }, [activeBooking]);
+
   // Thư đề nghị vận chuyển chính thức từ khách hàng gửi tới Ban Quản lý
   const activeLetter = useMemo(() => {
     if (!activeBooking) return null;
@@ -237,7 +248,7 @@ Thông tin tóm tắt lộ trình:
 - Số lượng: ${activeBooking.totalHorses || 1} cá thể ngựa
 - Khoảng ngày sẵn sàng đón: ${formatPickupWindow(activeBooking)}
 - Hạn giao trễ nhất: ${formatDeliveryDeadline(activeBooking)}
-- Ước tính cước phí dự kiến: ${Number(activeBooking.estimatedCost || 0).toLocaleString()} USD
+- Khoảng giá ước tính: ${formatBookingCost(activeBooking)}
 ${activeBooking.specialInstructions ? `- Yêu cầu chăm sóc đặc biệt: "${activeBooking.specialInstructions}"` : ''}
 
 Kính đề nghị Ban Quản lý kiểm tra hồ sơ, phân bổ chuyên viên kiểm dịch phụ trách và xem xét phê duyệt đơn.
@@ -255,7 +266,7 @@ Trip summary:
 - Number of horses: ${activeBooking.totalHorses || 1}
 - Pickup window: ${formatPickupWindow(activeBooking)}
 - Latest delivery: ${formatDeliveryDeadline(activeBooking)}
-- Estimated Freight: ${Number(activeBooking.estimatedCost || 0).toLocaleString()} USD
+- Estimated Freight: ${formatBookingCost(activeBooking)}
 ${activeBooking.specialInstructions ? `- Special Care: "${activeBooking.specialInstructions}"` : ''}
 
 Please review this request and assign specialist staff to process our transport schedule.
@@ -530,6 +541,16 @@ ${activeBooking.customerName || 'Customer'}`,
                 >
                   {t('manager.pendingRequests.transportInfo').toUpperCase()}
                 </Text>
+
+                {/* Bản đồ điểm đón / giao (đường thẳng nét đứt, chưa phải tuyến thật) */}
+                {requestStops.length === 2 && (
+                  <div style={{ marginBottom: 16 }}>
+                    <RouteMap stops={requestStops} isEstimate height={300} />
+                    <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 6 }}>
+                      Đường nét đứt nối điểm đón và điểm giao, chưa phải tuyến thật; tuyến cụ thể do điều phối lập sau khi duyệt.
+                    </Text>
+                  </div>
+                )}
 
                 {/* Tuyến đường trực quan */}
                 <div

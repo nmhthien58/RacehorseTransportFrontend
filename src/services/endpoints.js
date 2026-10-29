@@ -205,8 +205,8 @@ export const ENDPOINTS = {
 
   // 13. Phương tiện (Assets), Bảng giá (Pricing) & Thông báo (Notifications)
   ASSETS: {
-    LIST: '/assets',
-    DETAIL: (id) => `/assets/${id}`,
+    LIST: '/transport-assets',
+    DETAIL: (id) => `/transport-assets/${id}`,
   },
   // 14. Người nhận ngựa (R-16, BE-15)
   RECIPIENTS: {

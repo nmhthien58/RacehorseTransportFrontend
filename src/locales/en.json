@@ -1987,6 +1987,8 @@
       "OffloadHorse": "Offload the horse",
       "ReturnToOrigin": "Whole trip returns to origin",
       "HoldAtStable": "Keep horses at a temporary stable",
+      "ReplaceVehicle": "Replace vehicle",
+      "ReplaceCrew": "Replace crew member",
       "Other": "Other"
     },
     "actionPlaceholder": "Choose an action",
@@ -3036,6 +3038,8 @@
     "detourCost": "Detour fee for customers",
     "accepted": "Agreed",
     "declined": "Declined",
+    "replacementVehicle": "Replacement vehicle",
+    "crewReplacement": "Crew change",
     "faultParty": "Cause",
     "fault": {
       "Company": {
@@ -3058,6 +3062,8 @@
   "incidentPlan": {
     "emergencyOffload": "{{horse}} was offloaded in an emergency: the plan must be Offload the horse with the next step.",
     "actionHint": {
+      "ReplaceVehicle": "On approval the trip moves to the new vehicle (new vehicle In transit, old one Maintenance). Horses keep their stall numbers if the new vehicle has room.",
+      "ReplaceCrew": "On approval the new person takes over the old member's role; horses the old escort looked after move to the new one. Both people are notified.",
       "ReturnToOrigin": "On approval the system builds the return route itself (pending stops removed, e-POD signed at the origin). No route edit needed.",
       "HoldAtStable": "Stable fee = days × horses × daily rate, added to the extra cost when the incident is closed.",
       "Reroute": "If the detour costs customers more, enter the fee below: the route changes only when every customer on board agrees; one refusal sends the whole trip back."
@@ -3078,6 +3084,18 @@
     "extraCostForCustomer": "Extra cost charged to customers (detour)",
     "extraCostHint": "Total for the trip, split by each booking's horses. Leave 0 if the company pays.",
     "awaitingConsent": "Waiting for every customer on board to agree to the detour; the route has not changed yet.",
+    "replacementVehicle": "Replacement vehicle",
+    "replacementVehiclePlaceholder": "Choose a vehicle",
+    "replacementVehicleHint": "Only {{type}} vehicles free during the trip window with at least {{count}} slots for the horses still on board are listed. If a booking needs climate control, pick a vehicle with it.",
+    "noVehicle": "No free vehicle of the same type with enough slots",
+    "climate": "Climate control",
+    "removeCrew": "Member to replace",
+    "removeCrewPlaceholder": "Choose a crew member",
+    "removeCrewRequired": "Choose the crew member to replace on this trip",
+    "addCrew": "Replacement",
+    "addCrewPlaceholder": "Choose a free driver / escort",
+    "addCrewHint": "The new person takes the {{role}} role of the member being replaced.",
+    "noCrew": "No driver / escort is free during the trip window",
     "resolveTitle": "Close incident {{code}}",
     "faultRequired": "Choose the cause",
     "faultNote": "Short explanation (optional)",

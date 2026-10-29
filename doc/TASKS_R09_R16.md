@@ -136,7 +136,7 @@ File chính: `src/features/customer/components/BookingWizard.jsx`.
 - Trạng thái `QuoteExpired`: thông báo hết hạn, nút "Gửi lại yêu cầu" (tạo đơn mới điền sẵn thông tin cũ).
 - Cập nhật nhãn trạng thái mới (`PreApproved`, `RoutePlanned`, `Quoted`, `QuoteExpired`) ở mọi nơi hiển thị trạng thái đơn và bộ lọc.
 
-### [ ] FE-10 · Sự cố mở rộng (R-12, R-14)
+### [x] FE-10 · Sự cố mở rộng (R-12, R-14)
 Sửa `IncidentBoard`, `RouteChangeFields`, `TripIncidentsCard`, `EmergencyReportModal`.
 - Phương án `OffloadHorse`: chọn ngựa + **hướng xử lý tiếp** (chờ hồi phục / trả về nơi đi / khách nhận tại chỗ / chết). Chọn "chết" thì bắt buộc tải biên bản thú y.
 - `ReplaceVehicle`: chọn xe rảnh (lọc đủ chuồng, có điều hòa nếu cần), hiện sức chứa. `ReplaceCrew`: chọn người rời đoàn, người thay, vai trò.

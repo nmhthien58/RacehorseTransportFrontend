@@ -1,7 +1,7 @@
 import { Alert, Card, Space, Tag, Typography } from 'antd';
 import { WarningOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { INCIDENT_STATUS_COLOR, SEVERITY_COLOR, RESPONSE_ACTION_COLOR } from '@utils/incidents';
+import { INCIDENT_STATUS_COLOR, SEVERITY_COLOR, RESPONSE_ACTION_COLOR, buildIncidentLookup } from '@utils/incidents';
 import IncidentRouteChange from '@components/common/IncidentRouteChange';
 // Đang sửa TripIncidentsCard vì đoàn xe cần thấy hướng xử lý ngựa, quay về, phí đi vòng, nguyên nhân (FE-10)
 import IncidentOutcome from '@components/common/IncidentOutcome';
@@ -20,10 +20,12 @@ function formatTime(value) {
 
 /**
  * Sự cố của chuyến và phương án xử lý, để đoàn xe đọc lại chỉ đạo thay vì chỉ thấy qua thông báo.
- * @param {{ incidents: Array<Object> }} props - GET /trips/{id}/incidents (mới nhất trước)
+ * @param {{ incidents: Array<Object>, trip?: Object }} props - incidents: GET /trips/{id}/incidents (mới nhất trước);
+ *   trip: GET /trips/{id}, để hiện biển số xe / tên người của phương án đổi xe / đổi người
  */
-export default function TripIncidentsCard({ incidents }) {
+export default function TripIncidentsCard({ incidents, trip }) {
   const { t } = useTranslation();
+  const lookup = buildIncidentLookup({ trip });
 
   if (!incidents?.length) return null;
 
@@ -74,7 +76,7 @@ export default function TripIncidentsCard({ incidents }) {
                       {inc.proposedAction}
                     </div>
                     <div style={{ marginTop: 6 }}>
-                      <IncidentOutcome incident={inc} />
+                      <IncidentOutcome incident={inc} lookup={lookup} />
                     </div>
                     {inc.routeChange && (
                       <div style={{ marginTop: 8, background: '#FFFFFF', borderRadius: 8 }}>

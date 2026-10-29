@@ -23,8 +23,22 @@ export const INCIDENT_TYPES = [
 
 /** Loại hành động của phương án xử lý (responseAction); Reroute bắt buộc kèm thay đổi tuyến */
 // R-14 (BE-14b): ReturnToOrigin (cả đoàn quay về, hệ thống tự dựng tuyến), HoldAtStable (chuồng tạm, tính phí khi đóng)
-// TODO(BE-14a): ReplaceVehicle / ReplaceCrew khi backend có hành động đổi xe / đổi người
-export const RESPONSE_ACTIONS = ['WaitAndContinue', 'RepairAndContinue', 'Reroute', 'VeterinaryCare', 'OffloadHorse', 'ReturnToOrigin', 'HoldAtStable', 'Other'];
+// R-14 (BE-14a): ReplaceVehicle (đổi xe cùng loại), ReplaceCrew (đổi tài xế / áp tải); chi tiết nằm ở actionPayload
+export const RESPONSE_ACTIONS = [
+  'WaitAndContinue',
+  'RepairAndContinue',
+  'Reroute',
+  'VeterinaryCare',
+  'OffloadHorse',
+  'ReplaceVehicle',
+  'ReplaceCrew',
+  'ReturnToOrigin',
+  'HoldAtStable',
+  'Other',
+];
+
+/** Phương án kèm actionPayload: đổi xe (replacementVehicleId) / đổi người (removeUserId, addUserId, crewRole) */
+export const REPLACEMENT_ACTIONS = ['ReplaceVehicle', 'ReplaceCrew'];
 
 export const RESPONSE_ACTION_COLOR = {
   WaitAndContinue: 'default',
@@ -34,8 +48,32 @@ export const RESPONSE_ACTION_COLOR = {
   OffloadHorse: 'red',
   ReturnToOrigin: 'volcano',
   HoldAtStable: 'cyan',
+  ReplaceVehicle: 'geekblue',
+  ReplaceCrew: 'lime',
   Other: 'default',
 };
+
+/**
+ * Bảng tra tên để hiển thị actionPayload (đổi xe / đổi người) từ dữ liệu đang có trên màn hình.
+ * Nguồn sau ghi đè nguồn trước; thiếu tên thì màn hình hiện mã số.
+ * @param {{ trip?: Object|null, assets?: Array<Object>, users?: Array<Object> }} sources
+ *   trip: GET /trips/{id} (xe + đoàn xe hiện tại); assets: GET /transport-assets hoặc /trips/available-vehicles; users: GET /users/staff hoặc /trips/available-crew
+ * @returns {{ vehicles: Record<number, { assetCode: string, assetType?: string }>, users: Record<number, string> }}
+ */
+export function buildIncidentLookup({ trip, assets = [], users = [] }) {
+  const lookup = { vehicles: {}, users: {} };
+  assets.forEach((a) => {
+    lookup.vehicles[a.assetId] = { assetCode: a.assetCode, assetType: a.assetType };
+  });
+  users.forEach((u) => {
+    lookup.users[u.userId] = u.fullName;
+  });
+  if (trip?.vehicleId) lookup.vehicles[trip.vehicleId] = { assetCode: trip.vehicleCode, assetType: trip.vehicleType };
+  (trip?.crew || []).forEach((c) => {
+    lookup.users[c.userId] = c.fullName;
+  });
+  return lookup;
+}
 
 /** Hướng xử lý tiếp của ngựa rời chuyến (phương án OffloadHorse, R-12); Deceased chỉ ở sự cố Critical, bắt buộc biên bản thú y */
 export const OFFLOAD_OUTCOMES = ['WaitRecover', 'ReturnToOrigin', 'HandOverHere', 'Deceased'];

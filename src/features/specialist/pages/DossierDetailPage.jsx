@@ -41,7 +41,9 @@ import ClearDossierModal from '../components/ClearDossierModal';
 import CompanyDocumentUploadModal from '../components/CompanyDocumentUploadModal';
 import StandardFormTemplateModal from '@components/common/StandardFormTemplateModal';
 import FilePreview from '@components/common/FilePreview';
+import dayjs from 'dayjs';
 import { ROUTES } from '@routes/routes';
+import { formatExamWindow, hasExamWindowField, isOpenForFitExam, isPostClearance } from '@utils/fitExam';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -251,8 +253,11 @@ export default function DossierDetailPage() {
 
   const checklist = dossier?.checklist || [];
   const approvedCount = dossier?.approvedCount || 0;
-  const requiredCount = dossier?.requiredCount || checklist.filter((c) => c.isMandatory).length || 3;
+  const requiredCount = dossier?.requiredCount || checklist.filter((c) => c.isMandatory && !isPostClearance(c)).length || 3;
   const isReady = dossier?.isReadyToSubmit || approvedCount >= requiredCount;
+  // Giấy khám (FIT_EXAM) nộp hộ được khi hồ sơ còn nhận giấy (kể cả đã thông quan) và đã có khoảng 48 giờ
+  const canUploadFitExam = (item) =>
+    isOpenForFitExam(dossier?.status) && !(hasExamWindowField(item) && !formatExamWindow(item));
 
   return (
     <div style={{ padding: '0 0 24px 0' }}>
@@ -473,6 +478,19 @@ export default function DossierDetailPage() {
                           <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
                             {item.regulationNote} (Hiệu lực: {item.validityDays} ngày)
                           </div>
+                          {isPostClearance(item) && (
+                            <div style={{ fontSize: 12, color: '#B45309', fontWeight: 600, marginTop: 2 }}>
+                              {hasExamWindowField(item) &&
+                                (formatExamWindow(item)
+                                  ? t('fitExam.window', { window: formatExamWindow(item) })
+                                  : t('fitExam.windowPending'))}
+                              {doc?.issueDate && (
+                                <span style={{ marginLeft: hasExamWindowField(item) ? 8 : 0 }}>
+                                  {t('fitExam.issueDate')}: {dayjs(doc.issueDate).format('DD/MM/YYYY')}
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
 
                         <div>
@@ -626,6 +644,16 @@ export default function DossierDetailPage() {
                               {t('companyDocs.uploadButton')}
                             </Button>
                           )}
+                          {isPostClearance(item) && item.providedBy !== 'Company' && (
+                            <Button
+                              size="small"
+                              icon={<UploadOutlined />}
+                              disabled={!canUploadFitExam(item)}
+                              onClick={() => setCompanyUploadItem(item)}
+                            >
+                              {t('fitExam.uploadOnBehalf')}
+                            </Button>
+                          )}
                           <Button
                             type="link"
                             size="small"
@@ -641,6 +669,17 @@ export default function DossierDetailPage() {
                       {/* Nút hành động thẩm định (giấy công ty xin không cần thẩm định) */}
                       {doc && item.providedBy !== 'Company' && (
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                          {isPostClearance(item) && isRejected && (
+                            <Button
+                              size="small"
+                              icon={<UploadOutlined />}
+                              disabled={!canUploadFitExam(item)}
+                              onClick={() => setCompanyUploadItem(item)}
+                              style={{ borderRadius: 4, fontSize: 12 }}
+                            >
+                              {t('fitExam.uploadOnBehalf')}
+                            </Button>
+                          )}
                           <Button
                             size="small"
                             danger

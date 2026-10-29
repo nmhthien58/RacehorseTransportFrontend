@@ -29,6 +29,7 @@ import { tripService } from '@services/tripService';
 
 const { Text } = Typography;
 const ACTIVE_TRIP_STATUSES = ['InTransit', 'EmergencyRerouting', 'ArrivedDestination', 'Completed'];
+const FIT_EXAM_ISSUE_CODES = ['FitExamMissing', 'FitExamPendingReview'];
 
 /**
  * Chuyển enum vai trò trong đoàn xe thành nhãn tiếng Việt.
@@ -195,6 +196,11 @@ export default function PreDepartureChecklistPage() {
     ],
   );
 
+  // Mã lỗi giấy khám có câu thông báo riêng; mã khác dùng message của máy chủ
+  const issueText = (issue) =>
+    FIT_EXAM_ISSUE_CODES.includes(issue.code)
+      ? t(`driver.checklist.departureCheck.code.${issue.code}`)
+      : issue.message;
   const departureIssues = useMemo(() => departureCheck?.issues || [], [departureCheck?.issues]);
   const blockingIssues = useMemo(() => departureIssues.filter((i) => i.severity === 'Error'), [departureIssues]);
   const warningIssues = useMemo(() => departureIssues.filter((i) => i.severity === 'Warning'), [departureIssues]);
@@ -403,7 +409,7 @@ export default function PreDepartureChecklistPage() {
                       <div>
                         {issue.horseName && <Text strong style={{ marginRight: 8 }}>{issue.horseName}</Text>}
                         {issue.bookingCode && <Tag style={{ marginRight: 8 }}>{issue.bookingCode}</Tag>}
-                        <Text>{issue.message}</Text>
+                        <Text>{issueText(issue)}</Text>
                       </div>
                     </Space>
                   </List.Item>
@@ -435,7 +441,7 @@ export default function PreDepartureChecklistPage() {
                     <div>
                       {issue.horseName && <Text strong style={{ marginRight: 8 }}>{issue.horseName}</Text>}
                       {issue.bookingCode && <Tag style={{ marginRight: 8 }}>{issue.bookingCode}</Tag>}
-                      <Text>{issue.message}</Text>
+                      <Text>{issueText(issue)}</Text>
                     </div>
                   </Space>
                 </List.Item>

@@ -25,6 +25,7 @@ import dayjs from 'dayjs';
 import { formatCountryRoute } from '@utils/bookingRoute';
 import { formatPickupWindow } from '@utils/bookingSchedule';
 import dossierService from '@services/dossierService';
+import { formatExamWindow, hasExamWindowField, isIssueDateDisabled, isOpenForFitExam, isPostClearance } from '@utils/fitExam';
 import { unwrapData, unwrapList, getErrorMessage, toFormData } from '@utils/apiHelpers';
 
 const { Text, Title } = Typography;
@@ -146,6 +147,13 @@ export default function CustomerDossierPanel({ horseId, bookingId, bookingStatus
   const shownDetail = detail?.dossierId === activeId ? detail : null;
   const canUpload = shownDetail && OPEN_FOR_DOCUMENTS.includes(shownDetail.status);
 
+  // Giấy khám (FIT_EXAM): nộp được cả khi hồ sơ đã thông quan, nhưng phải có khoảng 48 giờ trước giờ xuất phát
+  const fitExamBlocked = (item) => {
+    if (!shownDetail || !isOpenForFitExam(shownDetail.status)) return true;
+    // Backend cũ chưa trả trường khoảng khám thì không chặn theo khoảng
+    return hasExamWindowField(item) && !formatExamWindow(item);
+  };
+
   const openUpload = (item) => {
     setUploadTarget(item);
     setFileList([]);
@@ -166,6 +174,7 @@ export default function CustomerDossierPanel({ horseId, bookingId, bookingStatus
         docTypeId: uploadTarget.docTypeId,
         documentNumber: values.documentNumber?.trim(),
         expiryDate: values.expiryDate ? values.expiryDate.format('YYYY-MM-DD') : null,
+        issueDate: values.issueDate ? values.issueDate.format('YYYY-MM-DD') : null,
         file,
       });
       const res = await dossierService.uploadDocument(shownDetail.dossierId, formData);
@@ -202,6 +211,13 @@ export default function CustomerDossierPanel({ horseId, bookingId, bookingStatus
             {item.validityDays ? ` · ${t('customerDossier.validityDays', { days: item.validityDays })}` : ''}
           </div>
           {item.regulationNote && <div style={{ fontSize: 12, color: '#94a3b8' }}>{item.regulationNote}</div>}
+          {isPostClearance(item) && hasExamWindowField(item) && (
+            <div style={{ fontSize: 12, color: '#b45309', fontWeight: 600 }}>
+              {formatExamWindow(item)
+                ? t('fitExam.window', { window: formatExamWindow(item) })
+                : t('fitExam.windowPending')}
+            </div>
+          )}
         </div>
       ),
     },
@@ -239,6 +255,7 @@ export default function CustomerDossierPanel({ horseId, bookingId, bookingStatus
             )}
             <div style={{ color: '#64748b' }}>
               {doc.uploadedAt ? dayjs(doc.uploadedAt).format('DD/MM/YYYY HH:mm') : ''}
+              {doc.issueDate ? ` · ${t('fitExam.issueDate')} ${dayjs(doc.issueDate).format('DD/MM/YYYY')}` : ''}
               {doc.expiryDate ? ` · ${t('customerDossier.expires')} ${dayjs(doc.expiryDate).format('DD/MM/YYYY')}` : ''}
             </div>
             {doc.correctionNote && (
@@ -258,7 +275,7 @@ export default function CustomerDossierPanel({ horseId, bookingId, bookingStatus
       render: (_, item) => {
         if (item.providedBy === 'Company') return null;
         const blocked =
-          !canUpload ||
+          (isPostClearance(item) ? fitExamBlocked(item) : !canUpload) ||
           item.state === 'Approved' ||
           (item.latestDocument?.rejectionCount || 0) >= MAX_REJECTIONS;
         return (
@@ -363,6 +380,10 @@ export default function CustomerDossierPanel({ horseId, bookingId, bookingStatus
           {!canUpload && shownDetail.status !== 'Cleared' && shownDetail.status !== 'Issue' && (
             <Alert type="info" showIcon message={t('customerDossier.locked')} />
           )}
+          {['SubmittedToAuthorities', 'Cleared'].includes(shownDetail.status) &&
+            (shownDetail.checklist || []).some((c) => isPostClearance(c) && c.state !== 'Approved') && (
+              <Alert type="warning" showIcon message={t('fitExam.customerNote')} />
+            )}
           {(shownDetail.checklist || []).some((c) => c.providedBy === 'Company') && (
             <Alert type="info" showIcon message={t('customerDossier.companyDocsNote')} />
           )}
@@ -373,6 +394,7 @@ export default function CustomerDossierPanel({ horseId, bookingId, bookingStatus
             pagination={false}
             columns={columns}
             dataSource={shownDetail.checklist || []}
+            onRow={(item) => (isPostClearance(item) ? { style: { background: '#fffbeb' } } : {})}
             scroll={{ x: 640 }}
           />
         </Space>
@@ -391,13 +413,28 @@ export default function CustomerDossierPanel({ horseId, bookingId, bookingStatus
           <Form.Item name="documentNumber" label={t('customerDossier.documentNumber')} rules={[{ max: 100 }]}>
             <Input placeholder="COGGINS-LAB-2026-888" />
           </Form.Item>
-          <Form.Item name="expiryDate" label={t('customerDossier.expiryDate')}>
-            <DatePicker
-              style={{ width: '100%' }}
-              format="DD/MM/YYYY"
-              disabledDate={(d) => d && d.isBefore(dayjs(), 'day')}
-            />
-          </Form.Item>
+          {isPostClearance(uploadTarget) ? (
+            <Form.Item
+              name="issueDate"
+              label={t('fitExam.issueDate')}
+              rules={[{ required: true, message: t('fitExam.issueDateRequired') }]}
+              extra={formatExamWindow(uploadTarget) ? t('fitExam.window', { window: formatExamWindow(uploadTarget) }) : null}
+            >
+              <DatePicker
+                style={{ width: '100%' }}
+                format="DD/MM/YYYY"
+                disabledDate={(d) => isIssueDateDisabled(d, uploadTarget)}
+              />
+            </Form.Item>
+          ) : (
+            <Form.Item name="expiryDate" label={t('customerDossier.expiryDate')}>
+              <DatePicker
+                style={{ width: '100%' }}
+                format="DD/MM/YYYY"
+                disabledDate={(d) => d && d.isBefore(dayjs(), 'day')}
+              />
+            </Form.Item>
+          )}
           <Form.Item label={t('customerDossier.file')} required>
             <Upload
               accept=".pdf,.jpg,.jpeg,.png"

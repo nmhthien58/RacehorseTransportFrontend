@@ -4,10 +4,12 @@ import { UploadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { toFormData } from '@utils/apiHelpers';
+import { formatExamWindow, isIssueDateDisabled, isPostClearance } from '@utils/fitExam';
 
 /**
  * Chuyên viên tải lên giấy phép công ty đã xin với cơ quan nhà nước (R-19):
  * kiểm dịch xuất khẩu, giấy phép nhập khẩu, giấy phép quá cảnh. Giấy được tính là đã duyệt ngay.
+ * Dùng lại để nộp hộ khách giấy khám lâm sàng (FIT_EXAM): có ô Ngày cấp bắt buộc, vẫn phải duyệt sau.
  * @param {Object} props
  * @param {Object|null} props.item - Dòng checklist (docTypeId, docTypeName)
  * @param {boolean} props.loading
@@ -19,6 +21,7 @@ export default function CompanyDocumentUploadModal({ item, loading, onCancel, on
   const { t } = useTranslation();
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState([]);
+  const isFitExam = isPostClearance(item);
 
   const handleOk = async () => {
     const values = await form.validateFields().catch(() => null);
@@ -33,6 +36,7 @@ export default function CompanyDocumentUploadModal({ item, loading, onCancel, on
         docTypeId: item.docTypeId,
         documentNumber: values.documentNumber?.trim(),
         expiryDate: values.expiryDate ? values.expiryDate.format('YYYY-MM-DD') : null,
+        issueDate: values.issueDate ? values.issueDate.format('YYYY-MM-DD') : null,
         file,
       }),
     );
@@ -44,7 +48,7 @@ export default function CompanyDocumentUploadModal({ item, loading, onCancel, on
 
   return (
     <Modal
-      title={item ? `${t('companyDocs.uploadTitle')}: ${item.docTypeName}` : ''}
+      title={item ? `${t(isFitExam ? 'fitExam.uploadTitle' : 'companyDocs.uploadTitle')}: ${item.docTypeName}` : ''}
       open={Boolean(item)}
       onCancel={onCancel}
       onOk={handleOk}
@@ -52,18 +56,33 @@ export default function CompanyDocumentUploadModal({ item, loading, onCancel, on
       okText={t('companyDocs.uploadOk')}
       destroyOnHidden
     >
-      <Alert type="info" showIcon style={{ marginBottom: 16 }} message={t('companyDocs.uploadHint')} />
+      <Alert type="info" showIcon style={{ marginBottom: 16 }} message={t(isFitExam ? 'fitExam.uploadHint' : 'companyDocs.uploadHint')} />
       <Form form={form} layout="vertical">
         <Form.Item name="documentNumber" label={t('customerDossier.documentNumber')} rules={[{ max: 100 }]}>
           <Input placeholder="GACC-IMP-2026-0457" />
         </Form.Item>
-        <Form.Item name="expiryDate" label={t('customerDossier.expiryDate')}>
-          <DatePicker
-            style={{ width: '100%' }}
-            format="DD/MM/YYYY"
-            disabledDate={(d) => d && d.isBefore(dayjs(), 'day')}
-          />
-        </Form.Item>
+        {isFitExam ? (
+          <Form.Item
+            name="issueDate"
+            label={t('fitExam.issueDate')}
+            rules={[{ required: true, message: t('fitExam.issueDateRequired') }]}
+            extra={formatExamWindow(item) ? t('fitExam.window', { window: formatExamWindow(item) }) : null}
+          >
+            <DatePicker
+              style={{ width: '100%' }}
+              format="DD/MM/YYYY"
+              disabledDate={(d) => isIssueDateDisabled(d, item)}
+            />
+          </Form.Item>
+        ) : (
+          <Form.Item name="expiryDate" label={t('customerDossier.expiryDate')}>
+            <DatePicker
+              style={{ width: '100%' }}
+              format="DD/MM/YYYY"
+              disabledDate={(d) => d && d.isBefore(dayjs(), 'day')}
+            />
+          </Form.Item>
+        )}
         <Form.Item label={t('customerDossier.file')} required>
           <Upload
             accept=".pdf,.jpg,.jpeg,.png"

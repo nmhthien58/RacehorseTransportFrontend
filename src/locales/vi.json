@@ -1329,6 +1329,10 @@
           "Document": "Hồ sơ kiểm dịch",
           "Health": "Sức khỏe 48h",
           "Payment": "Thanh toán"
+        },
+        "code": {
+          "FitExamMissing": "Thiếu giấy khám lâm sàng đủ sức khỏe trong 48 giờ trước giờ xuất phát",
+          "FitExamPendingReview": "Giấy khám lâm sàng đang chờ chuyên viên duyệt"
         }
       }
     },
@@ -3296,5 +3300,15 @@
         "hint": "Phần trăm trên giá trị ngựa khách khai báo."
       }
     }
+  },
+  "fitExam": {
+    "window": "Khám trong khoảng {{window}}",
+    "windowPending": "Sẽ báo khi chuyến được lên lịch",
+    "issueDate": "Ngày cấp",
+    "issueDateRequired": "Vui lòng chọn ngày cấp giấy khám",
+    "customerNote": "Hồ sơ đã nộp cơ quan / thông quan, nhưng bạn vẫn cần nộp giấy khám lâm sàng do thú y cấp trong 48 giờ trước giờ xuất phát.",
+    "uploadOnBehalf": "Nộp hộ giấy khám",
+    "uploadTitle": "Nộp hộ giấy khám",
+    "uploadHint": "Giấy khám phải do thú y cấp trong 48 giờ trước giờ xuất phát. Sau khi tải lên, giấy vẫn cần được duyệt."
   }
 }

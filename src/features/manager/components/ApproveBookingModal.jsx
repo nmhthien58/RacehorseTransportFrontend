@@ -64,7 +64,7 @@ export default function ApproveBookingModal({
           type="info"
           showIcon
           message={t('manager.bookings.modals.approveConfirmText', {
-            code: `#${bookingCode || ''}`,
+            code: (bookingCode || '').replace(/^#+/, ''),
           })}
           description={t('manager.bookings.modals.preApproveConfirmNote', 'Đơn sẽ được duyệt sơ bộ tính khả thi và chuyển đến Điều phối viên để lập tuyến chi tiết trên bản đồ. Báo giá chốt và giá trị ngựa sẽ được duyệt ở bước sau.')}
           style={{ marginBottom: 16, borderRadius: 8 }}
@@ -90,6 +90,13 @@ export default function ApproveBookingModal({
             />
           </Form.Item>
 
+          {/* Điều phối làm theo danh sách chung: đơn duyệt sơ bộ hiện cho mọi Coordinator */}
+          <Form.Item
+            label="Điều phối viên lập tuyến (Coordinator)"
+            extra="Đơn được chuyển vào danh sách chung, Coordinator nào cũng có thể lập tuyến."
+          >
+            <Select disabled placeholder="Tất cả Coordinator" />
+          </Form.Item>
         </Form>
       </div>
     </Modal>

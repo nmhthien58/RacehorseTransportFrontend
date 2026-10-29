@@ -34,6 +34,7 @@ import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedule';
 import tripService from '@services/tripService';
+import RouteMap from '@components/common/map/RouteMap';
 import routePlanService from '@services/routePlanService';
 import StatusTag from '@components/common/StatusTag';
 import RouteSuggestionPanel from '@features/coordinator/components/RouteSuggestionPanel';
@@ -97,6 +98,10 @@ function toApprovedRoute(plan) {
     totalDistanceKm: plan.totalDistanceKm,
     estimatedHours: plan.estimatedHours,
     transitCountryCodes: plan.transitCountryCodes || [],
+    // Giữ mốc gốc + đường vẽ để xem lại bản đồ tuyến đã duyệt
+    stops: plan.stops || [],
+    polyline: plan.polyline,
+    isEstimate: plan.isEstimate,
     checkpoints: (plan.stops || []).map((stop) => ({
       checkpointName: stop.name,
       checkpointType: stop.stopType,
@@ -947,6 +952,23 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
                     </Flex>
                   ))}
                 </div>
+
+                {selectedRoutePlan.stops.length >= 2 && (
+                  <div style={{ marginTop: 12 }}>
+                    <RouteMap
+                      stops={selectedRoutePlan.stops}
+                      polyline={selectedRoutePlan.polyline}
+                      legs={selectedRoutePlan.stops.slice(1).map((st) => ({
+                        distanceKm: Number(st.distanceKmFromPrevious || 0),
+                        durationHours: st.durationHoursFromPrevious,
+                      }))}
+                      totalDistanceKm={selectedRoutePlan.totalDistanceKm}
+                      totalDurationHours={selectedRoutePlan.estimatedHours}
+                      isEstimate={selectedRoutePlan.isEstimate}
+                      height={300}
+                    />
+                  </div>
+                )}
               </div>
             ) : (
               <Text type="secondary" style={{ fontSize: 12 }}>

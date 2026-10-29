@@ -27,6 +27,7 @@ import tripService from '@services/tripService';
 import TripPlanSummary from '@features/coordinator/components/TripPlanSummary';
 import BookingRouteApprovalCard from '@features/manager/components/BookingRouteApprovalCard';
 import bookingService from '@services/bookingService';
+import routePlanService from '@services/routePlanService';
 import { Tabs } from 'antd';
 import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 
@@ -63,15 +64,21 @@ export default function RouteApprovalsPage() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([
-      tripService.getTrips({ status: statusFilter, size: 100 }),
-      bookingService.getBookings(),
-    ])
-      .then(([tRes, bRes]) => {
+    // Tuyến vừa trình: đơn vẫn ở PreApproved, bản tuyến ở Submitted (đơn chỉ sang RoutePlanned sau khi duyệt)
+    const loadSubmittedRouteBookings = async () => {
+      const preApproved = unwrapList(await bookingService.getBookings({ status: 'PreApproved', size: 100 }));
+      const withPlans = await Promise.all(
+        preApproved.map(async (b) => {
+          const plans = unwrapList(await routePlanService.getForBooking(b.bookingId).catch(() => []));
+          return plans.some((p) => p.status === 'Submitted') ? b : null;
+        }),
+      );
+      return withPlans.filter(Boolean);
+    };
+    Promise.all([tripService.getTrips({ status: statusFilter, size: 100 }), loadSubmittedRouteBookings()])
+      .then(([tRes, planned]) => {
         if (!active) return;
         setTrips(unwrapList(tRes));
-        const allB = unwrapList(bRes);
-        const planned = allB.filter((b) => (b.status || b.Status) === 'RoutePlanned');
         setRouteBookings(planned);
         if (planned.length > 0) {
           setSelectedBookingId((prev) => prev || planned[0].bookingId || planned[0].BookingID);

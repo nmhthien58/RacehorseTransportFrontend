@@ -1643,16 +1643,13 @@
       "suggestNeedInput": "Choose horses and a departure time first",
       "suggestFailed": "Could not suggest a route",
       "suggested": "Route replaced with the suggestion",
-<<<<<<< HEAD
       "needTwoDrivers": "Estimated driving time is {{hours}} hours (> 9 hours). At least 2 rotating drivers are required to submit under R-14 safety rules.",
-      "routeCopied": "Copied checkpoints from approved route of booking {{code}} into trip plan!"
-=======
+      "routeCopied": "Copied checkpoints from approved route of booking {{code}} into trip plan!",
       "stopNameRequired": "Please enter stop or checkpoint name",
       "previewLoaded": "Route preview calculated",
       "previewFailed": "Failed to calculate route preview",
       "submittedSuccess": "Route plan submitted for Manager review",
       "submitFailed": "Failed to submit route plan"
->>>>>>> main
     },
     "suggestion": {
       "title": "Route suggestion",
@@ -1683,7 +1680,6 @@
       "emptySlot": "Empty stall",
       "hint": "Click a stall with a horse, then another stall, to swap them. Each escort looks after at most 3 horses; stalls left without an escort are auto-assigned on save (stalls 1-3 to the first escort, lead escort first)."
     },
-<<<<<<< HEAD
     "approvedRoute": {
       "title": "Approved Route Plan for Booking",
       "loading": "Loading approved route...",
@@ -1694,7 +1690,7 @@
     },
     "errors": {
       "unapprovedCountryTitle": "Route Error: Journey travels through unapproved transit country"
-=======
+    },
     "routePlanningEmpty": "No bookings waiting for route planning",
     "drawer": {
       "title": "Plan Route for Booking",
@@ -1711,7 +1707,6 @@
     "stopTypes": {
       "restStop": "Rest Stop",
       "borderGate": "Border Gate"
->>>>>>> main
     }
   },
   "routeApproval": {
@@ -2488,7 +2483,6 @@
     "ariaLabel": "Notifications",
     "newToast": "New notification"
   },
-<<<<<<< HEAD
   "policy": {
     "agreement": {
       "prefix": "I have read and agreed to the",
@@ -2592,7 +2586,7 @@
       "months": "months of age",
       "horse": "horse"
     }
-=======
+  },
   "map": {
     "searchPlaceholder": "Search an address (e.g. Ba Vi, Hanoi)",
     "pickHint": "Type an address and pick a suggestion, or click the map / drag the pin to adjust.",
@@ -2938,6 +2932,5 @@
     "companyCovers": "The company keeps the horses at a temporary stable at its own cost until this is resolved; you pay no waiting or stable fee.",
     "claimOpened": "An insurance claim has been opened.",
     "viewClaims": "View claims"
->>>>>>> main
   }
 }

@@ -45,10 +45,9 @@ import horseService from '@services/horseService';
 import bookingService from '@services/bookingService';
 import { geoService } from '@services/geoService';
 import { fileService } from '@services/fileService';
-import usePolicy from '@hooks/usePolicy';
 import MapPicker from '@components/common/map/MapPicker';
 import RouteMap from '@components/common/map/RouteMap';
-import PolicyAgreement, { POLICY_PAGE_PATH } from '@components/common/PolicyAgreement';
+import PolicyAgreement from '@components/common/PolicyAgreement';
 import RecipientForm from '@components/common/RecipientForm';
 import { isRecipientValid } from '@utils/recipient';
 import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
@@ -112,13 +111,8 @@ export default function BookingWizard({
   const [selectedHorseIds, setSelectedHorseIds] = useState([]);
   const [stallClasses, setStallClasses] = useState({});
   const [horseNotes, setHorseNotes] = useState({});
-<<<<<<< HEAD
   const [horseConditionErrors, setHorseConditionErrors] = useState({});
 
-  // Lấy chính sách dịch vụ động (tuổi tối thiểu, quy chuẩn thai sản)
-  const { policy } = usePolicy();
-  const minAgeMonths = policy?.Horse?.MinAgeMonths ?? 6;
-=======
   // R-12 / R-13: giá trị khai báo, chứng từ, gói bảo hiểm của từng con
   const [horseValues, setHorseValues] = useState({});
   const [uploadingHorseId, setUploadingHorseId] = useState(null);
@@ -129,8 +123,9 @@ export default function BookingWizard({
   // Đang sửa BookingWizard vì tích hợp RecipientForm dùng chung theo FE-13 (R-16)
   const recipientValid = isRecipientValid(recipient);
   const { policy } = usePolicy();
-  const proofThreshold = Number(policy?.insurance?.proofThresholdUsd ?? 50000);
-  const usdVndRate = Number(policy?.payment?.usdVndRate ?? 0);
+  const minAgeMonths = policy?.Horse?.MinAgeMonths ?? policy?.horse?.minAgeMonths ?? 6;
+  const proofThreshold = Number(policy?.insurance?.proofThresholdUsd ?? policy?.Insurance?.ProofThresholdUsd ?? 50000);
+  const usdVndRate = Number(policy?.payment?.usdVndRate ?? policy?.Payment?.UsdVndRate ?? 0);
 
   // R-11: điểm đón / trả chọn trên bản đồ { address, lat, lng, countryCode }
   const toPlace = (address, lat, lng, countryCode) =>
@@ -141,7 +136,6 @@ export default function BookingWizard({
     toPlace(initialValues?.dropoffAddress, initialValues?.dropoffLat, initialValues?.dropoffLng, initialValues?.dropoffCountryCode));
   const [route, setRoute] = useState(null);
   const [routeLoading, setRouteLoading] = useState(false);
->>>>>>> main
 
   const {
     control,
@@ -614,7 +608,6 @@ export default function BookingWizard({
         message.warning('Vui lòng chọn ít nhất 1 cá thể ngựa đủ điều kiện.');
         return;
       }
-<<<<<<< HEAD
       const targetPickupDate = pickupWindowEnd || pickupWindowStart || null;
       const conditionErrors = {};
       let hasError = false;
@@ -638,11 +631,12 @@ export default function BookingWizard({
       if (hasError) {
         setHorseConditionErrors((prev) => ({ ...prev, ...conditionErrors }));
         message.error('Có cá thể ngựa chưa đạt điều kiện vận chuyển theo chính sách. Vui lòng kiểm tra lại!');
-=======
+        return;
+      }
+
       const valueProblem = validateHorseValues();
       if (valueProblem) {
         message.warning(valueProblem);
->>>>>>> main
         return;
       }
     }
@@ -675,7 +669,6 @@ export default function BookingWizard({
         message.warning('Vui lòng chọn ít nhất 1 cá thể ngựa để tiếp tục.');
         return;
       }
-<<<<<<< HEAD
       const targetPickupDate = pickupWindowEnd || pickupWindowStart || null;
       const conditionErrors = {};
       let hasError = false;
@@ -699,11 +692,12 @@ export default function BookingWizard({
       if (hasError) {
         setHorseConditionErrors((prev) => ({ ...prev, ...conditionErrors }));
         message.error('Có cá thể ngựa chưa đạt điều kiện vận chuyển theo chính sách. Vui lòng kiểm tra lại!');
-=======
+        return;
+      }
+
       const valueProblem = validateHorseValues();
       if (valueProblem) {
         message.warning(valueProblem);
->>>>>>> main
         return;
       }
     }
@@ -1642,7 +1636,7 @@ export default function BookingWizard({
                                 </Text>
                               </Radio>
                             </Radio.Group>
-                            <a href={`${POLICY_PAGE_PATH}#8`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12 }}>
+                            <a href={`${ROUTES.POLICY || '/chinh-sach'}#8`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12 }}>
                               {t('bookingForm.insurance.policyLink')}
                             </a>
                           </div>

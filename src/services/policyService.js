@@ -3,15 +3,10 @@ import { ENDPOINTS } from './endpoints';
 
 /**
  * @file policyService.js
-<<<<<<< HEAD
  * @description Tầng Service xử lý chính sách dịch vụ hệ thống (FE-15 / BE-17).
  * Cung cấp cấu hình chính sách động và dữ liệu fallback chuẩn hóa từ doc/CHINH_SACH_DICH_VU.md.
  */
 
-/**
- * Giá trị chính sách dịch vụ mặc định (fallback khi BE-17 chưa có endpoint hoặc gặp lỗi mạng)
- * Mọi giá trị khớp 100% tài liệu doc/CHINH_SACH_DICH_VU.md
- */
 export const DEFAULT_POLICY = {
   PolicyVersion: '1.0',
   EffectiveDate: '26/10/2026',
@@ -53,8 +48,9 @@ export const policyService = {
    */
   async getPolicy() {
     try {
-      const response = await api.get(ENDPOINTS.POLICY.GET);
-      const data = response?.data?.data || response?.data;
+      const endpoint = ENDPOINTS.POLICY?.PUBLIC || ENDPOINTS.POLICY?.GET || '/policy';
+      const response = await api.get(endpoint);
+      const data = response?.data?.data || response?.data || response;
       if (data && typeof data === 'object') {
         return {
           ...DEFAULT_POLICY,
@@ -69,21 +65,8 @@ export const policyService = {
       }
       return DEFAULT_POLICY;
     } catch {
-      // TODO(BE-17): Trả về dữ liệu mặc định khi backend chưa hoàn tất endpoint /api/policy
       return DEFAULT_POLICY;
     }
-=======
- * @description Chính sách dịch vụ công khai (BE-17): phiên bản hiện hành và các giá trị cấu hình.
- */
-
-export const policyService = {
-  /**
-   * Lấy chính sách hiện hành (không cần đăng nhập)
-   * @returns {Promise<{ data: { version: string, payment: Object, booking: Object, delay: Object, insurance: Object, horse: Object, delivery: Object, values: Object<string, number|string> } }>}
-   */
-  async getPolicy() {
-    return api.get(ENDPOINTS.POLICY.PUBLIC);
->>>>>>> main
   },
 };
 

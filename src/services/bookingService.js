@@ -117,7 +117,6 @@ export const bookingService = {
   },
 
   /**
-<<<<<<< HEAD
    * Lấy tuyến đường đã duyệt của đơn (BE-07 / FE-07)
    * @param {number|string} id - Mã định danh BookingID
    * @returns {Promise<any>}
@@ -182,7 +181,9 @@ export const bookingService = {
         },
       };
     }
-=======
+  },
+
+  /**
    * Manager chốt giá trị thỏa thuận cho từng ngựa trong đơn (R-12, BE-09)
    * @param {number|string} id - BookingID
    * @param {{ horseValues: Array<{ horseId: number, agreedValue: number }> }} payload
@@ -219,7 +220,6 @@ export const bookingService = {
    */
   async declineQuote(id, payload) {
     return api.post(ENDPOINTS.BOOKINGS.DECLINE_QUOTE(id), payload);
->>>>>>> main
   },
 };
 

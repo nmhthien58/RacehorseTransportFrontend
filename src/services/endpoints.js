@@ -59,9 +59,10 @@ export const ENDPOINTS = {
     ROUTE: '/geo/route',
   },
 
-  // Chính sách dịch vụ công khai (BE-17): phiên bản + các giá trị cấu hình
+  // Chính sách dịch vụ công khai (BE-17 / FE-15): phiên bản + các giá trị cấu hình
   POLICY: {
     PUBLIC: '/policy',
+    GET: '/policy',
   },
 
   // Tải file lên storage (chứng từ giá trị ngựa, biên bản...): trả về path để gửi kèm request khác
@@ -271,11 +272,6 @@ export const ENDPOINTS = {
     MARK_ALL_READ: '/notifications/read-all',
     // SignalR hub nằm ngoài /api: https://<backend>/hubs/notifications
     HUB: '/hubs/notifications',
-  },
-
-  // 14. Chính sách dịch vụ (Policy - FE-15 / BE-17)
-  POLICY: {
-    GET: '/policy',
   },
 };
 

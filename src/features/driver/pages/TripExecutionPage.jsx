@@ -24,13 +24,9 @@ import {
   LogoutOutlined,
   HeartOutlined,
   SafetyCertificateOutlined,
-<<<<<<< HEAD
   FileDoneOutlined,
   AlertOutlined,
-=======
-  FileDoneOutlined, PhoneOutlined,
-  ExportOutlined,
->>>>>>> main
+  PhoneOutlined,
 } from '@ant-design/icons';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';

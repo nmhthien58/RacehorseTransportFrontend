@@ -1642,16 +1642,13 @@
       "suggestNeedInput": "Chọn ngựa và giờ khởi hành trước khi gợi ý lộ trình",
       "suggestFailed": "Không gợi ý được lộ trình",
       "suggested": "Đã thay lộ trình bằng gợi ý",
-<<<<<<< HEAD
       "needTwoDrivers": "Thời gian lái dự kiến {{hours}} giờ (vượt quá 9 giờ). Bắt buộc cần ít nhất 2 tài xế thay phiên để trình duyệt chuyến theo quy chuẩn an toàn R-14.",
-      "routeCopied": "Đã sao chép các mốc từ tuyến đã duyệt của đơn {{code}} vào kế hoạch chuyến!"
-=======
+      "routeCopied": "Đã sao chép các mốc từ tuyến đã duyệt của đơn {{code}} vào kế hoạch chuyến!",
       "stopNameRequired": "Vui lòng nhập tên điểm dừng / cửa khẩu",
       "previewLoaded": "Đã tính toán lộ trình dự kiến",
       "previewFailed": "Không thể tính lộ trình",
       "submittedSuccess": "Đã trình duyệt tuyến thành công cho Manager",
       "submitFailed": "Trình duyệt tuyến thất bại"
->>>>>>> main
     },
     "suggestion": {
       "title": "Kết quả gợi ý lộ trình",
@@ -1682,7 +1679,6 @@
       "emptySlot": "Ô trống",
       "hint": "Bấm một ô có ngựa rồi bấm ô khác để đổi chỗ. Mỗi người áp tải phụ trách tối đa 3 con; ô để trống áp tải sẽ được tự phân khi lưu (ô 1-3 cho người đầu tiên, trưởng nhóm trước)."
     },
-<<<<<<< HEAD
     "approvedRoute": {
       "title": "Tuyến đường đã được phê duyệt của đơn",
       "loading": "Đang tải tuyến đã duyệt...",
@@ -1693,7 +1689,7 @@
     },
     "errors": {
       "unapprovedCountryTitle": "Lỗi lộ trình: Đi qua nước ngoài tuyến đã duyệt"
-=======
+    },
     "routePlanningEmpty": "Hiện không có đơn nào chờ lập tuyến",
     "drawer": {
       "title": "Lập tuyến vận chuyển cho đơn",
@@ -1710,7 +1706,6 @@
     "stopTypes": {
       "restStop": "Trạm nghỉ",
       "borderGate": "Cửa khẩu"
->>>>>>> main
     }
   },
   "routeApproval": {
@@ -2487,7 +2482,6 @@
     "ariaLabel": "Thông báo",
     "newToast": "Thông báo mới"
   },
-<<<<<<< HEAD
   "policy": {
     "agreement": {
       "prefix": "Tôi đã đọc và đồng ý với",
@@ -2591,7 +2585,7 @@
       "months": "tháng tuổi",
       "horse": "con"
     }
-=======
+  },
   "map": {
     "searchPlaceholder": "Tìm địa chỉ (ví dụ: Ba Vì, Hà Nội)",
     "pickHint": "Gõ địa chỉ để chọn gợi ý, hoặc bấm lên bản đồ / kéo ghim để chỉnh vị trí.",
@@ -2937,6 +2931,5 @@
     "companyCovers": "Công ty chăm sóc ngựa tại chuồng tạm bằng chi phí của công ty cho tới khi xử lý xong; bạn không phải trả phí chờ hay phí chuồng.",
     "claimOpened": "Hồ sơ bồi thường đã được mở.",
     "viewClaims": "Xem hồ sơ bồi thường"
->>>>>>> main
   }
 }

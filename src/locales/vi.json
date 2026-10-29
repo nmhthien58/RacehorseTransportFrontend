@@ -1986,6 +1986,8 @@
       "OffloadHorse": "Cho ngựa rời chuyến",
       "ReturnToOrigin": "Cả đoàn quay về nơi đi",
       "HoldAtStable": "Gửi ngựa chuồng tạm",
+      "ReplaceVehicle": "Đổi xe",
+      "ReplaceCrew": "Đổi tài xế / áp tải",
       "Other": "Khác"
     },
     "actionPlaceholder": "Chọn hành động",
@@ -3035,6 +3037,8 @@
     "detourCost": "Phí đi vòng khách trả thêm",
     "accepted": "Đồng ý",
     "declined": "Không đồng ý",
+    "replacementVehicle": "Xe thay thế",
+    "crewReplacement": "Đổi người",
     "faultParty": "Nguyên nhân",
     "fault": {
       "Company": {
@@ -3057,6 +3061,8 @@
   "incidentPlan": {
     "emergencyOffload": "{{horse}} đã được dỡ khẩn cấp: phương án phải là Cho ngựa rời chuyến, kèm hướng xử lý tiếp.",
     "actionHint": {
+      "ReplaceVehicle": "Khi duyệt, chuyến chuyển sang xe mới (xe mới Đang chạy, xe cũ Bảo trì). Ngựa giữ số chuồng nếu xe mới đủ chỗ.",
+      "ReplaceCrew": "Khi duyệt, người mới thay đúng vai trò của người cũ; ngựa áp tải cũ phụ trách chuyển cho người mới. Hai người đều nhận thông báo.",
       "ReturnToOrigin": "Khi duyệt, hệ thống tự dựng tuyến quay về (bỏ các mốc chưa tới, e-POD ký ở nơi đi). Không cần sửa tuyến.",
       "HoldAtStable": "Phí chuồng tạm = số ngày × số ngựa × đơn giá, cộng vào chi phí phát sinh khi đóng sự cố.",
       "Reroute": "Đi vòng tốn thêm tiền cho khách: nhập phí bên dưới, tuyến chỉ đổi khi mọi khách có ngựa trên xe đồng ý; một khách từ chối thì cả đoàn quay về."
@@ -3077,6 +3083,18 @@
     "extraCostForCustomer": "Chi phí khách phải trả thêm (đi vòng)",
     "extraCostHint": "Tổng cho cả chuyến, chia theo số ngựa của các đơn. Để 0 nếu công ty chịu.",
     "awaitingConsent": "Đang chờ các khách có ngựa trên xe đồng ý đi vòng; tuyến chưa đổi.",
+    "replacementVehicle": "Xe thay thế",
+    "replacementVehiclePlaceholder": "Chọn xe",
+    "replacementVehicleHint": "Chỉ hiện xe {{type}} còn rảnh trong khung giờ của chuyến và đủ {{count}} chỗ cho ngựa còn trên xe. Đơn yêu cầu điều hòa thì chọn xe có điều hòa.",
+    "noVehicle": "Không có xe cùng loại còn rảnh và đủ chỗ",
+    "climate": "Có điều hòa",
+    "removeCrew": "Người bị thay",
+    "removeCrewPlaceholder": "Chọn người trong đoàn xe",
+    "removeCrewRequired": "Chọn người bị thay trong đoàn xe của chuyến",
+    "addCrew": "Người thay thế",
+    "addCrewPlaceholder": "Chọn tài xế / áp tải còn rảnh",
+    "addCrewHint": "Người mới nhận vai trò {{role}} của người bị thay.",
+    "noCrew": "Không có tài xế / áp tải nào rảnh trong khung giờ của chuyến",
     "resolveTitle": "Đóng sự cố {{code}}",
     "faultRequired": "Chọn nguyên nhân",
     "faultNote": "Giải thích ngắn (không bắt buộc)",

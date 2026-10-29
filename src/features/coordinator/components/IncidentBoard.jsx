@@ -25,16 +25,20 @@ import dayjs from 'dayjs';
 import incidentService from '@services/incidentService';
 import tripService from '@services/tripService';
 import fileService from '@services/fileService';
+import userService from '@services/userService';
+import assetService from '@services/assetService';
 import { unwrapList, unwrapData, getErrorMessage } from '@utils/apiHelpers';
 import {
   SEVERITY_COLOR,
   INCIDENT_STATUS_COLOR,
   RESPONSE_ACTIONS,
   RESPONSE_ACTION_COLOR,
+  REPLACEMENT_ACTIONS,
   OFFLOAD_OUTCOMES,
   FAULT_PARTIES,
   formatUsd,
   toRouteChangePayload,
+  buildIncidentLookup,
 } from '@utils/incidents';
 import IncidentRouteChange from '@components/common/IncidentRouteChange';
 // Đang sửa IncidentBoard vì FE-10: hướng xử lý ngựa rời chuyến, quay về / chuồng tạm, phí đi vòng chờ khách đồng ý, nguyên nhân khi đóng
@@ -46,6 +50,12 @@ const { Text } = Typography;
 const { TextArea } = Input;
 
 const formatTime = (value) => (value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—');
+
+// Ngựa còn phải chở (TripHorseStatuses.OnBoard của backend): xe thay thế phải đủ chỗ cho số này
+const ONBOARD_HORSE_STATUSES = ['Planned', 'InTransit'];
+
+// Một người có thể giữ cả hai vai trò trên chuyến nên lựa chọn "người bị thay" là cặp userId + vai trò
+const toCrewKey = (userId, crewRole) => `${userId}|${crewRole}`;
 
 // Nhóm lọc theo việc của từng vai trò
 const FILTERS = {
@@ -83,6 +93,7 @@ export default function IncidentBoard({ role }) {
   const [resolveForm] = Form.useForm();
   const responseAction = Form.useWatch('responseAction', proposeForm);
   const offloadOutcome = Form.useWatch('offloadOutcome', proposeForm);
+  const removeCrewKey = Form.useWatch('removeCrewKey', proposeForm);
   const faultParty = Form.useWatch('faultParty', resolveForm);
 
   // Chỉ cập nhật state trong callback của promise (không setState đồng bộ trong effect)
@@ -104,6 +115,18 @@ export default function IncidentBoard({ role }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Danh mục xe và nhân sự đoàn xe: để hiện biển số xe mới, tên người cũ → người mới của phương án đổi xe / đổi người
+  const [directory, setDirectory] = useState({ assets: [], users: [] });
+  useEffect(() => {
+    let active = true;
+    Promise.all([assetService.getAssets({ size: 100 }), userService.getStaff('DriverEscort')])
+      .then(([assetRes, staffRes]) => active && setDirectory({ assets: unwrapList(assetRes), users: unwrapList(staffRes) }))
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const groups = FILTERS[role];
   const filtered = useMemo(
@@ -130,6 +153,57 @@ export default function IncidentBoard({ role }) {
     selectedTripId && trip?.tripId === selectedTripId
       ? (trip.checkpoints || []).filter((c) => c.isActive !== false).sort((a, b) => a.sequenceOrder - b.sequenceOrder)
       : [];
+  const currentTrip = selectedTripId && trip?.tripId === selectedTripId ? trip : null;
+
+  // Đổi xe / đổi người: xe / người còn rảnh trong khung giờ kế hoạch của chuyến (backend kiểm tra trùng lịch theo đúng khung này)
+  const [availability, setAvailability] = useState({ tripId: null, vehicles: [], crew: [] });
+  const needsAvailability = role === 'coordinator' && REPLACEMENT_ACTIONS.includes(responseAction);
+  const plannedStart = currentTrip?.plannedStartDate;
+  const plannedEnd = currentTrip?.plannedEndDate;
+  const currentTripId = currentTrip?.tripId;
+  useEffect(() => {
+    if (!needsAvailability || !currentTripId || !plannedStart || !plannedEnd) return undefined;
+    let active = true;
+    Promise.all([
+      tripService.getAvailableVehicles({ from: plannedStart, to: plannedEnd }),
+      tripService.getAvailableCrew({ from: plannedStart, to: plannedEnd }),
+    ])
+      .then(([vRes, cRes]) => active && setAvailability({ tripId: currentTripId, vehicles: unwrapList(vRes), crew: unwrapList(cRes) }))
+      .catch((err) => active && message.error(getErrorMessage(err)));
+    return () => {
+      active = false;
+    };
+  }, [needsAvailability, currentTripId, plannedStart, plannedEnd]);
+  const available = availability.tripId === currentTripId ? availability : { vehicles: [], crew: [] };
+
+  // Xe thay thế: khác xe hiện tại, cùng loại, đang Available, đủ chỗ cho số ngựa còn trên xe (điều hòa: backend kiểm tra theo đơn)
+  // available-vehicles không trả trạng thái nên đối chiếu thêm với danh mục xe
+  const onboardCount = (currentTrip?.horses || []).filter((h) => ONBOARD_HORSE_STATUSES.includes(h.status)).length;
+  const assetStatus = (id) => directory.assets.find((a) => a.assetId === id)?.status;
+  const vehicleOptions = available.vehicles
+    .filter(
+      (v) =>
+        v.assetId !== currentTrip?.vehicleId &&
+        v.assetType === currentTrip?.vehicleType &&
+        v.capacityHorses >= onboardCount &&
+        (assetStatus(v.assetId) ?? 'Available') === 'Available',
+    )
+    .map((v) => ({
+      value: v.assetId,
+      label: [v.assetCode, v.assetType, t('tripPlan.fields.capacity', { count: v.capacityHorses }), v.hasClimateControl ? t('incidentPlan.climate') : null]
+        .filter(Boolean)
+        .join(' · '),
+    }));
+  const tripCrew = currentTrip?.crew || [];
+  const removedMember = tripCrew.find((c) => toCrewKey(c.userId, c.crewRole) === removeCrewKey);
+  const crewOptions = available.crew
+    .filter((u) => !tripCrew.some((c) => c.userId === u.userId))
+    .map((u) => ({ value: u.userId, label: u.phoneNumber ? `${u.fullName} · ${u.phoneNumber}` : u.fullName }));
+  const lookup = buildIncidentLookup({
+    trip: currentTrip,
+    assets: [...directory.assets, ...available.vehicles],
+    users: [...directory.users, ...available.crew],
+  });
 
   /**
    * Chạy một thao tác trên sự cố đang chọn rồi cập nhật lại dòng đó trong bảng.
@@ -170,6 +244,14 @@ export default function IncidentBoard({ role }) {
       message.warning(t('incidentPlan.vetReportRequired'));
       return;
     }
+    const isReplaceVehicle = values.responseAction === 'ReplaceVehicle';
+    const isReplaceCrew = values.responseAction === 'ReplaceCrew';
+    // Vai trò cần thay lấy theo vai trò của người bị thay trên chuyến
+    const removed = isReplaceCrew ? tripCrew.find((c) => toCrewKey(c.userId, c.crewRole) === values.removeCrewKey) : undefined;
+    if (isReplaceCrew && !removed) {
+      message.warning(t('incidentPlan.removeCrewRequired'));
+      return;
+    }
     const ok = await run(async () => {
       // Biên bản thú y tải lên trước (POST /files, documents) rồi gửi path
       const uploaded = isOffload && vetReport ? unwrapData(await fileService.upload(vetReport, 'documents')) : null;
@@ -184,6 +266,11 @@ export default function IncidentBoard({ role }) {
         affectedTripHorseId: isOffload ? values.affectedTripHorseId || undefined : undefined,
         offloadOutcome: isOffload ? values.offloadOutcome : undefined,
         vetReportPath: uploaded?.path,
+        // Chỉ gửi kèm đúng hành động, gửi với hành động khác backend trả 400
+        replacementVehicleId: isReplaceVehicle ? values.replacementVehicleId : undefined,
+        removeUserId: removed?.userId,
+        addUserId: isReplaceCrew ? values.addUserId : undefined,
+        crewRole: removed?.crewRole,
       });
     }, t('incidents.actions.proposed'));
     if (ok) setVetReport(null);
@@ -349,6 +436,12 @@ export default function IncidentBoard({ role }) {
                     : undefined,
                   revisedRouteNotes: selected.revisedRouteNotes || '',
                   additionalCost: selected.additionalCost || 0,
+                  // Đề xuất lại phương án đổi xe / đổi người: điền sẵn lựa chọn lần trước
+                  replacementVehicleId: selected.actionPayload?.replacementVehicleId || undefined,
+                  removeCrewKey: selected.actionPayload?.removeUserId
+                    ? toCrewKey(selected.actionPayload.removeUserId, selected.actionPayload.crewRole)
+                    : undefined,
+                  addUserId: selected.actionPayload?.addUserId || undefined,
                 }}
               >
                 <Form.Item
@@ -419,6 +512,50 @@ export default function IncidentBoard({ role }) {
                     )}
                   </div>
                 )}
+                {responseAction === 'ReplaceVehicle' && (
+                  <Form.Item
+                    name="replacementVehicleId"
+                    label={t('incidentPlan.replacementVehicle')}
+                    rules={[{ required: true, message: t('handover.form.required') }]}
+                    extra={t('incidentPlan.replacementVehicleHint', { type: currentTrip?.vehicleType || '—', count: onboardCount })}
+                  >
+                    <Select
+                      showSearch
+                      optionFilterProp="label"
+                      placeholder={t('incidentPlan.replacementVehiclePlaceholder')}
+                      notFoundContent={t('incidentPlan.noVehicle')}
+                      options={vehicleOptions}
+                    />
+                  </Form.Item>
+                )}
+                {responseAction === 'ReplaceCrew' && (
+                  <>
+                    <Form.Item
+                      name="removeCrewKey"
+                      label={t('incidentPlan.removeCrew')}
+                      rules={[{ required: true, message: t('handover.form.required') }]}
+                    >
+                      <Select
+                        placeholder={t('incidentPlan.removeCrewPlaceholder')}
+                        options={tripCrew.map((c) => ({ value: toCrewKey(c.userId, c.crewRole), label: `${c.fullName} · ${t(`tripPlan.crewRole.${c.crewRole}`)}` }))}
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      name="addUserId"
+                      label={t('incidentPlan.addCrew')}
+                      rules={[{ required: true, message: t('handover.form.required') }]}
+                      extra={removedMember ? t('incidentPlan.addCrewHint', { role: t(`tripPlan.crewRole.${removedMember.crewRole}`) }) : undefined}
+                    >
+                      <Select
+                        showSearch
+                        optionFilterProp="label"
+                        placeholder={t('incidentPlan.addCrewPlaceholder')}
+                        notFoundContent={t('incidentPlan.noCrew')}
+                        options={crewOptions}
+                      />
+                    </Form.Item>
+                  </>
+                )}
                 <Form.Item
                   name="proposedAction"
                   label={t('incidents.fields.plan')}
@@ -477,7 +614,7 @@ export default function IncidentBoard({ role }) {
 
             {!canPropose && (
               <div style={{ marginTop: 12 }}>
-                <IncidentOutcome incident={selected} />
+                <IncidentOutcome incident={selected} lookup={lookup} />
               </div>
             )}
             {selected.status === 'AwaitingConsent' && (

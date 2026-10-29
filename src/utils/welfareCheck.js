@@ -25,6 +25,8 @@ export const WELFARE_THRESHOLDS = {
     HOT_WARNING: 28.0,
     EXTREME_DANGER: 32.0,
   },
+  MAX_CONTINUOUS_TRANSIT_HOURS: 4.5,
+  MIN_REST_MINUTES: 30,
 };
 
 /**
@@ -107,4 +109,26 @@ export function calculateWelfareScore(log = {}) {
   }
 
   return Math.max(0, Math.round(score));
+}
+
+/**
+ * Kiểm tra xem xe có đang vi phạm thời gian chạy liên tục mà chưa cho ngựa nghỉ (R-14).
+ * @param {Date|string|number} lastRestTime
+ * @param {Date|string|number} [currentTime=new Date()]
+ * @returns {{ mustRestNow: boolean, hoursElapsed: number, remainingAllowedMinutes: number }}
+ */
+export function validateRestWindow(lastRestTime, currentTime = new Date()) {
+  const start = new Date(lastRestTime).getTime();
+  const now = new Date(currentTime).getTime();
+  const diffHours = Math.max(0, (now - start) / (1000 * 60 * 60));
+  const remainingMinutes = Math.max(
+    0,
+    Math.round((WELFARE_THRESHOLDS.MAX_CONTINUOUS_TRANSIT_HOURS - diffHours) * 60)
+  );
+
+  return {
+    mustRestNow: diffHours >= WELFARE_THRESHOLDS.MAX_CONTINUOUS_TRANSIT_HOURS,
+    hoursElapsed: Number(diffHours.toFixed(2)),
+    remainingAllowedMinutes: remainingMinutes,
+  };
 }

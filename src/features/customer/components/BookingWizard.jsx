@@ -99,6 +99,30 @@ import {
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
+// Ghim trên bản đồ chỉ điền địa chỉ chi tiết khi ô trống hoặc khách chưa sửa tay
+const fillDetailFromMap = (prev, place) =>
+  prev.edited && prev.text.trim() ? prev : { text: (place.address || '').slice(0, 255), edited: false };
+
+/**
+ * Ô "Địa chỉ chi tiết" dưới bản đồ (đường bộ).
+ * @param {{ value: string, onChange: (text: string) => void }} props
+ */
+function DetailedAddressField({ value, onChange }) {
+  const { t } = useTranslation();
+  return (
+    <Form.Item label={t('bookingForm.detailedAddress')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginTop: 12, marginBottom: 0 }}>
+      <TextArea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        maxLength={255}
+        showCount
+        autoSize={{ minRows: 2, maxRows: 4 }}
+        placeholder={t('bookingForm.detailedAddressPlaceholder')}
+      />
+    </Form.Item>
+  );
+}
+
 /**
  * Component Wizard 4 bước đặt chuyến vận chuyển ngựa đua
  *
@@ -259,14 +283,14 @@ export default function BookingWizard({
   // Chọn điểm trên bản đồ: điền địa chỉ + nước theo điểm đã chọn
   const handlePickupPick = (place) => {
     setPickupPlace(place);
-    setPickupDetail((prev) => (prev.edited && prev.text.trim() ? prev : { text: (place.address || '').slice(0, 255), edited: false }));
+    setPickupDetail((prev) => fillDetailFromMap(prev, place));
     if (place.countryCode && catalog.some((c) => c.countryCode === place.countryCode)) {
       setValue('PickupCountryCode', place.countryCode);
     }
   };
   const handleDropoffPick = (place) => {
     setDropoffPlace(place);
-    setDropoffDetail((prev) => (prev.edited && prev.text.trim() ? prev : { text: (place.address || '').slice(0, 255), edited: false }));
+    setDropoffDetail((prev) => fillDetailFromMap(prev, place));
     if (place.countryCode && catalog.some((c) => c.countryCode === place.countryCode && (c.groundAvailable || c.airAvailable))) {
       setValue('DropoffCountryCode', place.countryCode);
     }
@@ -1098,16 +1122,7 @@ export default function BookingWizard({
                     <Form.Item label={t('bookingForm.pickupOnMap')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginBottom: 0 }}>
                       <MapPicker value={pickupPlace} onChange={handlePickupPick} height={280} />
                     </Form.Item>
-                    <Form.Item label={t('bookingForm.detailedAddress')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginTop: 12, marginBottom: 0 }}>
-                      <TextArea
-                        value={pickupDetail.text}
-                        onChange={(e) => setPickupDetail({ text: e.target.value, edited: true })}
-                        maxLength={255}
-                        showCount
-                        autoSize={{ minRows: 2, maxRows: 4 }}
-                        placeholder={t('bookingForm.detailedAddressPlaceholder')}
-                      />
-                    </Form.Item>
+                    <DetailedAddressField value={pickupDetail.text} onChange={(text) => setPickupDetail({ text, edited: true })} />
                     </>
                   )}
                 </Card>
@@ -1191,16 +1206,7 @@ export default function BookingWizard({
                     <Form.Item label={t('bookingForm.dropoffOnMap')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginBottom: 0 }}>
                       <MapPicker value={dropoffPlace} onChange={handleDropoffPick} height={280} />
                     </Form.Item>
-                    <Form.Item label={t('bookingForm.detailedAddress')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginTop: 12, marginBottom: 0 }}>
-                      <TextArea
-                        value={dropoffDetail.text}
-                        onChange={(e) => setDropoffDetail({ text: e.target.value, edited: true })}
-                        maxLength={255}
-                        showCount
-                        autoSize={{ minRows: 2, maxRows: 4 }}
-                        placeholder={t('bookingForm.detailedAddressPlaceholder')}
-                      />
-                    </Form.Item>
+                    <DetailedAddressField value={dropoffDetail.text} onChange={(text) => setDropoffDetail({ text, edited: true })} />
                     </>
                   )}
                 </Card>

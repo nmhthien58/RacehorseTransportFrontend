@@ -24,6 +24,7 @@ import {
   FilePdfOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import RouteMap from '@components/common/map/RouteMap';
 import routePlanService from '@services/routePlanService';
 import bookingService from '@services/bookingService';
 import { unwrapList, unwrapData, getErrorMessage } from '@utils/apiHelpers';
@@ -76,7 +77,8 @@ export default function BookingRouteApprovalCard({ booking, onRefresh }) {
 
   const latestPlan = useMemo(() => {
     if (plans.length === 0) return null;
-    return plans[plans.length - 1];
+    // Ưu tiên bản đang chờ duyệt; không có thì lấy bản mới nhất
+    return plans.find((p) => p.status === 'Submitted') || plans[plans.length - 1];
   }, [plans]);
 
   const handlePreviewQuote = async () => {
@@ -274,6 +276,23 @@ export default function BookingRouteApprovalCard({ booking, onRefresh }) {
       </Descriptions>
 
       {/* Bảng các điểm dừng / cửa khẩu dọc đường */}
+      {latestPlan?.stops?.length >= 2 && (
+        <div style={{ marginBottom: 16 }}>
+          <RouteMap
+            stops={latestPlan.stops}
+            polyline={latestPlan.polyline}
+            legs={latestPlan.stops.slice(1).map((st) => ({
+              distanceKm: Number(st.distanceKmFromPrevious || 0),
+              durationHours: st.durationHoursFromPrevious,
+            }))}
+            totalDistanceKm={latestPlan.totalDistanceKm}
+            totalDurationHours={latestPlan.estimatedHours}
+            isEstimate={latestPlan.isEstimate}
+            height={340}
+          />
+        </div>
+      )}
+
       {latestPlan?.stops && latestPlan.stops.length > 0 && (
         <Card size="small" title={t('tripPlan.drawer.stops', 'Mốc dừng chân & Cửa khẩu')} style={{ marginBottom: 16, background: '#F8FAFC' }}>
           <Table

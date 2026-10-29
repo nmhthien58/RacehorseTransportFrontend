@@ -104,6 +104,8 @@
     "tripClosure": "Trip closing & KPI",
     "reports": "Reports",
     "paymentSettings": "Payment settings",
+    "transactions": "Transactions",
+    "paymentHistory": "Payment history",
     "transportOrders": "Transport orders",
     "insuranceClaims": "Insurance Claims"
   },
@@ -3295,6 +3297,58 @@
       "Insurance": {
         "name": "Insurance",
         "hint": "Percent of the horse's declared value."
+      }
+    }
+  },
+  "paymentLedger": {
+    "types": {
+      "Deposit": "Deposit",
+      "Balance": "Remaining balance",
+      "Extra": "Extra charge",
+      "Refund": "Refund",
+      "Compensation": "Compensation payout"
+    },
+    "statuses": {
+      "Succeeded": "Succeeded",
+      "Pending": "Pending",
+      "Failed": "Failed",
+      "Expired": "Expired"
+    },
+    "columns": {
+      "time": "Time",
+      "booking": "Booking",
+      "customer": "Customer",
+      "type": "Type",
+      "amount": "Amount",
+      "status": "Status",
+      "txnRef": "Transaction ID"
+    },
+    "filters": {
+      "type": "Transaction type",
+      "status": "Status",
+      "search": "Search booking or transaction code"
+    },
+    "empty": "No transactions yet",
+    "loadFailed": "Could not load transactions",
+    "customer": {
+      "title": "Payment history",
+      "subtitle": "All deposits, payments, extra charges and refunds across your bookings"
+    },
+    "manager": {
+      "title": "Transactions",
+      "subtitle": "All payments and refunds across every transport booking",
+      "summaryFailed": "Could not load the summary",
+      "searchPlaceholder": "Search booking, customer, transaction code",
+      "tiles": {
+        "succeeded": "Collected",
+        "pending": "Awaiting payment",
+        "failedExpired": "Failed / Expired",
+        "failedExpiredHint": "Transactions",
+        "refunded": "Refunded",
+        "refundsNeedingAction": "Refunds needing action",
+        "refundsNeedingActionHint": "Failed or pending refunds",
+        "count_one": "{{count}} transaction",
+        "count_other": "{{count}} transactions"
       }
     }
   }

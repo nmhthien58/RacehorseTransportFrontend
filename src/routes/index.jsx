@@ -45,6 +45,8 @@ import IncidentReviewPage from '@features/manager/pages/IncidentReviewPage';
 import TripClosurePage from '@features/manager/pages/TripClosurePage';
 import ReportsPage from '@features/manager/pages/ReportsPage';
 import PaymentSettingsPage from '@features/manager/pages/PaymentSettingsPage';
+import TransactionsPage from '@features/manager/pages/TransactionsPage';
+import PaymentHistoryPage from '@features/customer/pages/PaymentHistoryPage';
 import CountriesPage from '@features/manager/pages/CountriesPage';
 import PricingPage from '@features/manager/pages/PricingPage';
 
@@ -137,6 +139,7 @@ export default function AppRoutes() {
           <Route path={ROUTES.CUSTOMER_MESSAGES} element={<MessagesPage />} />
           <Route path={ROUTES.CUSTOMER_PROFILE} element={<ProfilePage />} />
           <Route path={ROUTES.CUSTOMER_BILLING} element={<BillingPage />} />
+          <Route path={ROUTES.CUSTOMER_PAYMENT_HISTORY} element={<PaymentHistoryPage />} />
           <Route path={ROUTES.CUSTOMER_PAYMENT_RESULT} element={<PaymentResultPage />} />
           <Route path={ROUTES.CUSTOMER_PAYMENT_MOCK} element={<MockPaymentPage />} />
           <Route path="/billing" element={<Navigate to={ROUTES.CUSTOMER_BILLING} replace />} />
@@ -160,6 +163,7 @@ export default function AppRoutes() {
           <Route path={ROUTES.MANAGER_TRIPS} element={<TripClosurePage />} />
           <Route path={ROUTES.MANAGER_REPORTS} element={<ReportsPage />} />
           <Route path={ROUTES.MANAGER_PAYMENT_SETTINGS} element={<PaymentSettingsPage />} />
+          <Route path={ROUTES.MANAGER_TRANSACTIONS} element={<TransactionsPage />} />
           <Route path={ROUTES.MANAGER_COUNTRIES} element={<CountriesPage />} />
           <Route path={ROUTES.MANAGER_PRICING} element={<PricingPage />} />
           <Route path={ROUTES.MANAGER_PROFILE} element={<ProfilePage />} />

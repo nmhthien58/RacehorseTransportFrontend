@@ -220,6 +220,7 @@ export const ENDPOINTS = {
   ROUTE_PLANS: {
     GET_FOR_BOOKING: (bookingId) => `/bookings/${bookingId}/route-plans`,
     GET_BY_ID: (id) => `/route-plans/${id}`,
+    QUOTE_PREVIEW: (id) => `/route-plans/${id}/quote-preview`,
     PREVIEW: (bookingId) => `/bookings/${bookingId}/route-plans/preview`,
     CREATE: (bookingId) => `/bookings/${bookingId}/route-plans`,
     UPDATE: (id) => `/route-plans/${id}`,

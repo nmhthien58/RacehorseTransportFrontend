@@ -28,7 +28,7 @@ import TripPlanSummary from '@features/coordinator/components/TripPlanSummary';
 import BookingRouteApprovalCard from '@features/manager/components/BookingRouteApprovalCard';
 import bookingService from '@services/bookingService';
 import routePlanService from '@services/routePlanService';
-import { Tabs } from 'antd';
+import { Tabs, Tag } from 'antd';
 import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 
 const { Text } = Typography;
@@ -206,7 +206,7 @@ const selectedBooking = routeBookings.find((b) => (b.bookingId || b.BookingID) =
                               <div style={{ width: '100%' }}>
                                 <Flex justify="space-between" align="center">
                                   <Text strong>{b.bookingCode || b.BookingCode || '#' + bId}</Text>
-                                  <StatusTag status={b.status || b.Status} />
+                                  <Tag color="blue">Chờ duyệt tuyến</Tag>
                                 </Flex>
                                 <div style={{ fontSize: 12, color: '#64748B' }}>
                                   {b.customerName || b.CustomerName} · {b.totalHorses || b.TotalHorses || (b.horses ? b.horses.length : 1)} ngựa

@@ -7,12 +7,9 @@ import {
   Space,
   Tag,
   Typography,
-  InputNumber,
   Input,
   Modal,
   Alert,
-  Row,
-  Col,
   message,
 } from 'antd';
 import {
@@ -20,15 +17,14 @@ import {
   CloseOutlined,
   CompassOutlined,
   DollarOutlined,
-  EyeOutlined,
-  FilePdfOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import RouteMap from '@components/common/map/RouteMap';
 import routePlanService from '@services/routePlanService';
 import bookingService from '@services/bookingService';
 import { unwrapList, unwrapData, getErrorMessage } from '@utils/apiHelpers';
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 const { TextArea } = Input;
 
 // Đang tạo BookingRouteApprovalCard vì phục vụ Manager duyệt lộ trình đơn hàng và chốt giá trị thỏa thuận cho từng ngựa theo FE-04 (R-10, BE-04, BE-09)
@@ -40,12 +36,27 @@ export default function BookingRouteApprovalCard({ booking, onRefresh }) {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
-  const [horseValues, setHorseValues] = useState({});
-  const [previewQuote, setPreviewQuote] = useState(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
+  // Kết quả xem trước báo giá, gắn với bản tuyến đã tính
+  const [quoteResult, setQuoteResult] = useState({ planId: null, quote: null, error: null });
 
   const bookingId = booking?.bookingId || booking?.BookingID;
-  const horses = useMemo(() => booking?.horses || booking?.Horses || [], [booking]);
+  // Danh sách đơn chỉ có thông tin tóm tắt: tải chi tiết để có danh sách ngựa và giá trị khai báo
+  const [detail, setDetail] = useState(null);
+  useEffect(() => {
+    if (!bookingId) return undefined;
+    let active = true;
+    bookingService
+      .getBookingById(bookingId)
+      .then((res) => active && setDetail(unwrapData(res)))
+      .catch(() => active && setDetail(null));
+    return () => {
+      active = false;
+    };
+  }, [bookingId]);
+  const horses = useMemo(() => {
+    const source = detail?.bookingId === bookingId ? detail : booking;
+    return source?.horses || source?.Horses || [];
+  }, [detail, booking, bookingId]);
 
   // Tải danh sách lộ trình đã lập của đơn
   useEffect(() => {
@@ -69,42 +80,31 @@ export default function BookingRouteApprovalCard({ booking, onRefresh }) {
     };
   }, [bookingId, horses]);
 
-  const getAgreedValue = (h) => {
-    const hId = h.horseId || h.HorseID || h.bookingHorseId;
-    return horseValues[hId] !== undefined ? horseValues[hId] : Number(h.declaredValue || h.DeclaredValue || 50000);
-  };
-
   const latestPlan = useMemo(() => {
     if (plans.length === 0) return null;
-    return plans[plans.length - 1];
+    // Ưu tiên bản đang chờ duyệt; không có thì lấy bản mới nhất
+    return plans.find((p) => p.status === 'Submitted') || plans[plans.length - 1];
   }, [plans]);
 
-  const handlePreviewQuote = async () => {
-    setPreviewLoading(true);
-    try {
-      const previewPayload = {
-        distanceKm: latestPlan?.totalDistanceKm || booking?.distanceKm || 1200,
-        transitCountries: latestPlan?.transitCountryCodes || booking?.transitCountries || ['LA'],
-        horses: horses.map((h) => {
-          const hId = h.horseId || h.HorseID || h.bookingHorseId;
-          return {
-            horseId: hId,
-            declaredValue: Number(h.declaredValue || 50000),
-            agreedValue: Number(getAgreedValue(h)),
-            insurancePlan: h.insurancePlan || 'Full',
-            stallClass: h.stallClass || 'Shared',
-          };
-        }),
-      };
-      const res = unwrapData(await bookingService.calculateQuote(bookingId, previewPayload));
-      setPreviewQuote(res);
-      message.success(t('routeApproval.messages.quotePreviewLoaded', 'Đã tính toán báo giá chốt'));
-    } catch (err) {
-      message.error(getErrorMessage(err, t('routeApproval.messages.quotePreviewFailed', 'Không thể tính báo giá')));
-    } finally {
-      setPreviewLoading(false);
-    }
-  };
+  // Giá hệ thống tính nếu duyệt tuyến này (cùng cách tính lúc phát hành báo giá chốt)
+  const planIdForQuote = latestPlan?.status === 'Submitted' ? latestPlan.routePlanId : null;
+  useEffect(() => {
+    if (!planIdForQuote) return undefined;
+    let active = true;
+    routePlanService
+      .getQuotePreview(planIdForQuote)
+      .then((res) => active && setQuoteResult({ planId: planIdForQuote, quote: unwrapData(res), error: null }))
+      .catch((err) => {
+        if (active) setQuoteResult({ planId: planIdForQuote, quote: null, error: getErrorMessage(err, 'Không tính được báo giá chốt') });
+      });
+    return () => {
+      active = false;
+    };
+  }, [planIdForQuote]);
+  const quoteCurrent = quoteResult.planId === planIdForQuote;
+  const quote = quoteCurrent ? quoteResult.quote : null;
+  const quoteError = quoteCurrent ? quoteResult.error : null;
+  const quoteLoading = Boolean(planIdForQuote) && !quoteCurrent;
 
   const handleApprove = async () => {
     const planId = latestPlan?.routePlanId || latestPlan?.id;
@@ -115,19 +115,6 @@ export default function BookingRouteApprovalCard({ booking, onRefresh }) {
 
     setApproving(true);
     try {
-      // 1. Chốt giá trị thỏa thuận từng ngựa (BE-09)
-      const horsePayload = {
-        horseValues: horses.map((h) => {
-          const hId = h.horseId || h.HorseID || h.bookingHorseId;
-          return {
-            horseId: hId,
-            agreedValue: Number(horseValues[hId] || h.declaredValue || 50000),
-          };
-        }),
-      };
-      await bookingService.updateHorseValues(bookingId, horsePayload);
-
-      // 2. Phê duyệt lộ trình (BE-04)
       await routePlanService.approveRoutePlan(planId);
 
       message.success(t('routeApproval.messages.approvedAndQuoted', 'Đã duyệt tuyến và gửi báo giá chốt cho khách hàng'));
@@ -179,44 +166,18 @@ export default function BookingRouteApprovalCard({ booking, onRefresh }) {
       title: t('bookings.detailPage.declaredValue', 'Giá trị khai báo ($)'),
       dataIndex: 'declaredValue',
       align: 'right',
-      render: (val) => `${Number(val || 50000).toLocaleString()} USD`,
+      render: (val) => (Number(val) > 0 ? `$${Number(val).toLocaleString('en-US')}` : 'Không khai báo'),
     },
     {
-      title: t('bookings.detailPage.proofDoc', 'Chứng từ định giá'),
-      render: (_, h) => {
-        const val = Number(h.declaredValue || 50000);
-        if (val >= 50000) {
-          return (
-            <Button
-              size="small"
-              type="link"
-              icon={<FilePdfOutlined />}
-              onClick={() => message.info(t('bookings.detailPage.viewProof', 'Mở chứng từ định giá ngựa'))}
-            >
-              {t('common.viewFile', 'Xem chứng từ')}
-            </Button>
-          );
-        }
-        return <Text type="secondary" style={{ fontSize: 12 }}>{t('common.notRequired', 'Không yêu cầu')}</Text>;
-      },
+      title: 'Giá trị thỏa thuận ($)',
+      dataIndex: 'agreedValue',
+      align: 'right',
+      render: (val) => (Number(val) > 0 ? <Text strong>${Number(val).toLocaleString('en-US')}</Text> : '—'),
     },
     {
-      title: t('routeApproval.fields.agreedValue', 'Giá trị thỏa thuận ($)'),
-      width: 180,
-      render: (_, h) => {
-        const hId = h.horseId || h.HorseID || h.bookingHorseId;
-        return (
-          <InputNumber
-            min={1000}
-            max={10000000}
-            step={1000}
-            style={{ width: '100%' }}
-            prefix="$"
-            value={getAgreedValue(h)}
-            onChange={(val) => setHorseValues((prev) => ({ ...prev, [hId]: val }))}
-          />
-        );
-      },
+      title: 'Bảo hiểm',
+      dataIndex: 'insurancePlan',
+      render: (plan) => (plan === 'Full' ? <Tag color="gold">Toàn giá trị</Tag> : <Tag>Không mua</Tag>),
     },
   ];
 
@@ -261,19 +222,38 @@ export default function BookingRouteApprovalCard({ booking, onRefresh }) {
           {booking?.dropoffAddress || booking?.DropoffAddress} ({booking?.dropoffCountryCode || 'CN'})
         </Descriptions.Item>
         <Descriptions.Item label={t('tripPlan.drawer.totalDistance', 'Tổng quãng đường')}>
-          <Text strong>{Number(latestPlan?.totalDistanceKm || booking?.distanceKm || 1200).toLocaleString()} km</Text>
+          <Text strong>{latestPlan?.totalDistanceKm != null ? `${Number(latestPlan.totalDistanceKm).toLocaleString()} km` : '—'}</Text>
         </Descriptions.Item>
         <Descriptions.Item label={t('tripPlan.drawer.totalHours', 'Thời gian ước tính')}>
-          <Text strong>{latestPlan?.estimatedHours || 28} {t('common.hours', 'giờ')}</Text>
+          <Text strong>{latestPlan?.estimatedHours != null ? `${latestPlan.estimatedHours} ${t('common.hours', 'giờ')}` : '—'}</Text>
         </Descriptions.Item>
         <Descriptions.Item label={t('tripPlan.drawer.transitCountries', 'Nước quá cảnh')} span={2}>
-          {(latestPlan?.transitCountryCodes || booking?.transitCountries || ['LA']).map((c) => (
-            <Tag color="geekblue" key={c}>{c}</Tag>
-          ))}
+          {latestPlan?.transitCountryCodes?.length
+            ? latestPlan.transitCountryCodes.map((c) => (
+                <Tag color="geekblue" key={c}>{c}</Tag>
+              ))
+            : 'Không có'}
         </Descriptions.Item>
       </Descriptions>
 
       {/* Bảng các điểm dừng / cửa khẩu dọc đường */}
+      {latestPlan?.stops?.length >= 2 && (
+        <div style={{ marginBottom: 16 }}>
+          <RouteMap
+            stops={latestPlan.stops}
+            polyline={latestPlan.polyline}
+            legs={latestPlan.stops.slice(1).map((st) => ({
+              distanceKm: Number(st.distanceKmFromPrevious || 0),
+              durationHours: st.durationHoursFromPrevious,
+            }))}
+            totalDistanceKm={latestPlan.totalDistanceKm}
+            totalDurationHours={latestPlan.estimatedHours}
+            isEstimate={latestPlan.isEstimate}
+            height={340}
+          />
+        </div>
+      )}
+
       {latestPlan?.stops && latestPlan.stops.length > 0 && (
         <Card size="small" title={t('tripPlan.drawer.stops', 'Mốc dừng chân & Cửa khẩu')} style={{ marginBottom: 16, background: '#F8FAFC' }}>
           <Table
@@ -287,12 +267,12 @@ export default function BookingRouteApprovalCard({ booking, onRefresh }) {
                 title: t('tripPlan.fields.stopType', 'Loại'),
                 dataIndex: 'stopType',
                 width: 120,
-                render: (type) =>
-                  type === 'BorderGate' ? (
-                    <Tag color="purple">{t('tripPlan.stopTypes.borderGate', 'Cửa khẩu')}</Tag>
-                  ) : (
-                    <Tag color="cyan">{t('tripPlan.stopTypes.restStop', 'Trạm nghỉ')}</Tag>
-                  ),
+                render: (type) => {
+                  if (type === 'BorderGate') return <Tag color="purple">{t('tripPlan.stopTypes.borderGate', 'Cửa khẩu')}</Tag>;
+                  if (type === 'Origin') return <Tag color="green">Điểm đón</Tag>;
+                  if (type === 'Destination') return <Tag color="red">Điểm giao</Tag>;
+                  return <Tag color="cyan">{t('tripPlan.stopTypes.restStop', 'Trạm nghỉ')}</Tag>;
+                },
               },
               { title: t('tripPlan.fields.stopName', 'Tên trạm / Mốc'), dataIndex: 'name', render: (t) => <Text strong>{t}</Text> },
               { title: t('tripPlan.fields.country', 'Nước'), dataIndex: 'countryCode', width: 80, render: (c) => <Tag>{c}</Tag> },
@@ -302,59 +282,62 @@ export default function BookingRouteApprovalCard({ booking, onRefresh }) {
         </Card>
       )}
 
-      {/* Bảng ngựa: kiểm tra giá trị khai báo và chốt giá trị thỏa thuận */}
-      <Card
-        size="small"
-        title={t('routeApproval.horsesCardTitle', 'Chốt giá trị thỏa thuận từng con ngựa (R-12)')}
-        style={{ marginBottom: 16 }}
-        extra={
-          <Button
-            size="small"
-            icon={<EyeOutlined />}
-            loading={previewLoading}
-            onClick={handlePreviewQuote}
-          >
-            {t('routeApproval.actions.previewQuote', 'Xem trước báo giá chốt')}
-          </Button>
-        }
-      >
+      {/* Ngựa: giá trị thỏa thuận đã chốt ở bước duyệt sơ bộ (chỉ xem) */}
+      <Card size="small" title="Ngựa & giá trị thỏa thuận (đã chốt khi duyệt sơ bộ)" style={{ marginBottom: 16 }}>
         <Table
           size="small"
           dataSource={horses}
           columns={horseColumns}
-          rowKey={(h) => h.horseId || h.HorseID || h.bookingHorseId}
+          rowKey={(h) => h.bookingHorseId || h.horseId}
           pagination={false}
         />
       </Card>
 
-      {/* Báo giá chốt dự kiến */}
-      {previewQuote && (
-        <Card size="small" style={{ borderRadius: 8, background: '#EFF6FF', borderColor: '#BFDBFE' }}>
-          <Title level={5} style={{ margin: '0 0 8px', color: '#1E40AF' }}>
-            <DollarOutlined /> {t('routeApproval.quoteSummaryTitle', 'Báo giá chốt dự kiến gửi cho khách hàng')}
-          </Title>
-          <Row gutter={[16, 8]}>
-            <Col xs={12} sm={6}>
-              <Text type="secondary">{t('routeApproval.freight', 'Cước vận chuyển')}:</Text>{' '}
-              <Text strong>{Number(previewQuote.freightAmount || 2400).toLocaleString()} USD</Text>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Text type="secondary">{t('routeApproval.clearance', 'Phí thông quan')}:</Text>{' '}
-              <Text strong>{Number(previewQuote.clearanceFees || 500).toLocaleString()} USD</Text>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Text type="secondary">{t('routeApproval.insurance', 'Phí bảo hiểm')}:</Text>{' '}
-              <Text strong>{Number(previewQuote.insuranceFee || 750).toLocaleString()} USD</Text>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Text type="secondary">{t('routeApproval.total', 'Tổng tiền chốt')}:</Text>{' '}
-              <Text strong style={{ color: '#D97706', fontSize: 16 }}>
-                {Number(previewQuote.totalCost || 7500).toLocaleString()} USD
-              </Text>
-            </Col>
-          </Row>
-        </Card>
-      )}
+      {/* Báo giá chốt hệ thống tính theo tuyến này */}
+      <Card
+        size="small"
+        title={
+          <span>
+            <DollarOutlined /> Báo giá chốt sẽ gửi khách nếu duyệt tuyến
+          </span>
+        }
+        style={{ borderRadius: 8, background: '#EFF6FF', borderColor: '#BFDBFE' }}
+        loading={quoteLoading}
+      >
+        {quoteError && <Alert type="error" showIcon title={quoteError} />}
+        {!quoteError && quote && (
+          <Table
+            size="small"
+            pagination={false}
+            rowKey={(l, i) => `${l.code}-${i}`}
+            dataSource={quote.lines || []}
+            columns={[
+              { title: 'Khoản', dataIndex: 'name' },
+              { title: 'SL', dataIndex: 'quantity', width: 70, align: 'right' },
+              {
+                title: 'Thành tiền',
+                dataIndex: 'amount',
+                width: 140,
+                align: 'right',
+                render: (v) => `$${Number(v).toLocaleString('en-US', { maximumFractionDigits: 2 })}`,
+              },
+            ]}
+            summary={() => (
+              <Table.Summary.Row>
+                <Table.Summary.Cell index={0} colSpan={2}>
+                  <Text strong>Tổng</Text>
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={1} align="right">
+                  <Text strong style={{ color: '#D97706', fontSize: 16 }}>
+                    ${Number(quote.total).toLocaleString('en-US', { maximumFractionDigits: 2 })} {quote.currencyCode || 'USD'}
+                  </Text>
+                </Table.Summary.Cell>
+              </Table.Summary.Row>
+            )}
+          />
+        )}
+        {!quoteError && !quote && !quoteLoading && <Text type="secondary">Không có tuyến chờ duyệt.</Text>}
+      </Card>
 
       {/* Modal từ chối tuyến */}
       <Modal

@@ -219,6 +219,10 @@ export default function PendingRequestsPage() {
   const handleConfirmApprove = async (values) => {
     try {
       setActionLoading(true);
+      // Chốt giá trị thỏa thuận từng con ngay ở bước duyệt sơ bộ
+      if (values.horseValues?.length) {
+        await bookingService.updateHorseValues(activeBooking.bookingId, { horses: values.horseValues });
+      }
       await bookingService.approveBooking(activeBooking.bookingId, {
         specialistUserId: values.specialistUserId,
       });
@@ -860,6 +864,7 @@ export default function PendingRequestsPage() {
         <ApproveBookingModal
           open={approveModalOpen}
           bookingCode={activeBooking.bookingCode}
+          horses={activeBooking.horses || []}
           specialists={specialists}
           confirmLoading={actionLoading}
           onConfirm={handleConfirmApprove}

@@ -150,6 +150,10 @@ export default function BookingDetailPage() {
   const handleConfirmApprove = async (values) => {
     try {
       setActionLoading(true);
+      // Chốt giá trị thỏa thuận từng con ngay ở bước duyệt sơ bộ
+      if (values.horseValues?.length) {
+        await bookingService.updateHorseValues(booking.bookingId, { horses: values.horseValues });
+      }
       await bookingService.approveBooking(booking.bookingId, {
         specialistUserId: values.specialistUserId,
       });
@@ -752,6 +756,7 @@ export default function BookingDetailPage() {
       <ApproveBookingModal
         open={approveModalOpen}
         bookingCode={booking.bookingCode}
+        horses={booking.horses || []}
         specialists={specialists}
         confirmLoading={actionLoading}
         onConfirm={handleConfirmApprove}

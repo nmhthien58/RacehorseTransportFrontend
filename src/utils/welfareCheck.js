@@ -35,11 +35,15 @@ export const WELFARE_THRESHOLDS = {
  * @returns {{ hasAnomaly: boolean, severity: 'Normal'|'Warning'|'Critical', reasons: string[] }}
  */
 export function detectBiometricAnomaly(vitals = {}) {
+  if (!vitals || typeof vitals !== 'object') {
+    return { hasAnomaly: false, severity: 'Normal', reasons: [] };
+  }
+
   const { heartRate, bodyTemp } = vitals;
   const reasons = [];
   let severity = 'Normal';
 
-  if (typeof heartRate === 'number') {
+  if (typeof heartRate === 'number' && !Number.isNaN(heartRate) && heartRate > 0) {
     if (heartRate >= WELFARE_THRESHOLDS.HEART_RATE_BPM.CRITICAL) {
       severity = 'Critical';
       reasons.push(`Nhịp tim rất cao (${heartRate} BPM >= ${WELFARE_THRESHOLDS.HEART_RATE_BPM.CRITICAL})`);
@@ -49,7 +53,7 @@ export function detectBiometricAnomaly(vitals = {}) {
     }
   }
 
-  if (typeof bodyTemp === 'number') {
+  if (typeof bodyTemp === 'number' && !Number.isNaN(bodyTemp) && bodyTemp > 0) {
     if (bodyTemp >= WELFARE_THRESHOLDS.BODY_TEMP_CELSIUS.CRITICAL) {
       severity = 'Critical';
       reasons.push(`Thân nhiệt nguy hiểm (${bodyTemp} °C)`);
@@ -73,10 +77,13 @@ export function detectBiometricAnomaly(vitals = {}) {
  * @returns {'Optimal'|'MildDehydration'|'SevereDehydration'}
  */
 export function evaluateHydrationStatus(skinTentSeconds = 1, capillaryRefillSeconds = 2) {
-  if (skinTentSeconds > 4 || capillaryRefillSeconds > 3) {
+  const safeSkinTent = Number(skinTentSeconds) || 1;
+  const safeRefill = Number(capillaryRefillSeconds) || 2;
+
+  if (safeSkinTent > 4 || safeRefill > 3) {
     return 'SevereDehydration';
   }
-  if (skinTentSeconds > 2 || capillaryRefillSeconds > 2) {
+  if (safeSkinTent > 2 || safeRefill > 2) {
     return 'MildDehydration';
   }
   return 'Optimal';
@@ -88,17 +95,19 @@ export function evaluateHydrationStatus(skinTentSeconds = 1, capillaryRefillSeco
  * @returns {number}
  */
 export function calculateWelfareScore(log = {}) {
+  if (!log || typeof log !== 'object') return 100;
+
   let score = 100;
 
-  if (log.heartRate && log.heartRate > WELFARE_THRESHOLDS.HEART_RATE_BPM.NORMAL_MAX) {
+  if (typeof log.heartRate === 'number' && log.heartRate > WELFARE_THRESHOLDS.HEART_RATE_BPM.NORMAL_MAX) {
     score -= Math.min(25, (log.heartRate - WELFARE_THRESHOLDS.HEART_RATE_BPM.NORMAL_MAX) * 1.5);
   }
 
-  if (log.bodyTemp && log.bodyTemp > WELFARE_THRESHOLDS.BODY_TEMP_CELSIUS.NORMAL_MAX) {
+  if (typeof log.bodyTemp === 'number' && log.bodyTemp > WELFARE_THRESHOLDS.BODY_TEMP_CELSIUS.NORMAL_MAX) {
     score -= Math.min(25, (log.bodyTemp - WELFARE_THRESHOLDS.BODY_TEMP_CELSIUS.NORMAL_MAX) * 20);
   }
 
-  if (log.cabinTemp && log.cabinTemp > WELFARE_THRESHOLDS.CABIN_TEMP_CELSIUS.HOT_WARNING) {
+  if (typeof log.cabinTemp === 'number' && log.cabinTemp > WELFARE_THRESHOLDS.CABIN_TEMP_CELSIUS.HOT_WARNING) {
     score -= Math.min(20, (log.cabinTemp - WELFARE_THRESHOLDS.CABIN_TEMP_CELSIUS.HOT_WARNING) * 5);
   }
 
@@ -118,8 +127,17 @@ export function calculateWelfareScore(log = {}) {
  * @returns {{ mustRestNow: boolean, hoursElapsed: number, remainingAllowedMinutes: number }}
  */
 export function validateRestWindow(lastRestTime, currentTime = new Date()) {
+  if (!lastRestTime) {
+    return { mustRestNow: false, hoursElapsed: 0, remainingAllowedMinutes: 270 };
+  }
+
   const start = new Date(lastRestTime).getTime();
   const now = new Date(currentTime).getTime();
+
+  if (Number.isNaN(start) || Number.isNaN(now)) {
+    return { mustRestNow: false, hoursElapsed: 0, remainingAllowedMinutes: 270 };
+  }
+
   const diffHours = Math.max(0, (now - start) / (1000 * 60 * 60));
   const remainingMinutes = Math.max(
     0,

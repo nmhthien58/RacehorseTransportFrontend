@@ -133,7 +133,7 @@ function GroundPointField({ labelKey, place, onPick, detail, onDetailChange }) {
  * Component Wizard 4 bước đặt chuyến vận chuyển ngựa đua
  *
  * @param {Object} props
- * @param {(payload: Partial<import('@types/database').Booking>) => Promise<void> | void} props.onSubmit
+ * @param {(payload: Partial<import('@types/database').Booking>, estimate?: {min: number, max: number, currencyCode: string}) => Promise<void> | void} props.onSubmit
  * @param {() => void} props.onCancel
  * @param {boolean} [props.loading]
  * @param {Object} [props.initialValues]
@@ -883,7 +883,7 @@ export default function BookingWizard({
     };
 
     try {
-      await onSubmit(payload);
+      await onSubmit(payload, { min: quoteMin, max: quoteMax, currencyCode });
     } catch (err) {
       const errorMsg = getErrorMessage(err, '');
       const responseData = err?.response?.data;
@@ -1719,7 +1719,10 @@ export default function BookingWizard({
                                     }}
                                   >
                                     <div style={{ fontSize: 12, fontWeight: 600, color: '#0f172a' }}>
-                                      {stall.title.split(' ')[0]}
+                                      {stall.title}
+                                    </div>
+                                    <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                                      {stall.priceNote}
                                     </div>
                                     <Tag color={isStallSelected ? 'gold' : 'default'} style={{ margin: '4px 0 0', fontSize: 10 }}>
                                       {stall.badge}

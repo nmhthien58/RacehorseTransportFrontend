@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Modal, Form, Input, DatePicker, Upload, Button, Alert, message } from 'antd';
+import { Modal, Form, Input, Upload, Button, Alert, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import dayjs from 'dayjs';
+import DocumentDateField from '@components/common/DocumentDateField';
 import { toFormData } from '@utils/apiHelpers';
-import { formatExamWindow, isIssueDateDisabled, isPostClearance } from '@utils/fitExam';
+import { isPostClearance } from '@utils/fitExam';
 
 /**
  * Chuyên viên tải lên giấy phép công ty đã xin với cơ quan nhà nước (R-19):
@@ -61,28 +61,7 @@ export default function CompanyDocumentUploadModal({ item, loading, onCancel, on
         <Form.Item name="documentNumber" label={t('customerDossier.documentNumber')} rules={[{ max: 100 }]}>
           <Input placeholder="GACC-IMP-2026-0457" />
         </Form.Item>
-        {isFitExam ? (
-          <Form.Item
-            name="issueDate"
-            label={t('fitExam.issueDate')}
-            rules={[{ required: true, message: t('fitExam.issueDateRequired') }]}
-            extra={formatExamWindow(item) ? t('fitExam.window', { window: formatExamWindow(item) }) : null}
-          >
-            <DatePicker
-              style={{ width: '100%' }}
-              format="DD/MM/YYYY"
-              disabledDate={(d) => isIssueDateDisabled(d, item)}
-            />
-          </Form.Item>
-        ) : (
-          <Form.Item name="expiryDate" label={t('customerDossier.expiryDate')}>
-            <DatePicker
-              style={{ width: '100%' }}
-              format="DD/MM/YYYY"
-              disabledDate={(d) => d && d.isBefore(dayjs(), 'day')}
-            />
-          </Form.Item>
-        )}
+        <DocumentDateField item={item} />
         <Form.Item label={t('customerDossier.file')} required>
           <Upload
             accept=".pdf,.jpg,.jpeg,.png"

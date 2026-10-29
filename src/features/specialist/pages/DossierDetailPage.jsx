@@ -258,6 +258,17 @@ export default function DossierDetailPage() {
   // Giấy khám (FIT_EXAM) nộp hộ được khi hồ sơ còn nhận giấy (kể cả đã thông quan) và đã có khoảng 48 giờ
   const canUploadFitExam = (item) =>
     isOpenForFitExam(dossier?.status) && !(hasExamWindowField(item) && !formatExamWindow(item));
+  const renderFitExamUpload = (item) => (
+    <Button
+      size="small"
+      icon={<UploadOutlined />}
+      disabled={!canUploadFitExam(item)}
+      onClick={() => setCompanyUploadItem(item)}
+      style={{ borderRadius: 4, fontSize: 12 }}
+    >
+      {t('fitExam.uploadOnBehalf')}
+    </Button>
+  );
 
   return (
     <div style={{ padding: '0 0 24px 0' }}>
@@ -644,16 +655,7 @@ export default function DossierDetailPage() {
                               {t('companyDocs.uploadButton')}
                             </Button>
                           )}
-                          {isPostClearance(item) && item.providedBy !== 'Company' && (
-                            <Button
-                              size="small"
-                              icon={<UploadOutlined />}
-                              disabled={!canUploadFitExam(item)}
-                              onClick={() => setCompanyUploadItem(item)}
-                            >
-                              {t('fitExam.uploadOnBehalf')}
-                            </Button>
-                          )}
+                          {isPostClearance(item) && item.providedBy !== 'Company' && renderFitExamUpload(item)}
                           <Button
                             type="link"
                             size="small"
@@ -669,17 +671,7 @@ export default function DossierDetailPage() {
                       {/* Nút hành động thẩm định (giấy công ty xin không cần thẩm định) */}
                       {doc && item.providedBy !== 'Company' && (
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                          {isPostClearance(item) && isRejected && (
-                            <Button
-                              size="small"
-                              icon={<UploadOutlined />}
-                              disabled={!canUploadFitExam(item)}
-                              onClick={() => setCompanyUploadItem(item)}
-                              style={{ borderRadius: 4, fontSize: 12 }}
-                            >
-                              {t('fitExam.uploadOnBehalf')}
-                            </Button>
-                          )}
+                          {isPostClearance(item) && isRejected && renderFitExamUpload(item)}
                           <Button
                             size="small"
                             danger

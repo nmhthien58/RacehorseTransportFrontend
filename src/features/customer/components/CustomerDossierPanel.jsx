@@ -3,7 +3,6 @@ import {
   Alert,
   Button,
   Card,
-  DatePicker,
   Empty,
   Flex,
   Form,
@@ -22,10 +21,11 @@ import {
 import { FileTextOutlined, UploadOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import DocumentDateField from '@components/common/DocumentDateField';
 import { formatCountryRoute } from '@utils/bookingRoute';
 import { formatPickupWindow } from '@utils/bookingSchedule';
 import dossierService from '@services/dossierService';
-import { formatExamWindow, hasExamWindowField, isIssueDateDisabled, isOpenForFitExam, isPostClearance } from '@utils/fitExam';
+import { formatExamWindow, hasExamWindowField, isOpenForFitExam, isPostClearance } from '@utils/fitExam';
 import { unwrapData, unwrapList, getErrorMessage, toFormData } from '@utils/apiHelpers';
 
 const { Text, Title } = Typography;
@@ -413,28 +413,7 @@ export default function CustomerDossierPanel({ horseId, bookingId, bookingStatus
           <Form.Item name="documentNumber" label={t('customerDossier.documentNumber')} rules={[{ max: 100 }]}>
             <Input placeholder="COGGINS-LAB-2026-888" />
           </Form.Item>
-          {isPostClearance(uploadTarget) ? (
-            <Form.Item
-              name="issueDate"
-              label={t('fitExam.issueDate')}
-              rules={[{ required: true, message: t('fitExam.issueDateRequired') }]}
-              extra={formatExamWindow(uploadTarget) ? t('fitExam.window', { window: formatExamWindow(uploadTarget) }) : null}
-            >
-              <DatePicker
-                style={{ width: '100%' }}
-                format="DD/MM/YYYY"
-                disabledDate={(d) => isIssueDateDisabled(d, uploadTarget)}
-              />
-            </Form.Item>
-          ) : (
-            <Form.Item name="expiryDate" label={t('customerDossier.expiryDate')}>
-              <DatePicker
-                style={{ width: '100%' }}
-                format="DD/MM/YYYY"
-                disabledDate={(d) => d && d.isBefore(dayjs(), 'day')}
-              />
-            </Form.Item>
-          )}
+          <DocumentDateField item={uploadTarget} />
           <Form.Item label={t('customerDossier.file')} required>
             <Upload
               accept=".pdf,.jpg,.jpeg,.png"

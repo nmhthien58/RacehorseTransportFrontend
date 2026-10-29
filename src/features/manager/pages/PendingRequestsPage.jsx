@@ -39,6 +39,7 @@ import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import RejectBookingModal from '@features/manager/components/RejectBookingModal';
 import ApproveBookingModal from '@features/manager/components/ApproveBookingModal';
 import BookingDecisionButtons from '@features/manager/components/BookingDecisionButtons';
+import { formatBookingCost } from '@utils/bookingCost';
 
 const { Text, Title } = Typography;
 
@@ -1116,9 +1117,9 @@ ${activeBooking.customerName || 'Customer'}`,
                 dataIndex: 'estimatedCost',
                 key: 'estimatedCost',
                 align: 'right',
-                render: (cost) => (
+                render: (_, rec) => (
                   <Text strong style={{ fontSize: 13, color: '#0f172a' }}>
-                    ${cost ? cost.toLocaleString() : '—'}
+                    {formatBookingCost(rec)}
                   </Text>
                 ),
               },

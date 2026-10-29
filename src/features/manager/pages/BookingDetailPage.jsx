@@ -42,6 +42,7 @@ import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import RejectBookingModal from '@features/manager/components/RejectBookingModal';
 import ApproveBookingModal from '@features/manager/components/ApproveBookingModal';
 import BookingDecisionButtons from '@features/manager/components/BookingDecisionButtons';
+import { formatBookingCost } from '@utils/bookingCost';
 
 const { Text, Title } = Typography;
 
@@ -642,7 +643,7 @@ export default function BookingDetailPage() {
                   {t('manager.bookings.modals.totalEstimated')}
                 </span>
                 <span style={{ fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
-                  {formatCost(booking.estimatedCost, booking.currencyCode)}
+                  {formatBookingCost(booking)}
                 </span>
               </div>
             </Card>

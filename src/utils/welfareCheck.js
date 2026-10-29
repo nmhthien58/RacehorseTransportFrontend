@@ -63,3 +63,19 @@ export function detectBiometricAnomaly(vitals = {}) {
     reasons,
   };
 }
+
+/**
+ * Đánh giá mức độ tiếp nhận nước và dấu hiệu mất nước (Hydration Status).
+ * @param {number} [skinTentSeconds=1] - Thời gian da trở lại bình thường (giây)
+ * @param {number} [capillaryRefillSeconds=2] - Thời gian hồi máu mao mạch nướu răng (giây)
+ * @returns {'Optimal'|'MildDehydration'|'SevereDehydration'}
+ */
+export function evaluateHydrationStatus(skinTentSeconds = 1, capillaryRefillSeconds = 2) {
+  if (skinTentSeconds > 4 || capillaryRefillSeconds > 3) {
+    return 'SevereDehydration';
+  }
+  if (skinTentSeconds > 2 || capillaryRefillSeconds > 2) {
+    return 'MildDehydration';
+  }
+  return 'Optimal';
+}

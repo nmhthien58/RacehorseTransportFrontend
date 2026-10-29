@@ -79,3 +79,32 @@ export function evaluateHydrationStatus(skinTentSeconds = 1, capillaryRefillSeco
   }
   return 'Optimal';
 }
+
+/**
+ * Tính điểm phúc lợi tổng hợp (Welfare Index: 0 - 100, 100 là tối ưu).
+ * @param {{ heartRate?: number, bodyTemp?: number, cabinTemp?: number, stressLevel?: string }} log
+ * @returns {number}
+ */
+export function calculateWelfareScore(log = {}) {
+  let score = 100;
+
+  if (log.heartRate && log.heartRate > WELFARE_THRESHOLDS.HEART_RATE_BPM.NORMAL_MAX) {
+    score -= Math.min(25, (log.heartRate - WELFARE_THRESHOLDS.HEART_RATE_BPM.NORMAL_MAX) * 1.5);
+  }
+
+  if (log.bodyTemp && log.bodyTemp > WELFARE_THRESHOLDS.BODY_TEMP_CELSIUS.NORMAL_MAX) {
+    score -= Math.min(25, (log.bodyTemp - WELFARE_THRESHOLDS.BODY_TEMP_CELSIUS.NORMAL_MAX) * 20);
+  }
+
+  if (log.cabinTemp && log.cabinTemp > WELFARE_THRESHOLDS.CABIN_TEMP_CELSIUS.HOT_WARNING) {
+    score -= Math.min(20, (log.cabinTemp - WELFARE_THRESHOLDS.CABIN_TEMP_CELSIUS.HOT_WARNING) * 5);
+  }
+
+  if (log.stressLevel === 'High') {
+    score -= 20;
+  } else if (log.stressLevel === 'Moderate') {
+    score -= 10;
+  }
+
+  return Math.max(0, Math.round(score));
+}

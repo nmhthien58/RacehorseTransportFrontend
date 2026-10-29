@@ -156,3 +156,49 @@ export function validateRestWindow(lastRestTime, currentTime = new Date()) {
     remainingAllowedMinutes: remainingMinutes,
   };
 }
+
+/**
+ * Tổng hợp thống kê phúc lợi của ngựa qua toàn bộ các mốc nhật ký của chuyến.
+ * @param {Array<Object>} [logs=[]]
+ * @returns {{ logCount: number, averageHeartRate: number|null, maxBodyTemp: number|null, alertCount: number, overallScore: number }}
+ */
+export function evaluateTripWelfareSummary(logs = []) {
+  if (!Array.isArray(logs) || logs.length === 0) {
+    return {
+      logCount: 0,
+      averageHeartRate: null,
+      maxBodyTemp: null,
+      alertCount: 0,
+      overallScore: 100,
+    };
+  }
+
+  let totalHr = 0;
+  let hrCount = 0;
+  let maxTemp = 0;
+  let alerts = 0;
+  let totalScore = 0;
+
+  logs.forEach((log) => {
+    if (typeof log.heartRate === 'number' && log.heartRate > 0) {
+      totalHr += log.heartRate;
+      hrCount += 1;
+    }
+    if (typeof log.bodyTemp === 'number' && log.bodyTemp > maxTemp) {
+      maxTemp = log.bodyTemp;
+    }
+    const anomaly = detectBiometricAnomaly(log);
+    if (anomaly.hasAnomaly) {
+      alerts += 1;
+    }
+    totalScore += calculateWelfareScore(log);
+  });
+
+  return {
+    logCount: logs.length,
+    averageHeartRate: hrCount > 0 ? Math.round(totalHr / hrCount) : null,
+    maxBodyTemp: maxTemp > 0 ? Number(maxTemp.toFixed(1)) : null,
+    alertCount: alerts,
+    overallScore: Math.round(totalScore / logs.length),
+  };
+}

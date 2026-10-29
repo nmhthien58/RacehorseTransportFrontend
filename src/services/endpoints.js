@@ -213,7 +213,6 @@ export const ENDPOINTS = {
   // 14. Người nhận ngựa (R-16, BE-15)
   RECIPIENTS: {
     UPDATE: (bookingId) => `/bookings/${bookingId}/recipient`,
-    CONFIRM_PRESENCE: (bookingId) => `/bookings/${bookingId}/confirm-presence`,
     APPROVE_ALTERNATE: (bookingId) => `/bookings/${bookingId}/approve-alternate-recipient`,
     BY_TRIP: (tripId) => `/trips/${tripId}/recipients`,
   },
@@ -222,6 +221,7 @@ export const ENDPOINTS = {
   ROUTE_PLANS: {
     GET_FOR_BOOKING: (bookingId) => `/bookings/${bookingId}/route-plans`,
     GET_BY_ID: (id) => `/route-plans/${id}`,
+    QUOTE_PREVIEW: (id) => `/route-plans/${id}/quote-preview`,
     PREVIEW: (bookingId) => `/bookings/${bookingId}/route-plans/preview`,
     CREATE: (bookingId) => `/bookings/${bookingId}/route-plans`,
     UPDATE: (id) => `/route-plans/${id}`,

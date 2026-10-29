@@ -13,12 +13,10 @@ import {
 import {
   UserOutlined,
   EditOutlined,
-  CheckCircleOutlined,
   ExclamationCircleOutlined,
   PhoneOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import dayjs from 'dayjs';
 import RecipientForm from '@components/common/RecipientForm';
 import { isRecipientValid } from '@utils/recipient';
 import recipientService from '@services/recipientService';
@@ -31,7 +29,6 @@ export default function CustomerRecipientSection({ booking, onChanged }) {
   const { t } = useTranslation();
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [confirmingPresence, setConfirmingPresence] = useState(false);
   const [approvingAlternate, setApprovingAlternate] = useState(false);
 
   const bookingId = booking?.bookingId || booking?.BookingID;
@@ -40,7 +37,6 @@ export default function CustomerRecipientSection({ booking, onChanged }) {
   const recipientPhone = booking?.recipientPhone || (isSelf ? booking?.customerPhone : '—');
   const recipientEmail = booking?.recipientEmail || (isSelf ? booking?.customerEmail : '—');
   const recipientIdNumber = booking?.recipientIdNumber || '—';
-  const confirmedAt = booking?.recipientConfirmedAt;
 
   // Khóa sửa khi chuyến đã tới mốc trả
   const dropoffArrived = ['ArrivedDestination', 'Completed'].includes(booking?.tripStatus) ||
@@ -80,19 +76,6 @@ export default function CustomerRecipientSection({ booking, onChanged }) {
       message.error(getErrorMessage(err, t('bookingForm.recipient.updateFailed', 'Không thể cập nhật người nhận')));
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleConfirmPresence = async () => {
-    setConfirmingPresence(true);
-    try {
-      await recipientService.confirmPresence(bookingId);
-      message.success(t('bookingForm.recipient.presenceSuccess', 'Đã xác nhận người nhận sẽ có mặt tại điểm giao'));
-      onChanged?.();
-    } catch (err) {
-      message.error(getErrorMessage(err, t('bookingForm.recipient.presenceFailed', 'Xác nhận có mặt thất bại')));
-    } finally {
-      setConfirmingPresence(false);
     }
   };
 
@@ -176,51 +159,6 @@ export default function CustomerRecipientSection({ booking, onChanged }) {
           }
         />
       )}
-
-      {/* Thẻ xác nhận có mặt khi sắp đến giờ giao */}
-      <div
-        style={{
-          padding: 12,
-          borderRadius: 8,
-          background: confirmedAt ? '#F0FDF4' : '#FFFBEB',
-          border: `1px solid ${confirmedAt ? '#BBF7D0' : '#FDE68A'}`,
-          marginBottom: 16,
-        }}
-      >
-        <Space style={{ width: '100%', justifyContent: 'space-between' }} wrap>
-          <div>
-            <Text strong style={{ color: confirmedAt ? '#166534' : '#92400E' }}>
-              {confirmedAt
-                ? t('bookingForm.recipient.presenceConfirmed', 'Đã xác nhận người nhận sẽ có mặt')
-                : t('bookingForm.recipient.presencePrompt', 'Xác nhận người nhận sẽ có mặt tại điểm giao')}
-            </Text>
-            <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-              {confirmedAt
-                ? `${t('bookingForm.recipient.confirmedAt', 'Xác nhận lúc')}: ${dayjs(confirmedAt).format('DD/MM/YYYY HH:mm')}`
-                : t('bookingForm.recipient.confirmHint', 'Vui lòng bấm xác nhận để tài xế và điều phối viên chuẩn bị bàn giao.')}
-            </div>
-          </div>
-          <Space>
-            {!confirmedAt && (
-              <Button
-                type="primary"
-                size="small"
-                icon={<CheckCircleOutlined />}
-                loading={confirmingPresence}
-                onClick={handleConfirmPresence}
-                style={{ backgroundColor: '#F59E0B', borderColor: '#F59E0B', color: '#0F172A', fontWeight: 600 }}
-              >
-                {t('bookingForm.recipient.confirmButton', 'Xác nhận có mặt')}
-              </Button>
-            )}
-            {!dropoffArrived && (
-              <Button size="small" onClick={handleOpenEdit}>
-                {t('bookingForm.recipient.changeRecipient', 'Đổi người nhận')}
-              </Button>
-            )}
-          </Space>
-        </Space>
-      </div>
 
       <Descriptions column={{ xs: 1, sm: 2 }} size="small">
         <Descriptions.Item label={t('bookingForm.recipient.typeLabel', 'Hình thức nhận')}>

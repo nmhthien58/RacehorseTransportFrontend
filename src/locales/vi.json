@@ -541,9 +541,11 @@
       "earliestHint": "Ngày đón sớm nhất: {{date}} (cần khoảng {{days}} ngày để duyệt đơn, đặt cọc, làm hồ sơ kiểm dịch và xếp chuyến).",
       "expressHint": "Chọn ngày đón trước {{date}} sẽ tính phụ phí gấp (Express) vì phải xử lý hồ sơ khẩn.",
       "transitHint": "Thời gian vận chuyển ước tính: khoảng {{hours}} giờ (chậm nhất {{maxHours}} giờ, ~{{days}} ngày).",
+      "deadlineFromHint": "Hạn giao trễ nhất nên chọn từ <b>{{date}}</b> trở đi (đã tính thời gian vận chuyển ước tính và {{days}} ngày dự phòng).",
+      "arrivalHint": "Dự kiến tới nơi khoảng <b>{{from}} – {{to}}</b> nếu đón ngày cuối của khoảng đón (ước tính, thời gian thực tế có thể thay đổi).",
       "deadlineHint": "Hạn giao sớm nhất có thể: {{date}}.",
-      "tooEarly": "Ngày đón phải từ {{date}} trở đi.",
-      "deadlineTooEarly": "Hạn giao phải từ {{date}} trở đi để đủ thời gian vận chuyển.",
+      "tooEarly": "Ngày đón phải từ <b>{{date}}</b> trở đi.",
+      "deadlineTooEarly": "Hạn giao phải từ <b>{{date}}</b> trở đi để đủ thời gian vận chuyển.",
       "windowSummary": "{{start}} → {{end}}"
     },
     "stats": {
@@ -1331,6 +1333,10 @@
           "Document": "Hồ sơ kiểm dịch",
           "Health": "Sức khỏe 48h",
           "Payment": "Thanh toán"
+        },
+        "code": {
+          "FitExamMissing": "Thiếu giấy khám lâm sàng đủ sức khỏe trong 48 giờ trước giờ xuất phát",
+          "FitExamPendingReview": "Giấy khám lâm sàng đang chờ chuyên viên duyệt"
         }
       }
     },
@@ -1669,7 +1675,7 @@
     },
     "warnings": {
       "DeadlineMissed": "{{bookingCode}} dự kiến tới {{eta}}, trễ hơn hạn giao {{deadline}}.",
-      "PickupOutsideWindow": "{{bookingCode}} được đón lúc {{pickupAt}}, ngoài khoảng đón {{from}} – {{to}}.",
+      "PickupOutsideWindow": "{{bookingCode}} được đón lúc {{pickupAt}}, ngoài khoảng đón <b>{{from}} – {{to}}</b>.",
       "DifferentPickupCountry": "Các đơn được đón ở nhiều nước khác nhau ({{countries}}).",
       "PickupsFarApart": "Điểm đón của {{bookingCode}} cách điểm xuất phát {{km}} km (ngưỡng {{limit}} km).",
       "Detour": "{{bookingCode}} phải đi {{routeKm}} km thay vì {{directKm}} km nếu đi thẳng (×{{ratio}}, ngưỡng ×{{limit}}).",
@@ -2394,6 +2400,7 @@
         "insuranceVetCapPercent": "Trần chi phí thú y bảo hiểm toàn giá",
         "horseMinAgeMonths": "Độ tuổi tối thiểu của ngựa",
         "deliveryWaitingFeePerHourUsd": "Phí chờ mỗi giờ",
+        "deliveryDeadlineBufferDays": "Số ngày dự phòng hạn giao (Delivery.DeadlineBufferDays)",
         "deliveryMaxWaitingHours": "Số giờ chờ tối đa tại điểm giao",
         "policyVersion": "Phiên bản chính sách hiện hành",
         "effectiveDate": "Ngày ban hành chính sách"
@@ -2415,6 +2422,8 @@
         "insuranceVetCapPercent": "Mức bồi thường tối đa chi phí thú y tính theo % giá trị thỏa thuận.",
         "horseMinAgeMonths": "Ngựa dưới số tháng tuổi này sẽ bị hệ thống từ chối vận chuyển theo quy chuẩn IATA/EU.",
         "deliveryWaitingFeePerHourUsd": "Phí chờ áp dụng cho mỗi giờ xe phải đợi tại điểm giao (sau 2 giờ miễn phí).",
+        "deliveryDeadlineBufferDays": "Số ngày cộng thêm sau thời gian vận chuyển ước tính khi gợi ý hạn giao trễ nhất cho khách (0 – 30 ngày)",
+        "deliveryDeadlineBufferDaysRange": "Số ngày dự phòng từ 0 đến 30",
         "deliveryMaxWaitingHours": "Sau số giờ này người nhận không có mặt, ngựa sẽ được đưa vào chuồng tạm lưu trú.",
         "policyVersion": "Số hiệu phiên bản hiển thị trên trang Chính sách và ghi nhận khi khách đồng ý.",
         "effectiveDate": "Ngày áp dụng phiên bản chính sách này."
@@ -2534,6 +2543,7 @@
     }
   },
   "bookingForm": {
+    "climateFee": "+10% cước vận chuyển (tính trên cước sau chiết khấu)",
     "routeNotOffered": "Công ty hiện chưa nhận tuyến này bằng đường bộ lẫn đường bay. Vui lòng chọn nước đi hoặc nước đến khác.",
     "switchedToAir": "Hiện chưa nhận vận chuyển đường bộ cho tuyến đến {{country}}, đã chuyển sang đường bay.",
     "switchedToGround": "Hiện chưa nhận vận chuyển đường bay cho tuyến này (đến {{country}}), đã chuyển sang đường bộ.",
@@ -2543,6 +2553,9 @@
     "groundOnlyNote": "Hiện chỉ nhận đường bộ",
     "pickupOnMap": "Điểm đón (tìm địa chỉ hoặc chọn trên bản đồ)",
     "dropoffOnMap": "Điểm giao (tìm địa chỉ hoặc chọn trên bản đồ)",
+    "detailedAddress": "Địa chỉ chi tiết",
+    "detailedAddressPlaceholder": "Tên trang trại, số nhà, đường, hướng dẫn xe vào…",
+    "detailedAddressRequired": "Vui lòng nhập địa chỉ chi tiết cho điểm đón và điểm giao.",
     "pickBothPoints": "Vui lòng chọn điểm đón và điểm giao trên bản đồ.",
     "routeHint": "Quãng đường đường bộ thực tế giữa hai điểm, lấy từ bản đồ. Tuyến chính xác (trạm nghỉ, cửa khẩu) do công ty lập sau khi duyệt yêu cầu.",
     "routeLoading": "Đang tính quãng đường...",
@@ -2967,6 +2980,7 @@
       "proRataRefund": "Hoàn theo tỉ lệ quãng đường chưa đi, trừ phí thủ tục không lấy lại được",
       "forceMajeureExtra": "Công ty chịu chi phí xe & nhân sự; Khách chịu chuồng tạm & thú y"
     },
+    "deadlineBufferNote": "Hạn giao trễ nhất khách chọn phải đủ thời gian vận chuyển ước tính cộng thêm {{days}} ngày dự phòng.",
     "units": {
       "days": "ngày",
       "hours": "giờ",
@@ -3298,6 +3312,16 @@
         "hint": "Phần trăm trên giá trị ngựa khách khai báo."
       }
     }
+  },
+  "fitExam": {
+    "window": "Khám trong khoảng {{window}}",
+    "windowPending": "Sẽ báo khi chuyến được lên lịch",
+    "issueDate": "Ngày cấp",
+    "issueDateRequired": "Vui lòng chọn ngày cấp giấy khám",
+    "customerNote": "Hồ sơ đã nộp cơ quan / thông quan, nhưng bạn vẫn cần nộp giấy khám lâm sàng do thú y cấp trong 48 giờ trước giờ xuất phát.",
+    "uploadOnBehalf": "Nộp hộ giấy khám",
+    "uploadTitle": "Nộp hộ giấy khám",
+    "uploadHint": "Giấy khám phải do thú y cấp trong 48 giờ trước giờ xuất phát. Sau khi tải lên, giấy vẫn cần được duyệt."
   },
   "paymentLedger": {
     "types": {

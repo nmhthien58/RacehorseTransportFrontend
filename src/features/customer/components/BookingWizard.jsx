@@ -40,7 +40,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller, useWatch } from 'react-hook-form';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import horseService from '@services/horseService';
 import bookingService from '@services/bookingService';
@@ -99,11 +99,41 @@ import {
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
+// Ghim trên bản đồ chỉ điền địa chỉ chi tiết khi ô trống hoặc khách chưa sửa tay
+const fillDetailFromMap = (prev, place) =>
+  prev.edited && prev.text.trim() ? prev : { text: (place.address || '').slice(0, 255), edited: false };
+
+/**
+ * Điểm đón / giao đường bộ: bản đồ chọn ghim + ô "Địa chỉ chi tiết" bên dưới.
+ * @param {{ labelKey: string, place: Object|null, onPick: (place: Object) => void, detail: string, onDetailChange: (text: string) => void }} props
+ */
+function GroundPointField({ labelKey, place, onPick, detail, onDetailChange }) {
+  const { t } = useTranslation();
+  return (
+    <>
+      <Form.Item label={t(labelKey)} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginBottom: 0 }}>
+        <MapPicker value={place} onChange={onPick} height={280} />
+      </Form.Item>
+      <Form.Item label={t('bookingForm.detailedAddress')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginTop: 12, marginBottom: 0 }}>
+        <TextArea
+          value={detail}
+          onChange={(e) => onDetailChange(e.target.value)}
+          maxLength={255}
+          showCount
+          autoSize={{ minRows: 2, maxRows: 4 }}
+          placeholder={t('bookingForm.detailedAddressPlaceholder')}
+        />
+      </Form.Item>
+    </>
+  );
+}
+
+
 /**
  * Component Wizard 4 bước đặt chuyến vận chuyển ngựa đua
  *
  * @param {Object} props
- * @param {(payload: Partial<import('@types/database').Booking>) => Promise<void> | void} props.onSubmit
+ * @param {(payload: Partial<import('@types/database').Booking>, estimate?: {min: number, max: number, currencyCode: string}) => Promise<void> | void} props.onSubmit
  * @param {() => void} props.onCancel
  * @param {boolean} [props.loading]
  * @param {Object} [props.initialValues]
@@ -172,6 +202,27 @@ export default function BookingWizard({
     toPlace(initialValues?.pickupAddress, initialValues?.pickupLat, initialValues?.pickupLng, initialValues?.pickupCountryCode));
   const [dropoffPlace, setDropoffPlace] = useState(() =>
     toPlace(initialValues?.dropoffAddress, initialValues?.dropoffLat, initialValues?.dropoffLng, initialValues?.dropoffCountryCode));
+  // Địa chỉ chi tiết (đường bộ) khách tự ghi cho tài xế / người nhận; edited = khách đã sửa tay thì không ghi đè khi kéo ghim
+  const initialDetail = (address) => {
+    const text = initialMode === 'Ground' && address ? address : '';
+    return { text, edited: !!text };
+  };
+  const [pickupDetail, setPickupDetail] = useState(() => initialDetail(initialValues?.pickupAddress));
+  const [dropoffDetail, setDropoffDetail] = useState(() => initialDetail(initialValues?.dropoffAddress));
+
+  // Đường bộ: phải có đủ hai ghim và địa chỉ chi tiết mới sang bước sau / gửi đơn
+  const groundPointsReady = () => {
+    if (transportMode !== 'Ground') return true;
+    if (!pickupPlace || !dropoffPlace) {
+      message.warning(t('bookingForm.pickBothPoints'));
+      return false;
+    }
+    if (!pickupDetail.text.trim() || !dropoffDetail.text.trim()) {
+      message.warning(t('bookingForm.detailedAddressRequired'));
+      return false;
+    }
+    return true;
+  };
   const [route, setRoute] = useState(null);
   const [routeLoading, setRouteLoading] = useState(false);
   // R-12: tuổi tối thiểu lấy từ chính sách (GET /api/policy)
@@ -249,14 +300,14 @@ export default function BookingWizard({
   // Chọn điểm trên bản đồ: điền địa chỉ + nước theo điểm đã chọn
   const handlePickupPick = (place) => {
     setPickupPlace(place);
-    setValue('PickupAddress', place.address);
+    setPickupDetail((prev) => fillDetailFromMap(prev, place));
     if (place.countryCode && catalog.some((c) => c.countryCode === place.countryCode)) {
       setValue('PickupCountryCode', place.countryCode);
     }
   };
   const handleDropoffPick = (place) => {
     setDropoffPlace(place);
-    setValue('DropoffAddress', place.address);
+    setDropoffDetail((prev) => fillDetailFromMap(prev, place));
     if (place.countryCode && catalog.some((c) => c.countryCode === place.countryCode && (c.groundAvailable || c.airAvailable))) {
       setValue('DropoffCountryCode', place.countryCode);
     }
@@ -343,11 +394,8 @@ export default function BookingWizard({
         if (chosenD.code !== dropoffAirportCode) setValue('DropoffAirportCode', chosenD.code);
         setValue('DropoffAddress', chosenD.name);
       }
-    } else {
-      setValue('PickupAddress', pickupPlace?.address || '');
-      setValue('DropoffAddress', dropoffPlace?.address || '');
     }
-  }, [transportMode, pickupCountry, dropoffCountry, pickupAirportCode, dropoffAirportCode, airportsByCountry, setValue, pickupPlace, dropoffPlace]);
+  }, [transportMode, pickupCountry, dropoffCountry, pickupAirportCode, dropoffAirportCode, airportsByCountry, setValue]);
 
   // Tải danh sách ngựa của khách hàng
   useEffect(() => {
@@ -474,17 +522,31 @@ export default function BookingWizard({
 
   const earliestPickup = schedule?.earliestPickupDate ? dayjs(schedule.earliestPickupDate) : null;
   const maxTransitHours = Number(schedule?.transit?.maxHours || 0);
-  // Hạn giao sớm nhất = hết ngày cuối của khoảng đón (đón muộn nhất) + thời gian vận chuyển chậm nhất (khớp backend)
+  // Số ngày dự phòng hạn giao: ưu tiên backend trả trong quote-preview, rồi policy (Delivery.DeadlineBufferDays), mặc định 2
+  const bufferDays = [schedule?.deliveryBufferDays, policy?.values?.['Delivery.DeadlineBufferDays'], policy?.delivery?.deadlineBufferDays, 2]
+    .map((v) => (v === null || v === undefined || v === '' ? Number.NaN : Number(v)))
+    .find((v) => Number.isFinite(v));
+  // Ngày nên chọn hạn giao (khớp backend earliestDeliveryDate) = hết ngày cuối của khoảng đón + thời gian vận chuyển
+  // chậm nhất, làm tròn lên hết ngày, + số ngày dự phòng. Chỉ tính theo ngày vì thời gian chỉ là ước tính.
   const latestPickup = pickupWindowEnd || pickupWindowStart;
-  const earliestDeadline = latestPickup
-    ? dayjs(latestPickup).add(1, 'day').startOf('day').add(maxTransitHours, 'hour')
-    : null;
+  const computeMinDeadlineDate = (lastPickupDay) =>
+    dayjs(lastPickupDay)
+      .add(1, 'day')
+      .startOf('day')
+      .add(maxTransitHours, 'hour')
+      .subtract(1, 'millisecond')
+      .startOf('day')
+      .add(bufferDays, 'day');
+  const earliestDeadline = latestPickup ? computeMinDeadlineDate(latestPickup) : null;
+  // Khoảng dự kiến tới nơi nếu đón ngày cuối của khoảng đón (chỉ để tham khảo)
+  const arrivalFrom = latestPickup ? dayjs(latestPickup).startOf('day').add(Number(schedule?.transit?.totalHours || 0), 'hour') : null;
+  const arrivalTo = latestPickup ? dayjs(latestPickup).add(1, 'day').startOf('day').add(maxTransitHours, 'hour').subtract(1, 'millisecond') : null;
 
-  // Đổi khoảng đón làm hạn giao đang chọn không còn đủ thời gian: tự lùi hạn giao về ngày sớm nhất hợp lệ
+  // Đổi khoảng đón làm hạn giao đang chọn sớm hơn ngày nên chọn: tự đẩy hạn giao lên ngày đó
   useEffect(() => {
     if (!earliestDeadline) return;
     const current = getValues('DeliveryDeadline');
-    if (current && dayjs(current).isBefore(earliestDeadline)) {
+    if (current && dayjs(current).isBefore(earliestDeadline, 'day')) {
       setValue('DeliveryDeadline', toLocalDateTimeString(earliestDeadline.endOf('day')));
     }
   }, [earliestDeadline?.valueOf(), getValues, setValue]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -502,9 +564,9 @@ export default function BookingWizard({
     setValue('PickupWindow', [toLocalDateTimeString(start), toLocalDateTimeString(start.add(3, 'day'))]);
     setValue(
       'DeliveryDeadline',
-      toLocalDateTimeString(start.add(Number(schedule.transit?.maxHours || 0), 'hour').add(3, 'day').endOf('day')),
+      toLocalDateTimeString(computeMinDeadlineDate(start.add(3, 'day')).endOf('day')),
     );
-  }, [schedule, preferredPickup, getValues, setValue]);
+  }, [schedule, preferredPickup, getValues, setValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Kiểm tra lịch khách chọn; trả về thông báo lỗi hoặc null
   const validateSchedule = () => {
@@ -515,9 +577,9 @@ export default function BookingWizard({
     if (earliestPickup && dayjs(start).isBefore(earliestPickup, 'day')) {
       return t('bookings.schedule.tooEarly', { date: earliestPickup.format('DD/MM/YYYY') });
     }
-    const minDeadline = dayjs(end).add(1, 'day').startOf('day').add(maxTransitHours, 'hour');
-    if (dayjs(deadline).isBefore(minDeadline)) {
-      return t('bookings.schedule.deadlineTooEarly', { date: minDeadline.format('DD/MM/YYYY HH:mm') });
+    const minDeadline = computeMinDeadlineDate(end);
+    if (dayjs(deadline).isBefore(minDeadline, 'day')) {
+      return t('bookings.schedule.deadlineTooEarly', { date: minDeadline.format('DD/MM/YYYY') });
     }
     return null;
   };
@@ -645,10 +707,7 @@ export default function BookingWizard({
         message.error('Quốc gia xuất phát và quốc gia đích không được trùng nhau.');
         return;
       }
-      if (transportMode === 'Ground' && (!pickupPlace || !dropoffPlace)) {
-        message.warning(t('bookingForm.pickBothPoints'));
-        return;
-      }
+      if (!groundPointsReady()) return;
     }
 
     if (targetStep >= 2) {
@@ -709,10 +768,7 @@ export default function BookingWizard({
         message.error('Quốc gia xuất phát và quốc gia đích không được trùng nhau.');
         return;
       }
-      if (transportMode === 'Ground' && (!pickupPlace || !dropoffPlace)) {
-        message.warning(t('bookingForm.pickBothPoints'));
-        return;
-      }
+      if (!groundPointsReady()) return;
     }
 
     if (currentStep === 1) {
@@ -774,8 +830,8 @@ export default function BookingWizard({
     const pCode = values.PickupCountryCode;
     const dCode = values.DropoffCountryCode;
 
-    let finalPickup = values.PickupAddress?.trim();
-    let finalDropoff = values.DropoffAddress?.trim();
+    let finalPickup = mode === 'Ground' ? pickupDetail.text.trim() : values.PickupAddress?.trim();
+    let finalDropoff = mode === 'Ground' ? dropoffDetail.text.trim() : values.DropoffAddress?.trim();
 
     if (mode === 'Air') {
       const pAirports = airportsByCountry[pCode] || [];
@@ -827,7 +883,7 @@ export default function BookingWizard({
     };
 
     try {
-      await onSubmit(payload);
+      await onSubmit(payload, { min: quoteMin, max: quoteMax, currencyCode });
     } catch (err) {
       const errorMsg = getErrorMessage(err, '');
       const responseData = err?.response?.data;
@@ -1079,9 +1135,13 @@ export default function BookingWizard({
                       }}
                     />
                   ) : (
-                    <Form.Item label={t('bookingForm.pickupOnMap')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginBottom: 0 }}>
-                      <MapPicker value={pickupPlace} onChange={handlePickupPick} height={280} />
-                    </Form.Item>
+                    <GroundPointField
+                      labelKey="bookingForm.pickupOnMap"
+                      place={pickupPlace}
+                      onPick={handlePickupPick}
+                      detail={pickupDetail.text}
+                      onDetailChange={(text) => setPickupDetail({ text, edited: true })}
+                    />
                   )}
                 </Card>
               </Col>
@@ -1160,9 +1220,13 @@ export default function BookingWizard({
                       }}
                     />
                   ) : (
-                    <Form.Item label={t('bookingForm.dropoffOnMap')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginBottom: 0 }}>
-                      <MapPicker value={dropoffPlace} onChange={handleDropoffPick} height={280} />
-                    </Form.Item>
+                    <GroundPointField
+                      labelKey="bookingForm.dropoffOnMap"
+                      place={dropoffPlace}
+                      onPick={handleDropoffPick}
+                      detail={dropoffDetail.text}
+                      onDetailChange={(text) => setDropoffDetail({ text, edited: true })}
+                    />
                   )}
                 </Card>
               </Col>
@@ -1318,9 +1382,12 @@ export default function BookingWizard({
                     </div>
                     {earliestDeadline && (
                       <div>
-                        {t('bookings.schedule.deadlineHint', {
-                          date: earliestDeadline.format('DD/MM/YYYY HH:mm'),
-                        })}
+                        <Trans i18nKey="bookings.schedule.deadlineFromHint" values={{ date: earliestDeadline.format('DD/MM/YYYY'), days: bufferDays }} components={{ b: <strong /> }} />
+                      </div>
+                    )}
+                    {arrivalFrom && arrivalTo && (
+                      <div>
+                        <Trans i18nKey="bookings.schedule.arrivalHint" values={{ from: arrivalFrom.format('DD/MM'), to: arrivalTo.format('DD/MM') }} components={{ b: <strong /> }} />
                       </div>
                     )}
                   </div>
@@ -1371,7 +1438,7 @@ export default function BookingWizard({
                         onChange={(date) => field.onChange(date ? toLocalDateTimeString(date.endOf('day')) : null)}
                         disabledDate={(current) =>
                           current &&
-                          current.endOf('day') < (earliestDeadline || earliestPickup || dayjs())
+                          current.startOf('day') < (earliestDeadline || earliestPickup || dayjs()).startOf('day')
                         }
                         format="DD/MM/YYYY"
                         size="large"
@@ -1426,6 +1493,10 @@ export default function BookingWizard({
                         <Text type="secondary" style={{ fontSize: 12.5, lineHeight: 1.45, display: 'block' }}>
                           Duy trì ổn định 18°C - 22°C suốt hành trình, đảm bảo hô hấp và sức bền cho ngựa thi đấu.
                         </Text>
+                        {/* Phụ phí SUR_CLIMATE trong Bảng giá chung (hiện 10%) */}
+                        <Tag color="orange" style={{ marginTop: 8 }}>
+                          {t('bookingForm.climateFee')}
+                        </Tag>
                       </div>
                     );
                   }}
@@ -1648,7 +1719,10 @@ export default function BookingWizard({
                                     }}
                                   >
                                     <div style={{ fontSize: 12, fontWeight: 600, color: '#0f172a' }}>
-                                      {stall.title.split(' ')[0]}
+                                      {stall.title}
+                                    </div>
+                                    <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                                      {stall.priceNote}
                                     </div>
                                     <Tag color={isStallSelected ? 'gold' : 'default'} style={{ margin: '4px 0 0', fontSize: 10 }}>
                                       {stall.badge}
@@ -1787,7 +1861,7 @@ export default function BookingWizard({
                 <div style={{ marginBottom: 10 }}>
                   <Text type="secondary" style={{ fontSize: 12 }}>Điểm xuất phát ({pickupCountry}):</Text>
                   <div style={{ fontSize: 13.5, fontWeight: 600, color: '#0f172a' }}>
-                    {getValues('PickupAddress')}
+                    {transportMode === 'Ground' ? pickupDetail.text : getValues('PickupAddress')}
                     {transportMode === 'Ground' && getValues('PickupCity') ? `, ${getValues('PickupCity')}` : ''}
                   </div>
                 </div>
@@ -1795,7 +1869,7 @@ export default function BookingWizard({
                 <div style={{ marginBottom: 10 }}>
                   <Text type="secondary" style={{ fontSize: 12 }}>Điểm giao đến ({dropoffCountry}):</Text>
                   <div style={{ fontSize: 13.5, fontWeight: 600, color: '#0f172a' }}>
-                    {getValues('DropoffAddress')}
+                    {transportMode === 'Ground' ? dropoffDetail.text : getValues('DropoffAddress')}
                     {transportMode === 'Ground' && getValues('DropoffCity') ? `, ${getValues('DropoffCity')}` : ''}
                   </div>
                 </div>

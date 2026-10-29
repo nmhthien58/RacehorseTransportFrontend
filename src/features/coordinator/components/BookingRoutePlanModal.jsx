@@ -211,6 +211,9 @@ export default function BookingRoutePlanModal({ open, booking, onClose, onSucces
     return [first, ...stops.map((s) => ({ ...s, lat: s.lat, lng: s.lng })), last];
   }, [preview, stops]);
 
+  // Đang tính lại hoặc kết quả cũ không khớp số mốc: vẽ tạm đường thẳng nét đứt qua các mốc hiện tại
+  const previewStale = previewing || (preview?.stops?.length || 0) !== mapStops.length;
+
   const legs = useMemo(
     () => (preview?.stops || []).slice(1).map((s) => ({ distanceKm: Number(s.distanceKmFromPrevious || 0), durationHours: s.durationHoursFromPrevious })),
     [preview],
@@ -454,11 +457,11 @@ export default function BookingRoutePlanModal({ open, booking, onClose, onSucces
           {mapStops.length >= 2 ? (
             <RouteMap
               stops={mapStops}
-              polyline={preview?.polyline}
-              legs={legs}
-              totalDistanceKm={preview?.totalDistanceKm}
-              totalDurationHours={preview?.estimatedHours}
-              isEstimate={preview?.isEstimate}
+              polyline={previewStale ? undefined : preview?.polyline}
+              legs={previewStale ? [] : legs}
+              totalDistanceKm={previewStale ? undefined : preview?.totalDistanceKm}
+              totalDurationHours={previewStale ? undefined : preview?.estimatedHours}
+              isEstimate={previewStale || preview?.isEstimate}
               editable={canEdit}
               showList={false}
               height={380}

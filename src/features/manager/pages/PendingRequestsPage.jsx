@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  Alert,
   Avatar,
   Badge,
   Button,
@@ -39,6 +38,8 @@ import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import RejectBookingModal from '@features/manager/components/RejectBookingModal';
 import ApproveBookingModal from '@features/manager/components/ApproveBookingModal';
 import BookingDecisionButtons from '@features/manager/components/BookingDecisionButtons';
+import { formatBookingCost } from '@utils/bookingCost';
+import RouteMap from '@components/common/map/RouteMap';
 
 const { Text, Title } = Typography;
 
@@ -67,8 +68,7 @@ function getExpiryText(createdAt) {
  * @returns {JSX.Element}
  */
 export default function PendingRequestsPage() {
-  const { t, i18n } = useTranslation();
-  const isEn = (i18n.language || 'vi').toLowerCase().startsWith('en');
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // ID đơn được chọn xem chi tiết (nếu null -> hiển thị danh sách)
@@ -201,69 +201,15 @@ export default function PendingRequestsPage() {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }, [activeBooking]);
 
-  // Thư đề nghị vận chuyển chính thức từ khách hàng gửi tới Ban Quản lý
-  const activeLetter = useMemo(() => {
-    if (!activeBooking) return null;
-
-    // Thư được dựng từ dữ liệu đơn thật (backend không lưu thư riêng)
-    return {
-      id: `LTR-${activeBooking.bookingCode}`,
-      bookingId: activeBooking.bookingId,
-      bookingCode: activeBooking.bookingCode,
-      title: `Thư yêu cầu vận chuyển: ${activeBooking.bookingCode}`,
-      titleEn: `Transport Request Letter: ${activeBooking.bookingCode}`,
-      customerName: activeBooking.customerName || 'Khách hàng',
-      customerEmail: activeBooking.customerEmail || '—',
-      customerPhone: activeBooking.customerPhone || '—',
-      pickupAddress: activeBooking.pickupAddress || 'Việt Nam',
-      dropoffAddress: activeBooking.dropoffAddress || 'Điểm đến quốc tế',
-      transportMode: activeBooking.transportMode || 'Air',
-      totalHorses: activeBooking.totalHorses || 1,
-      estimatedCost: activeBooking.estimatedCost || 0,
-      pickupWindowStart: activeBooking.pickupWindowStart,
-      pickupWindowEnd: activeBooking.pickupWindowEnd,
-      deliveryDeadline: activeBooking.deliveryDeadline,
-      isRead: true,
-      createdAt: activeBooking.createdAt || new Date().toISOString(),
-      contentVi: `Kính gửi Ban Quản Lý & Điều Phối Logistics Racehorse Transport,
-
-Tôi là ${activeBooking.customerName || 'Khách hàng'}. Tôi vừa gửi yêu cầu đặt chuyến vận chuyển mã số #${activeBooking.bookingCode} trên hệ thống.
-
-Thông tin tóm tắt lộ trình:
-- Địa điểm đón: ${activeBooking.pickupAddress || 'Việt Nam'}
-- Địa điểm giao: ${activeBooking.dropoffAddress || 'Điểm đến quốc tế'}
-- Phương thức vận chuyển: ${activeBooking.transportMode || 'Air'}
-- Số lượng: ${activeBooking.totalHorses || 1} cá thể ngựa
-- Khoảng ngày sẵn sàng đón: ${formatPickupWindow(activeBooking)}
-- Hạn giao trễ nhất: ${formatDeliveryDeadline(activeBooking)}
-- Ước tính cước phí dự kiến: ${Number(activeBooking.estimatedCost || 0).toLocaleString()} USD
-${activeBooking.specialInstructions ? `- Yêu cầu chăm sóc đặc biệt: "${activeBooking.specialInstructions}"` : ''}
-
-Kính đề nghị Ban Quản lý kiểm tra hồ sơ, phân bổ chuyên viên kiểm dịch phụ trách và xem xét phê duyệt đơn.
-
-Trân trọng cảm ơn,
-${activeBooking.customerName || 'Khách hàng'}`,
-      contentEn: `Dear Racehorse Transport Logistics & Fleet Management,
-
-I hereby submit this official request for horse transport under reference #${activeBooking.bookingCode}.
-
-Trip summary:
-- Origin: ${activeBooking.pickupAddress || 'Origin'}
-- Destination: ${activeBooking.dropoffAddress || 'Destination'}
-- Transport Method: ${activeBooking.transportMode || 'Air'}
-- Number of horses: ${activeBooking.totalHorses || 1}
-- Pickup window: ${formatPickupWindow(activeBooking)}
-- Latest delivery: ${formatDeliveryDeadline(activeBooking)}
-- Estimated Freight: ${Number(activeBooking.estimatedCost || 0).toLocaleString()} USD
-${activeBooking.specialInstructions ? `- Special Care: "${activeBooking.specialInstructions}"` : ''}
-
-Please review this request and assign specialist staff to process our transport schedule.
-
-Kind regards,
-${activeBooking.customerName || 'Customer'}`,
-    };
+  // Điểm đón / giao khách chọn trên bản đồ (đơn cũ không có tọa độ thì không vẽ)
+  const requestStops = useMemo(() => {
+    const b = activeBooking;
+    if (!b || b.pickupLat == null || b.pickupLng == null || b.dropoffLat == null || b.dropoffLng == null) return [];
+    return [
+      { lat: Number(b.pickupLat), lng: Number(b.pickupLng), stopType: 'Origin', name: b.pickupAddress, countryCode: b.pickupCountryCode },
+      { lat: Number(b.dropoffLat), lng: Number(b.dropoffLng), stopType: 'Destination', name: b.dropoffAddress, countryCode: b.dropoffCountryCode },
+    ];
   }, [activeBooking]);
-
 
   // Xử lý phê duyệt
   const handleOpenApprove = () => {
@@ -273,6 +219,10 @@ ${activeBooking.customerName || 'Customer'}`,
   const handleConfirmApprove = async (values) => {
     try {
       setActionLoading(true);
+      // Chốt giá trị thỏa thuận từng con ngay ở bước duyệt sơ bộ
+      if (values.horseValues?.length) {
+        await bookingService.updateHorseValues(activeBooking.bookingId, { horses: values.horseValues });
+      }
       await bookingService.approveBooking(activeBooking.bookingId, {
         specialistUserId: values.specialistUserId,
       });
@@ -403,54 +353,6 @@ ${activeBooking.customerName || 'Customer'}`,
           {/* CỘT TRÁI (2/3): THÔNG TIN KHÁCH, LỘ TRÌNH, NGỰA, YÊU CẦU ĐẶC BIỆT, TIMELINE */}
           <Col xs={24} lg={16}>
             <Space direction="vertical" size={16} style={{ width: '100%' }}>
-              {/* THƯ ĐỀ NGHỊ VẬN CHUYỂN CHÍNH THỨC TỪ KHÁCH HÀNG (CUSTOMER REQUEST LETTER) */}
-              {activeLetter && (
-                <Card
-                  bordered
-                  style={{
-                    borderRadius: 14,
-                    borderColor: '#fde68a',
-                    backgroundColor: '#fffdf5',
-                    boxShadow: '0 2px 8px rgba(245, 158, 11, 0.08)',
-                  }}
-                  styles={{ body: { padding: '20px 24px' } }}
-                >
-                  <Flex justify="space-between" align="center" style={{ marginBottom: 14 }}>
-                    <Flex align="center" gap={10}>
-                      <span style={{ fontSize: 24 }}>📜</span>
-                      <div>
-                        <strong style={{ fontSize: 16, color: '#92400e' }}>
-                          {isEn ? (activeLetter.titleEn || activeLetter.title) : activeLetter.title}
-                        </strong>
-                        <div style={{ fontSize: 12, color: '#b45309' }}>
-                          {isEn ? 'Official Customer Request Letter' : 'Thư đề nghị vận chuyển chính thức từ khách hàng'} · {dayjs(activeLetter.createdAt).format('HH:mm - DD/MM/YYYY')}
-                        </div>
-                      </div>
-                    </Flex>
-                    <Tag color="gold" style={{ fontWeight: 700, borderRadius: 6 }}>
-                      {isEn ? 'Official Letter' : 'Thư chính thức'}
-                    </Tag>
-                  </Flex>
-
-                  <div
-                    style={{
-                      whiteSpace: 'pre-line',
-                      fontFamily: 'serif',
-                      fontSize: 14,
-                      lineHeight: 1.7,
-                      color: '#1e293b',
-                      backgroundColor: '#ffffff',
-                      padding: '18px 22px',
-                      borderRadius: 10,
-                      border: '1px solid #fef3c7',
-                      boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.02)',
-                    }}
-                  >
-                    {isEn ? (activeLetter.contentEn || activeLetter.contentVi) : activeLetter.contentVi}
-                  </div>
-                </Card>
-              )}
-
               {/* 1. Customer Information Card */}
               <Card
                 bordered
@@ -530,6 +432,16 @@ ${activeBooking.customerName || 'Customer'}`,
                   {t('manager.pendingRequests.transportInfo').toUpperCase()}
                 </Text>
 
+                {/* Bản đồ điểm đón / giao (đường thẳng nét đứt, chưa phải tuyến thật) */}
+                {requestStops.length === 2 && (
+                  <div style={{ marginBottom: 16 }}>
+                    <RouteMap stops={requestStops} isEstimate height={300} />
+                    <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 6 }}>
+                      Đường nét đứt nối điểm đón và điểm giao, chưa phải tuyến thật; tuyến cụ thể do điều phối lập sau khi duyệt.
+                    </Text>
+                  </div>
+                )}
+
                 {/* Tuyến đường trực quan */}
                 <div
                   style={{
@@ -574,9 +486,9 @@ ${activeBooking.customerName || 'Customer'}`,
                   </div>
                 </div>
 
-                {/* 3 thông số cột */}
-                <Row gutter={16}>
-                  <Col span={8}>
+                {/* Thông số đơn */}
+                <Row gutter={[16, 12]}>
+                  <Col xs={12} md={8}>
                     <Text type="secondary" style={{ fontSize: 11, fontWeight: 700, display: 'block' }}>
                       {t('manager.pendingRequests.requestedDate')}
                     </Text>
@@ -584,7 +496,7 @@ ${activeBooking.customerName || 'Customer'}`,
                       {formatPickupWindow(activeBooking)}
                     </Text>
                   </Col>
-                  <Col span={8}>
+                  <Col xs={12} md={8}>
                     <Text type="secondary" style={{ fontSize: 11, fontWeight: 700, display: 'block' }}>
                       {t('manager.pendingRequests.numberOfHorses')}
                     </Text>
@@ -592,12 +504,28 @@ ${activeBooking.customerName || 'Customer'}`,
                       {activeBooking.totalHorses} {t('manager.bookings.columns.horses').toLowerCase()}
                     </Text>
                   </Col>
-                  <Col span={8}>
+                  <Col xs={12} md={8}>
                     <Text type="secondary" style={{ fontSize: 11, fontWeight: 700, display: 'block' }}>
                       {t('manager.pendingRequests.handling')}
                     </Text>
                     <Text strong style={{ fontSize: 14, color: '#0f172a' }}>
                       {activeBooking.requiresClimateControl ? 'Climate-controlled' : 'Standard'}
+                    </Text>
+                  </Col>
+                  <Col xs={12} md={8}>
+                    <Text type="secondary" style={{ fontSize: 11, fontWeight: 700, display: 'block' }}>
+                      Hạn giao trễ nhất
+                    </Text>
+                    <Text strong style={{ fontSize: 14, color: '#0f172a' }}>
+                      {formatDeliveryDeadline(activeBooking)}
+                    </Text>
+                  </Col>
+                  <Col xs={12} md={8}>
+                    <Text type="secondary" style={{ fontSize: 11, fontWeight: 700, display: 'block' }}>
+                      Khoảng giá ước tính
+                    </Text>
+                    <Text strong style={{ fontSize: 14, color: '#0f172a' }}>
+                      {formatBookingCost(activeBooking)}
                     </Text>
                   </Col>
                 </Row>
@@ -936,6 +864,7 @@ ${activeBooking.customerName || 'Customer'}`,
         <ApproveBookingModal
           open={approveModalOpen}
           bookingCode={activeBooking.bookingCode}
+          horses={activeBooking.horses || []}
           specialists={specialists}
           confirmLoading={actionLoading}
           onConfirm={handleConfirmApprove}
@@ -961,25 +890,6 @@ ${activeBooking.customerName || 'Customer'}`,
       <PageHeader
         title={t('manager.pendingRequests.title')}
         subtitle={t('manager.pendingRequests.subtitle')}
-      />
-
-      {/* Thông báo hộp thư yêu cầu vận chuyển */}
-      <Alert
-        type="info"
-        showIcon
-        icon={<span style={{ fontSize: 20 }}>📬</span>}
-        message={<strong style={{ fontSize: 14.5 }}>{isEn ? 'Official Transport Request Letters Inbox' : 'Hộp thư yêu cầu vận chuyển chính thức từ khách hàng'}</strong>}
-        description={
-          isEn
-            ? 'Whenever a customer submits a transport booking, their official request letter is delivered here. Click on any booking below to inspect the attached letter and process approval.'
-            : 'Mỗi khi khách hàng gửi đơn đặt chuyến mới, thư đề nghị vận chuyển chính thức sẽ được gửi trực tiếp đến đây. Bấm vào bất kỳ đơn nào bên dưới để xem toàn văn thư và phê duyệt.'
-        }
-        style={{
-          marginBottom: 16,
-          borderRadius: 14,
-          backgroundColor: '#eff6ff',
-          border: '1.5px solid #bfdbfe',
-        }}
       />
 
       {/* Thanh tìm kiếm và bộ lọc nhanh */}
@@ -1116,9 +1026,9 @@ ${activeBooking.customerName || 'Customer'}`,
                 dataIndex: 'estimatedCost',
                 key: 'estimatedCost',
                 align: 'right',
-                render: (cost) => (
+                render: (_, rec) => (
                   <Text strong style={{ fontSize: 13, color: '#0f172a' }}>
-                    ${cost ? cost.toLocaleString() : '—'}
+                    {formatBookingCost(rec)}
                   </Text>
                 ),
               },

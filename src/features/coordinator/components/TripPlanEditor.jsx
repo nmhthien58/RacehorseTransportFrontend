@@ -29,12 +29,15 @@ import {
   ReloadOutlined,
   CopyOutlined,
   CompassOutlined,
+  EnvironmentOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedule';
 import tripService from '@services/tripService';
+import RouteMap from '@components/common/map/RouteMap';
 import routePlanService from '@services/routePlanService';
+import geoService from '@services/geoService';
 import StatusTag from '@components/common/StatusTag';
 import RouteSuggestionPanel from '@features/coordinator/components/RouteSuggestionPanel';
 import StallMap from '@features/coordinator/components/StallMap';
@@ -90,6 +93,9 @@ function buildDefaultCheckpoints(horses, period) {
  * @param {Object} plan - routePlan: stops[] gồm name, stopType, address, countryCode, restMinutes
  * @returns {Object}
  */
+// Loại mốc của chuyến -> loại mốc của bản đồ (màu marker)
+const TRIP_STOP_MAP_TYPES = { PickUp: 'Pickup', DropOff: 'Dropoff' };
+
 function toApprovedRoute(plan) {
   return {
     bookingId: plan.bookingId,
@@ -97,11 +103,17 @@ function toApprovedRoute(plan) {
     totalDistanceKm: plan.totalDistanceKm,
     estimatedHours: plan.estimatedHours,
     transitCountryCodes: plan.transitCountryCodes || [],
+    // Giữ mốc gốc + đường vẽ để xem lại bản đồ tuyến đã duyệt
+    stops: plan.stops || [],
+    polyline: plan.polyline,
+    isEstimate: plan.isEstimate,
     checkpoints: (plan.stops || []).map((stop) => ({
       checkpointName: stop.name,
       checkpointType: stop.stopType,
       address: stop.address,
       countryCode: stop.countryCode,
+      latitude: stop.lat,
+      longitude: stop.lng,
       mandatoryRestMinutes: stop.restMinutes || 0,
     })),
   };
@@ -185,6 +197,40 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
   const [saving, setSaving] = useState(false);
   const [suggestion, setSuggestion] = useState(null);
   const [suggesting, setSuggesting] = useState(false);
+
+  // Bản đồ các mốc của chuyến: mốc có tọa độ (từ gợi ý lộ trình / tuyến đã duyệt), vẽ đường bộ qua /geo/route
+  const tripMapStops = useMemo(
+    () =>
+      checkpoints
+        .filter((c) => c.latitude != null && c.longitude != null)
+        .map((c) => ({
+          key: c.key,
+          lat: Number(c.latitude),
+          lng: Number(c.longitude),
+          stopType: TRIP_STOP_MAP_TYPES[c.checkpointType] || c.checkpointType,
+          name: c.checkpointName,
+        })),
+    [checkpoints],
+  );
+  const tripMapKey = tripMapStops.map((p) => `${p.lat},${p.lng}`).join('|');
+  const [tripRoute, setTripRoute] = useState({ key: null, data: null });
+  useEffect(() => {
+    if (tripMapStops.length < 2) return undefined;
+    let active = true;
+    const timer = setTimeout(() => {
+      geoService
+        .route(tripMapStops.map((p) => ({ lat: p.lat, lng: p.lng })))
+        .then((res) => active && setTripRoute({ key: tripMapKey, data: unwrapData(res) }))
+        .catch(() => active && setTripRoute({ key: tripMapKey, data: null }));
+    }, 500);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+    // tripMapKey đại diện cho tọa độ các mốc
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tripMapKey]);
+  const tripRouteData = tripRoute.key === tripMapKey ? tripRoute.data : null;
 
   // Các đơn có ngựa đang được chọn: dùng cho cột "Đơn" của mốc Điểm đón / Điểm trả
   const selectedBookings = useMemo(() => {
@@ -332,6 +378,8 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
         plannedTime,
         mandatoryRestMinutes: Number(cp.mandatoryRestMinutes) || 0,
         bookingId: BOOKING_STOP_TYPES.includes(type) ? bookingId : null,
+        latitude: cp.latitude ?? null,
+        longitude: cp.longitude ?? null,
       };
     });
 
@@ -413,6 +461,53 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
   const updateCheckpoint = (key, patch) =>
     setCheckpoints((prev) => prev.map((c) => (c.key === key ? { ...c, ...patch } : c)));
 
+  // Thao tác trên bản đồ chuyến: kéo ghim để dời mốc, bấm bản đồ để thêm trạm nghỉ
+  // hoặc đặt vị trí cho mốc đang chờ (mốc nhập tay / cửa khẩu chưa có tọa độ)
+  const [placingKey, setPlacingKey] = useState(null);
+  const fillAddress = async (key, lat, lng) => {
+    try {
+      const place = unwrapData(await geoService.reverse(lat, lng));
+      if (place?.displayName) updateCheckpoint(key, { address: place.displayName.slice(0, 255) });
+    } catch {
+      // Không lấy được địa chỉ: giữ tọa độ, coordinator tự nhập địa chỉ
+    }
+  };
+  const moveCheckpointOnMap = (index, point) => {
+    const key = tripMapStops[index]?.key;
+    if (!key) return;
+    updateCheckpoint(key, { latitude: point.lat, longitude: point.lng });
+    void fillAddress(key, point.lat, point.lng);
+  };
+  const addCheckpointOnMap = (point) => {
+    if (placingKey) {
+      updateCheckpoint(placingKey, { latitude: point.lat, longitude: point.lng });
+      void fillAddress(placingKey, point.lat, point.lng);
+      setPlacingKey(null);
+      return;
+    }
+    // Trạm nghỉ mới chèn trước mốc cuối, giờ dự kiến ở giữa hai mốc kề
+    const key = `cp-map-${Date.now()}`;
+    setCheckpoints((prev) => {
+      const at = Math.max(prev.length - 1, 0);
+      const before = prev[at - 1]?.plannedTime;
+      const after = prev[at]?.plannedTime;
+      const plannedTime = before && after ? dayjs((before.valueOf() + after.valueOf()) / 2) : before || after || null;
+      const stop = {
+        key,
+        checkpointName: `Trạm nghỉ ${prev.filter((c) => c.checkpointType === 'RestStop').length + 1}`,
+        checkpointType: 'RestStop',
+        address: '',
+        plannedTime,
+        mandatoryRestMinutes: 30,
+        bookingId: null,
+        latitude: point.lat,
+        longitude: point.lng,
+      };
+      return [...prev.slice(0, at), stop, ...prev.slice(at)];
+    });
+    void fillAddress(key, point.lat, point.lng);
+  };
+
   // Đổi loại mốc: chỉ Điểm đón / Điểm trả mới gắn đơn
   const changeCheckpointType = (key, type) =>
     updateCheckpoint(key, BOOKING_STOP_TYPES.includes(type) ? { checkpointType: type } : { checkpointType: type, bookingId: null });
@@ -442,6 +537,8 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
           plannedTime: dayjs(c.plannedTime),
           mandatoryRestMinutes: c.mandatoryRestMinutes,
           bookingId: c.bookingId,
+          latitude: c.latitude ?? null,
+          longitude: c.longitude ?? null,
         })),
       );
       if (result.suggestedEndDate) setPeriod([period[0], dayjs(result.suggestedEndDate)]);
@@ -497,6 +594,8 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
       plannedTime: toIsoString(c.plannedTime),
       mandatoryRestMinutes: Number(c.mandatoryRestMinutes) || 0,
       bookingId: BOOKING_STOP_TYPES.includes(c.checkpointType) ? c.bookingId || null : null,
+      latitude: c.latitude ?? null,
+      longitude: c.longitude ?? null,
     })),
   });
 
@@ -947,6 +1046,23 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
                     </Flex>
                   ))}
                 </div>
+
+                {selectedRoutePlan.stops.length >= 2 && (
+                  <div style={{ marginTop: 12 }}>
+                    <RouteMap
+                      stops={selectedRoutePlan.stops}
+                      polyline={selectedRoutePlan.polyline}
+                      legs={selectedRoutePlan.stops.slice(1).map((st) => ({
+                        distanceKm: Number(st.distanceKmFromPrevious || 0),
+                        durationHours: st.durationHoursFromPrevious,
+                      }))}
+                      totalDistanceKm={selectedRoutePlan.totalDistanceKm}
+                      totalDurationHours={selectedRoutePlan.estimatedHours}
+                      isEstimate={selectedRoutePlan.isEstimate}
+                      height={300}
+                    />
+                  </div>
+                )}
               </div>
             ) : (
               <Text type="secondary" style={{ fontSize: 12 }}>
@@ -1008,7 +1124,17 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
             {
               title: t('tripPlan.fields.address'),
               render: (_, c) => (
-                <Input size="small" maxLength={255} value={c.address} onChange={(e) => updateCheckpoint(c.key, { address: e.target.value })} />
+                <Space.Compact style={{ width: '100%' }}>
+                  <Input size="small" maxLength={255} value={c.address} onChange={(e) => updateCheckpoint(c.key, { address: e.target.value })} />
+                  <Button
+                    size="small"
+                    type={placingKey === c.key ? 'primary' : 'default'}
+                    icon={<EnvironmentOutlined />}
+                    title="Chọn vị trí mốc trên bản đồ"
+                    onClick={() => setPlacingKey((k) => (k === c.key ? null : c.key))}
+                    danger={c.latitude == null && placingKey !== c.key}
+                  />
+                </Space.Compact>
               ),
             },
             {
@@ -1049,6 +1175,33 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
         <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
           {t('tripPlan.hints.route')}
         </Text>
+        {tripMapStops.length >= 1 && (
+          <div style={{ marginTop: 12 }}>
+            <RouteMap
+              stops={tripMapStops}
+              polyline={tripRouteData?.polyline}
+              legs={(tripRouteData?.legs || []).map((l) => ({ distanceKm: l.distanceKm, durationHours: l.durationHours }))}
+              totalDistanceKm={tripRouteData?.totalDistanceKm}
+              totalDurationHours={tripRouteData?.totalDurationHours}
+              isEstimate={!tripRouteData || tripRouteData.isEstimate}
+              height={320}
+              editable
+              showList={false}
+              onAddStop={addCheckpointOnMap}
+              onMoveStop={moveCheckpointOnMap}
+            />
+            <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 6 }}>
+              {placingKey
+                ? 'Bấm lên bản đồ để đặt vị trí cho mốc đang chọn.'
+                : 'Bấm bản đồ để thêm trạm nghỉ, kéo ghim để dời mốc. Mốc chưa có vị trí (nút ghim đỏ ở cột Địa chỉ) thì bấm nút đó rồi bấm lên bản đồ.'}
+            </Text>
+            {tripMapStops.length < checkpoints.length && (
+              <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 6 }}>
+                Mốc nhập tay chưa có tọa độ không hiện trên bản đồ.
+              </Text>
+            )}
+          </div>
+        )}
       </Card>
 
       <Flex justify="flex-end" gap={8} wrap="wrap">

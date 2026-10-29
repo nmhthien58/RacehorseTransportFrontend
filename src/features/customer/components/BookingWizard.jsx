@@ -104,24 +104,30 @@ const fillDetailFromMap = (prev, place) =>
   prev.edited && prev.text.trim() ? prev : { text: (place.address || '').slice(0, 255), edited: false };
 
 /**
- * Ô "Địa chỉ chi tiết" dưới bản đồ (đường bộ).
- * @param {{ value: string, onChange: (text: string) => void }} props
+ * Điểm đón / giao đường bộ: bản đồ chọn ghim + ô "Địa chỉ chi tiết" bên dưới.
+ * @param {{ labelKey: string, place: Object|null, onPick: (place: Object) => void, detail: string, onDetailChange: (text: string) => void }} props
  */
-function DetailedAddressField({ value, onChange }) {
+function GroundPointField({ labelKey, place, onPick, detail, onDetailChange }) {
   const { t } = useTranslation();
   return (
-    <Form.Item label={t('bookingForm.detailedAddress')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginTop: 12, marginBottom: 0 }}>
-      <TextArea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        maxLength={255}
-        showCount
-        autoSize={{ minRows: 2, maxRows: 4 }}
-        placeholder={t('bookingForm.detailedAddressPlaceholder')}
-      />
-    </Form.Item>
+    <>
+      <Form.Item label={t(labelKey)} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginBottom: 0 }}>
+        <MapPicker value={place} onChange={onPick} height={280} />
+      </Form.Item>
+      <Form.Item label={t('bookingForm.detailedAddress')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginTop: 12, marginBottom: 0 }}>
+        <TextArea
+          value={detail}
+          onChange={(e) => onDetailChange(e.target.value)}
+          maxLength={255}
+          showCount
+          autoSize={{ minRows: 2, maxRows: 4 }}
+          placeholder={t('bookingForm.detailedAddressPlaceholder')}
+        />
+      </Form.Item>
+    </>
   );
 }
+
 
 /**
  * Component Wizard 4 bước đặt chuyến vận chuyển ngựa đua
@@ -1115,12 +1121,13 @@ export default function BookingWizard({
                       }}
                     />
                   ) : (
-                    <>
-                    <Form.Item label={t('bookingForm.pickupOnMap')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginBottom: 0 }}>
-                      <MapPicker value={pickupPlace} onChange={handlePickupPick} height={280} />
-                    </Form.Item>
-                    <DetailedAddressField value={pickupDetail.text} onChange={(text) => setPickupDetail({ text, edited: true })} />
-                    </>
+                    <GroundPointField
+                      labelKey="bookingForm.pickupOnMap"
+                      place={pickupPlace}
+                      onPick={handlePickupPick}
+                      detail={pickupDetail.text}
+                      onDetailChange={(text) => setPickupDetail({ text, edited: true })}
+                    />
                   )}
                 </Card>
               </Col>
@@ -1199,12 +1206,13 @@ export default function BookingWizard({
                       }}
                     />
                   ) : (
-                    <>
-                    <Form.Item label={t('bookingForm.dropoffOnMap')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginBottom: 0 }}>
-                      <MapPicker value={dropoffPlace} onChange={handleDropoffPick} height={280} />
-                    </Form.Item>
-                    <DetailedAddressField value={dropoffDetail.text} onChange={(text) => setDropoffDetail({ text, edited: true })} />
-                    </>
+                    <GroundPointField
+                      labelKey="bookingForm.dropoffOnMap"
+                      place={dropoffPlace}
+                      onPick={handleDropoffPick}
+                      detail={dropoffDetail.text}
+                      onDetailChange={(text) => setDropoffDetail({ text, edited: true })}
+                    />
                   )}
                 </Card>
               </Col>

@@ -342,40 +342,33 @@ export default function PolicyPage() {
                   2. {t('policy.sections.sec2', 'Quy trình đặt chuyến và báo giá')}
                 </Title>
                 <ol style={{ paddingLeft: 20, margin: 0, color: '#44403c', lineHeight: 1.8 }}>
-                  <li style={{ marginBottom: 12 }}>
-                    <Text strong style={{ color: '#1c1917' }}>{t('policy.sec2.step1_title', 'Gửi yêu cầu:')}</Text>{' '}
-                    {t('policy.sec2.step1_desc', 'Khách chọn điểm đón, điểm giao trên bản đồ, chọn ngựa, khoảng ngày ngựa sẵn sàng được đón và hạn giao trễ nhất. Hệ thống hiển thị khoảng giá ước tính (thấp nhất – cao nhất) để tham khảo, không phải giá cuối cùng. Ở bước này Khách chưa phải trả tiền.')}
-                  </li>
-                  <li style={{ marginBottom: 12 }}>
-                    <Text strong style={{ color: '#1c1917' }}>{t('policy.sec2.step2_title', 'Duyệt sơ bộ:')}</Text>{' '}
-                    {t('policy.sec2.step2_desc', 'Quản lý kiểm tra tính khả thi của yêu cầu (ngựa đủ điều kiện, tuyến phục vụ, lịch xe). Yêu cầu có thể bị từ chối kèm lý do cụ thể.')}
-                  </li>
-                  <li style={{ marginBottom: 12 }}>
-                    <Text strong style={{ color: '#1c1917' }}>{t('policy.sec2.step3_title', 'Lập tuyến và báo giá chốt:')}</Text>{' '}
-                    {t('policy.sec2.step3_desc', 'Công ty lập lộ trình cụ thể (các điểm dừng nghỉ, cửa khẩu, nước quá cảnh) và gửi báo giá chốt qua ứng dụng và email. Báo giá chốt bao gồm: cước theo quãng đường thực tế, hạng chuồng, phí thủ tục từng nước, bảo hiểm và phụ phí gấp (nếu có).')}
-                  </li>
+                  {[
+                    ['step1', 'Gửi yêu cầu:', 'Khách chọn điểm đón, điểm giao trên bản đồ, chọn ngựa, khoảng ngày ngựa sẵn sàng được đón và hạn giao trễ nhất. Hệ thống hiển thị khoảng giá ước tính (thấp nhất – cao nhất) để tham khảo, không phải giá cuối cùng. Ở bước này Khách chưa phải trả tiền.'],
+                    ['step2', 'Duyệt sơ bộ:', 'Quản lý kiểm tra tính khả thi của yêu cầu (ngựa đủ điều kiện, tuyến phục vụ, lịch xe). Yêu cầu có thể bị từ chối kèm lý do cụ thể.'],
+                    ['step3', 'Lập tuyến và báo giá chốt:', 'Công ty lập lộ trình cụ thể (các điểm dừng nghỉ, cửa khẩu, nước quá cảnh) và gửi báo giá chốt qua ứng dụng và email. Báo giá chốt bao gồm: cước theo quãng đường thực tế, hạng chuồng, phí thủ tục từng nước, bảo hiểm và phụ phí gấp (nếu có).'],
+                  ].map(([key, title, desc]) => (
+                    <li key={key} style={{ marginBottom: 12 }}>
+                      <Text strong style={{ color: '#1c1917' }}>{t(`policy.sec2.${key}_title`, title)}</Text>{' '}
+                      {t(`policy.sec2.${key}_desc`, desc)}
+                    </li>
+                  ))}
                   <li style={{ marginBottom: 12 }}>
                     <Text strong style={{ color: '#1c1917' }}>{t('policy.sec2.step4_title', 'Xem hợp đồng, chấp nhận báo giá và đặt cọc:')}</Text>{' '}
                     {t('policy.sec2.step4_desc_pre', 'Hệ thống tự động phát hành Hợp đồng vận chuyển điện tử. Khách có')}{' '}
                     <Text strong style={{ color: '#b45309' }}>{policy.Booking.QuoteAcceptDays} {t('policy.units.days', 'ngày')}</Text>{' '}
                     {t('policy.sec2.step4_desc_post', 'để xem hợp đồng, chấp nhận báo giá và đặt cọc. Quá hạn, đơn tự động hủy và Khách không mất phí.')}
                   </li>
-                  <li style={{ marginBottom: 12 }}>
-                    <Text strong style={{ color: '#1c1917' }}>{t('policy.sec2.step5_title', 'Làm hồ sơ:')}</Text>{' '}
-                    {t('policy.sec2.step5_desc', 'Sau khi cọc, chuyên viên thông báo danh mục giấy tờ kiểm dịch cần thiết theo nước đi, quá cảnh và nước đến. Khách nộp chứng từ trực tiếp trên ứng dụng theo thời hạn quy định.')}
-                  </li>
-                  <li style={{ marginBottom: 12 }}>
-                    <Text strong style={{ color: '#1c1917' }}>{t('policy.sec2.step6_title', 'Xếp chuyến:')}</Text>{' '}
-                    {t('policy.sec2.step6_desc', 'Công ty xếp ngựa vào chuyến phù hợp (phương tiện, đoàn xe, bác sĩ thú y theo xe).')}
-                  </li>
-                  <li style={{ marginBottom: 12 }}>
-                    <Text strong style={{ color: '#1c1917' }}>{t('policy.sec2.step7_title', 'Thanh toán phần còn lại:')}</Text>{' '}
-                    {t('policy.sec2.step7_desc', 'Hoàn tất thanh toán số dư trước ngày xuất phát theo quy định tại mục 3.')}
-                  </li>
-                  <li>
-                    <Text strong style={{ color: '#1c1917' }}>{t('policy.sec2.step8_title', 'Vận chuyển và giao nhận:')}</Text>{' '}
-                    {t('policy.sec2.step8_desc', 'Khách theo dõi hành trình GPS và nhật ký phúc lợi ngựa trên ứng dụng. Người nhận kiểm tra ngựa và ký e-POD khi nhận bàn giao.')}
-                  </li>
+                  {[
+                    ['step5', 'Làm hồ sơ:', 'Sau khi cọc, chuyên viên thông báo danh mục giấy tờ kiểm dịch cần thiết theo nước đi, quá cảnh và nước đến. Khách nộp chứng từ trực tiếp trên ứng dụng theo thời hạn quy định.'],
+                    ['step6', 'Xếp chuyến:', 'Công ty xếp ngựa vào chuyến phù hợp (phương tiện, đoàn xe, bác sĩ thú y theo xe).'],
+                    ['step7', 'Thanh toán phần còn lại:', 'Hoàn tất thanh toán số dư trước ngày xuất phát theo quy định tại mục 3.'],
+                    ['step8', 'Vận chuyển và giao nhận:', 'Khách theo dõi hành trình GPS và nhật ký phúc lợi ngựa trên ứng dụng. Người nhận kiểm tra ngựa và ký e-POD khi nhận bàn giao.'],
+                  ].map(([key, title, desc]) => (
+                    <li key={key} style={{ marginBottom: 12 }}>
+                      <Text strong style={{ color: '#1c1917' }}>{t(`policy.sec2.${key}_title`, title)}</Text>{' '}
+                      {t(`policy.sec2.${key}_desc`, desc)}
+                    </li>
+                  ))}
                 </ol>
 
                 <Divider style={{ borderColor: '#ede4d3' }} />

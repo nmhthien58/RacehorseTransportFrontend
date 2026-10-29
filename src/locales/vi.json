@@ -2536,6 +2536,7 @@
     }
   },
   "bookingForm": {
+    "climateFee": "+10% cước vận chuyển (tính trên cước sau chiết khấu)",
     "routeNotOffered": "Công ty hiện chưa nhận tuyến này bằng đường bộ lẫn đường bay. Vui lòng chọn nước đi hoặc nước đến khác.",
     "switchedToAir": "Hiện chưa nhận vận chuyển đường bộ cho tuyến đến {{country}}, đã chuyển sang đường bay.",
     "switchedToGround": "Hiện chưa nhận vận chuyển đường bay cho tuyến này (đến {{country}}), đã chuyển sang đường bộ.",

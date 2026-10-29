@@ -1476,6 +1476,10 @@ export default function BookingWizard({
                         <Text type="secondary" style={{ fontSize: 12.5, lineHeight: 1.45, display: 'block' }}>
                           Duy trì ổn định 18°C - 22°C suốt hành trình, đảm bảo hô hấp và sức bền cho ngựa thi đấu.
                         </Text>
+                        {/* Phụ phí SUR_CLIMATE trong Bảng giá chung (hiện 10%) */}
+                        <Tag color="orange" style={{ marginTop: 8 }}>
+                          {t('bookingForm.climateFee')}
+                        </Tag>
                       </div>
                     );
                   }}

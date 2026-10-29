@@ -90,6 +90,24 @@ export const paymentService = {
   async updateSettings(payload) {
     return api.put(ENDPOINTS.PAYMENTS.SETTINGS, payload);
   },
+
+  /**
+   * Manager xem toàn bộ giao dịch của mọi đơn (có phân trang như GET /api/bookings)
+   * @param {{ type?: string, status?: string, from?: string, to?: string, search?: string, page?: number, size?: number, sort?: string }} [params]
+   * @returns {Promise<any>}
+   */
+  async getPayments(params) {
+    return api.get(ENDPOINTS.PAYMENTS.LIST, { params });
+  },
+
+  /**
+   * Manager xem số liệu tổng hợp giao dịch trong khoảng thời gian
+   * @param {{ from?: string, to?: string }} [params]
+   * @returns {Promise<any>}
+   */
+  async getPaymentSummary(params) {
+    return api.get(ENDPOINTS.PAYMENTS.SUMMARY, { params });
+  },
 };
 
 export default paymentService;

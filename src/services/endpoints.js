@@ -28,6 +28,8 @@ export const ENDPOINTS = {
     RETRY_REFUND: (paymentId) => `/payments/${paymentId}/retry-refund`,
     MARK_REFUNDED: (paymentId) => `/payments/${paymentId}/mark-refunded`,
     SETTINGS: '/settings/payment',
+    LIST: '/payments',
+    SUMMARY: '/payments/summary',
   },
 
   // 2. Quản lý người dùng & Dropdown nhân sự

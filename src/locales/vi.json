@@ -103,6 +103,8 @@
     "tripClosure": "Đóng chuyến & KPI",
     "reports": "Báo cáo",
     "paymentSettings": "Cấu hình thanh toán",
+    "transactions": "Giao dịch",
+    "paymentHistory": "Lịch sử thanh toán",
     "transportOrders": "Đơn vận chuyển",
     "insuranceClaims": "Bồi thường bảo hiểm"
   },
@@ -3320,5 +3322,57 @@
     "uploadOnBehalf": "Nộp hộ giấy khám",
     "uploadTitle": "Nộp hộ giấy khám",
     "uploadHint": "Giấy khám phải do thú y cấp trong 48 giờ trước giờ xuất phát. Sau khi tải lên, giấy vẫn cần được duyệt."
+  },
+  "paymentLedger": {
+    "types": {
+      "Deposit": "Đặt cọc",
+      "Balance": "Thanh toán còn lại",
+      "Extra": "Phát sinh",
+      "Refund": "Hoàn tiền",
+      "Compensation": "Chi bồi thường"
+    },
+    "statuses": {
+      "Succeeded": "Thành công",
+      "Pending": "Đang chờ",
+      "Failed": "Thất bại",
+      "Expired": "Hết hạn"
+    },
+    "columns": {
+      "time": "Thời gian",
+      "booking": "Mã đơn",
+      "customer": "Khách hàng",
+      "type": "Loại",
+      "amount": "Số tiền",
+      "status": "Trạng thái",
+      "txnRef": "Mã giao dịch"
+    },
+    "filters": {
+      "type": "Loại giao dịch",
+      "status": "Trạng thái",
+      "search": "Tìm mã đơn, mã giao dịch"
+    },
+    "empty": "Chưa có giao dịch nào",
+    "loadFailed": "Không tải được danh sách giao dịch",
+    "customer": {
+      "title": "Lịch sử thanh toán",
+      "subtitle": "Mọi giao dịch đặt cọc, thanh toán, phát sinh và hoàn tiền của các đơn của bạn"
+    },
+    "manager": {
+      "title": "Giao dịch",
+      "subtitle": "Toàn bộ giao dịch thanh toán và hoàn tiền của mọi đơn vận chuyển",
+      "summaryFailed": "Không tải được số liệu tổng hợp",
+      "searchPlaceholder": "Tìm mã đơn, khách hàng, mã giao dịch",
+      "tiles": {
+        "succeeded": "Đã thu thành công",
+        "pending": "Đang chờ thanh toán",
+        "failedExpired": "Thất bại / Hết hạn",
+        "failedExpiredHint": "Số giao dịch",
+        "refunded": "Đã hoàn tiền",
+        "refundsNeedingAction": "Hoàn tiền cần xử lý",
+        "refundsNeedingActionHint": "Hoàn tiền thất bại hoặc đang chờ",
+        "count_one": "{{count}} giao dịch",
+        "count_other": "{{count}} giao dịch"
+      }
+    }
   }
 }

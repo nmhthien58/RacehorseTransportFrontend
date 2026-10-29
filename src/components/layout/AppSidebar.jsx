@@ -14,6 +14,7 @@ import {
   AuditOutlined,
   FileTextOutlined,
   HistoryOutlined,
+  TransactionOutlined,
   TeamOutlined,
   WarningOutlined,
   FileDoneOutlined,
@@ -74,6 +75,11 @@ export default function AppSidebar({ collapsed, user, onNavigate }) {
           key: ROUTES.CUSTOMER_BILLING,
           icon: <CreditCardOutlined style={{ fontSize: 18 }} />,
           label: t('nav.billing', 'Thanh toán'),
+        },
+        {
+          key: ROUTES.CUSTOMER_PAYMENT_HISTORY,
+          icon: <HistoryOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.paymentHistory'),
         },
         {
           key: ROUTES.CUSTOMER_PRICING,
@@ -144,6 +150,11 @@ export default function AppSidebar({ collapsed, user, onNavigate }) {
           key: ROUTES.MANAGER_PAYMENT_SETTINGS,
           icon: <DollarOutlined style={{ fontSize: 18 }} />,
           label: t('nav.paymentSettings', 'Cấu hình thanh toán'),
+        },
+        {
+          key: ROUTES.MANAGER_TRANSACTIONS,
+          icon: <TransactionOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.transactions'),
         },
         {
           key: ROUTES.ADMIN_USERS,

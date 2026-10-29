@@ -197,15 +197,26 @@ export default function BookingWizard({
   const [dropoffPlace, setDropoffPlace] = useState(() =>
     toPlace(initialValues?.dropoffAddress, initialValues?.dropoffLat, initialValues?.dropoffLng, initialValues?.dropoffCountryCode));
   // Địa chỉ chi tiết (đường bộ) khách tự ghi cho tài xế / người nhận; edited = khách đã sửa tay thì không ghi đè khi kéo ghim
-  const initialGroundAddress = (address) => (initialMode === 'Ground' && address ? address : '');
-  const [pickupDetail, setPickupDetail] = useState(() => ({
-    text: initialGroundAddress(initialValues?.pickupAddress),
-    edited: !!initialGroundAddress(initialValues?.pickupAddress),
-  }));
-  const [dropoffDetail, setDropoffDetail] = useState(() => ({
-    text: initialGroundAddress(initialValues?.dropoffAddress),
-    edited: !!initialGroundAddress(initialValues?.dropoffAddress),
-  }));
+  const initialDetail = (address) => {
+    const text = initialMode === 'Ground' && address ? address : '';
+    return { text, edited: !!text };
+  };
+  const [pickupDetail, setPickupDetail] = useState(() => initialDetail(initialValues?.pickupAddress));
+  const [dropoffDetail, setDropoffDetail] = useState(() => initialDetail(initialValues?.dropoffAddress));
+
+  // Đường bộ: phải có đủ hai ghim và địa chỉ chi tiết mới sang bước sau / gửi đơn
+  const groundPointsReady = () => {
+    if (transportMode !== 'Ground') return true;
+    if (!pickupPlace || !dropoffPlace) {
+      message.warning(t('bookingForm.pickBothPoints'));
+      return false;
+    }
+    if (!pickupDetail.text.trim() || !dropoffDetail.text.trim()) {
+      message.warning(t('bookingForm.detailedAddressRequired'));
+      return false;
+    }
+    return true;
+  };
   const [route, setRoute] = useState(null);
   const [routeLoading, setRouteLoading] = useState(false);
   // R-12: tuổi tối thiểu lấy từ chính sách (GET /api/policy)
@@ -676,14 +687,7 @@ export default function BookingWizard({
         message.error('Quốc gia xuất phát và quốc gia đích không được trùng nhau.');
         return;
       }
-      if (transportMode === 'Ground' && (!pickupPlace || !dropoffPlace)) {
-        message.warning(t('bookingForm.pickBothPoints'));
-        return;
-      }
-      if (transportMode === 'Ground' && (!pickupDetail.text.trim() || !dropoffDetail.text.trim())) {
-        message.warning(t('bookingForm.detailedAddressRequired'));
-        return;
-      }
+      if (!groundPointsReady()) return;
     }
 
     if (targetStep >= 2) {
@@ -744,14 +748,7 @@ export default function BookingWizard({
         message.error('Quốc gia xuất phát và quốc gia đích không được trùng nhau.');
         return;
       }
-      if (transportMode === 'Ground' && (!pickupPlace || !dropoffPlace)) {
-        message.warning(t('bookingForm.pickBothPoints'));
-        return;
-      }
-      if (transportMode === 'Ground' && (!pickupDetail.text.trim() || !dropoffDetail.text.trim())) {
-        message.warning(t('bookingForm.detailedAddressRequired'));
-        return;
-      }
+      if (!groundPointsReady()) return;
     }
 
     if (currentStep === 1) {

@@ -1,0 +1,32 @@
+[
+  {
+    "scenario": "HealthyOptimal",
+    "horseName": "Thần Mã Ánh Dương",
+    "heartRate": 36,
+    "bodyTemp": 37.8,
+    "cabinTemp": 21.5,
+    "stressLevel": "Low",
+    "hydration": "Optimal",
+    "expectedAnomaly": false
+  },
+  {
+    "scenario": "MildFatigueAlert",
+    "horseName": "Bạch Long Mã",
+    "heartRate": 52,
+    "bodyTemp": 38.6,
+    "cabinTemp": 26.0,
+    "stressLevel": "Moderate",
+    "hydration": "MildDehydration",
+    "expectedAnomaly": true
+  },
+  {
+    "scenario": "CriticalDistressEmergency",
+    "horseName": "Hắc Phong Thần",
+    "heartRate": 68,
+    "bodyTemp": 39.8,
+    "cabinTemp": 33.2,
+    "stressLevel": "High",
+    "hydration": "SevereDehydration",
+    "expectedAnomaly": true
+  }
+]

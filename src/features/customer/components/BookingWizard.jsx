@@ -172,6 +172,16 @@ export default function BookingWizard({
     toPlace(initialValues?.pickupAddress, initialValues?.pickupLat, initialValues?.pickupLng, initialValues?.pickupCountryCode));
   const [dropoffPlace, setDropoffPlace] = useState(() =>
     toPlace(initialValues?.dropoffAddress, initialValues?.dropoffLat, initialValues?.dropoffLng, initialValues?.dropoffCountryCode));
+  // Địa chỉ chi tiết (đường bộ) khách tự ghi cho tài xế / người nhận; edited = khách đã sửa tay thì không ghi đè khi kéo ghim
+  const initialGroundAddress = (address) => (initialMode === 'Ground' && address ? address : '');
+  const [pickupDetail, setPickupDetail] = useState(() => ({
+    text: initialGroundAddress(initialValues?.pickupAddress),
+    edited: !!initialGroundAddress(initialValues?.pickupAddress),
+  }));
+  const [dropoffDetail, setDropoffDetail] = useState(() => ({
+    text: initialGroundAddress(initialValues?.dropoffAddress),
+    edited: !!initialGroundAddress(initialValues?.dropoffAddress),
+  }));
   const [route, setRoute] = useState(null);
   const [routeLoading, setRouteLoading] = useState(false);
   // R-12: tuổi tối thiểu lấy từ chính sách (GET /api/policy)
@@ -249,14 +259,14 @@ export default function BookingWizard({
   // Chọn điểm trên bản đồ: điền địa chỉ + nước theo điểm đã chọn
   const handlePickupPick = (place) => {
     setPickupPlace(place);
-    setValue('PickupAddress', place.address);
+    setPickupDetail((prev) => (prev.edited && prev.text.trim() ? prev : { text: (place.address || '').slice(0, 255), edited: false }));
     if (place.countryCode && catalog.some((c) => c.countryCode === place.countryCode)) {
       setValue('PickupCountryCode', place.countryCode);
     }
   };
   const handleDropoffPick = (place) => {
     setDropoffPlace(place);
-    setValue('DropoffAddress', place.address);
+    setDropoffDetail((prev) => (prev.edited && prev.text.trim() ? prev : { text: (place.address || '').slice(0, 255), edited: false }));
     if (place.countryCode && catalog.some((c) => c.countryCode === place.countryCode && (c.groundAvailable || c.airAvailable))) {
       setValue('DropoffCountryCode', place.countryCode);
     }
@@ -343,11 +353,8 @@ export default function BookingWizard({
         if (chosenD.code !== dropoffAirportCode) setValue('DropoffAirportCode', chosenD.code);
         setValue('DropoffAddress', chosenD.name);
       }
-    } else {
-      setValue('PickupAddress', pickupPlace?.address || '');
-      setValue('DropoffAddress', dropoffPlace?.address || '');
     }
-  }, [transportMode, pickupCountry, dropoffCountry, pickupAirportCode, dropoffAirportCode, airportsByCountry, setValue, pickupPlace, dropoffPlace]);
+  }, [transportMode, pickupCountry, dropoffCountry, pickupAirportCode, dropoffAirportCode, airportsByCountry, setValue]);
 
   // Tải danh sách ngựa của khách hàng
   useEffect(() => {
@@ -649,6 +656,10 @@ export default function BookingWizard({
         message.warning(t('bookingForm.pickBothPoints'));
         return;
       }
+      if (transportMode === 'Ground' && (!pickupDetail.text.trim() || !dropoffDetail.text.trim())) {
+        message.warning(t('bookingForm.detailedAddressRequired'));
+        return;
+      }
     }
 
     if (targetStep >= 2) {
@@ -713,6 +724,10 @@ export default function BookingWizard({
         message.warning(t('bookingForm.pickBothPoints'));
         return;
       }
+      if (transportMode === 'Ground' && (!pickupDetail.text.trim() || !dropoffDetail.text.trim())) {
+        message.warning(t('bookingForm.detailedAddressRequired'));
+        return;
+      }
     }
 
     if (currentStep === 1) {
@@ -774,8 +789,8 @@ export default function BookingWizard({
     const pCode = values.PickupCountryCode;
     const dCode = values.DropoffCountryCode;
 
-    let finalPickup = values.PickupAddress?.trim();
-    let finalDropoff = values.DropoffAddress?.trim();
+    let finalPickup = mode === 'Ground' ? pickupDetail.text.trim() : values.PickupAddress?.trim();
+    let finalDropoff = mode === 'Ground' ? dropoffDetail.text.trim() : values.DropoffAddress?.trim();
 
     if (mode === 'Air') {
       const pAirports = airportsByCountry[pCode] || [];
@@ -1079,9 +1094,21 @@ export default function BookingWizard({
                       }}
                     />
                   ) : (
+                    <>
                     <Form.Item label={t('bookingForm.pickupOnMap')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginBottom: 0 }}>
                       <MapPicker value={pickupPlace} onChange={handlePickupPick} height={280} />
                     </Form.Item>
+                    <Form.Item label={t('bookingForm.detailedAddress')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginTop: 12, marginBottom: 0 }}>
+                      <TextArea
+                        value={pickupDetail.text}
+                        onChange={(e) => setPickupDetail({ text: e.target.value, edited: true })}
+                        maxLength={255}
+                        showCount
+                        autoSize={{ minRows: 2, maxRows: 4 }}
+                        placeholder={t('bookingForm.detailedAddressPlaceholder')}
+                      />
+                    </Form.Item>
+                    </>
                   )}
                 </Card>
               </Col>
@@ -1160,9 +1187,21 @@ export default function BookingWizard({
                       }}
                     />
                   ) : (
+                    <>
                     <Form.Item label={t('bookingForm.dropoffOnMap')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginBottom: 0 }}>
                       <MapPicker value={dropoffPlace} onChange={handleDropoffPick} height={280} />
                     </Form.Item>
+                    <Form.Item label={t('bookingForm.detailedAddress')} required labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} style={{ marginTop: 12, marginBottom: 0 }}>
+                      <TextArea
+                        value={dropoffDetail.text}
+                        onChange={(e) => setDropoffDetail({ text: e.target.value, edited: true })}
+                        maxLength={255}
+                        showCount
+                        autoSize={{ minRows: 2, maxRows: 4 }}
+                        placeholder={t('bookingForm.detailedAddressPlaceholder')}
+                      />
+                    </Form.Item>
+                    </>
                   )}
                 </Card>
               </Col>
@@ -1787,7 +1826,7 @@ export default function BookingWizard({
                 <div style={{ marginBottom: 10 }}>
                   <Text type="secondary" style={{ fontSize: 12 }}>Điểm xuất phát ({pickupCountry}):</Text>
                   <div style={{ fontSize: 13.5, fontWeight: 600, color: '#0f172a' }}>
-                    {getValues('PickupAddress')}
+                    {transportMode === 'Ground' ? pickupDetail.text : getValues('PickupAddress')}
                     {transportMode === 'Ground' && getValues('PickupCity') ? `, ${getValues('PickupCity')}` : ''}
                   </div>
                 </div>
@@ -1795,7 +1834,7 @@ export default function BookingWizard({
                 <div style={{ marginBottom: 10 }}>
                   <Text type="secondary" style={{ fontSize: 12 }}>Điểm giao đến ({dropoffCountry}):</Text>
                   <div style={{ fontSize: 13.5, fontWeight: 600, color: '#0f172a' }}>
-                    {getValues('DropoffAddress')}
+                    {transportMode === 'Ground' ? dropoffDetail.text : getValues('DropoffAddress')}
                     {transportMode === 'Ground' && getValues('DropoffCity') ? `, ${getValues('DropoffCity')}` : ''}
                   </div>
                 </div>

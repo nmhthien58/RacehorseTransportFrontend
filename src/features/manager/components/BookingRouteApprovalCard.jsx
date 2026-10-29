@@ -46,7 +46,23 @@ export default function BookingRouteApprovalCard({ booking, onRefresh }) {
   const [previewLoading, setPreviewLoading] = useState(false);
 
   const bookingId = booking?.bookingId || booking?.BookingID;
-  const horses = useMemo(() => booking?.horses || booking?.Horses || [], [booking]);
+  // Danh sách đơn chỉ có thông tin tóm tắt: tải chi tiết để có danh sách ngựa và giá trị khai báo
+  const [detail, setDetail] = useState(null);
+  useEffect(() => {
+    if (!bookingId) return undefined;
+    let active = true;
+    bookingService
+      .getBookingById(bookingId)
+      .then((res) => active && setDetail(unwrapData(res)))
+      .catch(() => active && setDetail(null));
+    return () => {
+      active = false;
+    };
+  }, [bookingId]);
+  const horses = useMemo(() => {
+    const source = detail?.bookingId === bookingId ? detail : booking;
+    return source?.horses || source?.Horses || [];
+  }, [detail, booking, bookingId]);
 
   // Tải danh sách lộ trình đã lập của đơn
   useEffect(() => {
@@ -306,12 +322,12 @@ export default function BookingRouteApprovalCard({ booking, onRefresh }) {
                 title: t('tripPlan.fields.stopType', 'Loại'),
                 dataIndex: 'stopType',
                 width: 120,
-                render: (type) =>
-                  type === 'BorderGate' ? (
-                    <Tag color="purple">{t('tripPlan.stopTypes.borderGate', 'Cửa khẩu')}</Tag>
-                  ) : (
-                    <Tag color="cyan">{t('tripPlan.stopTypes.restStop', 'Trạm nghỉ')}</Tag>
-                  ),
+                render: (type) => {
+                  if (type === 'BorderGate') return <Tag color="purple">{t('tripPlan.stopTypes.borderGate', 'Cửa khẩu')}</Tag>;
+                  if (type === 'Origin') return <Tag color="green">Điểm đón</Tag>;
+                  if (type === 'Destination') return <Tag color="red">Điểm giao</Tag>;
+                  return <Tag color="cyan">{t('tripPlan.stopTypes.restStop', 'Trạm nghỉ')}</Tag>;
+                },
               },
               { title: t('tripPlan.fields.stopName', 'Tên trạm / Mốc'), dataIndex: 'name', render: (t) => <Text strong>{t}</Text> },
               { title: t('tripPlan.fields.country', 'Nước'), dataIndex: 'countryCode', width: 80, render: (c) => <Tag>{c}</Tag> },

@@ -1,7 +1,14 @@
+import { useEffect, useMemo, useState } from 'react';
 import { Checkbox, Select, Form, Input, InputNumber, DatePicker, Button, Typography, Tag, Row, Col } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import RouteMap from '@components/common/map/RouteMap';
+import geoService from '@services/geoService';
+import { unwrapData } from '@utils/apiHelpers';
+
+// Loại mốc của chuyến -> loại mốc của bản đồ (màu marker)
+const MAP_STOP_TYPES = { PickUp: 'Pickup', DropOff: 'Dropoff' };
 
 const { Text } = Typography;
 
@@ -14,6 +21,90 @@ export default function RouteChangeFields({ checkpoints, prefix = [] }) {
   const { t } = useTranslation();
   // Chỉ bỏ được mốc chưa tới, không phải điểm đi / điểm giao / điểm đón trả của đơn
   const removable = (c) => c.status === 'Pending' && !['Origin', 'Destination', 'PickUp', 'DropOff'].includes(c.checkpointType);
+
+  // Bản đồ tuyến sau khi sửa: mốc còn giữ + mốc mới chèn sau "Chèn sau mốc" (mặc định trước điểm cuối)
+  const form = Form.useFormInstance();
+  const deactivated = Form.useWatch([...prefix, 'deactivateCheckpointIds'], form);
+  const insertAfter = Form.useWatch([...prefix, 'insertAfterCheckpointId'], form);
+  const added = Form.useWatch([...prefix, 'newCheckpoints'], form);
+  const mapStops = useMemo(() => {
+    const removed = deactivated || [];
+    const kept = checkpoints.filter((c) => !removed.includes(c.checkpointId));
+    let at = kept.findIndex((c) => c.checkpointId === insertAfter) + 1;
+    if (at <= 0) at = Math.max(kept.length - 1, 0);
+    const toStop = (c, newIndex) =>
+      c?.latitude != null && c?.longitude != null
+        ? {
+            lat: Number(c.latitude),
+            lng: Number(c.longitude),
+            stopType: MAP_STOP_TYPES[c.checkpointType] || c.checkpointType,
+            name: c.checkpointName,
+            newIndex,
+          }
+        : null;
+    const fresh = (added || []).map((c, i) => toStop(c, i));
+    return [...kept.slice(0, at).map((c) => toStop(c)), ...fresh, ...kept.slice(at).map((c) => toStop(c))].filter(Boolean);
+  }, [checkpoints, deactivated, insertAfter, added]);
+
+  // Đường bộ qua các mốc (gọi lại khi danh sách mốc đổi)
+  const routeKey = mapStops.map((p) => `${p.lat},${p.lng}`).join('|');
+  const [route, setRoute] = useState({ key: null, data: null });
+  useEffect(() => {
+    if (mapStops.length < 2) return undefined;
+    let active = true;
+    const timer = setTimeout(() => {
+      geoService
+        .route(mapStops.map((p) => ({ lat: p.lat, lng: p.lng })))
+        .then((res) => active && setRoute({ key: routeKey, data: unwrapData(res) }))
+        .catch(() => active && setRoute({ key: routeKey, data: null }));
+    }, 500);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+    // routeKey đại diện cho tọa độ các mốc
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeKey]);
+  const routeData = route.key === routeKey ? route.data : null;
+
+  const listPath = [...prefix, 'newCheckpoints'];
+  const fillAddress = async (index, lat, lng) => {
+    try {
+      const place = unwrapData(await geoService.reverse(lat, lng));
+      if (place?.displayName) form.setFieldValue([...listPath, index, 'address'], place.displayName.slice(0, 255));
+    } catch {
+      // Không lấy được địa chỉ: coordinator tự nhập
+    }
+  };
+  // Bấm bản đồ: thêm trạm nghỉ mới, giờ dự kiến sau mốc chèn 1 giờ
+  const addStopOnMap = (point) => {
+    const list = form.getFieldValue(listPath) || [];
+    // Mốc chèn sau: mốc đã chọn, không chọn thì mốc cuối cùng xe đã tới; giờ mới không sớm hơn hiện tại
+    const anchor =
+      checkpoints.find((c) => c.checkpointId === insertAfter) ||
+      [...checkpoints].reverse().find((c) => c.status !== 'Pending');
+    const afterAnchor = dayjs(anchor?.plannedTime || undefined).add(1, 'hour');
+    const earliest = dayjs().add(1, 'hour');
+    const stop = {
+      checkpointName: `${t('incidents.reroute.type.RestStop')} ${list.length + 1}`,
+      checkpointType: 'RestStop',
+      address: '',
+      plannedTime: afterAnchor.isAfter(earliest) ? afterAnchor : earliest,
+      mandatoryRestMinutes: 0,
+      latitude: point.lat,
+      longitude: point.lng,
+    };
+    form.setFieldValue(listPath, [...list, stop]);
+    void fillAddress(list.length, point.lat, point.lng);
+  };
+  // Kéo ghim: chỉ dời được mốc mới thêm
+  const moveStopOnMap = (index, point) => {
+    const target = mapStops[index];
+    if (target?.newIndex == null) return;
+    form.setFieldValue([...listPath, target.newIndex, 'latitude'], point.lat);
+    form.setFieldValue([...listPath, target.newIndex, 'longitude'], point.lng);
+    void fillAddress(target.newIndex, point.lat, point.lng);
+  };
 
   return (
     <>
@@ -40,6 +131,27 @@ export default function RouteChangeFields({ checkpoints, prefix = [] }) {
             .map((c) => ({ value: c.checkpointId, label: `${c.sequenceOrder}. ${c.checkpointName}` }))}
         />
       </Form.Item>
+
+      {mapStops.length >= 1 && (
+        <div style={{ marginBottom: 12 }}>
+          <RouteMap
+            stops={mapStops}
+            polyline={routeData?.polyline}
+            legs={(routeData?.legs || []).map((l) => ({ distanceKm: l.distanceKm, durationHours: l.durationHours }))}
+            totalDistanceKm={routeData?.totalDistanceKm}
+            totalDurationHours={routeData?.totalDurationHours}
+            isEstimate={!routeData || routeData.isEstimate}
+            height={300}
+            editable
+            showList={false}
+            onAddStop={addStopOnMap}
+            onMoveStop={moveStopOnMap}
+          />
+          <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 6 }}>
+            Bản đồ là tuyến sau khi sửa. Bấm lên bản đồ để thêm mốc mới (đổi loại thành Cửa khẩu nếu cần), kéo ghim của mốc mới để dời.
+          </Text>
+        </div>
+      )}
 
       <Text strong>{t('incidents.reroute.newStops')}</Text>
       <Form.List name={[...prefix, 'newCheckpoints']}>
@@ -86,6 +198,12 @@ export default function RouteChangeFields({ checkpoints, prefix = [] }) {
                       <InputNumber min={0} max={2880} style={{ width: '100%' }} />
                     </Form.Item>
                   </Col>
+                  <Form.Item name={[field.name, 'latitude']} hidden>
+                    <InputNumber />
+                  </Form.Item>
+                  <Form.Item name={[field.name, 'longitude']} hidden>
+                    <InputNumber />
+                  </Form.Item>
                   <Col xs={6} md={2} style={{ display: 'flex', alignItems: 'center', paddingTop: 6 }}>
                     <Button type="text" danger icon={<DeleteOutlined />} onClick={() => remove(field.name)} />
                   </Col>

@@ -96,6 +96,8 @@ export function toRouteChangePayload(values) {
     address: c.address?.trim() || '',
     plannedTime: toIsoString(c.plannedTime),
     mandatoryRestMinutes: c.mandatoryRestMinutes || 0,
+    latitude: c.latitude ?? null,
+    longitude: c.longitude ?? null,
   }));
   if (deactivateCheckpointIds.length === 0 && newCheckpoints.length === 0) return null;
   return { deactivateCheckpointIds, newCheckpoints, insertAfterCheckpointId: values.insertAfterCheckpointId || undefined };

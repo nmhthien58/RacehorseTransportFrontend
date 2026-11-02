@@ -83,11 +83,13 @@ export default function RouteChangeFields({ checkpoints, prefix = [] }) {
     const anchor =
       checkpoints.find((c) => c.checkpointId === insertAfter) ||
       [...checkpoints].reverse().find((c) => c.status !== 'Pending');
+    const afterAnchor = dayjs(anchor?.plannedTime || undefined).add(1, 'hour');
+    const earliest = dayjs().add(1, 'hour');
     const stop = {
       checkpointName: `${t('incidents.reroute.type.RestStop')} ${list.length + 1}`,
       checkpointType: 'RestStop',
       address: '',
-      plannedTime: [dayjs(anchor?.plannedTime || undefined).add(1, 'hour'), dayjs().add(1, 'hour')].reduce((x, y) => (x.isAfter(y) ? x : y)),
+      plannedTime: afterAnchor.isAfter(earliest) ? afterAnchor : earliest,
       mandatoryRestMinutes: 0,
       latitude: point.lat,
       longitude: point.lng,

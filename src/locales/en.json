@@ -1683,7 +1683,7 @@
       "DossierNotCleared": "Clearance of {{horseName}} ({{bookingCode}}) is not complete; the trip departs only when it is Cleared.",
       "OvernightRest": "The leg {{from}} → {{to}} ({{km}} km) needs {{count}} overnight rest(s); add Rest stop checkpoints.",
       "twoDriversRequiredTitle": "Warning: At least 2 drivers required (R-14)",
-      "twoDriversRequiredDesc": "Estimated trip duration is {{hours}} hours (exceeds 9 hours/day). At least 2 rotating drivers are required before submission."
+      "twoDriversRequiredDesc": "Estimated driving time is {{hours}} hours (exceeds 9 hours). At least 2 rotating drivers are required before submission."
     },
     "stallMap": {
       "load": "{{count}}/{{max}} horses",

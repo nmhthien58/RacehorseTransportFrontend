@@ -57,6 +57,10 @@ const HORSES_PER_ESCORT = 3;
  * @param {string} vehicleType
  * @returns {'Ground'|'Air'}
  */
+// Khớp backend appsettings Transit: TruckAverageSpeedKmh, MaxDrivingHoursPerDaySingleDriver
+const TRUCK_AVERAGE_SPEED_KMH = 55;
+const SINGLE_DRIVER_LIMIT_HOURS = 9;
+
 const modeFromVehicleType = (vehicleType) => (vehicleType === 'AirStall' ? 'Air' : 'Ground');
 
 /**
@@ -288,9 +292,12 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
   const escortCount = crew.filter((c) => c.crewRole === 'Escort' && c.userId).length;
   const escortsNeeded = Math.ceil(selectedHorses.length / HORSES_PER_ESCORT);
 
-  // Cảnh báo quy tắc tài xế (R-14): Chuyến có thời gian chạy dự kiến > 9 giờ bắt buộc ít nhất 2 tài xế
-  const estimatedTripHours = periodValid ? period[1].diff(period[0], 'hour', true) : 0;
-  const requiresTwoDrivers = estimatedTripHours > 9;
+  // Quy tắc tài xế (R-14, BE-07): tính theo GIỜ LÁI như backend (quãng đường / tốc độ xe tải),
+  // không theo khoảng thời gian chuyến vì khoảng đó gồm cả chờ cửa khẩu, bốc xếp, nghỉ.
+  // Chỉ áp cho đường bộ; chưa có quãng đường thì để backend kiểm khi trình.
+  const tripDistanceKm = Number(tripRouteData?.totalDistanceKm) || 0;
+  const estimatedTripHours = mode === 'Ground' && tripDistanceKm > 0 ? tripDistanceKm / TRUCK_AVERAGE_SPEED_KMH : 0;
+  const requiresTwoDrivers = estimatedTripHours > SINGLE_DRIVER_LIMIT_HOURS;
   const hasEnoughDrivers = driverCount >= 2;
   const isDriverWarning = requiresTwoDrivers && !hasEnoughDrivers;
 
@@ -866,7 +873,7 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
                   })}
                   description={t('tripPlan.warnings.twoDriversRequiredDesc', {
                     hours: Math.round(estimatedTripHours * 10) / 10,
-                    defaultValue: `Thời gian chạy dự kiến ${Math.round(estimatedTripHours * 10) / 10} giờ (vượt quá 9 giờ). Bắt buộc phải có ít nhất 2 tài xế thay phiên để trình duyệt chuyến.`,
+                    defaultValue: `Thời gian lái dự kiến ${Math.round(estimatedTripHours * 10) / 10} giờ (vượt quá 9 giờ). Bắt buộc phải có ít nhất 2 tài xế thay phiên để trình duyệt chuyến.`,
                   })}
                 />
               )}

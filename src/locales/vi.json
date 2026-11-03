@@ -1682,7 +1682,7 @@
       "DossierNotCleared": "Hồ sơ của {{horseName}} ({{bookingCode}}) chưa thông quan; xe chỉ xuất phát khi đã Cleared.",
       "OvernightRest": "Chặng {{from}} → {{to}} ({{km}} km) cần {{count}} lần nghỉ qua đêm; nên thêm mốc Trạm nghỉ.",
       "twoDriversRequiredTitle": "Cảnh báo: Yêu cầu ít nhất 2 tài xế (R-14)",
-      "twoDriversRequiredDesc": "Thời gian chạy dự kiến {{hours}} giờ (vượt quá 9 giờ/ngày). Bắt buộc phải có ít nhất 2 tài xế thay phiên để trình duyệt chuyến."
+      "twoDriversRequiredDesc": "Thời gian lái dự kiến {{hours}} giờ (vượt quá 9 giờ). Bắt buộc phải có ít nhất 2 tài xế thay phiên để trình duyệt chuyến."
     },
     "stallMap": {
       "load": "{{count}}/{{max}} ngựa",

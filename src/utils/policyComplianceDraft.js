@@ -1,7 +1,15 @@
 /**
  * @file policyComplianceDraft.js
  * @description Experimental policy clause taxonomy and service policy evaluation helpers.
- * References: CHINH_SACH_DICH_VU.md, Terms of Service v1.1.
+ *
+ * Legal Framework References:
+ * 1. Convention on the Contract for the International Carriage of Goods by Road (CMR).
+ * 2. FEI Veterinary Regulations Chapter V: Equine Transport & Biosecurity.
+ * 3. Racehorse Transport Service Terms & Conditions (CHINH_SACH_DICH_VU.md).
+ *    - Section 1: Deposit, billing milestones, and payment schedule.
+ *    - Section 3: Booking cancellation window & refund brackets.
+ *    - Section 6: Operational delivery delay compensation penalties.
+ *    - Section 8: Transit insurance coverage limits and agreed value riders.
  */
 
 export const POLICY_CLAUSE_CATEGORIES = Object.freeze({

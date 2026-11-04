@@ -175,3 +175,35 @@ export function diffPolicySnapshots(oldSnap = {}, newSnap = {}) {
 
   return diffs;
 }
+
+
+/**
+ * Performs a comprehensive pre-submission policy compliance audit for a booking payload.
+ * @param {Record<string, unknown>} bookingContext - Booking details including deposit, agreed version, horses
+ * @returns {{ compliant: boolean, warnings: string[], errors: string[] }}
+ */
+export function auditBookingPolicyCompliance(bookingContext = {}) {
+  const errors = [];
+  const warnings = [];
+
+  if (!bookingContext?.policyAgreed) {
+    errors.push('Customer has not accepted the active terms of service.');
+  }
+
+  if (!bookingContext?.policyVersion) {
+    errors.push('Policy version tag is missing from consent metadata.');
+  }
+
+  const horses = Array.isArray(bookingContext?.horses) ? bookingContext.horses : [];
+  for (const horse of horses) {
+    if (horse?.declaredValueUsd >= 50000 && !horse?.hasAppraisalDocument) {
+      warnings.push(`Horse ${horse?.name || horse?.horseId} exceeds $50k valuation without attached appraisal document.`);
+    }
+  }
+
+  return {
+    compliant: errors.length === 0,
+    warnings,
+    errors,
+  };
+}

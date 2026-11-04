@@ -1,0 +1,35 @@
+{
+  "policyVersion": "1.2.0-draft",
+  "effectiveDate": "2026-11-01T00:00:00Z",
+  "clauses": [
+    {
+      "clauseId": "SEC-01-DEPOSIT",
+      "title": "Quy định đặt cọc và phương thức thanh toán",
+      "requiredDepositPct": 30,
+      "settlementWindowHours": 48
+    },
+    {
+      "clauseId": "SEC-03-CANCELLATION",
+      "title": "Chính sách hủy đơn và hoàn cọc",
+      "tiers": [
+        { "noticeDays": 7, "refundPct": 100 },
+        { "noticeDays": 3, "refundPct": 50 },
+        { "noticeDays": 0, "refundPct": 0 }
+      ]
+    },
+    {
+      "clauseId": "SEC-06-DELAY",
+      "title": "Bồi thường giao trễ hạn",
+      "gracePeriodHours": 6,
+      "ratePer12hPct": 5,
+      "capPct": 25
+    },
+    {
+      "clauseId": "SEC-08-INSURANCE",
+      "title": "Bảo hiểm vận chuyển ngựa đua",
+      "defaultLiabilityLimitUsd": 5000,
+      "fullValueRatePct": 1.0,
+      "agreedValueThresholdUsd": 50000
+    }
+  ]
+}

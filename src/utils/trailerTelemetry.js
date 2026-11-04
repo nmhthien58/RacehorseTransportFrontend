@@ -1,7 +1,8 @@
 /**
  * @file trailerTelemetry.js
- * @description Trailer cabin environmental telemetry utilities based on IATA Live Animals Regulations (LAR).
- * Monitors cabin climate, thermal heat index, and structural acceleration thresholds during equine transit.
+ * @deprecated Real-time IoT sensor telemetry simulation is unfeasible for the current project phase
+ * due to the absence of physical OBD-II / BLE environmental sensors on fleet haulers.
+ * This experimental module is deprecated and will be removed in favor of manual driver checklist logs.
  *
  * Mathematical Reference Models:
  * 1. Rothfusz Heat Index Regression: HI = c1 + c2*T + c3*RH + c4*T*RH + ...

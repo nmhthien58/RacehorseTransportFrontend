@@ -13,11 +13,32 @@ export const INCIDENT_TYPES = [
   'Weather',
   'ClimateControlFailure',
   'CustomsHold',
+  // R-14 (BE-14b): cửa khẩu từ chối, biên giới đóng, tài xế / áp tải không thể tiếp tục, người nhận vắng mặt
+  'BorderRejected',
+  'BorderClosed',
+  'CrewUnavailable',
+  'RecipientUnavailable',
   'Other',
 ];
 
 /** Loại hành động của phương án xử lý (responseAction); Reroute bắt buộc kèm thay đổi tuyến */
-export const RESPONSE_ACTIONS = ['WaitAndContinue', 'RepairAndContinue', 'Reroute', 'VeterinaryCare', 'OffloadHorse', 'Other'];
+// R-14 (BE-14b): ReturnToOrigin (cả đoàn quay về, hệ thống tự dựng tuyến), HoldAtStable (chuồng tạm, tính phí khi đóng)
+// R-14 (BE-14a): ReplaceVehicle (đổi xe cùng loại), ReplaceCrew (đổi tài xế / áp tải); chi tiết nằm ở actionPayload
+export const RESPONSE_ACTIONS = [
+  'WaitAndContinue',
+  'RepairAndContinue',
+  'Reroute',
+  'VeterinaryCare',
+  'OffloadHorse',
+  'ReplaceVehicle',
+  'ReplaceCrew',
+  'ReturnToOrigin',
+  'HoldAtStable',
+  'Other',
+];
+
+/** Phương án kèm actionPayload: đổi xe (replacementVehicleId) / đổi người (removeUserId, addUserId, crewRole) */
+export const REPLACEMENT_ACTIONS = ['ReplaceVehicle', 'ReplaceCrew'];
 
 export const RESPONSE_ACTION_COLOR = {
   WaitAndContinue: 'default',
@@ -25,8 +46,42 @@ export const RESPONSE_ACTION_COLOR = {
   Reroute: 'purple',
   VeterinaryCare: 'magenta',
   OffloadHorse: 'red',
+  ReturnToOrigin: 'volcano',
+  HoldAtStable: 'cyan',
+  ReplaceVehicle: 'geekblue',
+  ReplaceCrew: 'lime',
   Other: 'default',
 };
+
+/**
+ * Bảng tra tên để hiển thị actionPayload (đổi xe / đổi người) từ dữ liệu đang có trên màn hình.
+ * Nguồn sau ghi đè nguồn trước; thiếu tên thì màn hình hiện mã số.
+ * @param {{ trip?: Object|null, assets?: Array<Object>, users?: Array<Object> }} sources
+ *   trip: GET /trips/{id} (xe + đoàn xe hiện tại); assets: GET /transport-assets hoặc /trips/available-vehicles; users: GET /users/staff hoặc /trips/available-crew
+ * @returns {{ vehicles: Record<number, { assetCode: string, assetType?: string }>, users: Record<number, string> }}
+ */
+export function buildIncidentLookup({ trip, assets = [], users = [] }) {
+  const lookup = { vehicles: {}, users: {} };
+  assets.forEach((a) => {
+    lookup.vehicles[a.assetId] = { assetCode: a.assetCode, assetType: a.assetType };
+  });
+  users.forEach((u) => {
+    lookup.users[u.userId] = u.fullName;
+  });
+  if (trip?.vehicleId) lookup.vehicles[trip.vehicleId] = { assetCode: trip.vehicleCode, assetType: trip.vehicleType };
+  (trip?.crew || []).forEach((c) => {
+    lookup.users[c.userId] = c.fullName;
+  });
+  return lookup;
+}
+
+/** Hướng xử lý tiếp của ngựa rời chuyến (phương án OffloadHorse, R-12); Deceased chỉ ở sự cố Critical, bắt buộc biên bản thú y */
+export const OFFLOAD_OUTCOMES = ['WaitRecover', 'ReturnToOrigin', 'HandOverHere', 'Deceased'];
+
+/** Nguyên nhân khi đóng sự cố (Chính sách 9.1) quyết định ai chịu chi phí */
+export const FAULT_PARTIES = ['Company', 'Customer', 'ForceMajeure'];
+
+export const FAULT_PARTY_COLOR = { Company: 'blue', Customer: 'orange', ForceMajeure: 'purple' };
 
 /**
  * Chuyển giá trị các ô sửa tuyến (RouteChangeFields) sang body backend; không có thay đổi nào thì trả null.
@@ -41,6 +96,8 @@ export function toRouteChangePayload(values) {
     address: c.address?.trim() || '',
     plannedTime: toIsoString(c.plannedTime),
     mandatoryRestMinutes: c.mandatoryRestMinutes || 0,
+    latitude: c.latitude ?? null,
+    longitude: c.longitude ?? null,
   }));
   if (deactivateCheckpointIds.length === 0 && newCheckpoints.length === 0) return null;
   return { deactivateCheckpointIds, newCheckpoints, insertAfterCheckpointId: values.insertAfterCheckpointId || undefined };
@@ -52,11 +109,13 @@ export const INCIDENT_SEVERITIES = ['Minor', 'Moderate', 'Major', 'Critical'];
 export const SEVERITY_COLOR = { Minor: 'default', Moderate: 'gold', Major: 'orange', Critical: 'red' };
 
 /** Trạng thái sự cố: Reported -> PlanProposed -> Approved -> Resolved (hoặc Rejected rồi đề xuất lại) */
-export const INCIDENT_STATUSES = ['Reported', 'PlanProposed', 'Approved', 'Rejected', 'Resolved'];
+// AwaitingConsent: phương án đi vòng có phí đã duyệt, chờ mọi khách có ngựa trên xe đồng ý (R-14)
+export const INCIDENT_STATUSES = ['Reported', 'PlanProposed', 'AwaitingConsent', 'Approved', 'Rejected', 'Resolved'];
 
 export const INCIDENT_STATUS_COLOR = {
   Reported: 'red',
   PlanProposed: 'gold',
+  AwaitingConsent: 'purple',
   Approved: 'blue',
   Rejected: 'volcano',
   Resolved: 'green',

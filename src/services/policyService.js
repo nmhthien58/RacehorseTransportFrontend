@@ -68,6 +68,23 @@ export const policyService = {
       return DEFAULT_POLICY;
     }
   },
+
+  /**
+   * Cấu hình chính sách cho màn quản trị (nhân sự): 21 trường phẳng, ví dụ `deliveryWaitingFeePerHourUsd`
+   * @returns {Promise<any>}
+   */
+  async getPolicySettings() {
+    return api.get(ENDPOINTS.POLICY.SETTINGS);
+  },
+
+  /**
+   * Manager / Admin sửa cấu hình chính sách; phải gửi đủ 21 trường (lấy từ getPolicySettings rồi sửa)
+   * @param {Object} payload
+   * @returns {Promise<any>}
+   */
+  async updatePolicySettings(payload) {
+    return api.put(ENDPOINTS.POLICY.SETTINGS, payload);
+  },
 };
 
 export default policyService;

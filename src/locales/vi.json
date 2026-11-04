@@ -72,6 +72,8 @@
     "detail": "Chi tiết yêu cầu"
   },
   "nav": {
+    "countries": "Quốc gia & tuyến",
+    "pricingConfig": "Bảng giá chung",
     "dashboard": "Bảng điều khiển",
     "horses": "Ngựa của tôi",
     "vetRecords": "Hồ sơ thú y",
@@ -101,6 +103,8 @@
     "tripClosure": "Đóng chuyến & KPI",
     "reports": "Báo cáo",
     "paymentSettings": "Cấu hình thanh toán",
+    "transactions": "Giao dịch",
+    "paymentHistory": "Lịch sử thanh toán",
     "transportOrders": "Đơn vận chuyển",
     "insuranceClaims": "Bồi thường bảo hiểm"
   },
@@ -537,9 +541,11 @@
       "earliestHint": "Ngày đón sớm nhất: {{date}} (cần khoảng {{days}} ngày để duyệt đơn, đặt cọc, làm hồ sơ kiểm dịch và xếp chuyến).",
       "expressHint": "Chọn ngày đón trước {{date}} sẽ tính phụ phí gấp (Express) vì phải xử lý hồ sơ khẩn.",
       "transitHint": "Thời gian vận chuyển ước tính: khoảng {{hours}} giờ (chậm nhất {{maxHours}} giờ, ~{{days}} ngày).",
+      "deadlineFromHint": "Hạn giao trễ nhất nên chọn từ <b>{{date}}</b> trở đi (đã tính thời gian vận chuyển ước tính và {{days}} ngày dự phòng).",
+      "arrivalHint": "Dự kiến tới nơi khoảng <b>{{from}} – {{to}}</b> nếu đón ngày cuối của khoảng đón (ước tính, thời gian thực tế có thể thay đổi).",
       "deadlineHint": "Hạn giao sớm nhất có thể: {{date}}.",
-      "tooEarly": "Ngày đón phải từ {{date}} trở đi.",
-      "deadlineTooEarly": "Hạn giao phải từ {{date}} trở đi để đủ thời gian vận chuyển.",
+      "tooEarly": "Ngày đón phải từ <b>{{date}}</b> trở đi.",
+      "deadlineTooEarly": "Hạn giao phải từ <b>{{date}}</b> trở đi để đủ thời gian vận chuyển.",
       "windowSummary": "{{start}} → {{end}}"
     },
     "stats": {
@@ -1316,6 +1322,7 @@
       "startSuccess": "Chuyến đã xuất bến thành công.",
       "horseStatus": "Trạng thái ngựa",
       "departureCheck": {
+        "unavailable": "Chưa kiểm tra được tự động (hạn giấy tờ, giấy khám 48 giờ, thanh toán) vì hệ thống chưa sẵn sàng. Khi bấm Xuất phát, máy chủ vẫn kiểm tra lại các điều kiện.",
         "blockingTitle": "Có {{count}} vấn đề chặn xuất phát bắt buộc phải giải quyết",
         "blockingHint": "Theo quy chuẩn an toàn và pháp lý vận chuyển ngựa quốc tế, toàn bộ các vấn đề bên dưới bắt buộc phải xử lý triệt để trước khi đoàn xe được phép lăn bánh:",
         "warningTitle": "Cảnh báo lưu ý trước khi xuất phát ({{count}})",
@@ -1326,6 +1333,10 @@
           "Document": "Hồ sơ kiểm dịch",
           "Health": "Sức khỏe 48h",
           "Payment": "Thanh toán"
+        },
+        "code": {
+          "FitExamMissing": "Thiếu giấy khám lâm sàng đủ sức khỏe trong 48 giờ trước giờ xuất phát",
+          "FitExamPendingReview": "Giấy khám lâm sàng đang chờ chuyên viên duyệt"
         }
       }
     },
@@ -1459,6 +1470,10 @@
     }
   },
   "customerDossier": {
+    "companyProvides": "Công ty xin",
+    "companyProcessing": "Công ty đang làm thủ tục",
+    "companyObtained": "Đã có",
+    "companyDocsNote": "Bạn chỉ cần nộp giấy tờ của con ngựa (hộ chiếu, tiêm phòng, xét nghiệm). Giấy kiểm dịch xuất khẩu, giấy phép nhập khẩu và giấy phép quá cảnh do chuyên viên của công ty xin với cơ quan chức năng; bạn theo dõi tiến độ ở đây.",
     "title": "Hồ sơ kiểm dịch (Digital Dossier)",
     "empty": "Chưa có hồ sơ kiểm dịch. Hồ sơ được tạo tự động cho từng con ngựa khi đơn vận chuyển được duyệt.",
     "awaitingApproval": "Yêu cầu đang chờ duyệt. Hồ sơ sẽ xuất hiện tại đây sau khi chuyên viên được phân công.",
@@ -1660,14 +1675,14 @@
     },
     "warnings": {
       "DeadlineMissed": "{{bookingCode}} dự kiến tới {{eta}}, trễ hơn hạn giao {{deadline}}.",
-      "PickupOutsideWindow": "{{bookingCode}} được đón lúc {{pickupAt}}, ngoài khoảng đón {{from}} – {{to}}.",
+      "PickupOutsideWindow": "{{bookingCode}} được đón lúc {{pickupAt}}, ngoài khoảng đón <b>{{from}} – {{to}}</b>.",
       "DifferentPickupCountry": "Các đơn được đón ở nhiều nước khác nhau ({{countries}}).",
       "PickupsFarApart": "Điểm đón của {{bookingCode}} cách điểm xuất phát {{km}} km (ngưỡng {{limit}} km).",
       "Detour": "{{bookingCode}} phải đi {{routeKm}} km thay vì {{directKm}} km nếu đi thẳng (×{{ratio}}, ngưỡng ×{{limit}}).",
       "DossierNotCleared": "Hồ sơ của {{horseName}} ({{bookingCode}}) chưa thông quan; xe chỉ xuất phát khi đã Cleared.",
       "OvernightRest": "Chặng {{from}} → {{to}} ({{km}} km) cần {{count}} lần nghỉ qua đêm; nên thêm mốc Trạm nghỉ.",
       "twoDriversRequiredTitle": "Cảnh báo: Yêu cầu ít nhất 2 tài xế (R-14)",
-      "twoDriversRequiredDesc": "Thời gian chạy dự kiến {{hours}} giờ (vượt quá 9 giờ/ngày). Bắt buộc phải có ít nhất 2 tài xế thay phiên để trình duyệt chuyến."
+      "twoDriversRequiredDesc": "Thời gian lái dự kiến {{hours}} giờ (vượt quá 9 giờ). Bắt buộc phải có ít nhất 2 tài xế thay phiên để trình duyệt chuyến."
     },
     "stallMap": {
       "load": "{{count}}/{{max}} ngựa",
@@ -1977,6 +1992,10 @@
       "Reroute": "Đổi tuyến",
       "VeterinaryCare": "Dừng chăm sóc thú y",
       "OffloadHorse": "Cho ngựa rời chuyến",
+      "ReturnToOrigin": "Cả đoàn quay về nơi đi",
+      "HoldAtStable": "Gửi ngựa chuồng tạm",
+      "ReplaceVehicle": "Đổi xe",
+      "ReplaceCrew": "Đổi tài xế / áp tải",
       "Other": "Khác"
     },
     "actionPlaceholder": "Chọn hành động",
@@ -2043,6 +2062,10 @@
       "Weather": "Thời tiết",
       "ClimateControlFailure": "Hỏng điều hòa khoang",
       "CustomsHold": "Bị giữ ở hải quan",
+      "BorderRejected": "Cửa khẩu từ chối cho qua",
+      "BorderClosed": "Biên giới đóng",
+      "CrewUnavailable": "Tài xế / áp tải không thể tiếp tục",
+      "RecipientUnavailable": "Người nhận vắng mặt / từ chối",
       "Other": "Khác"
     },
     "severity": {
@@ -2054,6 +2077,7 @@
     "status": {
       "Reported": "Mới báo",
       "PlanProposed": "Chờ duyệt phương án",
+      "AwaitingConsent": "Chờ khách đồng ý đi vòng",
       "Approved": "Đã duyệt phương án",
       "Rejected": "Phương án bị từ chối",
       "Resolved": "Đã xử lý xong"
@@ -2221,6 +2245,15 @@
     "success": "Đã đóng chuyến {{code}}, KPI {{score}} điểm"
   },
   "reports": {
+    "operatingCostHint": "Chi phí vận hành: {{cost}}",
+    "marginHint": "Biên lợi nhuận {{percent}}%",
+    "tripsHint": "{{bookings}} đơn hoàn tất · {{horses}} ngựa đã giao",
+    "incidentCostHint": "Chi phí phát sinh: {{cost}}",
+    "financeTrend": "Doanh thu, chi phí và lợi nhuận theo tháng",
+    "lastMonths": "{{count}} tháng gần nhất",
+    "performance": "Hiệu suất vận hành",
+    "tripsTrend": "Chuyến hoàn thành theo tháng",
+    "onTimeShort": "đúng giờ",
     "title": "Báo cáo",
     "subtitle": "Số liệu của các chuyến đã đóng. Bỏ trống khoảng ngày để xem toàn bộ.",
     "from": "Từ ngày",
@@ -2367,6 +2400,7 @@
         "insuranceVetCapPercent": "Trần chi phí thú y bảo hiểm toàn giá",
         "horseMinAgeMonths": "Độ tuổi tối thiểu của ngựa",
         "deliveryWaitingFeePerHourUsd": "Phí chờ mỗi giờ",
+        "deliveryDeadlineBufferDays": "Số ngày dự phòng hạn giao (Delivery.DeadlineBufferDays)",
         "deliveryMaxWaitingHours": "Số giờ chờ tối đa tại điểm giao",
         "policyVersion": "Phiên bản chính sách hiện hành",
         "effectiveDate": "Ngày ban hành chính sách"
@@ -2388,6 +2422,8 @@
         "insuranceVetCapPercent": "Mức bồi thường tối đa chi phí thú y tính theo % giá trị thỏa thuận.",
         "horseMinAgeMonths": "Ngựa dưới số tháng tuổi này sẽ bị hệ thống từ chối vận chuyển theo quy chuẩn IATA/EU.",
         "deliveryWaitingFeePerHourUsd": "Phí chờ áp dụng cho mỗi giờ xe phải đợi tại điểm giao (sau 2 giờ miễn phí).",
+        "deliveryDeadlineBufferDays": "Số ngày cộng thêm sau thời gian vận chuyển ước tính khi gợi ý hạn giao trễ nhất cho khách (0 – 30 ngày)",
+        "deliveryDeadlineBufferDaysRange": "Số ngày dự phòng từ 0 đến 30",
         "deliveryMaxWaitingHours": "Sau số giờ này người nhận không có mặt, ngựa sẽ được đưa vào chuồng tạm lưu trú.",
         "policyVersion": "Số hiệu phiên bản hiển thị trên trang Chính sách và ghi nhận khi khách đồng ý.",
         "effectiveDate": "Ngày áp dụng phiên bản chính sách này."
@@ -2482,110 +2518,6 @@
     "ariaLabel": "Thông báo",
     "newToast": "Thông báo mới"
   },
-  "policy": {
-    "agreement": {
-      "prefix": "Tôi đã đọc và đồng ý với",
-      "policyLinkText": "Chính sách dịch vụ",
-      "versionLabel": "phiên bản",
-      "checkboxAria": "Đồng ý với chính sách dịch vụ"
-    },
-    "header": {
-      "tag": "CHÍNH THỨC",
-      "version": "Phiên bản",
-      "effectiveDate": "Ngày ban hành",
-      "title": "Chính Sách Dịch Vụ Vận Chuyển Ngựa",
-      "subtitle": "Quy định chi tiết về phạm vi trách nhiệm, quy trình đặt chuyến, cước phí, bồi thường và quyền lợi của khách hàng khi sử dụng dịch vụ của International Equine Transport."
-    },
-    "nav": {
-      "contentsTitle": "MỤC LỤC CHÍNH SÁCH"
-    },
-    "sections": {
-      "sec1": "Phạm vi áp dụng",
-      "sec2": "Quy trình đặt chuyến & báo giá",
-      "sec3": "Thanh toán",
-      "sec4": "Hủy đơn & hoàn tiền",
-      "sec5": "Điều kiện ngựa được vận chuyển",
-      "sec6": "Giấy tờ & thủ tục",
-      "sec7": "Cam kết thời gian & bồi thường giao trễ",
-      "sec8": "Bảo hiểm & giới hạn trách nhiệm",
-      "sec9": "Sự cố trong hành trình",
-      "sec10": "Giao nhận",
-      "sec11": "Khiếu nại",
-      "sec12": "Hợp đồng vận chuyển",
-      "sec13": "Thay đổi chính sách"
-    },
-    "table": {
-      "item": "Khoản",
-      "amount": "Số tiền",
-      "deadline": "Thời hạn",
-      "cancelTime": "Thời điểm Khách hủy",
-      "refund": "Hoàn tiền",
-      "criteria": "Tiêu chí",
-      "optDefault": "Không mua bảo hiểm (mặc định)",
-      "optFull": "Bảo hiểm toàn giá trị (tùy chọn)",
-      "incidentCause": "Nguyên nhân",
-      "incidentExample": "Ví dụ",
-      "unusedFare": "Tiền cước phần chưa đi",
-      "extraCosts": "Chi phí phát sinh (chờ, quay đầu, chuồng, thú y)",
-      "delayCompensation": "Bồi thường trễ"
-    },
-    "payment": {
-      "deposit": "Tiền cọc",
-      "quoteBase": "báo giá chốt",
-      "quoteAcceptHint": "Khi chấp nhận báo giá, trong",
-      "balance": "Phần còn lại",
-      "balanceCalc": "Báo giá chốt − tiền cọc",
-      "balanceDueHint": "Trước ngày xuất phát",
-      "extra": "Chi phí phát sinh",
-      "extraDesc": "Theo mục 9, 10 (nếu có)",
-      "extraDueHint": "Trong",
-      "extraAfterTrip": "ngày kể từ khi kết thúc chuyến"
-    },
-    "cancel": {
-      "beforeDeposit": "Trước khi đặt cọc",
-      "noRefundNeeded": "Không có khoản nào phải hoàn",
-      "afterDepositBeforeDeparture": "Sau khi cọc, trước khi xuất phát",
-      "refundDepositPrefix": "Hoàn",
-      "refundDepositSuffix": "tiền cọc + 100% phần còn lại đã trả",
-      "afterDeparture": "Sau khi xuất phát",
-      "cannotCancelSelf": "Khách không tự hủy được. Mọi thay đổi xử lý theo mục 9"
-    },
-    "insurance": {
-      "premium": "Phí bảo hiểm",
-      "free": "Không",
-      "agreedValue": "giá trị thỏa thuận",
-      "whenCovered": "Khi nào được bồi thường",
-      "companyFaultOnly": "Chỉ khi do lỗi công ty",
-      "allCausesCovered": "Mọi nguyên nhân trong phạm vi, kể cả bất khả kháng",
-      "lossEuthanasia": "Ngựa chết / an tử / mất",
-      "capUpTo": "Tối đa",
-      "injuredHorse": "Ngựa bị thương",
-      "actualVetCost": "Chi phí thú y thực tế, tối đa"
-    },
-    "incident": {
-      "companyFault": "Lỗi công ty",
-      "companyFaultEx": "Xe hỏng do bảo dưỡng, thiếu giấy do chuyên viên, đi sai tuyến",
-      "refund100": "Hoàn 100%",
-      "companyBears": "Công ty chịu",
-      "delayYes": "Có (mục 7)",
-      "customerFault": "Lỗi Khách",
-      "customerFaultEx": "Giấy sai / giả, khai sai tình trạng ngựa, người nhận vắng mặt / từ chối",
-      "noRefund": "Không hoàn",
-      "customerBears": "Khách chịu",
-      "delayNo": "Không",
-      "forceMajeure": "Bất khả kháng",
-      "forceMajeureEx": "Đóng biên giới, đổi chính sách nhập khẩu, thiên tai, dịch bệnh, tai nạn bên thứ 3",
-      "proRataRefund": "Hoàn theo tỉ lệ quãng đường chưa đi, trừ phí thủ tục không lấy lại được",
-      "forceMajeureExtra": "Công ty chịu chi phí xe & nhân sự; Khách chịu chuồng tạm & thú y"
-    },
-    "units": {
-      "days": "ngày",
-      "hours": "giờ",
-      "hour": "giờ",
-      "months": "tháng tuổi",
-      "horse": "con"
-    }
-  },
   "map": {
     "searchPlaceholder": "Tìm địa chỉ (ví dụ: Ba Vì, Hà Nội)",
     "pickHint": "Gõ địa chỉ để chọn gợi ý, hoặc bấm lên bản đồ / kéo ghim để chỉnh vị trí.",
@@ -2611,11 +2543,31 @@
     }
   },
   "bookingForm": {
+    "climateFee": "+10% cước vận chuyển (tính trên cước sau chiết khấu)",
+    "routeNotOffered": "Công ty hiện chưa nhận tuyến này bằng đường bộ lẫn đường bay. Vui lòng chọn nước đi hoặc nước đến khác.",
+    "switchedToAir": "Hiện chưa nhận vận chuyển đường bộ cho tuyến đến {{country}}, đã chuyển sang đường bay.",
+    "switchedToGround": "Hiện chưa nhận vận chuyển đường bay cho tuyến này (đến {{country}}), đã chuyển sang đường bộ.",
+    "groundNotOffered": "Hiện chưa nhận vận chuyển đường bộ cho tuyến này.",
+    "airNotOffered": "Hiện chưa nhận vận chuyển đường bay cho tuyến này (cần sân bay ở cả nước đi và nước đến).",
+    "airOnlyNote": "Hiện chỉ nhận đường bay",
+    "groundOnlyNote": "Hiện chỉ nhận đường bộ",
     "pickupOnMap": "Điểm đón (tìm địa chỉ hoặc chọn trên bản đồ)",
     "dropoffOnMap": "Điểm giao (tìm địa chỉ hoặc chọn trên bản đồ)",
+    "detailedAddress": "Địa chỉ chi tiết",
+    "detailedAddressPlaceholder": "Tên trang trại, số nhà, đường, hướng dẫn xe vào…",
+    "detailedAddressRequired": "Vui lòng nhập địa chỉ chi tiết cho điểm đón và điểm giao.",
     "pickBothPoints": "Vui lòng chọn điểm đón và điểm giao trên bản đồ.",
     "routeHint": "Quãng đường đường bộ thực tế giữa hai điểm, lấy từ bản đồ. Tuyến chính xác (trạm nghỉ, cửa khẩu) do công ty lập sau khi duyệt yêu cầu.",
     "routeLoading": "Đang tính quãng đường...",
+    "pickPointsForRoute": "Chọn điểm đón và điểm giao để xem quãng đường và thời gian lái.",
+    "driveTime": "Thời gian lái",
+    "driveTimeValue": "{{hours}} giờ {{minutes}} phút",
+    "driveTimeHours": "{{hours}} giờ",
+    "distance": "Quãng đường",
+    "routeFailed": "Chưa tính được quãng đường; hệ thống sẽ tự tính khi gửi đơn.",
+    "transitTime": "Thời gian vận chuyển",
+    "transitBreakdown": "Gồm khoảng {{driving}} giờ lái (theo tốc độ trung bình của xe chở ngựa), {{rest}} giờ nghỉ dọc đường, {{border}} giờ làm thủ tục cửa khẩu và {{handling}} giờ bốc xếp ngựa.",
+    "transitDisclaimer": "Đây là thời gian ước tính để bạn tham khảo. Thời gian thực tế có thể thay đổi tùy tuyến đường công ty lập, tình hình giao thông, thời tiết và thủ tục tại cửa khẩu.",
     "values": {
       "declaredLabel": "Giá trị khai báo (USD, không bắt buộc)",
       "declaredPlaceholder": "Ví dụ: 40.000",
@@ -2931,5 +2883,496 @@
     "companyCovers": "Công ty chăm sóc ngựa tại chuồng tạm bằng chi phí của công ty cho tới khi xử lý xong; bạn không phải trả phí chờ hay phí chuồng.",
     "claimOpened": "Hồ sơ bồi thường đã được mở.",
     "viewClaims": "Xem hồ sơ bồi thường"
+  },
+  "policy": {
+    "agreement": {
+      "prefix": "Tôi đã đọc và đồng ý với",
+      "policyLinkText": "Chính sách dịch vụ",
+      "versionLabel": "phiên bản",
+      "checkboxAria": "Đồng ý với chính sách dịch vụ"
+    },
+    "header": {
+      "tag": "CHÍNH THỨC",
+      "version": "Phiên bản",
+      "effectiveDate": "Ngày ban hành",
+      "title": "Chính Sách Dịch Vụ Vận Chuyển Ngựa",
+      "subtitle": "Quy định chi tiết về phạm vi trách nhiệm, quy trình đặt chuyến, cước phí, bồi thường và quyền lợi của khách hàng khi sử dụng dịch vụ của International Equine Transport."
+    },
+    "nav": {
+      "contentsTitle": "MỤC LỤC CHÍNH SÁCH"
+    },
+    "sections": {
+      "sec1": "Phạm vi áp dụng",
+      "sec2": "Quy trình đặt chuyến & báo giá",
+      "sec3": "Thanh toán",
+      "sec4": "Hủy đơn & hoàn tiền",
+      "sec5": "Điều kiện ngựa được vận chuyển",
+      "sec6": "Giấy tờ & thủ tục",
+      "sec7": "Cam kết thời gian & bồi thường giao trễ",
+      "sec8": "Bảo hiểm & giới hạn trách nhiệm",
+      "sec9": "Sự cố trong hành trình",
+      "sec10": "Giao nhận",
+      "sec11": "Khiếu nại",
+      "sec12": "Hợp đồng vận chuyển",
+      "sec13": "Thay đổi chính sách"
+    },
+    "table": {
+      "item": "Khoản",
+      "amount": "Số tiền",
+      "deadline": "Thời hạn",
+      "cancelTime": "Thời điểm Khách hủy",
+      "refund": "Hoàn tiền",
+      "criteria": "Tiêu chí",
+      "optDefault": "Không mua bảo hiểm (mặc định)",
+      "optFull": "Bảo hiểm toàn giá trị (tùy chọn)",
+      "incidentCause": "Nguyên nhân",
+      "incidentExample": "Ví dụ",
+      "unusedFare": "Tiền cước phần chưa đi",
+      "extraCosts": "Chi phí phát sinh (chờ, quay đầu, chuồng, thú y)",
+      "delayCompensation": "Bồi thường trễ"
+    },
+    "payment": {
+      "deposit": "Tiền cọc",
+      "quoteBase": "báo giá chốt",
+      "quoteAcceptHint": "Khi chấp nhận báo giá, trong",
+      "balance": "Phần còn lại",
+      "balanceCalc": "Báo giá chốt − tiền cọc",
+      "balanceDueHint": "Trước ngày xuất phát",
+      "extra": "Chi phí phát sinh",
+      "extraDesc": "Theo mục 9, 10 (nếu có)",
+      "extraDueHint": "Trong",
+      "extraAfterTrip": "ngày kể từ khi kết thúc chuyến"
+    },
+    "cancel": {
+      "beforeDeposit": "Trước khi đặt cọc",
+      "noRefundNeeded": "Không có khoản nào phải hoàn",
+      "afterDepositBeforeDeparture": "Sau khi cọc, trước khi xuất phát",
+      "refundDepositPrefix": "Hoàn",
+      "refundDepositSuffix": "tiền cọc + 100% phần còn lại đã trả",
+      "afterDeparture": "Sau khi xuất phát",
+      "cannotCancelSelf": "Khách không tự hủy được. Mọi thay đổi xử lý theo mục 9"
+    },
+    "insurance": {
+      "premium": "Phí bảo hiểm",
+      "free": "Không",
+      "agreedValue": "giá trị thỏa thuận",
+      "whenCovered": "Khi nào được bồi thường",
+      "companyFaultOnly": "Chỉ khi do lỗi công ty",
+      "allCausesCovered": "Mọi nguyên nhân trong phạm vi, kể cả bất khả kháng",
+      "lossEuthanasia": "Ngựa chết / an tử / mất",
+      "capUpTo": "Tối đa",
+      "injuredHorse": "Ngựa bị thương",
+      "actualVetCost": "Chi phí thú y thực tế, tối đa"
+    },
+    "incident": {
+      "companyFault": "Lỗi công ty",
+      "companyFaultEx": "Xe hỏng do bảo dưỡng, thiếu giấy do chuyên viên, đi sai tuyến",
+      "refund100": "Hoàn 100%",
+      "companyBears": "Công ty chịu",
+      "delayYes": "Có (mục 7)",
+      "customerFault": "Lỗi Khách",
+      "customerFaultEx": "Giấy sai / giả, khai sai tình trạng ngựa, người nhận vắng mặt / từ chối",
+      "noRefund": "Không hoàn",
+      "customerBears": "Khách chịu",
+      "delayNo": "Không",
+      "forceMajeure": "Bất khả kháng",
+      "forceMajeureEx": "Đóng biên giới, đổi chính sách nhập khẩu, thiên tai, dịch bệnh, tai nạn bên thứ 3",
+      "proRataRefund": "Hoàn theo tỉ lệ quãng đường chưa đi, trừ phí thủ tục không lấy lại được",
+      "forceMajeureExtra": "Công ty chịu chi phí xe & nhân sự; Khách chịu chuồng tạm & thú y"
+    },
+    "deadlineBufferNote": "Hạn giao trễ nhất khách chọn phải đủ thời gian vận chuyển ước tính cộng thêm {{days}} ngày dự phòng.",
+    "units": {
+      "days": "ngày",
+      "hours": "giờ",
+      "hour": "giờ",
+      "months": "tháng tuổi",
+      "horse": "con"
+    }
+  },
+  "routePlan": {
+    "title": "Lập tuyến dự kiến cho đơn {{code}}",
+    "origin": "Điểm đón (lấy từ đơn)",
+    "destination": "Điểm giao (lấy từ đơn)",
+    "searchPlaceholder": "Tìm địa chỉ trạm nghỉ / cửa khẩu để thêm mốc, hoặc bấm lên bản đồ",
+    "transitCountries": "Nước quá cảnh",
+    "noTransit": "Không có",
+    "recalculating": "Đang tính lại tuyến...",
+    "warningLeg": "Chặng {{from}} → {{to}} đi qua {{countries}}",
+    "noStops": "Chưa có mốc giữa đường: tuyến đi thẳng từ điểm đón tới điểm giao",
+    "noCoordinates": "Đơn chưa có tọa độ điểm đón / giao nên không vẽ được tuyến.",
+    "notesPlaceholder": "Ghi chú cho quản lý (không bắt buộc)",
+    "nameRequired": "Mốc nào cũng cần có tên",
+    "saveDraft": "Lưu nháp",
+    "submit": "Lưu & trình duyệt",
+    "submitHint": "Mỗi lần thêm / kéo / xóa mốc, hệ thống tính lại quãng đường và nước quá cảnh.",
+    "submitBlocked": "Còn cảnh báo cửa khẩu: thêm mốc Cửa khẩu ở chặng qua biên giới rồi mới trình được.",
+    "hasWarnings": "Đã lưu nhưng tuyến còn cảnh báo cửa khẩu nên chưa trình.",
+    "saved": "Đã lưu bản nháp tuyến",
+    "submitted": "Đã trình tuyến của đơn {{code}} cho quản lý duyệt",
+    "saveFailed": "Không lưu được tuyến",
+    "loadFailed": "Không tải được tuyến của đơn",
+    "previewFailed": "Không tính được tuyến",
+    "rejected": "Phiên bản v{{version}} bị quản lý từ chối",
+    "newVersion": "Lập phiên bản mới",
+    "newVersionHint": "Tuyến mới sẽ thay tuyến đã duyệt khi quản lý duyệt; báo giá được tính lại nếu đơn chưa chấp nhận báo giá.",
+    "readOnly": {
+      "Submitted": "Tuyến đang chờ quản lý duyệt.",
+      "Approved": "Tuyến đã được duyệt."
+    },
+    "versions": "Các phiên bản",
+    "status": {
+      "Draft": "Đang soạn",
+      "Submitted": "Chờ duyệt",
+      "Approved": "Đã duyệt",
+      "Rejected": "Bị từ chối",
+      "Superseded": "Đã thay thế"
+    },
+    "fields": {
+      "type": "Loại mốc",
+      "name": "Tên mốc",
+      "address": "Địa chỉ",
+      "rest": "Nghỉ (phút)",
+      "version": "Phiên bản",
+      "status": "Trạng thái",
+      "stops": "Các mốc",
+      "km": "km",
+      "createdAt": "Lập lúc",
+      "rejection": "Lý do từ chối"
+    }
+  },
+  "incidentOutcome": {
+    "emergencyOffload": "Đã dỡ khẩn cấp",
+    "offloadOutcome": "Ngựa rời chuyến",
+    "outcome": {
+      "WaitRecover": "Chờ hồi phục rồi đi chuyến khác",
+      "ReturnToOrigin": "Đưa ngựa về nơi đi",
+      "HandOverHere": "Khách nhận ngựa tại nơi dỡ",
+      "Deceased": "Ngựa chết"
+    },
+    "vetReport": "Biên bản thú y",
+    "detourCost": "Phí đi vòng khách trả thêm",
+    "accepted": "Đồng ý",
+    "declined": "Không đồng ý",
+    "replacementVehicle": "Xe thay thế",
+    "crewReplacement": "Đổi người",
+    "faultParty": "Nguyên nhân",
+    "fault": {
+      "Company": {
+        "title": "Lỗi công ty",
+        "example": "Ví dụ: xe hỏng do bảo dưỡng kém, thiếu giấy do chuyên viên, đi sai tuyến",
+        "money": "Công ty chịu chi phí phát sinh; khách được bồi thường nếu giao trễ."
+      },
+      "Customer": {
+        "title": "Lỗi khách",
+        "example": "Ví dụ: giấy sai / giả, khai sai tình trạng ngựa",
+        "money": "Khách chịu chi phí phát sinh (cộng vào khoản phát sinh khi đóng chuyến); không bồi thường giao trễ."
+      },
+      "ForceMajeure": {
+        "title": "Bất khả kháng",
+        "example": "Ví dụ: đóng biên, thiên tai, dịch bệnh, tai nạn do bên thứ ba",
+        "money": "Công ty chịu chi phí xe và nhân sự; khách trả phí đi vòng đã đồng ý, chuồng tạm và thú y; không bồi thường giao trễ."
+      }
+    }
+  },
+  "incidentPlan": {
+    "emergencyOffload": "{{horse}} đã được dỡ khẩn cấp: phương án phải là Cho ngựa rời chuyến, kèm hướng xử lý tiếp.",
+    "actionHint": {
+      "ReplaceVehicle": "Khi duyệt, chuyến chuyển sang xe mới (xe mới Đang chạy, xe cũ Bảo trì). Ngựa giữ số chuồng nếu xe mới đủ chỗ.",
+      "ReplaceCrew": "Khi duyệt, người mới thay đúng vai trò của người cũ; ngựa áp tải cũ phụ trách chuyển cho người mới. Hai người đều nhận thông báo.",
+      "ReturnToOrigin": "Khi duyệt, hệ thống tự dựng tuyến quay về (bỏ các mốc chưa tới, e-POD ký ở nơi đi). Không cần sửa tuyến.",
+      "HoldAtStable": "Phí chuồng tạm = số ngày × số ngựa × đơn giá, cộng vào chi phí phát sinh khi đóng sự cố.",
+      "Reroute": "Đi vòng tốn thêm tiền cho khách: nhập phí bên dưới, tuyến chỉ đổi khi mọi khách có ngựa trên xe đồng ý; một khách từ chối thì cả đoàn quay về."
+    },
+    "horse": "Ngựa rời chuyến",
+    "horsePlaceholder": "Chọn ngựa",
+    "outcome": "Hướng xử lý tiếp",
+    "outcomeHint": {
+      "WaitRecover": "Ngựa về lại hàng chờ xếp chuyến",
+      "ReturnToOrigin": "Điều phối sắp xếp chở về; ngựa xong với đơn",
+      "HandOverHere": "Đoàn xe ký e-POD tại chỗ với khách",
+      "Deceased": "Bắt buộc biên bản thú y; tự mở hồ sơ bồi thường"
+    },
+    "deceasedNeedsCritical": "Chỉ chọn được ở sự cố mức Khẩn cấp",
+    "vetReport": "Biên bản thú y",
+    "chooseVetReport": "Chọn file (PDF / ảnh)",
+    "vetReportRequired": "Ngựa chết bắt buộc kèm biên bản thú y",
+    "extraCostForCustomer": "Chi phí khách phải trả thêm (đi vòng)",
+    "extraCostHint": "Tổng cho cả chuyến, chia theo số ngựa của các đơn. Để 0 nếu công ty chịu.",
+    "awaitingConsent": "Đang chờ các khách có ngựa trên xe đồng ý đi vòng; tuyến chưa đổi.",
+    "replacementVehicle": "Xe thay thế",
+    "replacementVehiclePlaceholder": "Chọn xe",
+    "replacementVehicleHint": "Chỉ hiện xe {{type}} còn rảnh trong khung giờ của chuyến và đủ {{count}} chỗ cho ngựa còn trên xe. Đơn yêu cầu điều hòa thì chọn xe có điều hòa.",
+    "noVehicle": "Không có xe cùng loại còn rảnh và đủ chỗ",
+    "climate": "Có điều hòa",
+    "removeCrew": "Người bị thay",
+    "removeCrewPlaceholder": "Chọn người trong đoàn xe",
+    "removeCrewRequired": "Chọn người bị thay trong đoàn xe của chuyến",
+    "addCrew": "Người thay thế",
+    "addCrewPlaceholder": "Chọn tài xế / áp tải còn rảnh",
+    "addCrewHint": "Người mới nhận vai trò {{role}} của người bị thay.",
+    "noCrew": "Không có tài xế / áp tải nào rảnh trong khung giờ của chuyến",
+    "resolveTitle": "Đóng sự cố {{code}}",
+    "faultRequired": "Chọn nguyên nhân",
+    "faultNote": "Giải thích ngắn (không bắt buộc)",
+    "resolveEffect": {
+      "ReturnToOrigin": {
+        "Company": "Quay về do lỗi công ty: hoàn 100% số khách đã trả cho từng đơn.",
+        "Customer": "Quay về do lỗi khách: không hoàn; chi phí quay đầu ({{cost}}) là khoản phát sinh của khách.",
+        "ForceMajeure": "Bất khả kháng: hoàn tiền cước theo tỉ lệ quãng đường chưa đi (không hoàn phí thủ tục)."
+      },
+      "OffloadHorse": {
+        "Company": "Hoàn phần cước chưa đi của con ngựa rời chuyến (trừ hướng Chờ hồi phục).",
+        "Customer": "Không hoàn phần cước của con ngựa rời chuyến.",
+        "ForceMajeure": "Hoàn phần cước chưa đi của con ngựa rời chuyến (trừ hướng Chờ hồi phục)."
+      },
+      "HoldAtStable": {
+        "Company": "Phí chuồng tạm được tính khi đóng; lỗi công ty thì khách không phải trả.",
+        "Customer": "Phí chuồng tạm được tính khi đóng và cộng vào khoản phát sinh của khách.",
+        "ForceMajeure": "Phí chuồng tạm được tính khi đóng và cộng vào khoản phát sinh của khách."
+      }
+    }
+  },
+  "detourConsent": {
+    "title": "Chuyến {{trip}} cần đi đường vòng — cần bạn đồng ý",
+    "intro": "Đoàn xe gặp sự cố và cần đổi sang tuyến khác tốn thêm chi phí. Tuyến chỉ đổi khi mọi khách có ngựa trên xe đồng ý.",
+    "cost": "Phí đi vòng cả chuyến: {{amount}}",
+    "costNote": "Chia theo số ngựa của các đơn trên xe và cộng vào khoản phát sinh khi đóng chuyến. Đồng ý thì có bản hợp đồng mới để bạn xác nhận.",
+    "accept": "Đồng ý đi vòng",
+    "decline": "Không đồng ý",
+    "acceptConfirm": "Đồng ý đi đường vòng?",
+    "acceptConfirmDesc": "Bạn trả phần phí đi vòng của đơn mình.",
+    "declineConfirm": "Không đồng ý đi vòng?",
+    "declineConfirmDesc": "Cả đoàn sẽ quay về nơi đi, không thu phí đi vòng; tiền hoàn theo Chính sách mục 9.",
+    "yourAnswer": "Bạn đã trả lời:",
+    "canChange": "có thể đổi tới khi có kết quả",
+    "acceptedMsg": "Đã ghi nhận bạn đồng ý đi vòng",
+    "declinedMsg": "Đã ghi nhận bạn không đồng ý",
+    "failed": "Không gửi được câu trả lời"
+  },
+  "companyDocs": {
+    "uploadTitle": "Tải lên giấy công ty đã xin",
+    "uploadOk": "Tải lên",
+    "uploadHint": "Giấy do cơ quan chức năng cấp được tính là đã duyệt ngay khi tải lên. Giấy phải còn hiệu lực tới ngày cuối khoảng đón ngựa.",
+    "uploadButton": "Tải lên giấy đã xin",
+    "uploadSuccess": "Đã lưu giấy và báo cho khách hàng",
+    "notYetObtained": "Chưa có. Chuyên viên xin giấy với cơ quan chức năng rồi tải lên tại đây."
+  },
+  "countryConfig": {
+    "title": "Quốc gia & tuyến vận chuyển",
+    "subtitle": "Nước nào công ty nhận làm nước đi / nước đến, bằng đường bộ hay đường bay, sân bay và giấy tờ của từng nước.",
+    "rulesTitle": "Khách đặt được một tuyến khi:",
+    "rule1": "Nước đi và nước đến đều đang được bật.",
+    "rule2": "Nước đến đang bật phương thức khách chọn. Công tắc \"Đường bộ\" / \"Đường bay\" chính là dòng cước của nước đó trong bảng giá: tắt thì giá vẫn được giữ.",
+    "rule3": "Đường bay cần sân bay đang mở ở cả nước đi và nước đến. Đường bộ giữa hai nước có đi được không (ví dụ cách biển) thì Manager xét khi duyệt đơn.",
+    "addCountry": "Thêm quốc gia",
+    "addCountryHint": "Nước mới đang bật nhưng chưa có cước: khách chỉ chọn được làm nước đi cho tới khi bạn nhập cước đường bộ hoặc đường bay.",
+    "countryCode": "Mã nước (ISO 2 chữ)",
+    "countryCodeInvalid": "Mã nước gồm đúng 2 chữ cái, ví dụ NZ",
+    "nameVi": "Tên tiếng Việt",
+    "nameEn": "Tên tiếng Anh",
+    "sortOrder": "Thứ tự",
+    "created": "Đã thêm quốc gia",
+    "statActive": "Nước đang nhận",
+    "statGround": "Nhận đường bộ",
+    "statAir": "Nhận đường bay",
+    "statWarnings": "Còn thiếu thông tin",
+    "filters": {
+      "all": "Tất cả",
+      "ground": "Đường bộ",
+      "air": "Đường bay",
+      "warnings": "Còn thiếu",
+      "off": "Đang tắt"
+    },
+    "search": "Tìm theo tên hoặc mã nước",
+    "country": "Quốc gia",
+    "ground": "Đường bộ",
+    "air": "Đường bay",
+    "documentsCol": "Giấy tờ (xuất / quá cảnh / nhập)",
+    "warningsCol": "Còn thiếu",
+    "configure": "Cấu hình",
+    "inactive": "Đang tắt",
+    "transitOnly": "Chỉ quá cảnh / nước đi",
+    "noRateYet": "Chưa có giá",
+    "noOpenAirport": "Không còn sân bay mở",
+    "airportCount": "{{active}}/{{total}} sân bay mở",
+    "directionsShort": {
+      "Export": "Xuất {{count}}",
+      "Transit": "Quá cảnh {{count}}",
+      "Import": "Nhập {{count}}"
+    },
+    "directions": {
+      "Export": "Xuất khẩu",
+      "Transit": "Quá cảnh",
+      "Import": "Nhập khẩu"
+    },
+    "warningsShort": {
+      "MissingImportDocuments": "Chưa khai giấy nhập khẩu",
+      "MissingExportDocuments": "Chưa khai giấy xuất khẩu",
+      "AirFreightWithoutAirport": "Bật đường bay nhưng không có sân bay mở"
+    },
+    "warnings": {
+      "MissingImportDocuments": "Nước này đang nhận làm nước đến nhưng chưa khai giấy nhập khẩu: hồ sơ của đơn sẽ thiếu giấy.",
+      "MissingExportDocuments": "Chưa khai giấy xuất khẩu: đơn đi từ nước này sẽ thiếu giấy.",
+      "AirFreightWithoutAirport": "Cước bay đang bật nhưng không còn sân bay mở, khách chưa đặt được đường bay."
+    },
+    "tabs": {
+      "modes": "Phương thức & sân bay",
+      "documents": "Giấy tờ ({{count}})",
+      "fees": "Phí riêng ({{count}})",
+      "general": "Thông tin chung"
+    },
+    "on": "Đang nhận",
+    "off": "Không nhận",
+    "groundTitle": "Đường bộ (giá tính theo km mỗi con)",
+    "airTitle": "Đường bay (giá tính theo con)",
+    "customersCanChoose": "Khách đang chọn được phương thức này cho nước đến này.",
+    "customersCannotChoose": "Khách chưa chọn được phương thức này cho nước đến này.",
+    "accepting": "Nhận khách",
+    "rate": "Giá cước",
+    "enterRateFirst": "Hãy nhập giá cước trước khi bật phương thức này.",
+    "saved": "Đã lưu",
+    "airports": "Sân bay",
+    "airportsHint": "Sân bay nhận ngựa của nước này. Đặt đường bay từ / tới nước này cần ít nhất một sân bay đang mở.",
+    "airportName": "Tên sân bay",
+    "airportNameRequired": "Nhập tên sân bay",
+    "iataInvalid": "Mã IATA gồm 3 chữ cái",
+    "city": "Thành phố",
+    "open": "Đang mở",
+    "addAirport": "Thêm sân bay",
+    "airportAdded": "Đã thêm sân bay",
+    "noAirports": "Chưa có sân bay",
+    "documentsHint": "Giấy tờ nước này yêu cầu khi ngựa đi từ nước này (xuất khẩu), đi ngang qua (quá cảnh) hoặc tới nước này (nhập khẩu). Hồ sơ của mỗi đơn tự ghép theo tuyến: xuất khẩu nước đi, quá cảnh từng nước đi qua, nhập khẩu nước đến. Đây là dữ liệu chuyên viên khai báo, không phải tư vấn pháp lý.",
+    "direction": "Chiều",
+    "document": "Loại giấy",
+    "validity": "Hiệu lực",
+    "processing": "Thời gian xin",
+    "days": "{{count}} ngày",
+    "validityDays": "Cấp trong vòng (ngày)",
+    "processingDays": "Số ngày để có giấy",
+    "note": "Ghi chú quy định",
+    "mandatory": "Bắt buộc",
+    "addRequirement": "Thêm giấy tờ",
+    "requirementAdded": "Đã thêm giấy tờ",
+    "deleteRequirement": "Xóa giấy tờ này khỏi quy định của nước?",
+    "feesHint": "Các khoản phí chỉ áp khi nước đến là nước này, ví dụ phí kiểm dịch cách ly dài của Nhật, Úc. Phí áp cho mọi nước nằm ở trang Bảng giá chung.",
+    "noFees": "Không có phí riêng",
+    "inService": "Nước này đang trong phạm vi dịch vụ",
+    "inServiceHint": "Tắt thì khách không chọn được nước này làm nước đi hay nước đến. Đơn đã gửi không bị ảnh hưởng."
+  },
+  "priceConfig": {
+    "title": "Bảng giá chung",
+    "subtitle": "Các khoản giá áp cho mọi tuyến: hạng chuồng, chiết khấu, phụ phí, phí thủ tục, người chăm ngựa, bảo hiểm.",
+    "howItWorks": "Giá mới áp cho các báo giá tính sau khi lưu; đơn đã gửi giữ nguyên giá cũ.",
+    "countrySpecific": "Cước đường bộ / đường bay của từng nước và phí riêng của nước (ví dụ kiểm dịch Nhật, Úc) chỉnh ở trang Quốc gia & tuyến.",
+    "goToCountries": "Mở trang Quốc gia & tuyến",
+    "name": "Khoản giá",
+    "mode": "Phương thức",
+    "value": "Giá trị",
+    "active": "Bật",
+    "fromHorses": "từ {{count}} con",
+    "modes": {
+      "Ground": "Đường bộ",
+      "Air": "Đường bay",
+      "any": "Cả hai"
+    },
+    "unit": {
+      "PerHorse": "/con",
+      "PerKmPerHorse": "/km/con",
+      "PerBooking": "/đơn",
+      "PerGroom": "/người",
+      "PerGroomDay": "/người/ngày"
+    },
+    "categories": {
+      "Freight": {
+        "name": "Cước vận chuyển",
+        "hint": "Cước gốc dùng chung (nếu có). Cước theo từng nước chỉnh ở trang Quốc gia & tuyến."
+      },
+      "StallClass": {
+        "name": "Hạng chuồng",
+        "hint": "Hệ số nhân vào cước gốc theo hạng chuồng khách chọn cho từng con."
+      },
+      "Discount": {
+        "name": "Chiết khấu số lượng",
+        "hint": "Phần trăm giảm trên cước; đơn được hưởng bậc cao nhất mà số ngựa đạt tới."
+      },
+      "Surcharge": {
+        "name": "Phụ phí",
+        "hint": "Phần trăm cộng thêm trên cước sau chiết khấu (nhiên liệu, khoang điều hòa, đơn gấp)."
+      },
+      "Clearance": {
+        "name": "Phí thủ tục & thông quan",
+        "hint": "Phí hồ sơ, thông quan, kiểm dịch, quá cảnh (mỗi nước đi qua), điều xe."
+      },
+      "Escort": {
+        "name": "Người chăm ngựa đi kèm",
+        "hint": "Một người chăm cho mỗi 3 con: đường bay tính theo người, đường bộ tính theo người mỗi ngày."
+      },
+      "Insurance": {
+        "name": "Bảo hiểm",
+        "hint": "Phần trăm trên giá trị ngựa khách khai báo."
+      }
+    }
+  },
+  "fitExam": {
+    "window": "Khám trong khoảng {{window}}",
+    "windowPending": "Sẽ báo khi chuyến được lên lịch",
+    "issueDate": "Ngày cấp",
+    "issueDateRequired": "Vui lòng chọn ngày cấp giấy khám",
+    "customerNote": "Hồ sơ đã nộp cơ quan / thông quan, nhưng bạn vẫn cần nộp giấy khám lâm sàng do thú y cấp trong 48 giờ trước giờ xuất phát.",
+    "uploadOnBehalf": "Nộp hộ giấy khám",
+    "uploadTitle": "Nộp hộ giấy khám",
+    "uploadHint": "Giấy khám phải do thú y cấp trong 48 giờ trước giờ xuất phát. Sau khi tải lên, giấy vẫn cần được duyệt."
+  },
+  "paymentLedger": {
+    "types": {
+      "Deposit": "Đặt cọc",
+      "Balance": "Thanh toán còn lại",
+      "Extra": "Phát sinh",
+      "Refund": "Hoàn tiền",
+      "Compensation": "Chi bồi thường"
+    },
+    "statuses": {
+      "Succeeded": "Thành công",
+      "Pending": "Đang chờ",
+      "Failed": "Thất bại",
+      "Expired": "Hết hạn"
+    },
+    "columns": {
+      "time": "Thời gian",
+      "booking": "Mã đơn",
+      "customer": "Khách hàng",
+      "type": "Loại",
+      "amount": "Số tiền",
+      "status": "Trạng thái",
+      "txnRef": "Mã giao dịch"
+    },
+    "filters": {
+      "type": "Loại giao dịch",
+      "status": "Trạng thái",
+      "search": "Tìm mã đơn, mã giao dịch"
+    },
+    "empty": "Chưa có giao dịch nào",
+    "loadFailed": "Không tải được danh sách giao dịch",
+    "customer": {
+      "title": "Lịch sử thanh toán",
+      "subtitle": "Mọi giao dịch đặt cọc, thanh toán, phát sinh và hoàn tiền của các đơn của bạn"
+    },
+    "manager": {
+      "title": "Giao dịch",
+      "subtitle": "Toàn bộ giao dịch thanh toán và hoàn tiền của mọi đơn vận chuyển",
+      "summaryFailed": "Không tải được số liệu tổng hợp",
+      "searchPlaceholder": "Tìm mã đơn, khách hàng, mã giao dịch",
+      "tiles": {
+        "succeeded": "Đã thu thành công",
+        "pending": "Đang chờ thanh toán",
+        "failedExpired": "Thất bại / Hết hạn",
+        "failedExpiredHint": "Số giao dịch",
+        "refunded": "Đã hoàn tiền",
+        "refundsNeedingAction": "Hoàn tiền cần xử lý",
+        "refundsNeedingActionHint": "Hoàn tiền thất bại hoặc đang chờ",
+        "count_one": "{{count}} giao dịch",
+        "count_other": "{{count}} giao dịch"
+      }
+    }
   }
 }

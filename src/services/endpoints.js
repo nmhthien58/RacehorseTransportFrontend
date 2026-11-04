@@ -28,6 +28,8 @@ export const ENDPOINTS = {
     RETRY_REFUND: (paymentId) => `/payments/${paymentId}/retry-refund`,
     MARK_REFUNDED: (paymentId) => `/payments/${paymentId}/mark-refunded`,
     SETTINGS: '/settings/payment',
+    LIST: '/payments',
+    SUMMARY: '/payments/summary',
   },
 
   // 2. Quản lý người dùng & Dropdown nhân sự
@@ -59,10 +61,11 @@ export const ENDPOINTS = {
     ROUTE: '/geo/route',
   },
 
-  // Chính sách dịch vụ công khai (BE-17 / FE-15): phiên bản + các giá trị cấu hình
+  // Chính sách dịch vụ công khai (BE-17): phiên bản + các giá trị cấu hình
   POLICY: {
     PUBLIC: '/policy',
-    GET: '/policy',
+    // Màn quản trị (FE-16): xem / sửa đủ 21 khóa chính sách
+    SETTINGS: '/settings/policy',
   },
 
   // Tải file lên storage (chứng từ giá trị ngựa, biên bản...): trả về path để gửi kèm request khác
@@ -90,7 +93,6 @@ export const ENDPOINTS = {
     // Bí danh tương thích ngược
     ASSIGN: (id) => `/bookings/${id}/reassign-specialist`,
     CALCULATE_QUOTE: (id) => (id ? `/bookings/${id}/calculate-quote` : '/bookings/quote-preview'),
-    ROUTE_PLAN: (id) => `/bookings/${id}/route-plan`,
   },
 
   // 5. Hồ sơ kiểm dịch & giấy tờ (Dossiers - Flow 2)
@@ -169,6 +171,8 @@ export const ENDPOINTS = {
     REJECT_PLAN: (id) => `/incidents/${id}/reject`,
     APPLY_REROUTE: (id) => `/incidents/${id}/apply-reroute`,
     RESOLVE: (id) => `/incidents/${id}/resolve`,
+    // R-14: khách đồng ý / từ chối đi đường vòng có phí
+    CUSTOMER_CONSENT: (id) => `/incidents/${id}/customer-consent`,
     // Bí danh tương thích ngược
     CREATE: '/incidents',
     APPROVE: (id) => `/incidents/${id}/approve`,
@@ -203,13 +207,12 @@ export const ENDPOINTS = {
 
   // 13. Phương tiện (Assets), Bảng giá (Pricing) & Thông báo (Notifications)
   ASSETS: {
-    LIST: '/assets',
-    DETAIL: (id) => `/assets/${id}`,
+    LIST: '/transport-assets',
+    DETAIL: (id) => `/transport-assets/${id}`,
   },
   // 14. Người nhận ngựa (R-16, BE-15)
   RECIPIENTS: {
     UPDATE: (bookingId) => `/bookings/${bookingId}/recipient`,
-    CONFIRM_PRESENCE: (bookingId) => `/bookings/${bookingId}/confirm-presence`,
     APPROVE_ALTERNATE: (bookingId) => `/bookings/${bookingId}/approve-alternate-recipient`,
     BY_TRIP: (tripId) => `/trips/${tripId}/recipients`,
   },
@@ -218,6 +221,7 @@ export const ENDPOINTS = {
   ROUTE_PLANS: {
     GET_FOR_BOOKING: (bookingId) => `/bookings/${bookingId}/route-plans`,
     GET_BY_ID: (id) => `/route-plans/${id}`,
+    QUOTE_PREVIEW: (id) => `/route-plans/${id}/quote-preview`,
     PREVIEW: (bookingId) => `/bookings/${bookingId}/route-plans/preview`,
     CREATE: (bookingId) => `/bookings/${bookingId}/route-plans`,
     UPDATE: (id) => `/route-plans/${id}`,
@@ -264,6 +268,31 @@ export const ENDPOINTS = {
 
   PRICING: {
     ITEMS: '/pricing/items',
+  },
+  // Phạm vi dịch vụ: quốc gia, phương thức, sân bay (R-18)
+  COUNTRIES: {
+    CATALOG: '/countries/catalog',
+    LIST: '/countries',
+    DETAIL: (code) => `/countries/${code}`,
+    CREATE: '/countries',
+    UPDATE: (code) => `/countries/${code}`,
+    SET_ACTIVE: (code) => `/countries/${code}/active`,
+    SET_FREIGHT: (code, mode) => `/countries/${code}/freight/${mode}`,
+    ADD_AIRPORT: (code) => `/countries/${code}/airports`,
+    UPDATE_AIRPORT: (airportId) => `/countries/airports/${airportId}`,
+    SET_AIRPORT_ACTIVE: (airportId) => `/countries/airports/${airportId}/active`,
+  },
+  // Bảng giá (mục 17 API.md) và quy định giấy tờ theo nước (mục 16)
+  PRICE_ITEMS: {
+    LIST: '/price-items',
+    CREATE: '/price-items',
+    UPDATE: (id) => `/price-items/${id}`,
+    SET_ACTIVE: (id) => `/price-items/${id}/active`,
+  },
+  COUNTRY_DOC_REQUIREMENTS: {
+    CREATE: '/country-doc-requirements',
+    UPDATE: (id) => `/country-doc-requirements/${id}`,
+    DELETE: (id) => `/country-doc-requirements/${id}`,
   },
   NOTIFICATIONS: {
     LIST: '/notifications',

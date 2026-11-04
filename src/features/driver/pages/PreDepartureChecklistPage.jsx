@@ -29,6 +29,7 @@ import { tripService } from '@services/tripService';
 
 const { Text } = Typography;
 const ACTIVE_TRIP_STATUSES = ['InTransit', 'EmergencyRerouting', 'ArrivedDestination', 'Completed'];
+const FIT_EXAM_ISSUE_CODES = ['FitExamMissing', 'FitExamPendingReview'];
 
 /**
  * Chuyển enum vai trò trong đoàn xe thành nhãn tiếng Việt.
@@ -65,6 +66,8 @@ export default function PreDepartureChecklistPage() {
   const [startConfirmOpen, setStartConfirmOpen] = useState(false);
   const [departureCheck, setDepartureCheck] = useState(null);
   const [checkLoading, setCheckLoading] = useState(false);
+  // Backend chưa có / lỗi kiểm tra trước khi xuất phát (BE-10): báo rõ, không tự tính thay
+  const [checkUnavailable, setCheckUnavailable] = useState(false);
 
   const loadDepartureCheck = useCallback(async () => {
     if (!tripId) return;
@@ -73,8 +76,10 @@ export default function PreDepartureChecklistPage() {
       const res = await tripService.getDepartureCheck(tripId);
       const data = res?.data || res;
       setDepartureCheck(data);
+      setCheckUnavailable(false);
     } catch {
-      // Dự phòng khi endpoint lỗi, không làm hỏng toàn bộ màn hình
+      setDepartureCheck(null);
+      setCheckUnavailable(true);
     } finally {
       setCheckLoading(false);
     }
@@ -91,7 +96,7 @@ export default function PreDepartureChecklistPage() {
           setDepartureCheck(data);
         }
       } catch {
-        // Dự phòng
+        if (!ignore) setCheckUnavailable(true);
       }
     };
     initCheck();
@@ -191,6 +196,11 @@ export default function PreDepartureChecklistPage() {
     ],
   );
 
+  // Mã lỗi giấy khám có câu thông báo riêng; mã khác dùng message của máy chủ
+  const issueText = (issue) =>
+    FIT_EXAM_ISSUE_CODES.includes(issue.code)
+      ? t(`driver.checklist.departureCheck.code.${issue.code}`)
+      : issue.message;
   const departureIssues = useMemo(() => departureCheck?.issues || [], [departureCheck?.issues]);
   const blockingIssues = useMemo(() => departureIssues.filter((i) => i.severity === 'Error'), [departureIssues]);
   const warningIssues = useMemo(() => departureIssues.filter((i) => i.severity === 'Warning'), [departureIssues]);
@@ -365,6 +375,15 @@ export default function PreDepartureChecklistPage() {
         />
       )}
 
+      {!isAlreadyInTransit && checkUnavailable && (
+        <Alert
+          type="info"
+          showIcon
+          title={t('driver.checklist.departureCheck.unavailable')}
+          style={{ marginBottom: 20 }}
+        />
+      )}
+
       {/* Cảnh báo các vấn đề chặn xuất phát từ API kiểm tra trước khi khởi hành (FE-09 / R-12 / R-15) */}
       {!isAlreadyInTransit && blockingIssues.length > 0 && (
         <Alert
@@ -390,7 +409,7 @@ export default function PreDepartureChecklistPage() {
                       <div>
                         {issue.horseName && <Text strong style={{ marginRight: 8 }}>{issue.horseName}</Text>}
                         {issue.bookingCode && <Tag style={{ marginRight: 8 }}>{issue.bookingCode}</Tag>}
-                        <Text>{issue.message}</Text>
+                        <Text>{issueText(issue)}</Text>
                       </div>
                     </Space>
                   </List.Item>
@@ -422,7 +441,7 @@ export default function PreDepartureChecklistPage() {
                     <div>
                       {issue.horseName && <Text strong style={{ marginRight: 8 }}>{issue.horseName}</Text>}
                       {issue.bookingCode && <Tag style={{ marginRight: 8 }}>{issue.bookingCode}</Tag>}
-                      <Text>{issue.message}</Text>
+                      <Text>{issueText(issue)}</Text>
                     </div>
                   </Space>
                 </List.Item>

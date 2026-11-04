@@ -35,6 +35,18 @@ export const specialistDossierService = {
   },
 
   /**
+   * Chuyên viên tải lên giấy công ty đã xin với cơ quan nhà nước (R-19): giấy được tính là đã duyệt ngay
+   * @param {number|string} id - DossierID
+   * @param {FormData} formData - docTypeId, documentNumber, expiryDate, file
+   * @returns {Promise<any>}
+   */
+  async uploadDocument(id, formData) {
+    return api.post(ENDPOINTS.DOSSIERS.UPLOAD_DOCUMENT(id), formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  /**
    * Từ chối một tài liệu kèm lý do và ghi chú chỉnh sửa
    * @param {number|string} docId - DocumentID
    * @param {{ reason: string, correctionNote?: string }} payload

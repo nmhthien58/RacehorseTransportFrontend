@@ -19,16 +19,6 @@ export const recipientService = {
   },
 
   /**
-   * Khách xác nhận người nhận sẽ có mặt tại điểm giao
-   * @param {number|string} bookingId
-   * @param {{ isAvailable: boolean }} [payload={ isAvailable: true }]
-   * @returns {Promise<any>}
-   */
-  async confirmPresence(bookingId, payload = { isAvailable: true }) {
-    return api.post(ENDPOINTS.RECIPIENTS.CONFIRM_PRESENCE(bookingId), payload);
-  },
-
-  /**
    * Khách xác nhận đồng ý cho người khác nhận thay khi tài xế báo khác tên
    * @param {number|string} bookingId
    * @param {{ name: string, idNumber?: string }} payload

@@ -27,6 +27,15 @@ export const routePlanService = {
   },
 
   /**
+   * Manager xem trước báo giá chốt khách sẽ nhận nếu duyệt tuyến này (không lưu)
+   * @param {number|string} id - routePlanId
+   * @returns {Promise<any>}
+   */
+  async getQuotePreview(id) {
+    return api.get(ENDPOINTS.ROUTE_PLANS.QUOTE_PREVIEW(id));
+  },
+
+  /**
    * Xem trước và tính toán các chặng, nước quá cảnh, cảnh báo cửa khẩu khi đang sửa mốc
    * @param {number|string} bookingId
    * @param {{ stops: Array<any> }} payload

@@ -145,6 +145,13 @@ export function useDossierDetail(dossierId) {
   const reportIssue = (reason) =>
     runAction(() => specialistDossierService.reportIssue(dossierId, { reason }), 'Lỗi khi báo sự cố hồ sơ');
 
+  /**
+   * Tải lên giấy công ty đã xin (R-19)
+   * @param {FormData} formData
+   */
+  const uploadCompanyDocument = (formData) =>
+    runAction(() => specialistDossierService.uploadDocument(dossierId, formData), 'Lỗi khi tải lên giấy tờ');
+
   return {
     dossier,
     loading,
@@ -158,6 +165,7 @@ export function useDossierDetail(dossierId) {
     clearDossier,
     returnToAuthority,
     reportIssue,
+    uploadCompanyDocument,
   };
 }
 

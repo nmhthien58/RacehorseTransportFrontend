@@ -18,6 +18,8 @@ import {
   HANDOVER_CONDITION_COLOR,
 } from '@utils/incidents';
 import TripHorseStatusTag from '@components/common/TripHorseStatusTag';
+// Đang sửa TripJourney vì khách cần thấy kết quả sự cố: ngựa rời chuyến, quay về, phí đi vòng, nguyên nhân (FE-10)
+import IncidentOutcome from '@components/common/IncidentOutcome';
 import styles from './TripJourney.module.css';
 
 const { Text } = Typography;
@@ -279,6 +281,11 @@ export default function TripJourney({ trip, lastLoadedAt, onRefresh }) {
                         </div>
                       )}
                     </div>
+                    {inc.status !== 'Reported' && inc.status !== 'Rejected' && (
+                      <div style={{ marginTop: 4 }}>
+                        <IncidentOutcome incident={inc} />
+                      </div>
+                    )}
                   </div>
                 ))
               )}

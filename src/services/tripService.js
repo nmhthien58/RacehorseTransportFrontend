@@ -174,59 +174,9 @@ export const tripService = {
    * @param {number|string} id - TripID
    * @returns {Promise<{ isReady: boolean, issues: Array<{ code: string, message: string, severity: 'Error'|'Warning', horseName?: string, bookingCode?: string, category: string }> }>}
    */
+  // TODO(BE-10): endpoint chưa có ở backend; khi chưa có, màn tài xế báo "chưa kiểm tra được" (không tự tính thay backend)
   async getDepartureCheck(id) {
-    try {
-      return await api.get(ENDPOINTS.TRIPS.DEPARTURE_CHECK(id));
-    } catch {
-      // TODO(BE-10): Dự phòng khi backend chưa hoàn thành endpoint /trips/{id}/departure-check
-      const tripRes = await this.getTripById(id);
-      const trip = tripRes?.data || tripRes;
-      const horses = trip?.horses || [];
-      const crew = trip?.crew || [];
-      const drivers = crew.filter((c) => c.crewRole === 'Driver');
-      const escorts = crew.filter((c) => c.crewRole === 'Escort');
-      const neededEscorts = Math.max(1, Math.ceil(horses.length / 3));
-      const issues = [];
-
-      // 1. Kiểm tra tài xế & áp tải
-      if (drivers.length < 1) {
-        issues.push({
-          code: 'DRIVER_MISSING',
-          category: 'Crew',
-          severity: 'Error',
-          message: 'Chưa có tài xế nào được phân công cho chuyến đi.',
-        });
-      }
-      if (escorts.length < neededEscorts) {
-        issues.push({
-          code: 'ESCORT_SHORTAGE',
-          category: 'Crew',
-          severity: 'Error',
-          message: `Thiếu nhân sự áp tải: Có ${escorts.length}/${neededEscorts} người (quy chuẩn 1 người áp tải / 3 ngựa).`,
-        });
-      }
-
-      // 2. Kiểm tra hồ sơ kiểm dịch và giấy khám lâm sàng 48h của từng ngựa
-      horses.forEach((h) => {
-        if (h.dossierStatus !== 'Cleared') {
-          issues.push({
-            code: 'DOSSIER_NOT_CLEARED',
-            category: 'Document',
-            severity: 'Error',
-            horseName: h.horseName,
-            bookingCode: h.bookingCode,
-            message: `Hồ sơ kiểm dịch chưa thông quan (trạng thái: ${h.dossierStatus || 'Chưa duyệt'}).`,
-          });
-        }
-      });
-
-      return {
-        data: {
-          isReady: issues.filter((i) => i.severity === 'Error').length === 0,
-          issues,
-        },
-      };
-    }
+    return api.get(ENDPOINTS.TRIPS.DEPARTURE_CHECK(id));
   },
 
   /**

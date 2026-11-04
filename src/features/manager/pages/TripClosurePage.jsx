@@ -33,6 +33,16 @@ import {
   formatUsd,
 } from '@utils/incidents';
 
+// Trạng thái bồi thường giao trễ theo backend (BE-13)
+const COMP_STATUS = {
+  AwaitingApproval: { label: 'Chờ duyệt', color: 'orange' },
+  Approved: { label: 'Đã duyệt', color: 'green' },
+  Rejected: { label: 'Từ chối', color: 'red' },
+};
+
+// Số tiền hiển thị: đã duyệt thì lấy số duyệt, chưa thì lấy số hệ thống tính
+const compAmount = (comp) => Number(comp.approvedAmount ?? comp.calculatedAmount ?? 0);
+
 const { Text } = Typography;
 const { TextArea } = Input;
 
@@ -50,7 +60,7 @@ export default function TripClosurePage() {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
-  const [extra, setExtra] = useState({ handovers: [], incidents: [], loading: false });
+  const [extra, setExtra] = useState({ handovers: [], incidents: [], compensations: [], loading: false });
   const [remarks, setRemarks] = useState('');
   const [closing, setClosing] = useState(false);
   const [adjustModalOpen, setAdjustModalOpen] = useState(false);
@@ -94,18 +104,24 @@ export default function TripClosurePage() {
     setSelected(trip);
     setRemarks('');
     setExtra({ handovers: [], incidents: [], compensations: [], loading: true });
-    const [handovers, incidents] = await Promise.all([
+    const [handovers, incidents, compensations] = await Promise.all([
       handoverService.getTripHandovers(trip.tripId).then(unwrapList).catch(() => []),
       incidentService.getTripIncidents(trip.tripId).then(unwrapList).catch(() => []),
+      // Bồi thường giao trễ chỉ có khi đóng chuyến; API lấy theo trạng thái nên lọc theo chuyến ở đây
+      delayCompensationService
+        .list()
+        .then(unwrapList)
+        .then((rows) => rows.filter((c) => c.tripId === trip.tripId))
+        .catch(() => []),
     ]);
-    setExtra({ handovers, incidents, loading: false });
+    setExtra({ handovers, incidents, compensations, loading: false });
   };
 
 
-  const handleApproveCompensation = async (compId) => {
+  const handleApproveCompensation = async (comp) => {
     setActionCompLoading(true);
     try {
-      await delayCompensationService.approve(compId);
+      await delayCompensationService.approve(comp.delayCompensationId, { amount: compAmount(comp) });
       message.success(t('delayCompensation.messages.approved', 'Đã duyệt bồi thường giao trễ'));
       if (selected) openTrip(selected);
     } catch (err) {
@@ -117,7 +133,7 @@ export default function TripClosurePage() {
 
   const handleOpenAdjustModal = (comp) => {
     setSelectedComp(comp);
-    setNewAmount(Number(comp.amountUsd || comp.amount || 0));
+    setNewAmount(compAmount(comp));
     setAdjustReason('');
     setAdjustModalOpen(true);
   };
@@ -129,8 +145,8 @@ export default function TripClosurePage() {
     }
     setActionCompLoading(true);
     try {
-      await delayCompensationService.approve(selectedComp.compensationId, {
-        approvedAmount: Number(newAmount),
+      await delayCompensationService.approve(selectedComp.delayCompensationId, {
+        amount: Number(newAmount),
         reason: adjustReason.trim(),
       });
       message.success(t('delayCompensation.messages.adjustedSuccess', 'Đã điều chỉnh và duyệt số tiền bồi thường'));
@@ -290,23 +306,23 @@ export default function TripClosurePage() {
               <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('delayCompensation.none', 'Không có đơn nào bị giao trễ')} />
             )}
             {extra.compensations.map((comp) => (
-              <div key={comp.compensationId} style={{ padding: '10px 12px', background: '#F8FAFC', borderRadius: 8, marginBottom: 8, border: '1px solid #E2E8F0' }}>
+              <div key={comp.delayCompensationId} style={{ padding: '10px 12px', background: '#F8FAFC', borderRadius: 8, marginBottom: 8, border: '1px solid #E2E8F0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
                   <div>
                     <Text strong>{comp.bookingCode || '#' + comp.bookingId}</Text>
                     <div style={{ fontSize: 12, color: '#64748B' }}>
-                      {t('delayCompensation.delayHours', 'Trễ')}: <Text strong style={{ color: '#DC2626' }}>{comp.delayHours} {t('common.hours', 'giờ')}</Text> · {t('delayCompensation.amount', 'Bồi thường')}: <Text strong style={{ color: '#047857' }}>{Number(comp.amountUsd || comp.amount || 0).toLocaleString()} USD</Text>
+                      {t('delayCompensation.delayHours', 'Trễ')}: <Text strong style={{ color: '#DC2626' }}>{comp.delayHours} {t('common.hours', 'giờ')}</Text> · {t('delayCompensation.amount', 'Bồi thường')}: <Text strong style={{ color: '#047857' }}>{compAmount(comp).toLocaleString()} {comp.currencyCode || 'USD'}</Text>
                     </div>
                   </div>
                   <Space>
-                    <Tag color={comp.status === 'Approved' ? 'green' : 'orange'}>{comp.status}</Tag>
-                    {comp.status === 'Pending' && (
+                    <Tag color={COMP_STATUS[comp.status]?.color || 'default'}>{COMP_STATUS[comp.status]?.label || comp.status}</Tag>
+                    {comp.status === 'AwaitingApproval' && (
                       <>
                         <Button
                           size="small"
                           type="primary"
                           loading={actionCompLoading}
-                          onClick={() => handleApproveCompensation(comp.compensationId)}
+                          onClick={() => handleApproveCompensation(comp)}
                           style={{ backgroundColor: '#10B981', borderColor: '#10B981' }}
                         >
                           {t('common.approve', 'Duyệt')}
@@ -381,7 +397,7 @@ export default function TripClosurePage() {
       >
         <div style={{ marginTop: 12 }}>
           <p style={{ marginBottom: 8 }}>
-            {t('delayCompensation.adjustModal.currentAmount', 'Số tiền hệ thống tính')}: <Text strong>{Number(selectedComp?.amountUsd || selectedComp?.amount || 0).toLocaleString()} USD</Text>
+            {t('delayCompensation.adjustModal.currentAmount', 'Số tiền hệ thống tính')}: <Text strong>{Number(selectedComp?.calculatedAmount || 0).toLocaleString()} {selectedComp?.currencyCode || 'USD'}</Text>
           </p>
           <div style={{ marginBottom: 12 }}>
             <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>

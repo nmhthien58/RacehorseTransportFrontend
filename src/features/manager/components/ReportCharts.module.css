@@ -1,0 +1,126 @@
+/* Biểu đồ trang Báo cáo: trục, lưới nhạt; chữ dùng màu chữ, không dùng màu series */
+.frame {
+  position: relative;
+  width: 100%;
+}
+
+.axisText {
+  font-size: 11px;
+  fill: #898781;
+  font-variant-numeric: tabular-nums;
+}
+
+.valueText {
+  font-size: 11px;
+  font-weight: 600;
+  fill: #52514e;
+}
+
+.donutValue {
+  font-size: 26px;
+  font-weight: 700;
+  fill: #1c1917;
+}
+
+.legend {
+  margin-bottom: 8px;
+  font-size: 12.5px;
+  color: #52514e;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legendSwatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.legendLine {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 2;
+  min-width: 170px;
+  padding: 8px 10px;
+  background: #ffffff;
+  border: 1px solid rgba(11, 11, 11, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  font-size: 12.5px;
+  color: #1c1917;
+  pointer-events: none;
+}
+
+.tooltipTitle {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.tooltipRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.8;
+}
+
+.tooltipLabel {
+  flex: 1;
+  color: #52514e;
+}
+
+.emptyOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.donutRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: default;
+}
+
+.hbarRow {
+  display: grid;
+  grid-template-columns: minmax(90px, 38%) 1fr 32px;
+  align-items: center;
+  gap: 10px;
+}
+
+.hbarLabel {
+  font-size: 13px;
+}
+
+.hbarTrack {
+  height: 12px;
+  background: #f4f3f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.hbarFill {
+  height: 100%;
+  border-radius: 0 4px 4px 0;
+  min-width: 2px;
+}
+
+.hbarValue {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

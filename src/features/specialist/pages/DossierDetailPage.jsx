@@ -30,6 +30,7 @@ import {
   FileTextOutlined,
   FilePdfOutlined,
   RollbackOutlined,
+  UploadOutlined,
 } from '@ant-design/icons';
 import { useDossierDetail } from '../hooks/useDossierDetail';
 import DossierStatusBar from '../components/DossierStatusBar';
@@ -37,9 +38,12 @@ import RejectDocumentModal from '../components/RejectDocumentModal';
 import SubmitAuthorityModal from '../components/SubmitAuthorityModal';
 import RequestDocumentsModal from '../components/RequestDocumentsModal';
 import ClearDossierModal from '../components/ClearDossierModal';
+import CompanyDocumentUploadModal from '../components/CompanyDocumentUploadModal';
 import StandardFormTemplateModal from '@components/common/StandardFormTemplateModal';
 import FilePreview from '@components/common/FilePreview';
+import dayjs from 'dayjs';
 import { ROUTES } from '@routes/routes';
+import { formatExamWindow, hasExamWindowField, isOpenForFitExam, isPostClearance } from '@utils/fitExam';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -66,7 +70,10 @@ export default function DossierDetailPage() {
     clearDossier,
     returnToAuthority,
     reportIssue,
+    uploadCompanyDocument,
   } = useDossierDetail(id);
+  // R-19: giấy công ty xin (kiểm dịch xuất khẩu, nhập khẩu, quá cảnh) do chuyên viên tải lên
+  const [companyUploadItem, setCompanyUploadItem] = useState(null);
 
   // Modal states
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
@@ -170,6 +177,15 @@ export default function DossierDetailPage() {
     }
   };
 
+  const handleCompanyUpload = async (formData) => {
+    const ok = await uploadCompanyDocument(formData);
+    if (ok) {
+      message.success(t('companyDocs.uploadSuccess'));
+      setCompanyUploadItem(null);
+    }
+    return ok;
+  };
+
   // Phê duyệt tài liệu
   const handleApproveDoc = async (docId) => {
     const ok = await approveDocument(docId);
@@ -237,8 +253,22 @@ export default function DossierDetailPage() {
 
   const checklist = dossier?.checklist || [];
   const approvedCount = dossier?.approvedCount || 0;
-  const requiredCount = dossier?.requiredCount || checklist.filter((c) => c.isMandatory).length || 3;
+  const requiredCount = dossier?.requiredCount || checklist.filter((c) => c.isMandatory && !isPostClearance(c)).length || 3;
   const isReady = dossier?.isReadyToSubmit || approvedCount >= requiredCount;
+  // Giấy khám (FIT_EXAM) nộp hộ được khi hồ sơ còn nhận giấy (kể cả đã thông quan) và đã có khoảng 48 giờ
+  const canUploadFitExam = (item) =>
+    isOpenForFitExam(dossier?.status) && !(hasExamWindowField(item) && !formatExamWindow(item));
+  const renderFitExamUpload = (item) => (
+    <Button
+      size="small"
+      icon={<UploadOutlined />}
+      disabled={!canUploadFitExam(item)}
+      onClick={() => setCompanyUploadItem(item)}
+      style={{ borderRadius: 4, fontSize: 12 }}
+    >
+      {t('fitExam.uploadOnBehalf')}
+    </Button>
+  );
 
   return (
     <div style={{ padding: '0 0 24px 0' }}>
@@ -450,10 +480,28 @@ export default function DossierDetailPage() {
                                 * {t('specialist.detail.mandatory', 'Bắt buộc')}
                               </span>
                             )}
+                            {item.providedBy === 'Company' && (
+                              <Tag color="blue" style={{ margin: 0 }}>
+                                {t('customerDossier.companyProvides')}
+                              </Tag>
+                            )}
                           </div>
                           <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
                             {item.regulationNote} (Hiệu lực: {item.validityDays} ngày)
                           </div>
+                          {isPostClearance(item) && (
+                            <div style={{ fontSize: 12, color: '#B45309', fontWeight: 600, marginTop: 2 }}>
+                              {hasExamWindowField(item) &&
+                                (formatExamWindow(item)
+                                  ? t('fitExam.window', { window: formatExamWindow(item) })
+                                  : t('fitExam.windowPending'))}
+                              {doc?.issueDate && (
+                                <span style={{ marginLeft: hasExamWindowField(item) ? 8 : 0 }}>
+                                  {t('fitExam.issueDate')}: {dayjs(doc.issueDate).format('DD/MM/YYYY')}
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
 
                         <div>
@@ -593,8 +641,21 @@ export default function DossierDetailPage() {
                       ) : (
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, padding: '6px 10px', backgroundColor: '#F8FAFC', borderRadius: 4, border: '1px dashed #CBD5E1' }}>
                           <span style={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic' }}>
-                            Khách hàng chưa tải lên giấy tờ này.
+                            {item.providedBy === 'Company'
+                              ? t('companyDocs.notYetObtained')
+                              : 'Khách hàng chưa tải lên giấy tờ này.'}
                           </span>
+                          {item.providedBy === 'Company' && ['Draft', 'AwaitingDocs', 'Reviewing'].includes(dossier?.status) && (
+                            <Button
+                              size="small"
+                              type="primary"
+                              icon={<UploadOutlined />}
+                              onClick={() => setCompanyUploadItem(item)}
+                            >
+                              {t('companyDocs.uploadButton')}
+                            </Button>
+                          )}
+                          {isPostClearance(item) && item.providedBy !== 'Company' && renderFitExamUpload(item)}
                           <Button
                             type="link"
                             size="small"
@@ -607,9 +668,10 @@ export default function DossierDetailPage() {
                         </div>
                       )}
 
-                      {/* Nút hành động thẩm định */}
-                      {doc && (
+                      {/* Nút hành động thẩm định (giấy công ty xin không cần thẩm định) */}
+                      {doc && item.providedBy !== 'Company' && (
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                          {isPostClearance(item) && isRejected && renderFitExamUpload(item)}
                           <Button
                             size="small"
                             danger
@@ -964,6 +1026,13 @@ export default function DossierDetailPage() {
           </div>
         </Col>
       </Row>
+
+      <CompanyDocumentUploadModal
+        item={companyUploadItem}
+        loading={actionLoading}
+        onCancel={() => setCompanyUploadItem(null)}
+        onSubmit={handleCompanyUpload}
+      />
 
       {/* Modal Util 3: Từ chối tài liệu */}
       <RejectDocumentModal

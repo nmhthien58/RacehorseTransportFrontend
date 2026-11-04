@@ -72,6 +72,8 @@
     "detail": "Request Detail"
   },
   "nav": {
+    "countries": "Countries & routes",
+    "pricingConfig": "General price list",
     "dashboard": "Dashboard",
     "horses": "My Horses",
     "vetRecords": "Vet Records",
@@ -102,6 +104,8 @@
     "tripClosure": "Trip closing & KPI",
     "reports": "Reports",
     "paymentSettings": "Payment settings",
+    "transactions": "Transactions",
+    "paymentHistory": "Payment history",
     "transportOrders": "Transport orders",
     "insuranceClaims": "Insurance Claims"
   },
@@ -538,6 +542,8 @@
       "earliestHint": "Earliest pickup date: {{date}} (about {{days}} days are needed for review, deposit, quarantine clearance and trip planning).",
       "expressHint": "A pickup before {{date}} adds the Express surcharge because the documents must be rushed.",
       "transitHint": "Estimated transit time: about {{hours}} hours (up to {{maxHours}} hours, ~{{days}} days).",
+      "deadlineFromHint": "Choose a latest delivery date of <b>{{date}}</b> or later (includes the estimated transit time and {{days}} buffer days).",
+      "arrivalHint": "Expected arrival around <b>{{from}} – {{to}}</b> if picked up on the last day of the pickup window (estimate; actual times may vary).",
       "deadlineHint": "Earliest possible delivery deadline: {{date}}.",
       "tooEarly": "The pickup date must be on or after {{date}}.",
       "deadlineTooEarly": "The delivery deadline must be on or after {{date}} to allow for transit.",
@@ -1317,6 +1323,7 @@
       "startSuccess": "Trip departed successfully.",
       "horseStatus": "Horse Status",
       "departureCheck": {
+        "unavailable": "The automatic check (document expiry, 48-hour fitness exam, payment) is not available yet. The server still re-checks these conditions when you start the trip.",
         "blockingTitle": "{{count}} blocking issues must be resolved before departure",
         "blockingHint": "According to international equine transport safety and legal regulations, all issues below must be resolved before departure:",
         "warningTitle": "Pre-departure warnings ({{count}})",
@@ -1327,6 +1334,10 @@
           "Document": "Quarantine Dossier",
           "Health": "Health 48h",
           "Payment": "Payment"
+        },
+        "code": {
+          "FitExamMissing": "Missing a fit-to-travel clinical exam issued within 48 hours before departure",
+          "FitExamPendingReview": "The clinical exam certificate is awaiting specialist review"
         }
       }
     },
@@ -1460,6 +1471,10 @@
     }
   },
   "customerDossier": {
+    "companyProvides": "Obtained by us",
+    "companyProcessing": "We are applying",
+    "companyObtained": "Obtained",
+    "companyDocsNote": "You only need to upload your horse's documents (passport, vaccination, test results). The export health certificate, import permit and transit permits are obtained by our specialist from the authorities; you can follow their progress here.",
     "title": "Quarantine dossier (Digital Dossier)",
     "empty": "No dossiers yet. A dossier is created for each horse once the booking is approved.",
     "awaitingApproval": "This request is awaiting approval. Its dossiers will appear here after a specialist is assigned.",
@@ -1661,14 +1676,14 @@
     },
     "warnings": {
       "DeadlineMissed": "{{bookingCode}} is expected at {{eta}}, after its deadline {{deadline}}.",
-      "PickupOutsideWindow": "{{bookingCode}} would be picked up at {{pickupAt}}, outside its window {{from}} – {{to}}.",
+      "PickupOutsideWindow": "{{bookingCode}} would be picked up at {{pickupAt}}, outside its window <b>{{from}} – {{to}}</b>.",
       "DifferentPickupCountry": "The bookings are picked up in different countries ({{countries}}).",
       "PickupsFarApart": "The pick-up of {{bookingCode}} is {{km}} km from the origin (limit {{limit}} km).",
       "Detour": "{{bookingCode}} travels {{routeKm}} km instead of {{directKm}} km direct (×{{ratio}}, limit ×{{limit}}).",
       "DossierNotCleared": "Clearance of {{horseName}} ({{bookingCode}}) is not complete; the trip departs only when it is Cleared.",
       "OvernightRest": "The leg {{from}} → {{to}} ({{km}} km) needs {{count}} overnight rest(s); add Rest stop checkpoints.",
       "twoDriversRequiredTitle": "Warning: At least 2 drivers required (R-14)",
-      "twoDriversRequiredDesc": "Estimated trip duration is {{hours}} hours (exceeds 9 hours/day). At least 2 rotating drivers are required before submission."
+      "twoDriversRequiredDesc": "Estimated driving time is {{hours}} hours (exceeds 9 hours). At least 2 rotating drivers are required before submission."
     },
     "stallMap": {
       "load": "{{count}}/{{max}} horses",
@@ -1978,6 +1993,10 @@
       "Reroute": "Reroute",
       "VeterinaryCare": "Stop for veterinary care",
       "OffloadHorse": "Offload the horse",
+      "ReturnToOrigin": "Whole trip returns to origin",
+      "HoldAtStable": "Keep horses at a temporary stable",
+      "ReplaceVehicle": "Replace vehicle",
+      "ReplaceCrew": "Replace crew member",
       "Other": "Other"
     },
     "actionPlaceholder": "Choose an action",
@@ -2044,6 +2063,10 @@
       "Weather": "Weather",
       "ClimateControlFailure": "Climate control failure",
       "CustomsHold": "Customs hold",
+      "BorderRejected": "Refused at the border",
+      "BorderClosed": "Border closed",
+      "CrewUnavailable": "Crew member cannot continue",
+      "RecipientUnavailable": "Recipient absent / refused",
       "Other": "Other"
     },
     "severity": {
@@ -2055,6 +2078,7 @@
     "status": {
       "Reported": "Reported",
       "PlanProposed": "Plan awaiting approval",
+      "AwaitingConsent": "Awaiting customer consent",
       "Approved": "Plan approved",
       "Rejected": "Plan rejected",
       "Resolved": "Resolved"
@@ -2222,6 +2246,15 @@
     "success": "Closed trip {{code}}, KPI {{score}}"
   },
   "reports": {
+    "operatingCostHint": "Operating cost: {{cost}}",
+    "marginHint": "Profit margin {{percent}}%",
+    "tripsHint": "{{bookings}} bookings completed · {{horses}} horses delivered",
+    "incidentCostHint": "Extra cost: {{cost}}",
+    "financeTrend": "Revenue, cost and profit by month",
+    "lastMonths": "Last {{count}} months",
+    "performance": "Operational performance",
+    "tripsTrend": "Trips closed by month",
+    "onTimeShort": "on time",
     "title": "Reports",
     "subtitle": "Figures for closed trips. Leave the dates empty to see everything.",
     "from": "From",
@@ -2368,6 +2401,7 @@
         "insuranceVetCapPercent": "Full insurance vet expense cap",
         "horseMinAgeMonths": "Minimum horse age",
         "deliveryWaitingFeePerHourUsd": "Waiting fee per hour",
+        "deliveryDeadlineBufferDays": "Delivery deadline buffer days (Delivery.DeadlineBufferDays)",
         "deliveryMaxWaitingHours": "Maximum delivery waiting hours",
         "policyVersion": "Active policy version",
         "effectiveDate": "Policy effective date"
@@ -2389,6 +2423,8 @@
         "insuranceVetCapPercent": "Maximum vet care compensation as percentage of agreed horse value.",
         "horseMinAgeMonths": "Horses under this age in months are refused transport per IATA/EU regulations.",
         "deliveryWaitingFeePerHourUsd": "Hourly fee applied when waiting at drop-off point beyond 2 free hours.",
+        "deliveryDeadlineBufferDays": "Days added after the estimated transit time when suggesting the latest delivery date to customers (0 – 30 days)",
+        "deliveryDeadlineBufferDaysRange": "Buffer days must be between 0 and 30",
         "deliveryMaxWaitingHours": "Maximum hours vehicle waits before transferring horse to emergency temporary stable.",
         "policyVersion": "Version identifier shown on Policy page and recorded upon customer acceptance.",
         "effectiveDate": "Date when this policy version took effect."
@@ -2483,110 +2519,6 @@
     "ariaLabel": "Notifications",
     "newToast": "New notification"
   },
-  "policy": {
-    "agreement": {
-      "prefix": "I have read and agreed to the",
-      "policyLinkText": "Service Policy",
-      "versionLabel": "version",
-      "checkboxAria": "Agree to the service policy"
-    },
-    "header": {
-      "tag": "OFFICIAL",
-      "version": "Version",
-      "effectiveDate": "Effective Date",
-      "title": "Equine Transport Service Policy",
-      "subtitle": "Detailed guidelines covering scope of liability, booking workflow, pricing, delay compensation, and customer welfare rights across International Equine Transport services."
-    },
-    "nav": {
-      "contentsTitle": "TABLE OF CONTENTS"
-    },
-    "sections": {
-      "sec1": "Scope of Application",
-      "sec2": "Booking Workflow & Quoting",
-      "sec3": "Payment Terms",
-      "sec4": "Cancellation & Refunds",
-      "sec5": "Equine Eligibility Conditions",
-      "sec6": "Documentation & Clearance",
-      "sec7": "Schedule Commitment & Delay Compensation",
-      "sec8": "Insurance & Liability Limits",
-      "sec9": "In-Transit Incidents",
-      "sec10": "Delivery & Handover",
-      "sec11": "Complaints & Claims",
-      "sec12": "Transport Contract",
-      "sec13": "Policy Amendments"
-    },
-    "table": {
-      "item": "Payment Item",
-      "amount": "Amount",
-      "deadline": "Due Time",
-      "cancelTime": "Cancellation Timing",
-      "refund": "Refund Rule",
-      "criteria": "Coverage Aspect",
-      "optDefault": "No Insurance (Standard)",
-      "optFull": "Full Value Insurance (Optional)",
-      "incidentCause": "Root Cause",
-      "incidentExample": "Examples",
-      "unusedFare": "Unused Transport Fare",
-      "extraCosts": "Extra Expenses (Stabling, Vet, Rerouting)",
-      "delayCompensation": "Delay Penalty"
-    },
-    "payment": {
-      "deposit": "Security Deposit",
-      "quoteBase": "final quote",
-      "quoteAcceptHint": "Upon accepting quote, within",
-      "balance": "Remaining Balance",
-      "balanceCalc": "Final quote − Deposit",
-      "balanceDueHint": "Prior to departure",
-      "extra": "Extra Expenses",
-      "extraDesc": "As per Sections 9 & 10 (if any)",
-      "extraDueHint": "Within",
-      "extraAfterTrip": "days after trip completion"
-    },
-    "cancel": {
-      "beforeDeposit": "Prior to paying deposit",
-      "noRefundNeeded": "No payment made; zero charge",
-      "afterDepositBeforeDeparture": "After deposit, before departure",
-      "refundDepositPrefix": "Refund",
-      "refundDepositSuffix": "deposit + 100% of remaining balance paid",
-      "afterDeparture": "After vehicle departure",
-      "cannotCancelSelf": "Self-cancellation not permitted. Handled via Section 9"
-    },
-    "insurance": {
-      "premium": "Insurance Premium",
-      "free": "None",
-      "agreedValue": "agreed insured value",
-      "whenCovered": "Coverage Trigger",
-      "companyFaultOnly": "Company fault only",
-      "allCausesCovered": "All eligible causes, including Force Majeure",
-      "lossEuthanasia": "Horse death / humane euthanasia / loss",
-      "capUpTo": "Up to",
-      "injuredHorse": "Injured horse veterinary treatment",
-      "actualVetCost": "Actual vet costs, up to"
-    },
-    "incident": {
-      "companyFault": "Company Fault",
-      "companyFaultEx": "Mechanical breakdown, agent doc errors, incorrect routing",
-      "refund100": "100% Refund",
-      "companyBears": "Borne by Company",
-      "delayYes": "Eligible (Sec 7)",
-      "customerFault": "Customer Fault",
-      "customerFaultEx": "Fraudulent/missing docs, inaccurate horse status, recipient missing",
-      "noRefund": "Non-refundable",
-      "customerBears": "Borne by Customer",
-      "delayNo": "Ineligible",
-      "forceMajeure": "Force Majeure",
-      "forceMajeureEx": "Border closure, quarantine restrictions, natural disaster, 3rd party accident",
-      "proRataRefund": "Pro-rata refund for remaining distance less non-refundable filing fees",
-      "forceMajeureExtra": "Company covers vehicle & crew; Customer covers emergency stabling & vet"
-    },
-    "units": {
-      "days": "days",
-      "hours": "hours",
-      "hour": "hour",
-      "months": "months of age",
-      "horse": "horse"
-    }
-  },
   "map": {
     "searchPlaceholder": "Search an address (e.g. Ba Vi, Hanoi)",
     "pickHint": "Type an address and pick a suggestion, or click the map / drag the pin to adjust.",
@@ -2612,11 +2544,31 @@
     }
   },
   "bookingForm": {
+    "climateFee": "+10% of the freight (after volume discount)",
+    "routeNotOffered": "We do not currently serve this route by road or by air. Please choose another origin or destination.",
+    "switchedToAir": "Ground transport to {{country}} is not offered at the moment, switched to air.",
+    "switchedToGround": "Air transport is not offered for this route (to {{country}}) at the moment, switched to ground.",
+    "groundNotOffered": "Ground transport is not offered for this route at the moment.",
+    "airNotOffered": "Air transport is not offered for this route at the moment (both countries need an airport).",
+    "airOnlyNote": "Air only for now",
+    "groundOnlyNote": "Ground only for now",
     "pickupOnMap": "Pickup point (search an address or pick on the map)",
     "dropoffOnMap": "Drop-off point (search an address or pick on the map)",
+    "detailedAddress": "Detailed address",
+    "detailedAddressPlaceholder": "Farm name, house number, street, directions for the truck…",
+    "detailedAddressRequired": "Please enter a detailed address for both pickup and drop-off.",
     "pickBothPoints": "Please pick both the pickup and the drop-off point on the map.",
     "routeHint": "Actual road distance between the two points, from the map. The exact route (rest stops, border gates) is planned by the company after reviewing your request.",
     "routeLoading": "Calculating the distance...",
+    "pickPointsForRoute": "Pick the pick-up and drop-off points to see the distance and drive time.",
+    "driveTime": "Drive time",
+    "driveTimeValue": "{{hours}}h {{minutes}}m",
+    "driveTimeHours": "{{hours}}h",
+    "distance": "Distance",
+    "routeFailed": "The distance could not be calculated yet; it will be calculated when you send the request.",
+    "transitTime": "Transit time",
+    "transitBreakdown": "About {{driving}} h of driving (at a horse truck's average speed), {{rest}} h of rest along the way, {{border}} h of border formalities and {{handling}} h of loading and unloading.",
+    "transitDisclaimer": "This is an estimate for your reference. The actual time may vary with the route the company plans, traffic, weather and border procedures.",
     "values": {
       "declaredLabel": "Declared value (USD, optional)",
       "declaredPlaceholder": "e.g. 40,000",
@@ -2932,5 +2884,496 @@
     "companyCovers": "The company keeps the horses at a temporary stable at its own cost until this is resolved; you pay no waiting or stable fee.",
     "claimOpened": "An insurance claim has been opened.",
     "viewClaims": "View claims"
+  },
+  "policy": {
+    "agreement": {
+      "prefix": "I have read and agreed to the",
+      "policyLinkText": "Service Policy",
+      "versionLabel": "version",
+      "checkboxAria": "Agree to the service policy"
+    },
+    "header": {
+      "tag": "OFFICIAL",
+      "version": "Version",
+      "effectiveDate": "Effective Date",
+      "title": "Equine Transport Service Policy",
+      "subtitle": "Detailed guidelines covering scope of liability, booking workflow, pricing, delay compensation, and customer welfare rights across International Equine Transport services."
+    },
+    "nav": {
+      "contentsTitle": "TABLE OF CONTENTS"
+    },
+    "sections": {
+      "sec1": "Scope of Application",
+      "sec2": "Booking Workflow & Quoting",
+      "sec3": "Payment Terms",
+      "sec4": "Cancellation & Refunds",
+      "sec5": "Equine Eligibility Conditions",
+      "sec6": "Documentation & Clearance",
+      "sec7": "Schedule Commitment & Delay Compensation",
+      "sec8": "Insurance & Liability Limits",
+      "sec9": "In-Transit Incidents",
+      "sec10": "Delivery & Handover",
+      "sec11": "Complaints & Claims",
+      "sec12": "Transport Contract",
+      "sec13": "Policy Amendments"
+    },
+    "table": {
+      "item": "Payment Item",
+      "amount": "Amount",
+      "deadline": "Due Time",
+      "cancelTime": "Cancellation Timing",
+      "refund": "Refund Rule",
+      "criteria": "Coverage Aspect",
+      "optDefault": "No Insurance (Standard)",
+      "optFull": "Full Value Insurance (Optional)",
+      "incidentCause": "Root Cause",
+      "incidentExample": "Examples",
+      "unusedFare": "Unused Transport Fare",
+      "extraCosts": "Extra Expenses (Stabling, Vet, Rerouting)",
+      "delayCompensation": "Delay Penalty"
+    },
+    "payment": {
+      "deposit": "Security Deposit",
+      "quoteBase": "final quote",
+      "quoteAcceptHint": "Upon accepting quote, within",
+      "balance": "Remaining Balance",
+      "balanceCalc": "Final quote − Deposit",
+      "balanceDueHint": "Prior to departure",
+      "extra": "Extra Expenses",
+      "extraDesc": "As per Sections 9 & 10 (if any)",
+      "extraDueHint": "Within",
+      "extraAfterTrip": "days after trip completion"
+    },
+    "cancel": {
+      "beforeDeposit": "Prior to paying deposit",
+      "noRefundNeeded": "No payment made; zero charge",
+      "afterDepositBeforeDeparture": "After deposit, before departure",
+      "refundDepositPrefix": "Refund",
+      "refundDepositSuffix": "deposit + 100% of remaining balance paid",
+      "afterDeparture": "After vehicle departure",
+      "cannotCancelSelf": "Self-cancellation not permitted. Handled via Section 9"
+    },
+    "insurance": {
+      "premium": "Insurance Premium",
+      "free": "None",
+      "agreedValue": "agreed insured value",
+      "whenCovered": "Coverage Trigger",
+      "companyFaultOnly": "Company fault only",
+      "allCausesCovered": "All eligible causes, including Force Majeure",
+      "lossEuthanasia": "Horse death / humane euthanasia / loss",
+      "capUpTo": "Up to",
+      "injuredHorse": "Injured horse veterinary treatment",
+      "actualVetCost": "Actual vet costs, up to"
+    },
+    "incident": {
+      "companyFault": "Company Fault",
+      "companyFaultEx": "Mechanical breakdown, agent doc errors, incorrect routing",
+      "refund100": "100% Refund",
+      "companyBears": "Borne by Company",
+      "delayYes": "Eligible (Sec 7)",
+      "customerFault": "Customer Fault",
+      "customerFaultEx": "Fraudulent/missing docs, inaccurate horse status, recipient missing",
+      "noRefund": "Non-refundable",
+      "customerBears": "Borne by Customer",
+      "delayNo": "Ineligible",
+      "forceMajeure": "Force Majeure",
+      "forceMajeureEx": "Border closure, quarantine restrictions, natural disaster, 3rd party accident",
+      "proRataRefund": "Pro-rata refund for remaining distance less non-refundable filing fees",
+      "forceMajeureExtra": "Company covers vehicle & crew; Customer covers emergency stabling & vet"
+    },
+    "deadlineBufferNote": "The latest delivery date must allow for the estimated transit time plus {{days}} buffer days.",
+    "units": {
+      "days": "days",
+      "hours": "hours",
+      "hour": "hour",
+      "months": "months of age",
+      "horse": "horse"
+    }
+  },
+  "routePlan": {
+    "title": "Plan the route for booking {{code}}",
+    "origin": "Pick-up (from the booking)",
+    "destination": "Drop-off (from the booking)",
+    "searchPlaceholder": "Search a rest stop / border gate to add it, or click the map",
+    "transitCountries": "Transit countries",
+    "noTransit": "None",
+    "recalculating": "Recalculating the route...",
+    "warningLeg": "Leg {{from}} → {{to}} crosses {{countries}}",
+    "noStops": "No stops yet: the route goes straight from pick-up to drop-off",
+    "noCoordinates": "The booking has no pick-up / drop-off coordinates, so the route cannot be drawn.",
+    "notesPlaceholder": "Notes for the manager (optional)",
+    "nameRequired": "Every stop needs a name",
+    "saveDraft": "Save draft",
+    "submit": "Save & submit",
+    "submitHint": "Each time you add, drag or remove a stop, the distance and transit countries are recalculated.",
+    "submitBlocked": "Border warnings remain: add a Border gate stop on each cross-border leg before submitting.",
+    "hasWarnings": "Saved, but the route still has border warnings so it was not submitted.",
+    "saved": "Route draft saved",
+    "submitted": "Route of {{code}} submitted for the manager's approval",
+    "saveFailed": "Could not save the route",
+    "loadFailed": "Could not load the booking's routes",
+    "previewFailed": "Could not calculate the route",
+    "rejected": "Version v{{version}} was rejected by the manager",
+    "newVersion": "Plan a new version",
+    "newVersionHint": "The new route replaces the approved one once the manager approves it; the quote is recalculated if it has not been accepted yet.",
+    "readOnly": {
+      "Submitted": "The route is waiting for the manager's approval.",
+      "Approved": "The route has been approved."
+    },
+    "versions": "Versions",
+    "status": {
+      "Draft": "Draft",
+      "Submitted": "Submitted",
+      "Approved": "Approved",
+      "Rejected": "Rejected",
+      "Superseded": "Superseded"
+    },
+    "fields": {
+      "type": "Type",
+      "name": "Name",
+      "address": "Address",
+      "rest": "Rest (min)",
+      "version": "Version",
+      "status": "Status",
+      "stops": "Stops",
+      "km": "km",
+      "createdAt": "Created",
+      "rejection": "Rejection reason"
+    }
+  },
+  "incidentOutcome": {
+    "emergencyOffload": "Offloaded in an emergency",
+    "offloadOutcome": "Horse leaves the trip",
+    "outcome": {
+      "WaitRecover": "Recover, then travel on another trip",
+      "ReturnToOrigin": "Take the horse back to origin",
+      "HandOverHere": "Customer receives the horse here",
+      "Deceased": "Horse died"
+    },
+    "vetReport": "Veterinary report",
+    "detourCost": "Detour fee for customers",
+    "accepted": "Agreed",
+    "declined": "Declined",
+    "replacementVehicle": "Replacement vehicle",
+    "crewReplacement": "Crew change",
+    "faultParty": "Cause",
+    "fault": {
+      "Company": {
+        "title": "Company fault",
+        "example": "E.g. poor maintenance, missing documents from our specialist, wrong route",
+        "money": "The company bears the extra cost; the customer is compensated if delivery is late."
+      },
+      "Customer": {
+        "title": "Customer fault",
+        "example": "E.g. wrong / forged documents, misdeclared horse condition",
+        "money": "The customer bears the extra cost (added to extra charges when the trip closes); no late-delivery compensation."
+      },
+      "ForceMajeure": {
+        "title": "Force majeure",
+        "example": "E.g. border closure, natural disaster, epidemic, third-party accident",
+        "money": "The company bears the vehicle and crew costs; the customer pays the agreed detour fee, stabling and vet care; no late-delivery compensation."
+      }
+    }
+  },
+  "incidentPlan": {
+    "emergencyOffload": "{{horse}} was offloaded in an emergency: the plan must be Offload the horse with the next step.",
+    "actionHint": {
+      "ReplaceVehicle": "On approval the trip moves to the new vehicle (new vehicle In transit, old one Maintenance). Horses keep their stall numbers if the new vehicle has room.",
+      "ReplaceCrew": "On approval the new person takes over the old member's role; horses the old escort looked after move to the new one. Both people are notified.",
+      "ReturnToOrigin": "On approval the system builds the return route itself (pending stops removed, e-POD signed at the origin). No route edit needed.",
+      "HoldAtStable": "Stable fee = days × horses × daily rate, added to the extra cost when the incident is closed.",
+      "Reroute": "If the detour costs customers more, enter the fee below: the route changes only when every customer on board agrees; one refusal sends the whole trip back."
+    },
+    "horse": "Horse leaving the trip",
+    "horsePlaceholder": "Choose the horse",
+    "outcome": "Next step",
+    "outcomeHint": {
+      "WaitRecover": "The horse goes back to the trip planning queue",
+      "ReturnToOrigin": "Coordinator arranges the return; the horse is done with this booking",
+      "HandOverHere": "The crew signs the e-POD with the customer on the spot",
+      "Deceased": "Veterinary report required; an insurance claim opens automatically"
+    },
+    "deceasedNeedsCritical": "Only for a Critical incident",
+    "vetReport": "Veterinary report",
+    "chooseVetReport": "Choose file (PDF / image)",
+    "vetReportRequired": "A veterinary report is required when a horse died",
+    "extraCostForCustomer": "Extra cost charged to customers (detour)",
+    "extraCostHint": "Total for the trip, split by each booking's horses. Leave 0 if the company pays.",
+    "awaitingConsent": "Waiting for every customer on board to agree to the detour; the route has not changed yet.",
+    "replacementVehicle": "Replacement vehicle",
+    "replacementVehiclePlaceholder": "Choose a vehicle",
+    "replacementVehicleHint": "Only {{type}} vehicles free during the trip window with at least {{count}} slots for the horses still on board are listed. If a booking needs climate control, pick a vehicle with it.",
+    "noVehicle": "No free vehicle of the same type with enough slots",
+    "climate": "Climate control",
+    "removeCrew": "Member to replace",
+    "removeCrewPlaceholder": "Choose a crew member",
+    "removeCrewRequired": "Choose the crew member to replace on this trip",
+    "addCrew": "Replacement",
+    "addCrewPlaceholder": "Choose a free driver / escort",
+    "addCrewHint": "The new person takes the {{role}} role of the member being replaced.",
+    "noCrew": "No driver / escort is free during the trip window",
+    "resolveTitle": "Close incident {{code}}",
+    "faultRequired": "Choose the cause",
+    "faultNote": "Short explanation (optional)",
+    "resolveEffect": {
+      "ReturnToOrigin": {
+        "Company": "Return caused by the company: each booking is refunded 100% of what was paid.",
+        "Customer": "Return caused by the customer: no refund; the turnaround cost ({{cost}}) is charged as an extra.",
+        "ForceMajeure": "Force majeure: freight refunded in proportion to the distance not travelled (procedure fees not refunded)."
+      },
+      "OffloadHorse": {
+        "Company": "The unused freight share of the offloaded horse is refunded (except Recover).",
+        "Customer": "No refund for the offloaded horse's freight.",
+        "ForceMajeure": "The unused freight share of the offloaded horse is refunded (except Recover)."
+      },
+      "HoldAtStable": {
+        "Company": "The stable fee is calculated on closing; with a company fault the customer does not pay it.",
+        "Customer": "The stable fee is calculated on closing and added to the customer's extra charges.",
+        "ForceMajeure": "The stable fee is calculated on closing and added to the customer's extra charges."
+      }
+    }
+  },
+  "detourConsent": {
+    "title": "Trip {{trip}} needs a detour — your agreement is needed",
+    "intro": "The trip hit a problem and needs a longer route that costs more. The route changes only if every customer on board agrees.",
+    "cost": "Detour fee for the whole trip: {{amount}}",
+    "costNote": "Split by the number of horses of each booking on board and added to extra charges when the trip closes. If you agree, a new contract version is issued for you to confirm.",
+    "accept": "Agree to the detour",
+    "decline": "Decline",
+    "acceptConfirm": "Agree to the detour?",
+    "acceptConfirmDesc": "You pay your booking's share of the detour fee.",
+    "declineConfirm": "Decline the detour?",
+    "declineConfirmDesc": "The whole trip returns to the origin with no detour fee; refunds follow Policy section 9.",
+    "yourAnswer": "Your answer:",
+    "canChange": "you can change it until there is a result",
+    "acceptedMsg": "Your agreement has been recorded",
+    "declinedMsg": "Your refusal has been recorded",
+    "failed": "Could not send your answer"
+  },
+  "companyDocs": {
+    "uploadTitle": "Upload a permit we obtained",
+    "uploadOk": "Upload",
+    "uploadHint": "A document issued by the authorities counts as approved as soon as it is uploaded. It must stay valid until the last day of the pickup window.",
+    "uploadButton": "Upload obtained permit",
+    "uploadSuccess": "Document saved and the customer was notified",
+    "notYetObtained": "Not obtained yet. The specialist applies to the authorities and uploads it here."
+  },
+  "countryConfig": {
+    "title": "Countries & transport routes",
+    "subtitle": "Which countries we pick up from and deliver to, by road or by air, and the airports and documents of each country.",
+    "rulesTitle": "Customers can book a route when:",
+    "rule1": "Both the origin and the destination country are turned on.",
+    "rule2": "The destination has the chosen mode turned on. The \"Ground\" / \"Air\" switch is that country's freight rate in the price list: turning it off keeps the rate.",
+    "rule3": "Air needs an open airport in both countries. Whether a road route between two countries is possible (e.g. across the sea) is checked by the manager when reviewing the booking.",
+    "addCountry": "Add country",
+    "addCountryHint": "A new country is on but has no freight rate yet: customers can only choose it as the origin until you enter a ground or air rate.",
+    "countryCode": "Country code (ISO, 2 letters)",
+    "countryCodeInvalid": "Exactly 2 letters, e.g. NZ",
+    "nameVi": "Vietnamese name",
+    "nameEn": "English name",
+    "sortOrder": "Order",
+    "created": "Country added",
+    "statActive": "Countries served",
+    "statGround": "By road",
+    "statAir": "By air",
+    "statWarnings": "Missing information",
+    "filters": {
+      "all": "All",
+      "ground": "Road",
+      "air": "Air",
+      "warnings": "Missing",
+      "off": "Off"
+    },
+    "search": "Search by name or code",
+    "country": "Country",
+    "ground": "Road",
+    "air": "Air",
+    "documentsCol": "Documents (export / transit / import)",
+    "warningsCol": "Missing",
+    "configure": "Configure",
+    "inactive": "Off",
+    "transitOnly": "Transit / origin only",
+    "noRateYet": "No rate yet",
+    "noOpenAirport": "No open airport",
+    "airportCount": "{{active}}/{{total}} airports open",
+    "directionsShort": {
+      "Export": "Export {{count}}",
+      "Transit": "Transit {{count}}",
+      "Import": "Import {{count}}"
+    },
+    "directions": {
+      "Export": "Export",
+      "Transit": "Transit",
+      "Import": "Import"
+    },
+    "warningsShort": {
+      "MissingImportDocuments": "No import documents",
+      "MissingExportDocuments": "No export documents",
+      "AirFreightWithoutAirport": "Air on but no open airport"
+    },
+    "warnings": {
+      "MissingImportDocuments": "This country accepts deliveries but has no import documents: dossiers will be incomplete.",
+      "MissingExportDocuments": "No export documents: bookings from this country will have incomplete dossiers.",
+      "AirFreightWithoutAirport": "The air rate is on but no airport is open, so customers cannot book by air yet."
+    },
+    "tabs": {
+      "modes": "Modes & airports",
+      "documents": "Documents ({{count}})",
+      "fees": "Country fees ({{count}})",
+      "general": "General"
+    },
+    "on": "Accepting",
+    "off": "Not accepting",
+    "groundTitle": "Road (rate per km per horse)",
+    "airTitle": "Air (rate per horse)",
+    "customersCanChoose": "Customers can choose this mode for this destination.",
+    "customersCannotChoose": "Customers cannot choose this mode for this destination yet.",
+    "accepting": "Accepting",
+    "rate": "Rate",
+    "enterRateFirst": "Enter a rate before turning this mode on.",
+    "saved": "Saved",
+    "airports": "Airports",
+    "airportsHint": "Airports that handle horses in this country. Flying from or to this country needs at least one open airport.",
+    "airportName": "Airport name",
+    "airportNameRequired": "Enter the airport name",
+    "iataInvalid": "IATA code is 3 letters",
+    "city": "City",
+    "open": "Open",
+    "addAirport": "Add airport",
+    "airportAdded": "Airport added",
+    "noAirports": "No airports",
+    "documentsHint": "Documents this country requires when a horse leaves it (export), passes through it (transit) or arrives in it (import). Each booking's dossier is built from its route: export of the origin, transit of every country passed, import of the destination. This is data entered by our specialists, not legal advice.",
+    "direction": "Direction",
+    "document": "Document",
+    "validity": "Validity",
+    "processing": "Time to obtain",
+    "days": "{{count}} days",
+    "validityDays": "Issued within (days)",
+    "processingDays": "Days to obtain",
+    "note": "Regulation note",
+    "mandatory": "Mandatory",
+    "addRequirement": "Add document",
+    "requirementAdded": "Document added",
+    "deleteRequirement": "Remove this document from the country's requirements?",
+    "feesHint": "Fees that apply only when this country is the destination, e.g. long quarantine in Japan or Australia. Fees for every country are on the General price list page.",
+    "noFees": "No country fees",
+    "inService": "This country is in our service area",
+    "inServiceHint": "When off, customers cannot choose it as origin or destination. Existing bookings are not affected."
+  },
+  "priceConfig": {
+    "title": "General price list",
+    "subtitle": "Prices that apply to every route: stall classes, discounts, surcharges, clearance fees, grooms, insurance.",
+    "howItWorks": "New prices apply to quotes calculated after saving; submitted bookings keep their prices.",
+    "countrySpecific": "Road / air rates of each country and country-specific fees (e.g. quarantine in Japan, Australia) are on the Countries & routes page.",
+    "goToCountries": "Open Countries & routes",
+    "name": "Price item",
+    "mode": "Mode",
+    "value": "Value",
+    "active": "On",
+    "fromHorses": "from {{count}} horses",
+    "modes": {
+      "Ground": "Road",
+      "Air": "Air",
+      "any": "Both"
+    },
+    "unit": {
+      "PerHorse": "/horse",
+      "PerKmPerHorse": "/km/horse",
+      "PerBooking": "/booking",
+      "PerGroom": "/groom",
+      "PerGroomDay": "/groom/day"
+    },
+    "categories": {
+      "Freight": {
+        "name": "Freight",
+        "hint": "Shared base freight (if any). Rates per country are on the Countries & routes page."
+      },
+      "StallClass": {
+        "name": "Stall classes",
+        "hint": "Multiplier on the base freight by the stall class chosen for each horse."
+      },
+      "Discount": {
+        "name": "Volume discounts",
+        "hint": "Percent off the freight; the booking gets the highest tier its horse count reaches."
+      },
+      "Surcharge": {
+        "name": "Surcharges",
+        "hint": "Percent added on the freight after discounts (fuel, climate control, express)."
+      },
+      "Clearance": {
+        "name": "Clearance fees",
+        "hint": "Documents, clearance, quarantine, transit (per country passed), vehicle dispatch."
+      },
+      "Escort": {
+        "name": "Grooms",
+        "hint": "One groom per 3 horses: per groom by air, per groom per day by road."
+      },
+      "Insurance": {
+        "name": "Insurance",
+        "hint": "Percent of the horse's declared value."
+      }
+    }
+  },
+  "fitExam": {
+    "window": "Exam window {{window}}",
+    "windowPending": "We will notify you once the trip is scheduled",
+    "issueDate": "Issue date",
+    "issueDateRequired": "Please select the exam issue date",
+    "customerNote": "The dossier has been submitted / cleared, but you still need to upload the vet clinical exam issued within 48 hours before departure.",
+    "uploadOnBehalf": "Upload exam on behalf",
+    "uploadTitle": "Upload clinical exam on behalf",
+    "uploadHint": "The exam must be issued by a vet within 48 hours before departure. After uploading it still needs approval."
+  },
+  "paymentLedger": {
+    "types": {
+      "Deposit": "Deposit",
+      "Balance": "Remaining balance",
+      "Extra": "Extra charge",
+      "Refund": "Refund",
+      "Compensation": "Compensation payout"
+    },
+    "statuses": {
+      "Succeeded": "Succeeded",
+      "Pending": "Pending",
+      "Failed": "Failed",
+      "Expired": "Expired"
+    },
+    "columns": {
+      "time": "Time",
+      "booking": "Booking",
+      "customer": "Customer",
+      "type": "Type",
+      "amount": "Amount",
+      "status": "Status",
+      "txnRef": "Transaction ID"
+    },
+    "filters": {
+      "type": "Transaction type",
+      "status": "Status",
+      "search": "Search booking or transaction code"
+    },
+    "empty": "No transactions yet",
+    "loadFailed": "Could not load transactions",
+    "customer": {
+      "title": "Payment history",
+      "subtitle": "All deposits, payments, extra charges and refunds across your bookings"
+    },
+    "manager": {
+      "title": "Transactions",
+      "subtitle": "All payments and refunds across every transport booking",
+      "summaryFailed": "Could not load the summary",
+      "searchPlaceholder": "Search booking, customer, transaction code",
+      "tiles": {
+        "succeeded": "Collected",
+        "pending": "Awaiting payment",
+        "failedExpired": "Failed / Expired",
+        "failedExpiredHint": "Transactions",
+        "refunded": "Refunded",
+        "refundsNeedingAction": "Refunds needing action",
+        "refundsNeedingActionHint": "Failed or pending refunds",
+        "count_one": "{{count}} transaction",
+        "count_other": "{{count}} transactions"
+      }
+    }
   }
 }

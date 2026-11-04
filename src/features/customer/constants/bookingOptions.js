@@ -98,18 +98,21 @@ export const STALL_CLASSES = [
     value: 'Shared',
     title: 'Chuồng ghép (Shared)',
     badge: '3 ngựa / khoang',
+    priceNote: 'Giá cước × 1.0',
     description: 'Cước cơ bản, phù hợp với các cá thể ngựa tính cách hiền hòa, quen di chuyển theo bầy đàn.',
   },
   {
     value: 'Comfort',
     title: 'Chuồng rưỡi (Comfort)',
     badge: '2 ngựa / khoang',
+    priceNote: 'Giá cước × 1.4',
     description: 'Không gian rộng rãi, thoáng đãng, vách đệm êm giảm căng thẳng cho ngựa đua thi đấu.',
   },
   {
     value: 'Private',
     title: 'Chuồng riêng (Private)',
     badge: '1 ngựa / khoang',
+    priceNote: 'Giá cước × 2.2',
     description: 'Khoang riêng biệt độc lập, chế độ giám sát và chăm sóc tối đa cho ngựa đua giá trị cao.',
   },
 ];

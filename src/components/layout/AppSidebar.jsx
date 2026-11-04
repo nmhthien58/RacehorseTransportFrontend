@@ -14,12 +14,15 @@ import {
   AuditOutlined,
   FileTextOutlined,
   HistoryOutlined,
+  TransactionOutlined,
   TeamOutlined,
   WarningOutlined,
   FileDoneOutlined,
   BarChartOutlined,
   DollarOutlined,
   CreditCardOutlined,
+  GlobalOutlined,
+  TagsOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -72,6 +75,11 @@ export default function AppSidebar({ collapsed, user, onNavigate }) {
           key: ROUTES.CUSTOMER_BILLING,
           icon: <CreditCardOutlined style={{ fontSize: 18 }} />,
           label: t('nav.billing', 'Thanh toán'),
+        },
+        {
+          key: ROUTES.CUSTOMER_PAYMENT_HISTORY,
+          icon: <HistoryOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.paymentHistory'),
         },
         {
           key: ROUTES.CUSTOMER_PRICING,
@@ -129,9 +137,24 @@ export default function AppSidebar({ collapsed, user, onNavigate }) {
           label: t('nav.reports', 'Báo cáo'),
         },
         {
+          key: ROUTES.MANAGER_COUNTRIES,
+          icon: <GlobalOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.countries', 'Quốc gia & tuyến'),
+        },
+        {
+          key: ROUTES.MANAGER_PRICING,
+          icon: <TagsOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.pricingConfig', 'Bảng giá chung'),
+        },
+        {
           key: ROUTES.MANAGER_PAYMENT_SETTINGS,
           icon: <DollarOutlined style={{ fontSize: 18 }} />,
           label: t('nav.paymentSettings', 'Cấu hình thanh toán'),
+        },
+        {
+          key: ROUTES.MANAGER_TRANSACTIONS,
+          icon: <TransactionOutlined style={{ fontSize: 18 }} />,
+          label: t('nav.transactions'),
         },
         {
           key: ROUTES.ADMIN_USERS,
@@ -298,6 +321,8 @@ export default function AppSidebar({ collapsed, user, onNavigate }) {
     if (current.startsWith('/manager/incidents')) return ROUTES.MANAGER_INCIDENTS;
     if (current.startsWith('/manager/trips')) return ROUTES.MANAGER_TRIPS;
     if (current.startsWith('/manager/reports')) return ROUTES.MANAGER_REPORTS;
+    if (current.startsWith('/manager/countries')) return ROUTES.MANAGER_COUNTRIES;
+    if (current.startsWith('/manager/pricing')) return ROUTES.MANAGER_PRICING;
     if (current.startsWith('/manager/pending-requests')) return ROUTES.MANAGER_PENDING_REQUESTS;
     if (current.startsWith('/manager/bookings')) return ROUTES.MANAGER_BOOKINGS;
     if (current.startsWith('/manager/dashboard')) return ROUTES.MANAGER_DASHBOARD;

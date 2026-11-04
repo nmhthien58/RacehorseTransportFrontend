@@ -47,3 +47,30 @@ export function calculateCancellationRefundPct(daysBeforePickup, isCompanyFault 
 
   return { refundPct: 0, reason: 'Deposit is non-refundable for cancellation under 3 days before pickup.' };
 }
+
+
+/**
+ * Calculates delivery delay compensation for customer according to Section 6 of Terms of Service.
+ * Formula: 5% of base freight per full 12 hours of delay exceeding 6h grace period, capped at 25%.
+ * @param {number} delayHours - Actual delivery delay in decimal hours
+ * @param {number} baseFreightAmount - Total base freight cost in USD
+ * @param {boolean} isForceMajeure - Weather, border closure, or force majeure event
+ * @returns {{ compensationAmount: number, penaltyPct: number, isEligible: boolean }}
+ */
+export function calculateDelayCompensationAmount(delayHours, baseFreightAmount = 0, isForceMajeure = false) {
+  if (isForceMajeure || delayHours <= DELAY_COMPENSATION_RULES.GRACE_PERIOD_HOURS) {
+    return { compensationAmount: 0, penaltyPct: 0, isEligible: false };
+  }
+
+  const billableDelayHours = delayHours - DELAY_COMPENSATION_RULES.GRACE_PERIOD_HOURS;
+  const twelveHourBlocks = Math.floor(billableDelayHours / 12);
+  const calculatedPenaltyPct = twelveHourBlocks * DELAY_COMPENSATION_RULES.PENALTY_PCT_PER_12H;
+  const effectivePenaltyPct = Math.min(calculatedPenaltyPct, DELAY_COMPENSATION_RULES.MAX_PENALTY_PCT);
+
+  const compensationAmount = Number(((baseFreightAmount * effectivePenaltyPct) / 100).toFixed(2));
+  return {
+    compensationAmount,
+    penaltyPct: effectivePenaltyPct,
+    isEligible: effectivePenaltyPct > 0,
+  };
+}

@@ -120,3 +120,27 @@ export function verifyPolicyVersionMatch(userAgreedVersion, activeSystemVersion)
     requiresReconsent: !isCurrent,
   };
 }
+
+
+/**
+ * Calculates prorated refund when transport is terminated mid-route due to force majeure (e.g. border closure).
+ * Customer is refunded base freight proportional to remaining uncompleted distance. Clearance and insurance are non-refundable.
+ * @param {number} baseFreightUsd - Total freight charge for the leg
+ * @param {number} totalDistanceKm - Planned route length in km
+ * @param {number} completedDistanceKm - Distance already covered before force majeure stop
+ * @returns {{ refundAmount: number, uncompletedDistanceKm: number, refundRatio: number }}
+ */
+export function calculateForceMajeureProratedRefund(baseFreightUsd = 0, totalDistanceKm = 1, completedDistanceKm = 0) {
+  const safeTotalKm = Math.max(1, totalDistanceKm);
+  const safeCompletedKm = Math.min(Math.max(0, completedDistanceKm), safeTotalKm);
+  const uncompletedDistanceKm = safeTotalKm - safeCompletedKm;
+
+  const refundRatio = Number((uncompletedDistanceKm / safeTotalKm).toFixed(4));
+  const refundAmount = Number((baseFreightUsd * refundRatio).toFixed(2));
+
+  return {
+    refundAmount,
+    uncompletedDistanceKm,
+    refundRatio,
+  };
+}

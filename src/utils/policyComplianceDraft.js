@@ -101,3 +101,22 @@ export function evaluateInsuranceCoverageTier(agreedValueUsd = 0, optFullValueIn
     requiresAppraisalProof,
   };
 }
+
+
+/**
+ * Validates that customer consent matches the current active policy version.
+ * @param {string} userAgreedVersion - Version string stored at booking creation
+ * @param {string} activeSystemVersion - Current policy version published by Admin
+ * @returns {{ isCurrent: boolean, requiresReconsent: boolean }}
+ */
+export function verifyPolicyVersionMatch(userAgreedVersion, activeSystemVersion) {
+  if (!userAgreedVersion || !activeSystemVersion) {
+    return { isCurrent: false, requiresReconsent: true };
+  }
+
+  const isCurrent = userAgreedVersion.trim() === activeSystemVersion.trim();
+  return {
+    isCurrent,
+    requiresReconsent: !isCurrent,
+  };
+}

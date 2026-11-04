@@ -1,6 +1,7 @@
 /**
  * @file policyComplianceDraft.js
- * @description Experimental policy clause taxonomy and service policy evaluation helpers.
+ * @deprecated Standalone client-side policy evaluation draft is deprecated in favor of unified
+ * backend policy validation and reactive usePolicy hook. Slated for cleanup.
  *
  * Legal Framework References:
  * 1. Convention on the Contract for the International Carriage of Goods by Road (CMR).

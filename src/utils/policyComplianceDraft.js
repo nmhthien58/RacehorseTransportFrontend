@@ -74,3 +74,30 @@ export function calculateDelayCompensationAmount(delayHours, baseFreightAmount =
     isEligible: effectivePenaltyPct > 0,
   };
 }
+
+
+/**
+ * Evaluates transit insurance liability coverage according to agreed valuation.
+ * @param {number} agreedValueUsd - Agreed value per horse in USD
+ * @param {boolean} optFullValueInsurance - Whether customer opted for full-value rider (1% premium)
+ * @returns {{ planName: string, maxLiabilityDeath: number, maxInjuryVetCost: number, requiresAppraisalProof: boolean }}
+ */
+export function evaluateInsuranceCoverageTier(agreedValueUsd = 0, optFullValueInsurance = false) {
+  const requiresAppraisalProof = agreedValueUsd >= 50000;
+
+  if (!optFullValueInsurance) {
+    return {
+      planName: 'STANDARD_LIMITED_LIABILITY',
+      maxLiabilityDeath: Math.min(agreedValueUsd, 5000),
+      maxInjuryVetCost: 1000,
+      requiresAppraisalProof,
+    };
+  }
+
+  return {
+    planName: 'COMPREHENSIVE_FULL_VALUE',
+    maxLiabilityDeath: agreedValueUsd,
+    maxInjuryVetCost: Number((agreedValueUsd * 0.2).toFixed(2)),
+    requiresAppraisalProof,
+  };
+}

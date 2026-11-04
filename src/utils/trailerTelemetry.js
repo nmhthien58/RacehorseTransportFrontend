@@ -139,3 +139,31 @@ export function detectRoadShockSpikes(readings = []) {
 
   return { spikeCount, maxG: Number(maxG.toFixed(2)), status };
 }
+
+
+/**
+ * Evaluates air exchange rates and airflow sufficiency inside the horse trailer cabin.
+ * Compliance baseline: Minimum 20 air changes per hour (ACH) for live equine transport.
+ * @param {number} fanRpm - Active extractor fan speed in RPM
+ * @param {number} cabinVolumeM3 - Total interior cabin air volume in cubic meters
+ * @param {boolean} ventsOpen - Status of passive roof vents
+ * @returns {{ ach: number, compliant: boolean, recommendation: string }}
+ */
+export function evaluateAirExchangeCycles(fanRpm = 0, cabinVolumeM3 = 35, ventsOpen = true) {
+  // Approximate airflow yield: 0.8 m3/h per RPM per fan unit
+  const baseAirflowM3H = fanRpm * 0.8 * 2;
+  const passiveAirflowM3H = ventsOpen ? 150 : 20;
+  const totalFlowM3H = baseAirflowM3H + passiveAirflowM3H;
+
+  const ach = Number((totalFlowM3H / Math.max(cabinVolumeM3, 10)).toFixed(1));
+  const compliant = ach >= 20;
+
+  let recommendation = 'Airflow optimal.';
+  if (!compliant) {
+    recommendation = ventsOpen
+      ? 'Increase mechanical fan speed to level 3 immediately.'
+      : 'Open roof ventilation hatches and activate auxiliary blowers.';
+  }
+
+  return { ach, compliant, recommendation };
+}

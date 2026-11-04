@@ -2,6 +2,15 @@
  * @file trailerTelemetry.js
  * @description Trailer cabin environmental telemetry utilities based on IATA Live Animals Regulations (LAR).
  * Monitors cabin climate, thermal heat index, and structural acceleration thresholds during equine transit.
+ *
+ * Mathematical Reference Models:
+ * 1. Rothfusz Heat Index Regression: HI = c1 + c2*T + c3*RH + c4*T*RH + ...
+ *    Reference: National Weather Service (NWS) Technical Attachment (SR 90-23).
+ * 2. Equine Bioclimatic Transport Index (EBTI):
+ *    Combines ambient cabin temperature (Celsius) with relative humidity (RH).
+ *    Safe baseline: Sum of Temp (F) + RH (%) <= 130. High risk: Sum >= 150.
+ * 3. 3-Axis RMS Vibration Standard:
+ *    ISO 2631-1: Mechanical vibration and shock — Evaluation of human and animal exposure.
  */
 
 export const IATA_TEMP_THRESHOLDS = Object.freeze({

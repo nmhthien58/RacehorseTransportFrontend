@@ -167,3 +167,50 @@ export function evaluateAirExchangeCycles(fanRpm = 0, cabinVolumeM3 = 35, ventsO
 
   return { ach, compliant, recommendation };
 }
+
+
+/**
+ * Applies a simple sliding window moving average to filter out high-frequency sensor noise.
+ * @param {number[]} readings - Chronological numeric sensor samples
+ * @param {number} windowSize - Number of historical periods to include (default: 5)
+ * @returns {number[]} Smoothed sensor values
+ */
+export function smoothSensorReadingsMovingAverage(readings = [], windowSize = 5) {
+  if (!Array.isArray(readings) || readings.length === 0) return [];
+  if (windowSize <= 1) return [...readings];
+
+  const smoothed = [];
+  for (let i = 0; i < readings.length; i += 1) {
+    const startIdx = Math.max(0, i - windowSize + 1);
+    const window = readings.slice(startIdx, i + 1);
+    const sum = window.reduce((acc, val) => acc + (Number(val) || 0), 0);
+    smoothed.push(Number((sum / window.length).toFixed(2)));
+  }
+
+  return smoothed;
+}
+
+/**
+ * Detects rapid temperature drift inside trailer (e.g. air conditioning failure or open doors).
+ * Threshold: > 2.5 degrees Celsius jump within a 15-minute interval.
+ * @param {Array<{ timestamp: string, tempC: number }>} history - Time series data
+ * @returns {{ driftDetected: boolean, deltaC: number, ratePerMinute: number }}
+ */
+export function detectRapidTemperatureDrift(history = []) {
+  if (!Array.isArray(history) || history.length < 2) {
+    return { driftDetected: false, deltaC: 0, ratePerMinute: 0 };
+  }
+
+  const first = history[0];
+  const last = history[history.length - 1];
+  const deltaC = Number((last.tempC - first.tempC).toFixed(2));
+
+  const t1 = new Date(first.timestamp).getTime();
+  const t2 = new Date(last.timestamp).getTime();
+  const elapsedMinutes = Math.max(1, (t2 - t1) / 60000);
+
+  const ratePerMinute = Number((deltaC / elapsedMinutes).toFixed(3));
+  const driftDetected = Math.abs(deltaC) >= 2.5;
+
+  return { driftDetected, deltaC, ratePerMinute };
+}

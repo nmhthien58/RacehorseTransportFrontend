@@ -214,3 +214,42 @@ export function detectRapidTemperatureDrift(history = []) {
 
   return { driftDetected, deltaC, ratePerMinute };
 }
+
+
+/**
+ * Validates and sanitizes raw IoT sensor packets from CAN bus / BLE gateway.
+ * Flags disconnected sensors, physical wiring faults, or out-of-range sensor telemetries.
+ * @param {Record<string, unknown>} rawSample - Raw packet payload
+ * @returns {{ sanitized: { tempC: number, rhPct: number }, isHealthy: boolean, faults: string[] }}
+ */
+export function sanitizeSensorInput(rawSample = {}) {
+  const faults = [];
+  let tempC = Number(rawSample?.temperatureC);
+  let rhPct = Number(rawSample?.humidityPct);
+
+  if (rawSample == null || typeof rawSample !== 'object') {
+    return {
+      sanitized: { tempC: 20, rhPct: 50 },
+      isHealthy: false,
+      faults: ['NULL_OR_INVALID_PACKET'],
+    };
+  }
+
+  // Check temperature bounds (-20C to +60C physical limit)
+  if (Number.isNaN(tempC) || tempC < -20 || tempC > 60) {
+    faults.push('TEMPERATURE_SENSOR_FAULT');
+    tempC = 20; // Safe neutral fallback
+  }
+
+  // Check humidity bounds (0 to 100%)
+  if (Number.isNaN(rhPct) || rhPct < 0 || rhPct > 100) {
+    faults.push('HUMIDITY_SENSOR_FAULT');
+    rhPct = 50;
+  }
+
+  return {
+    sanitized: { tempC, rhPct },
+    isHealthy: faults.length === 0,
+    faults,
+  };
+}

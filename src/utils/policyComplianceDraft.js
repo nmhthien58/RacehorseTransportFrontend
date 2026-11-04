@@ -144,3 +144,26 @@ export function calculateForceMajeureProratedRefund(baseFreightUsd = 0, totalDis
     refundRatio,
   };
 }
+
+
+/**
+ * Compares two policy configuration snapshots and highlights adjusted numerical terms.
+ * @param {Record<string, unknown>} oldSnap - Previous policy configuration
+ * @param {Record<string, unknown>} newSnap - Current policy configuration
+ * @returns {Array<{ key: string, oldValue: unknown, newValue: unknown, isChanged: boolean }>}
+ */
+export function diffPolicySnapshots(oldSnap = {}, newSnap = {}) {
+  const allKeys = Array.from(new Set([...Object.keys(oldSnap), ...Object.keys(newSnap)]));
+  const diffs = [];
+
+  for (const k of allKeys) {
+    const oldValue = oldSnap[k];
+    const newValue = newSnap[k];
+    const isChanged = oldValue !== newValue;
+    if (isChanged) {
+      diffs.push({ key: k, oldValue, newValue, isChanged: true });
+    }
+  }
+
+  return diffs;
+}

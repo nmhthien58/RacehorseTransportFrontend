@@ -94,3 +94,48 @@ export function assessThermalComfort(tempC, rhPct) {
   }
   return 'DANGER';
 }
+
+
+/**
+ * Calculates Root Mean Square (RMS) acceleration vector magnitude across 3 axes (X, Y, Z).
+ * @param {{ x: number, y: number, z: number }} accel - Accelerometer vector in g units
+ * @returns {number} Vector magnitude in g
+ */
+export function calculateVectorMagnitude(accel) {
+  if (!accel) return 1.0;
+  const { x = 0, y = 0, z = 1.0 } = accel;
+  return Math.sqrt(x * x + y * y + z * z);
+}
+
+/**
+ * Analyzes sudden road shock events exceeding safety thresholds for equine balance.
+ * Normal transport limit: < 0.4g lateral, < 0.6g vertical.
+ * @param {Array<{ x: number, y: number, z: number, timestamp: string }>} readings - Accel logs
+ * @returns {{ spikeCount: number, maxG: number, status: 'SMOOTH'|'BUMPY'|'HAZARDOUS' }}
+ */
+export function detectRoadShockSpikes(readings = []) {
+  if (!Array.isArray(readings) || readings.length === 0) {
+    return { spikeCount: 0, maxG: 1.0, status: 'SMOOTH' };
+  }
+
+  let spikeCount = 0;
+  let maxG = 1.0;
+
+  for (const r of readings) {
+    const mag = calculateVectorMagnitude(r);
+    if (mag > maxG) maxG = mag;
+    // Shock event threshold > 1.5g total force (including Earth gravity)
+    if (mag > 1.5) {
+      spikeCount += 1;
+    }
+  }
+
+  let status = 'SMOOTH';
+  if (spikeCount > 10 || maxG > 2.2) {
+    status = 'HAZARDOUS';
+  } else if (spikeCount > 2 || maxG > 1.6) {
+    status = 'BUMPY';
+  }
+
+  return { spikeCount, maxG: Number(maxG.toFixed(2)), status };
+}

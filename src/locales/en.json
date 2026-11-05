@@ -3380,5 +3380,95 @@
         "count_other": "{{count}} transactions"
       }
     }
+  },
+  "fleetRoster": {
+    "back": "Operations Hub",
+    "title": "Fleet & crew",
+    "subtitle": "Vehicle specs and status, plus active drivers / escorts",
+    "reload": "Reload",
+    "fleetTitle": "Specialized equine fleet & air stalls",
+    "fleetSubtitle": "Air-suspension trucks, horse vans and IATA air stalls",
+    "crewTitle": "Drivers & escorts",
+    "crewSubtitle": "Active DriverEscort accounts available for trip planning",
+    "loadAssetsFailed": "Could not load vehicles",
+    "loadCrewFailed": "Could not load crew",
+    "horses": "{{count}} horses",
+    "climateOn": "Climate control",
+    "climateOff": "No climate control",
+    "gpsOn": "GPS",
+    "gpsOff": "No GPS",
+    "driverEscort": "Driver / Escort",
+    "col": {
+      "unit": "Unit",
+      "capacity": "Capacity",
+      "equipment": "Equipment",
+      "lastSanitization": "Last sanitization",
+      "status": "Status",
+      "staff": "Staff",
+      "phone": "Phone",
+      "role": "Role"
+    },
+    "status": {
+      "Available": "Available",
+      "InTransit": "In transit",
+      "Maintenance": "Maintenance"
+    },
+    "assetType": {
+      "HorseTruck_AirSuspension": "Air-suspension horse truck",
+      "HorseVan": "Horse van",
+      "AirStall": "Air stall"
+    }
+  },
+  "userAdmin": {
+    "title": "User & role management",
+    "subtitle": "Accounts list, create staff accounts and lock / unlock accounts",
+    "reload": "Reload",
+    "addStaff": "Add staff",
+    "addTitle": "Create staff account",
+    "createSubmit": "Create account",
+    "searchPlaceholder": "Search by name, email...",
+    "allRoles": "All roles",
+    "allStatuses": "All statuses",
+    "totalCount": "{{count}} accounts",
+    "active": "Active",
+    "inactive": "Locked",
+    "you": "You",
+    "lock": "Lock",
+    "unlock": "Unlock",
+    "confirmLock": "Lock this account?",
+    "confirmUnlock": "Unlock this account?",
+    "locked": "Locked {{name}}",
+    "unlocked": "Unlocked {{name}}",
+    "toggleFailed": "Could not change account status",
+    "cannotLockSelf": "You cannot lock your own account",
+    "created": "Created account {{email}}",
+    "createFailed": "Could not create account",
+    "loadFailed": "Could not load users",
+    "forbidden": "Only Admin accounts can view the user list.",
+    "phone": "Phone",
+    "password": "Initial password",
+    "nameRequired": "Please enter a full name",
+    "emailRequired": "Please enter an email",
+    "emailInvalid": "Invalid email",
+    "phoneInvalid": "Invalid phone number",
+    "passwordRequired": "Please enter a password",
+    "passwordLength": "Password must be 8–64 characters",
+    "customerNote": "Customers sign up themselves; they are not created here.",
+    "col": {
+      "name": "Full name",
+      "contact": "Email & contact",
+      "role": "Role",
+      "createdAt": "Created",
+      "status": "Status",
+      "action": "Actions"
+    },
+    "role": {
+      "Admin": "Admin",
+      "LogisticsManager": "Logistics Manager",
+      "TransportSpecialist": "Transport Specialist",
+      "FleetCoordinator": "Fleet Coordinator",
+      "DriverEscort": "Driver / Escort",
+      "Customer": "Customer"
+    }
   }
 }

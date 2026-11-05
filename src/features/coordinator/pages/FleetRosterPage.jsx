@@ -1,183 +1,175 @@
-import { useState } from 'react';
-import {
-  Button,
-  Card,
-  Flex,
-  Modal,
-  Space,
-  Table,
-  Tag,
-  Typography,
-  message,
-  Select,
-} from 'antd';
-import {
-  ArrowLeftOutlined,
-} from '@ant-design/icons';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, Button, Card, Flex, Space, Table, Tag, Typography } from 'antd';
+import { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import dayjs from 'dayjs';
 import { ROUTES } from '@routes/routes';
-import {
-  getStoredFleet,
-  getStoredPersonnel,
-  updateStoredRoutePlan,
-} from '@utils/routePlanStorage';
+import { assetService } from '@services/assetService';
+import { userService } from '@services/userService';
+import { getErrorMessage, unwrapList } from '@utils/apiHelpers';
 
 const { Title, Text } = Typography;
 
+// Backend giới hạn size tối đa 100 mỗi trang
+const ASSET_PAGE_SIZE = 100;
+
+const STATUS_COLORS = { Available: 'green', InTransit: 'blue', Maintenance: 'orange' };
+
 /**
- * Trang Fleet Inventory & Personnel Roster khớp 100% Figma Image 4
+ * Trang danh mục phương tiện và nhân sự chuyến (Fleet Coordinator), đọc từ
+ * GET /api/transport-assets và GET /api/users/staff?role=DriverEscort.
  */
 export default function FleetRosterPage() {
   const navigate = useNavigate();
-  const [fleet] = useState(() => getStoredFleet());
-  const [personnel] = useState(() => getStoredPersonnel());
-  const [assignModalOpen, setAssignModalOpen] = useState(false);
-  const [selectedPlanForAssign, setSelectedPlanForAssign] = useState('PLN-8821');
-  const [selectedVehicleForAssign, setSelectedVehicleForAssign] = useState('ST-04');
+  const { t } = useTranslation();
+  const [assets, setAssets] = useState([]);
+  const [crew, setCrew] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [assetError, setAssetError] = useState(null);
+  const [crewError, setCrewError] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const handleConfirmAssignVehicle = () => {
-    updateStoredRoutePlan(selectedPlanForAssign, {
-      vehicleId: selectedVehicleForAssign,
-      status: 'PENDING_APPROVAL',
-      managerNotes: 'Updated vehicle assignment. Waiting for review.',
+  const reload = useCallback(() => {
+    setLoading(true);
+    setReloadKey((k) => k + 1);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    Promise.allSettled([
+      assetService.getAssets({ page: 1, size: ASSET_PAGE_SIZE }),
+      userService.getStaff('DriverEscort'),
+    ]).then(([assetRes, crewRes]) => {
+      if (!active) return;
+      if (assetRes.status === 'fulfilled') {
+        setAssets(unwrapList(assetRes.value));
+        setAssetError(null);
+      } else {
+        setAssetError(
+          getErrorMessage(
+            assetRes.reason,
+            t('fleetRoster.loadAssetsFailed', 'Không tải được danh sách phương tiện'),
+          ),
+        );
+      }
+      if (crewRes.status === 'fulfilled') {
+        setCrew(unwrapList(crewRes.value));
+        setCrewError(null);
+      } else {
+        setCrewError(
+          getErrorMessage(
+            crewRes.reason,
+            t('fleetRoster.loadCrewFailed', 'Không tải được danh sách nhân sự'),
+          ),
+        );
+      }
+      setLoading(false);
     });
-    message.success(`Đã phân bổ phương tiện cho ${selectedPlanForAssign}!`);
-    setAssignModalOpen(false);
-  };
+    return () => {
+      active = false;
+    };
+  }, [reloadKey, t]);
+
+  const counts = useMemo(() => {
+    const result = { Available: 0, InTransit: 0, Maintenance: 0 };
+    assets.forEach((a) => {
+      if (a.status in result) result[a.status] += 1;
+    });
+    return result;
+  }, [assets]);
+
+  const statusLabel = (status) => t(`fleetRoster.status.${status}`, status);
+  const typeLabel = (type) => t(`fleetRoster.assetType.${type}`, type);
 
   const fleetColumns = [
     {
-      title: 'EQUIPMENT / UNIT',
-      key: 'name',
+      title: t('fleetRoster.col.unit', 'Phương tiện'),
+      key: 'assetCode',
       render: (_, record) => (
         <div>
           <strong style={{ fontSize: 14, color: '#0F172A' }}>
-            {record.type.includes('Air') ? '✈️ ' : '🚛 '}
-            {record.name}
+            {record.assetType === 'AirStall' ? '✈️ ' : '🚛 '}
+            {record.assetCode}
           </strong>
-          <div style={{ fontSize: 12, color: '#64748B' }}>{record.type}</div>
+          <div style={{ fontSize: 12, color: '#64748B' }}>{typeLabel(record.assetType)}</div>
         </div>
       ),
     },
     {
-      title: 'CAPACITY',
-      dataIndex: 'capacity',
-      key: 'capacity',
-      render: (cap) => <Tag color="blue">{cap}</Tag>,
-    },
-    {
-      title: 'CLIMATE CONTROL & SPECS',
-      dataIndex: 'specs',
-      key: 'specs',
-      render: (specs) => <span style={{ fontSize: 12.5, color: '#475569' }}>{specs}</span>,
-    },
-    {
-      title: 'LOCATION / HUB',
-      dataIndex: 'location',
-      key: 'location',
-      render: (loc) => <span style={{ fontSize: 12.5, fontWeight: 600 }}>{loc}</span>,
-    },
-    {
-      title: 'STATUS',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => (
-        <Tag
-          color={
-            status === 'AVAILABLE'
-              ? 'green'
-              : status === 'BOOKED'
-              ? 'blue'
-              : 'orange'
-          }
-          style={{ fontWeight: 700, borderRadius: 6 }}
-        >
-          {status}
-        </Tag>
+      title: t('fleetRoster.col.capacity', 'Sức chứa'),
+      dataIndex: 'capacityHorses',
+      key: 'capacityHorses',
+      render: (cap) => (
+        <Tag color="blue">{t('fleetRoster.horses', '{{count}} ngựa', { count: cap })}</Tag>
       ),
     },
     {
-      title: 'ACTION',
-      key: 'action',
+      title: t('fleetRoster.col.equipment', 'Trang bị'),
+      key: 'equipment',
       render: (_, record) => (
-        <Button
-          type="primary"
-          size="small"
-          onClick={() => {
-            setSelectedVehicleForAssign(record.id);
-            setAssignModalOpen(true);
-          }}
-          disabled={record.status !== 'AVAILABLE'}
-          style={{
-            backgroundColor: record.status === 'AVAILABLE' ? '#F59E0B' : undefined,
-            borderColor: record.status === 'AVAILABLE' ? '#F59E0B' : undefined,
-            color: record.status === 'AVAILABLE' ? '#0F172A' : undefined,
-            fontWeight: 700,
-            borderRadius: 6,
-          }}
-        >
-          Assign to Plan
-        </Button>
-      ),
-    },
-  ];
-
-  const personnelColumns = [
-    {
-      title: 'STAFF MEMBER',
-      key: 'name',
-      render: (_, record) => (
-        <Flex align="center" gap={10}>
-          <div style={{ fontSize: 24 }}>{record.avatar}</div>
-          <div>
-            <strong style={{ fontSize: 14, color: '#0F172A' }}>{record.name}</strong>
-            <div style={{ fontSize: 12, color: '#64748B' }}>{record.license}</div>
-          </div>
-        </Flex>
+        <Space size={4} wrap>
+          <Tag color={record.hasClimateControl ? 'cyan' : 'default'}>
+            {record.hasClimateControl
+              ? t('fleetRoster.climateOn', 'Có điều hòa')
+              : t('fleetRoster.climateOff', 'Không điều hòa')}
+          </Tag>
+          <Tag color={record.hasGpsTracker ? 'geekblue' : 'default'}>
+            {record.hasGpsTracker
+              ? t('fleetRoster.gpsOn', 'Có GPS')
+              : t('fleetRoster.gpsOff', 'Không GPS')}
+          </Tag>
+        </Space>
       ),
     },
     {
-      title: 'ROLE',
-      dataIndex: 'role',
-      key: 'role',
-      render: (role) => (
-        <Tag color={role.includes('Vet') ? 'cyan' : 'purple'} style={{ fontWeight: 600 }}>
-          {role}
-        </Tag>
-      ),
-    },
-    {
-      title: 'EXPERIENCE',
-      dataIndex: 'experience',
-      key: 'experience',
-      render: (exp) => <span style={{ fontSize: 12.5, color: '#475569' }}>{exp}</span>,
-    },
-    {
-      title: 'DUTY STATUS',
-      dataIndex: 'dutyToday',
-      key: 'dutyToday',
-      render: (duty, record) => (
-        <span
-          style={{
-            fontSize: 12.5,
-            fontWeight: 600,
-            color: record.status === 'CONFLICT' ? '#DC2626' : record.status === 'AVAILABLE' ? '#16A34A' : '#2563EB',
-          }}
-        >
-          {duty}
+      title: t('fleetRoster.col.lastSanitization', 'Khử trùng gần nhất'),
+      dataIndex: 'lastSanitizationDate',
+      key: 'lastSanitizationDate',
+      render: (date) => (
+        <span style={{ fontSize: 12.5, color: '#475569' }}>
+          {date ? dayjs(date).format('DD/MM/YYYY') : '—'}
         </span>
       ),
     },
     {
-      title: 'STATUS',
+      title: t('fleetRoster.col.status', 'Trạng thái'),
       dataIndex: 'status',
       key: 'status',
       render: (status) => (
         <Tag
-          color={status === 'AVAILABLE' ? 'green' : status === 'ASSIGNED' ? 'blue' : 'red'}
-          style={{ fontWeight: 800, borderRadius: 6 }}
+          color={STATUS_COLORS[status] || 'default'}
+          style={{ fontWeight: 700, borderRadius: 6 }}
         >
-          {status}
+          {statusLabel(status)}
+        </Tag>
+      ),
+    },
+  ];
+
+  const crewColumns = [
+    {
+      title: t('fleetRoster.col.staff', 'Nhân sự'),
+      key: 'fullName',
+      render: (_, record) => (
+        <div>
+          <strong style={{ fontSize: 14, color: '#0F172A' }}>{record.fullName}</strong>
+          <div style={{ fontSize: 12, color: '#64748B' }}>{record.email}</div>
+        </div>
+      ),
+    },
+    {
+      title: t('fleetRoster.col.phone', 'Số điện thoại'),
+      dataIndex: 'phoneNumber',
+      key: 'phoneNumber',
+      render: (phone) => <span style={{ fontSize: 12.5, color: '#475569' }}>{phone || '—'}</span>,
+    },
+    {
+      title: t('fleetRoster.col.role', 'Vai trò'),
+      key: 'role',
+      render: () => (
+        <Tag color="purple" style={{ fontWeight: 600 }}>
+          {t('fleetRoster.driverEscort', 'Tài xế / Áp tải')}
         </Tag>
       ),
     },
@@ -185,113 +177,114 @@ export default function FleetRosterPage() {
 
   return (
     <div style={{ maxWidth: 1280, margin: '0 auto', paddingBottom: 40 }}>
-      <Flex align="center" gap={12} style={{ marginBottom: 20 }}>
-        <Button
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate(ROUTES.COORDINATOR_DASHBOARD)}
-          style={{ borderRadius: 8 }}
-        >
-          Operations Hub
+      <Flex
+        align="center"
+        justify="space-between"
+        gap={12}
+        wrap="wrap"
+        style={{ marginBottom: 20 }}
+      >
+        <Flex align="center" gap={12}>
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate(ROUTES.COORDINATOR_DASHBOARD)}
+            style={{ borderRadius: 8 }}
+          >
+            {t('fleetRoster.back', 'Operations Hub')}
+          </Button>
+          <div>
+            <Title level={2} style={{ margin: 0, fontWeight: 800, color: '#0F172A', fontSize: 26 }}>
+              {t('fleetRoster.title', 'Phương tiện & nhân sự')}
+            </Title>
+            <Text style={{ color: '#64748B', fontSize: 13 }}>
+              {t(
+                'fleetRoster.subtitle',
+                'Thông số, trạng thái phương tiện và danh sách tài xế / áp tải đang hoạt động',
+              )}
+            </Text>
+          </div>
+        </Flex>
+        <Button icon={<ReloadOutlined />} onClick={reload} loading={loading}>
+          {t('fleetRoster.reload', 'Tải lại')}
         </Button>
-        <div>
-          <Title level={2} style={{ margin: 0, fontWeight: 800, color: '#0F172A', fontSize: 26 }}>
-            Fleet Inventory & Personnel Roster
-          </Title>
-          <Text style={{ color: '#64748B', fontSize: 13 }}>
-            Check vehicle specs & availability, slot heavy equipment, track driver schedules & resting compliance
-          </Text>
-        </div>
       </Flex>
 
-      {/* SECTION 1: SPECIALIZED EQUINE VANS & STALL CONTAINERS */}
       <Card
         bordered
         style={{ borderRadius: 18, border: '1px solid #E2E8F0', marginBottom: 24 }}
         styles={{ body: { padding: '22px' } }}
       >
-        <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
+        <Flex
+          justify="space-between"
+          align="center"
+          wrap="wrap"
+          gap={12}
+          style={{ marginBottom: 16 }}
+        >
           <div>
             <Title level={4} style={{ margin: 0, fontWeight: 800, color: '#0F172A' }}>
-              Specialized Equine Fleet & Stall Containers
+              {t('fleetRoster.fleetTitle', 'Đội xe chuyên dụng & chuồng hàng không')}
             </Title>
             <Text style={{ fontSize: 12.5, color: '#64748B' }}>
-              Dedicated equine trailers, climate-controlled vans and IATA certified air boxes
+              {t(
+                'fleetRoster.fleetSubtitle',
+                'Xe tải giảm xóc khí, xe van chở ngựa và chuồng bay IATA',
+              )}
             </Text>
           </div>
-          <Space>
-            <Tag color="green" style={{ fontWeight: 700 }}>4 Available</Tag>
-            <Tag color="blue" style={{ fontWeight: 700 }}>1 Booked</Tag>
-            <Tag color="orange" style={{ fontWeight: 700 }}>1 Maintenance</Tag>
+          <Space wrap>
+            {Object.keys(counts).map((status) => (
+              <Tag key={status} color={STATUS_COLORS[status]} style={{ fontWeight: 700 }}>
+                {counts[status]} {statusLabel(status)}
+              </Tag>
+            ))}
           </Space>
         </Flex>
 
+        {assetError && (
+          <Alert type="error" showIcon message={assetError} style={{ marginBottom: 12 }} />
+        )}
         <Table
           columns={fleetColumns}
-          dataSource={fleet}
-          rowKey="id"
-          pagination={false}
+          dataSource={assets}
+          rowKey="assetId"
+          loading={loading}
+          pagination={assets.length > 10 ? { pageSize: 10, showSizeChanger: false } : false}
           size="middle"
+          scroll={{ x: 'max-content' }}
         />
       </Card>
 
-      {/* SECTION 2: PERSONNEL ROSTER & 7-DAY DUTY TIMELINE */}
       <Card
         bordered
         style={{ borderRadius: 18, border: '1px solid #E2E8F0' }}
         styles={{ body: { padding: '22px' } }}
       >
-        <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-          <div>
-            <Title level={4} style={{ margin: 0, fontWeight: 800, color: '#0F172A' }}>
-              Personnel Roster & Duty Compliance
-            </Title>
-            <Text style={{ fontSize: 12.5, color: '#64748B' }}>
-              Drivers, handlers and veterinary flight escorts with 24-hr rest verification
-            </Text>
-          </div>
-        </Flex>
+        <div style={{ marginBottom: 16 }}>
+          <Title level={4} style={{ margin: 0, fontWeight: 800, color: '#0F172A' }}>
+            {t('fleetRoster.crewTitle', 'Tài xế & người áp tải')}
+          </Title>
+          <Text style={{ fontSize: 12.5, color: '#64748B' }}>
+            {t(
+              'fleetRoster.crewSubtitle',
+              'Tài khoản DriverEscort đang hoạt động, dùng khi lập kế hoạch chuyến',
+            )}
+          </Text>
+        </div>
 
+        {crewError && (
+          <Alert type="error" showIcon message={crewError} style={{ marginBottom: 12 }} />
+        )}
         <Table
-          columns={personnelColumns}
-          dataSource={personnel}
-          rowKey="id"
-          pagination={false}
+          columns={crewColumns}
+          dataSource={crew}
+          rowKey="userId"
+          loading={loading}
+          pagination={crew.length > 10 ? { pageSize: 10, showSizeChanger: false } : false}
           size="middle"
+          scroll={{ x: 'max-content' }}
         />
       </Card>
-
-      {/* MODAL ASSIGN VEHICLE TO PLAN */}
-      <Modal
-        open={assignModalOpen}
-        onCancel={() => setAssignModalOpen(false)}
-        onOk={handleConfirmAssignVehicle}
-        title="Assign Vehicle to Route Plan"
-        okText="Confirm Assign"
-        cancelText="Cancel"
-        okButtonProps={{ style: { backgroundColor: '#F59E0B', borderColor: '#F59E0B', color: '#0F172A', fontWeight: 700 } }}
-      >
-        <div style={{ padding: '12px 0' }}>
-          <div style={{ marginBottom: 14 }}>
-            <label htmlFor="target-plan-select" style={{ fontWeight: 700, display: 'block', marginBottom: 6 }}>
-              Select Target Plan:
-            </label>
-            <Select
-              id="target-plan-select"
-              value={selectedPlanForAssign}
-              onChange={setSelectedPlanForAssign}
-              style={{ width: '100%' }}
-              options={[
-                { value: 'PLN-8821', label: '#PLN-8821 • SGN → CDG (Sheikh Al-Mansoor)' },
-                { value: 'PLN-8834', label: '#PLN-8834 • Cu Chi → Bangkok (Saigon Polo)' },
-                { value: 'PLN-8809', label: '#PLN-8809 • Da Nang → Lam Dong' },
-              ]}
-            />
-          </div>
-          <div style={{ backgroundColor: '#F8FAFC', padding: '10px 14px', borderRadius: 8, fontSize: 12 }}>
-            Phân bổ phương tiện này sẽ cập nhật lộ trình và tự động kích hoạt thông báo tới đội ngũ điều phối.
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 }

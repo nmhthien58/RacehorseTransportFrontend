@@ -19,6 +19,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import PageHeader from '@components/layout/PageHeader';
+import DeliveryDeadlineList from '@components/common/DeliveryDeadlineList';
 import tripService from '@services/tripService';
 import handoverService from '@services/handoverService';
 // Đang sửa TripClosurePage vì bổ sung xét duyệt và điều chỉnh bồi thường giao trễ theo FE-12 (R-09, BE-13)
@@ -245,6 +246,9 @@ export default function TripClosurePage() {
       <Drawer open={Boolean(selected)} onClose={() => setSelected(null)} width={620} title={selected?.tripCode}>
         {selected && (
           <>
+            <div style={{ marginBottom: 12 }}>
+              <DeliveryDeadlineList bookings={bookings} />
+            </div>
             <Descriptions column={2} size="small">
               <Descriptions.Item label={t('customerTrips.info.vehicle')}>{selected.vehicleCode}</Descriptions.Item>
               <Descriptions.Item label={t('tripClose.columns.horses')}>{selected.horseCount}</Descriptions.Item>

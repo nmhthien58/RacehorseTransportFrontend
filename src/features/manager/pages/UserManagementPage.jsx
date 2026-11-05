@@ -1,253 +1,289 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
-  Card,
-  Table,
-  Tag,
+  Alert,
   Button,
+  Card,
+  Col,
+  Form,
   Input,
+  Modal,
+  Popconfirm,
+  Row,
   Select,
   Space,
-  Typography,
-  Popconfirm,
-  message,
-  Modal,
-  Form,
-  Row,
-  Col,
+  Table,
+  Tag,
   Tooltip,
+  Typography,
+  message,
 } from 'antd';
 import {
-  UserOutlined,
-  SearchOutlined,
-  DeleteOutlined,
-  PlusOutlined,
-  TeamOutlined,
-  SafetyCertificateOutlined,
-  CarOutlined,
+  LockOutlined,
   MailOutlined,
   PhoneOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  SearchOutlined,
+  TeamOutlined,
+  UnlockOutlined,
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@features/auth/store/authStore';
-import { getStoredUsers, deleteStoredUser, addStoredUser } from '@utils/userStorage';
-import { ROLES } from '@utils/constants';
+import { userService } from '@services/userService';
+import { getErrorMessage, unwrapData, unwrapList } from '@utils/apiHelpers';
 
 const { Title, Text } = Typography;
 
+const PAGE_SIZE = 10;
+
+// Khớp UserRoles ở backend
+const ROLE_META = {
+  Admin: { color: 'red', label: 'Admin' },
+  LogisticsManager: { color: 'gold', label: 'Logistics Manager' },
+  TransportSpecialist: { color: 'purple', label: 'Transport Specialist' },
+  FleetCoordinator: { color: 'cyan', label: 'Fleet Coordinator' },
+  DriverEscort: { color: 'green', label: 'Driver / Escort' },
+  Customer: { color: 'blue', label: 'Customer' },
+};
+
+// Backend chặn tạo Customer qua POST /api/users (khách tự đăng ký)
+const STAFF_ROLES = [
+  'LogisticsManager',
+  'TransportSpecialist',
+  'FleetCoordinator',
+  'DriverEscort',
+  'Admin',
+];
+
+/**
+ * Trang quản lý tài khoản (Admin): GET /api/users, POST /api/users, PATCH /api/users/{id}/active.
+ */
 export default function UserManagementPage() {
+  const { t } = useTranslation();
   const { user: currentUser } = useAuthStore();
-  const [users, setUsers] = useState(() => getStoredUsers());
-  const [searchKeyword, setSearchKeyword] = useState('');
-  const [filterRole, setFilterRole] = useState('ALL');
+  const [users, setUsers] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [role, setRole] = useState();
+  const [isActive, setIsActive] = useState();
+  const [togglingId, setTogglingId] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [form] = Form.useForm();
 
-  useEffect(() => {
-    const handleUsersUpdate = () => {
-      setUsers(getStoredUsers());
-    };
-    window.addEventListener('users_updated', handleUsersUpdate);
-    return () => window.removeEventListener('users_updated', handleUsersUpdate);
+  const roleLabel = (value) => t(`userAdmin.role.${value}`, ROLE_META[value]?.label || value);
+
+  const [reloadKey, setReloadKey] = useState(0);
+
+  // Mọi thay đổi bộ lọc / trang đều đi qua đây để bật loading trước khi effect gọi API
+  const load = useCallback(() => {
+    setLoading(true);
+    setReloadKey((k) => k + 1);
   }, []);
 
-  const handleDelete = (targetUser) => {
-    if (
-      String(currentUser?.userId) === String(targetUser.userId) ||
-      currentUser?.email === targetUser.email
-    ) {
-      message.error('Không thể tự xóa tài khoản đang đăng nhập!');
-      return;
-    }
-
-    const res = deleteStoredUser(targetUser.userId);
-    if (res.success) {
-      setUsers(getStoredUsers());
-      message.success(`Đã xóa tài khoản "${targetUser.fullName}" thành công!`);
-    } else {
-      message.error(res.message || 'Không thể xóa người dùng');
-    }
-  };
-
-  const handleAddUser = (values) => {
-    const created = addStoredUser(values);
-    setUsers(getStoredUsers());
-    setIsAddModalOpen(false);
-    form.resetFields();
-    message.success(`Đã tạo tài khoản "${created.fullName}" (${created.email}) thành công!`);
-  };
-
-  const roleMeta = (role) => {
-    switch (role) {
-      case ROLES.ADMIN:
-      case ROLES.MANAGER:
-      case 'LogisticsManager':
-        return { color: 'gold', text: 'Logistics Manager (Admin)', icon: <SafetyCertificateOutlined /> };
-      case ROLES.SPECIALIST:
-      case 'TransportSpecialist':
-        return { color: 'purple', text: 'Transport Specialist', icon: <SafetyCertificateOutlined /> };
-      case ROLES.COORDINATOR:
-      case 'FleetCoordinator':
-        return { color: 'cyan', text: 'Fleet & Route Coordinator', icon: <CarOutlined /> };
-      case ROLES.DRIVER:
-      case 'Driver':
-        return { color: 'green', text: 'Driver (Tài xế)', icon: <CarOutlined /> };
-      case ROLES.ESCORT:
-      case 'Escort':
-        return { color: 'magenta', text: 'Veterinary Escort (Áp tải)', icon: <UserOutlined /> };
-      case ROLES.CUSTOMER:
-      case 'Customer':
-      default:
-        return { color: 'blue', text: 'Customer (Khách hàng)', icon: <UserOutlined /> };
-    }
-  };
-
-  const filteredUsers = useMemo(() => {
-    return users.filter((u) => {
-      if (filterRole !== 'ALL' && u.role !== filterRole) return false;
-      if (!searchKeyword.trim()) return true;
-      const kw = searchKeyword.toLowerCase();
-      const name = String(u.fullName || '').toLowerCase();
-      const email = String(u.email || '').toLowerCase();
-      const phone = String(u.phoneNumber || '').toLowerCase();
-      const dept = String(u.department || '').toLowerCase();
-      return name.includes(kw) || email.includes(kw) || phone.includes(kw) || dept.includes(kw);
-    });
-  }, [users, filterRole, searchKeyword]);
-
-  const stats = useMemo(() => {
-    return {
-      total: users.length,
-      managers: users.filter((u) => u.role === 'LogisticsManager' || u.role === 'Admin').length,
-      specialists: users.filter((u) => u.role === 'TransportSpecialist').length,
-      coordinators: users.filter((u) => u.role === 'FleetCoordinator').length,
-      crew: users.filter((u) => u.role === 'Driver' || u.role === 'Escort').length,
-      customers: users.filter((u) => u.role === 'Customer').length,
+  useEffect(() => {
+    let active = true;
+    userService
+      .getUsers({ page, size: PAGE_SIZE, search: search || undefined, role, isActive })
+      .then((res) => {
+        if (!active) return;
+        const list = unwrapList(res);
+        setUsers(list);
+        setTotal(res?.pagination?.totalItems ?? list.length);
+        setLoadError(null);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setUsers([]);
+        setTotal(0);
+        setLoadError(
+          err?.response?.status === 403
+            ? t('userAdmin.forbidden', 'Chỉ tài khoản Admin mới xem được danh sách người dùng.')
+            : getErrorMessage(
+                err,
+                t('userAdmin.loadFailed', 'Không tải được danh sách người dùng'),
+              ),
+        );
+      })
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
     };
-  }, [users]);
+  }, [page, search, role, isActive, reloadKey, t]);
+
+  const isSelf = (record) => String(currentUser?.userId) === String(record.userId);
+
+  const handleToggleActive = async (record) => {
+    setTogglingId(record.userId);
+    try {
+      await userService.setUserActive(record.userId, !record.isActive);
+      message.success(
+        record.isActive
+          ? t('userAdmin.locked', 'Đã khóa tài khoản {{name}}', { name: record.fullName })
+          : t('userAdmin.unlocked', 'Đã mở khóa tài khoản {{name}}', { name: record.fullName }),
+      );
+      load();
+    } catch (err) {
+      message.error(
+        getErrorMessage(err, t('userAdmin.toggleFailed', 'Không đổi được trạng thái tài khoản')),
+      );
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const handleCreate = async (values) => {
+    setCreating(true);
+    try {
+      const res = await userService.createUser({
+        fullName: values.fullName.trim(),
+        email: values.email.trim(),
+        password: values.password,
+        phoneNumber: values.phoneNumber?.trim() || undefined,
+        role: values.role,
+      });
+      const created = unwrapData(res);
+      message.success(
+        t('userAdmin.created', 'Đã tạo tài khoản {{email}}', {
+          email: created?.email || values.email,
+        }),
+      );
+      setIsAddModalOpen(false);
+      form.resetFields();
+      load();
+    } catch (err) {
+      message.error(getErrorMessage(err, t('userAdmin.createFailed', 'Không tạo được tài khoản')));
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const columns = [
     {
-      title: 'Họ và tên',
+      title: t('userAdmin.col.name', 'Họ và tên'),
       key: 'name',
-      render: (_, record) => {
-        const isSelf =
-          String(currentUser?.userId) === String(record.userId) || currentUser?.email === record.email;
-        return (
-          <Space>
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: '50%',
-                backgroundColor: '#EFF6FF',
-                color: '#2563EB',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-                fontSize: 14,
-              }}
-            >
-              {record.fullName?.charAt(0) || 'U'}
-            </div>
-            <div>
-              <div style={{ fontWeight: 700, color: '#0F172A', fontSize: 13.5 }}>
-                {record.fullName}
-                {isSelf && (
-                  <Tag color="processing" style={{ marginLeft: 6, fontSize: 11, borderRadius: 4 }}>
-                    Bạn
-                  </Tag>
-                )}
-              </div>
-              <div style={{ fontSize: 11.5, color: '#64748B' }}>
-                ID: #{record.userId} {record.staffId ? `• ${record.staffId}` : ''}
-              </div>
-            </div>
-          </Space>
-        );
-      },
+      render: (_, record) => (
+        <div>
+          <div style={{ fontWeight: 700, color: '#0F172A', fontSize: 13.5 }}>
+            {record.fullName}
+            {isSelf(record) && (
+              <Tag color="processing" style={{ marginLeft: 6, fontSize: 11, borderRadius: 4 }}>
+                {t('userAdmin.you', 'Bạn')}
+              </Tag>
+            )}
+          </div>
+          <div style={{ fontSize: 11.5, color: '#64748B' }}>ID: #{record.userId}</div>
+        </div>
+      ),
     },
     {
-      title: 'Email & Liên hệ',
+      title: t('userAdmin.col.contact', 'Email & liên hệ'),
       key: 'contact',
       render: (_, record) => (
         <div>
-          <div style={{ fontSize: 12.5, color: '#334155', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div
+            style={{
+              fontSize: 12.5,
+              color: '#334155',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
             <MailOutlined style={{ color: '#94A3B8' }} />
             <span>{record.email}</span>
           </div>
-          <div style={{ fontSize: 12, color: '#64748B', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+          <div
+            style={{
+              fontSize: 12,
+              color: '#64748B',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              marginTop: 2,
+            }}
+          >
             <PhoneOutlined style={{ color: '#94A3B8' }} />
-            <span>{record.phoneNumber || '---'}</span>
+            <span>{record.phoneNumber || '—'}</span>
           </div>
         </div>
       ),
     },
     {
-      title: 'Vai trò (Role)',
+      title: t('userAdmin.col.role', 'Vai trò'),
       dataIndex: 'role',
       key: 'role',
-      render: (role) => {
-        const meta = roleMeta(role);
-        return (
-          <Tag color={meta.color} icon={meta.icon} style={{ fontWeight: 600, borderRadius: 6, padding: '3px 8px' }}>
-            {meta.text}
-          </Tag>
-        );
-      },
-    },
-    {
-      title: 'Phòng ban / Đơn vị',
-      dataIndex: 'department',
-      key: 'department',
-      render: (dept) => (
-        <span style={{ fontSize: 12.5, color: '#475569' }}>
-          {dept || 'Thành viên hệ thống'}
-        </span>
-      ),
-    },
-    {
-      title: 'Trạng thái',
-      key: 'status',
-      render: (_, record) => (
-        <Tag color={record.isActive !== false ? 'success' : 'default'} style={{ borderRadius: 4, fontWeight: 600 }}>
-          {record.isActive !== false ? 'Hoạt động' : 'Tạm khóa'}
+      render: (value) => (
+        <Tag
+          color={ROLE_META[value]?.color || 'default'}
+          style={{ fontWeight: 600, borderRadius: 6 }}
+        >
+          {roleLabel(value)}
         </Tag>
       ),
     },
     {
-      title: 'Thao tác',
+      title: t('userAdmin.col.createdAt', 'Ngày tạo'),
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      render: (value) => (
+        <span style={{ fontSize: 12.5, color: '#475569' }}>
+          {value ? new Date(value).toLocaleDateString('vi-VN') : '—'}
+        </span>
+      ),
+    },
+    {
+      title: t('userAdmin.col.status', 'Trạng thái'),
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (active) => (
+        <Tag color={active ? 'success' : 'default'} style={{ borderRadius: 4, fontWeight: 600 }}>
+          {active ? t('userAdmin.active', 'Hoạt động') : t('userAdmin.inactive', 'Đã khóa')}
+        </Tag>
+      ),
+    },
+    {
+      title: t('userAdmin.col.action', 'Thao tác'),
       key: 'action',
       align: 'center',
-      width: 110,
+      width: 130,
       render: (_, record) => {
-        const isSelf =
-          String(currentUser?.userId) === String(record.userId) || currentUser?.email === record.email;
-
-        if (isSelf) {
+        if (isSelf(record)) {
           return (
-            <Tooltip title="Không thể tự xóa tài khoản của bạn">
-              <Button type="text" disabled danger icon={<DeleteOutlined />} size="small" />
+            <Tooltip
+              title={t('userAdmin.cannotLockSelf', 'Không thể khóa tài khoản đang đăng nhập')}
+            >
+              <Button size="small" disabled icon={<LockOutlined />}>
+                {t('userAdmin.lock', 'Khóa')}
+              </Button>
             </Tooltip>
           );
         }
-
         return (
           <Popconfirm
-            title="Xác nhận xóa người dùng?"
-            description={`Bạn có chắc chắn muốn xóa tài khoản "${record.fullName}" (${record.email}) không?`}
-            onConfirm={() => handleDelete(record)}
-            okText="Xóa tài khoản"
-            cancelText="Hủy"
-            okButtonProps={{ danger: true }}
+            title={
+              record.isActive
+                ? t('userAdmin.confirmLock', 'Khóa tài khoản này?')
+                : t('userAdmin.confirmUnlock', 'Mở khóa tài khoản này?')
+            }
+            description={`${record.fullName} (${record.email})`}
+            onConfirm={() => handleToggleActive(record)}
+            okText={t('common.confirm', 'Xác nhận')}
+            cancelText={t('common.cancel', 'Hủy')}
+            okButtonProps={{ danger: record.isActive }}
           >
             <Button
-              type="primary"
-              danger
               size="small"
-              icon={<DeleteOutlined />}
+              danger={record.isActive}
+              loading={togglingId === record.userId}
+              icon={record.isActive ? <LockOutlined /> : <UnlockOutlined />}
               style={{ borderRadius: 6, fontSize: 12 }}
             >
-              Xóa
+              {record.isActive ? t('userAdmin.lock', 'Khóa') : t('userAdmin.unlock', 'Mở khóa')}
             </Button>
           </Popconfirm>
         );
@@ -257,7 +293,6 @@ export default function UserManagementPage() {
 
   return (
     <div style={{ padding: '0 0 24px 0' }}>
-      {/* HEADER SECTION */}
       <div
         style={{
           display: 'flex',
@@ -271,121 +306,112 @@ export default function UserManagementPage() {
         <div>
           <Title level={4} style={{ margin: 0, fontWeight: 800, color: '#0F172A' }}>
             <TeamOutlined style={{ marginRight: 8, color: '#2563EB' }} />
-            Quản lý người dùng & Phân quyền hệ thống
+            {t('userAdmin.title', 'Quản lý người dùng & phân quyền')}
           </Title>
           <Text type="secondary" style={{ fontSize: 13, color: '#64748B' }}>
-            Quản trị danh sách tài khoản toàn diện, phân quyền vai trò và xóa người dùng
+            {t(
+              'userAdmin.subtitle',
+              'Danh sách tài khoản, tạo tài khoản nhân viên và khóa / mở khóa tài khoản',
+            )}
           </Text>
         </div>
-
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          style={{
-            backgroundColor: '#2563EB',
-            borderColor: '#2563EB',
-            fontWeight: 600,
-            borderRadius: 8,
-          }}
-          onClick={() => setIsAddModalOpen(true)}
-        >
-          Thêm người dùng mới
-        </Button>
+        <Space>
+          <Button icon={<ReloadOutlined />} onClick={load} loading={loading}>
+            {t('userAdmin.reload', 'Tải lại')}
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsAddModalOpen(true)}>
+            {t('userAdmin.addStaff', 'Thêm nhân viên')}
+          </Button>
+        </Space>
       </div>
 
-      {/* QUICK STATS CARDS */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
-        <Col xs={12} sm={8} md={4}>
-          <Card bordered style={{ borderRadius: 12, border: '1px solid #E2E8F0', textAlign: 'center' }} styles={{ body: { padding: '14px 10px' } }}>
-            <Text type="secondary" style={{ fontSize: 11.5, display: 'block' }}>Tổng người dùng</Text>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#0F172A' }}>{stats.total}</div>
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card bordered style={{ borderRadius: 12, border: '1px solid #FDE68A', backgroundColor: '#FFFDF5', textAlign: 'center' }} styles={{ body: { padding: '14px 10px' } }}>
-            <Text style={{ fontSize: 11.5, color: '#B45309', display: 'block' }}>Logistics Manager</Text>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#D97706' }}>{stats.managers}</div>
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card bordered style={{ borderRadius: 12, border: '1px solid #E9D5FF', backgroundColor: '#FAF5FF', textAlign: 'center' }} styles={{ body: { padding: '14px 10px' } }}>
-            <Text style={{ fontSize: 11.5, color: '#7E22CE', display: 'block' }}>Transport Specialist</Text>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#9333EA' }}>{stats.specialists}</div>
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card bordered style={{ borderRadius: 12, border: '1px solid #A5F3FC', backgroundColor: '#ECFEFF', textAlign: 'center' }} styles={{ body: { padding: '14px 10px' } }}>
-            <Text style={{ fontSize: 11.5, color: '#0E7490', display: 'block' }}>Route Coordinator</Text>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#0891B2' }}>{stats.coordinators}</div>
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card bordered style={{ borderRadius: 12, border: '1px solid #BBF7D0', backgroundColor: '#F0FDF4', textAlign: 'center' }} styles={{ body: { padding: '14px 10px' } }}>
-            <Text style={{ fontSize: 11.5, color: '#15803D', display: 'block' }}>Driver & Escort</Text>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#16A34A' }}>{stats.crew}</div>
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card bordered style={{ borderRadius: 12, border: '1px solid #BFDBFE', backgroundColor: '#EFF6FF', textAlign: 'center' }} styles={{ body: { padding: '14px 10px' } }}>
-            <Text style={{ fontSize: 11.5, color: '#1D4ED8', display: 'block' }}>Khách hàng</Text>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#2563EB' }}>{stats.customers}</div>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* FILTER & TABLE */}
       <Card
         bordered
-        style={{ borderRadius: 14, border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}
+        style={{ borderRadius: 14, border: '1px solid #E2E8F0' }}
         styles={{ body: { padding: 20 } }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 12,
+            marginBottom: 16,
+          }}
+        >
           <Space wrap>
-            <Input
+            <Input.Search
               prefix={<SearchOutlined style={{ color: '#94A3B8' }} />}
-              placeholder="Tìm theo tên, email, số điện thoại..."
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              style={{ width: 280, borderRadius: 8 }}
+              placeholder={t('userAdmin.searchPlaceholder', 'Tìm theo tên, email...')}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onSearch={(value) => {
+                setLoading(true);
+                setPage(1);
+                setSearch(value.trim());
+              }}
+              style={{ width: 280 }}
               allowClear
             />
             <Select
-              value={filterRole}
-              onChange={setFilterRole}
-              style={{ width: 210, borderRadius: 8 }}
+              value={role}
+              onChange={(value) => {
+                setLoading(true);
+                setPage(1);
+                setRole(value);
+              }}
+              allowClear
+              placeholder={t('userAdmin.allRoles', 'Tất cả vai trò')}
+              style={{ width: 200 }}
+              options={Object.keys(ROLE_META).map((value) => ({ value, label: roleLabel(value) }))}
+            />
+            <Select
+              value={isActive}
+              onChange={(value) => {
+                setLoading(true);
+                setPage(1);
+                setIsActive(value);
+              }}
+              allowClear
+              placeholder={t('userAdmin.allStatuses', 'Tất cả trạng thái')}
+              style={{ width: 170 }}
               options={[
-                { value: 'ALL', label: 'Tất cả vai trò' },
-                { value: 'Customer', label: 'Khách hàng (Customer)' },
-                { value: 'LogisticsManager', label: 'Logistics Manager' },
-                { value: 'TransportSpecialist', label: 'Transport Specialist' },
-                { value: 'FleetCoordinator', label: 'Fleet Coordinator' },
-                { value: 'Driver', label: 'Driver (Tài xế)' },
-                { value: 'Escort', label: 'Veterinary Escort' },
+                { value: true, label: t('userAdmin.active', 'Hoạt động') },
+                { value: false, label: t('userAdmin.inactive', 'Đã khóa') },
               ]}
             />
           </Space>
-
           <Text type="secondary" style={{ fontSize: 12.5 }}>
-            Hiển thị <strong>{filteredUsers.length}</strong> / {users.length} người dùng
+            {t('userAdmin.totalCount', 'Tổng {{count}} tài khoản', { count: total })}
           </Text>
         </div>
 
+        {loadError && (
+          <Alert type="error" showIcon message={loadError} style={{ marginBottom: 12 }} />
+        )}
+
         <Table
-          dataSource={filteredUsers}
+          dataSource={users}
           columns={columns}
           rowKey="userId"
-          pagination={{ pageSize: 8, showSizeChanger: false }}
+          loading={loading}
+          scroll={{ x: 'max-content' }}
+          pagination={{
+            current: page,
+            pageSize: PAGE_SIZE,
+            total,
+            showSizeChanger: false,
+            onChange: (p) => {
+              setLoading(true);
+              setPage(p);
+            },
+          }}
         />
       </Card>
 
-      {/* MODAL THÊM NGƯỜI DÙNG */}
       <Modal
-        title={
-          <div style={{ fontWeight: 700, color: '#0F172A', fontSize: 16 }}>
-            <PlusOutlined style={{ marginRight: 6, color: '#2563EB' }} />
-            Thêm tài khoản người dùng mới
-          </div>
-        }
+        title={t('userAdmin.addTitle', 'Tạo tài khoản nhân viên')}
         open={isAddModalOpen}
         onCancel={() => setIsAddModalOpen(false)}
         footer={null}
@@ -394,63 +420,84 @@ export default function UserManagementPage() {
         <Form
           form={form}
           layout="vertical"
-          onFinish={handleAddUser}
-          initialValues={{ role: 'Customer' }}
+          onFinish={handleCreate}
+          initialValues={{ role: 'DriverEscort' }}
           style={{ marginTop: 16 }}
         >
           <Form.Item
-            label="Họ và tên"
+            label={t('userAdmin.col.name', 'Họ và tên')}
             name="fullName"
-            rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}
+            rules={[
+              {
+                required: true,
+                whitespace: true,
+                message: t('userAdmin.nameRequired', 'Vui lòng nhập họ tên'),
+              },
+              { max: 100 },
+            ]}
           >
-            <Input placeholder="e.g. Nguyễn Văn An" />
+            <Input />
           </Form.Item>
-
           <Row gutter={16}>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <Form.Item
-                label="Email đăng nhập"
+                label="Email"
                 name="email"
                 rules={[
-                  { required: true, message: 'Vui lòng nhập email' },
-                  { type: 'email', message: 'Email không đúng định dạng' },
+                  { required: true, message: t('userAdmin.emailRequired', 'Vui lòng nhập email') },
+                  {
+                    type: 'email',
+                    message: t('userAdmin.emailInvalid', 'Email không đúng định dạng'),
+                  },
                 ]}
               >
-                <Input placeholder="e.g. an.nguyen@test.com" />
+                <Input />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item label="Số điện thoại" name="phoneNumber">
-                <Input placeholder="e.g. +84988111222" />
+            <Col xs={24} sm={12}>
+              <Form.Item
+                label={t('userAdmin.phone', 'Số điện thoại')}
+                name="phoneNumber"
+                rules={[
+                  {
+                    pattern: /^\+?[0-9 ().-]{6,30}$/,
+                    message: t('userAdmin.phoneInvalid', 'Số điện thoại không hợp lệ'),
+                  },
+                ]}
+              >
+                <Input />
               </Form.Item>
             </Col>
           </Row>
-
           <Form.Item
-            label="Vai trò (Role)"
-            name="role"
-            rules={[{ required: true, message: 'Vui lòng chọn vai trò' }]}
+            label={t('userAdmin.password', 'Mật khẩu ban đầu')}
+            name="password"
+            rules={[
+              {
+                required: true,
+                message: t('userAdmin.passwordRequired', 'Vui lòng nhập mật khẩu'),
+              },
+              {
+                min: 8,
+                max: 64,
+                message: t('userAdmin.passwordLength', 'Mật khẩu dài 8–64 ký tự'),
+              },
+            ]}
           >
-            <Select
-              options={[
-                { value: 'Customer', label: 'Khách hàng (Customer)' },
-                { value: 'LogisticsManager', label: 'Logistics Manager (Quản lý)' },
-                { value: 'TransportSpecialist', label: 'Transport Specialist (Kiểm dịch)' },
-                { value: 'FleetCoordinator', label: 'Fleet & Route Coordinator (Điều phối)' },
-                { value: 'Driver', label: 'Driver (Tài xế vận tải)' },
-                { value: 'Escort', label: 'Veterinary Escort (Áp tải thú y)' },
-              ]}
-            />
+            <Input.Password autoComplete="new-password" />
           </Form.Item>
-
-          <Form.Item label="Phòng ban / Chức vụ" name="department">
-            <Input placeholder="e.g. Đội ngũ Tài xế Vận tải Chuyên trách" />
+          <Form.Item
+            label={t('userAdmin.col.role', 'Vai trò')}
+            name="role"
+            rules={[{ required: true }]}
+            extra={t('userAdmin.customerNote', 'Khách hàng tự đăng ký tài khoản, không tạo ở đây.')}
+          >
+            <Select options={STAFF_ROLES.map((value) => ({ value, label: roleLabel(value) }))} />
           </Form.Item>
-
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 20 }}>
-            <Button onClick={() => setIsAddModalOpen(false)}>Hủy</Button>
-            <Button type="primary" htmlType="submit" style={{ backgroundColor: '#2563EB', borderColor: '#2563EB' }}>
-              Tạo tài khoản
+            <Button onClick={() => setIsAddModalOpen(false)}>{t('common.cancel', 'Hủy')}</Button>
+            <Button type="primary" htmlType="submit" loading={creating}>
+              {t('userAdmin.createSubmit', 'Tạo tài khoản')}
             </Button>
           </div>
         </Form>

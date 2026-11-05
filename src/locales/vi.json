@@ -3379,5 +3379,95 @@
         "count_other": "{{count}} giao dịch"
       }
     }
+  },
+  "fleetRoster": {
+    "back": "Operations Hub",
+    "title": "Phương tiện & nhân sự",
+    "subtitle": "Thông số, trạng thái phương tiện và danh sách tài xế / áp tải đang hoạt động",
+    "reload": "Tải lại",
+    "fleetTitle": "Đội xe chuyên dụng & chuồng hàng không",
+    "fleetSubtitle": "Xe tải giảm xóc khí, xe van chở ngựa và chuồng bay IATA",
+    "crewTitle": "Tài xế & người áp tải",
+    "crewSubtitle": "Tài khoản DriverEscort đang hoạt động, dùng khi lập kế hoạch chuyến",
+    "loadAssetsFailed": "Không tải được danh sách phương tiện",
+    "loadCrewFailed": "Không tải được danh sách nhân sự",
+    "horses": "{{count}} ngựa",
+    "climateOn": "Có điều hòa",
+    "climateOff": "Không điều hòa",
+    "gpsOn": "Có GPS",
+    "gpsOff": "Không GPS",
+    "driverEscort": "Tài xế / Áp tải",
+    "col": {
+      "unit": "Phương tiện",
+      "capacity": "Sức chứa",
+      "equipment": "Trang bị",
+      "lastSanitization": "Khử trùng gần nhất",
+      "status": "Trạng thái",
+      "staff": "Nhân sự",
+      "phone": "Số điện thoại",
+      "role": "Vai trò"
+    },
+    "status": {
+      "Available": "Sẵn sàng",
+      "InTransit": "Đang chạy",
+      "Maintenance": "Bảo trì"
+    },
+    "assetType": {
+      "HorseTruck_AirSuspension": "Xe tải giảm xóc khí",
+      "HorseVan": "Xe van chở ngựa",
+      "AirStall": "Chuồng bay hàng không"
+    }
+  },
+  "userAdmin": {
+    "title": "Quản lý người dùng & phân quyền",
+    "subtitle": "Danh sách tài khoản, tạo tài khoản nhân viên và khóa / mở khóa tài khoản",
+    "reload": "Tải lại",
+    "addStaff": "Thêm nhân viên",
+    "addTitle": "Tạo tài khoản nhân viên",
+    "createSubmit": "Tạo tài khoản",
+    "searchPlaceholder": "Tìm theo tên, email...",
+    "allRoles": "Tất cả vai trò",
+    "allStatuses": "Tất cả trạng thái",
+    "totalCount": "Tổng {{count}} tài khoản",
+    "active": "Hoạt động",
+    "inactive": "Đã khóa",
+    "you": "Bạn",
+    "lock": "Khóa",
+    "unlock": "Mở khóa",
+    "confirmLock": "Khóa tài khoản này?",
+    "confirmUnlock": "Mở khóa tài khoản này?",
+    "locked": "Đã khóa tài khoản {{name}}",
+    "unlocked": "Đã mở khóa tài khoản {{name}}",
+    "toggleFailed": "Không đổi được trạng thái tài khoản",
+    "cannotLockSelf": "Không thể khóa tài khoản đang đăng nhập",
+    "created": "Đã tạo tài khoản {{email}}",
+    "createFailed": "Không tạo được tài khoản",
+    "loadFailed": "Không tải được danh sách người dùng",
+    "forbidden": "Chỉ tài khoản Admin mới xem được danh sách người dùng.",
+    "phone": "Số điện thoại",
+    "password": "Mật khẩu ban đầu",
+    "nameRequired": "Vui lòng nhập họ tên",
+    "emailRequired": "Vui lòng nhập email",
+    "emailInvalid": "Email không đúng định dạng",
+    "phoneInvalid": "Số điện thoại không hợp lệ",
+    "passwordRequired": "Vui lòng nhập mật khẩu",
+    "passwordLength": "Mật khẩu dài 8–64 ký tự",
+    "customerNote": "Khách hàng tự đăng ký tài khoản, không tạo ở đây.",
+    "col": {
+      "name": "Họ và tên",
+      "contact": "Email & liên hệ",
+      "role": "Vai trò",
+      "createdAt": "Ngày tạo",
+      "status": "Trạng thái",
+      "action": "Thao tác"
+    },
+    "role": {
+      "Admin": "Admin",
+      "LogisticsManager": "Logistics Manager",
+      "TransportSpecialist": "Transport Specialist",
+      "FleetCoordinator": "Fleet Coordinator",
+      "DriverEscort": "Driver / Escort",
+      "Customer": "Khách hàng"
+    }
   }
 }

@@ -55,6 +55,9 @@ import RecipientForm from '@components/common/RecipientForm';
 import { isRecipientValid } from '@utils/recipient';
 import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import { formatDeliveryDeadline, formatPickupWindow, toLocalDateTimeString } from '@utils/bookingSchedule';
+
+// Khoảng ngày đón dài nhất cho phép (backend: Booking:MaxPickupWindowDays = 30)
+const MAX_PICKUP_WINDOW_DAYS = 30;
 import { formatCountryRoute } from '@utils/bookingRoute';
 import { checkHorseTransportEligibility } from '@utils/horseHealth';
 import { ROUTES } from '@routes/routes';
@@ -574,6 +577,12 @@ export default function BookingWizard({
     const deadline = getValues('DeliveryDeadline');
     if (!start || !end) return t('bookings.schedule.pickupRequired');
     if (!deadline) return t('bookings.schedule.deadlineRequired');
+    if (dayjs(end).diff(dayjs(start), 'day') > MAX_PICKUP_WINDOW_DAYS) {
+      return t('bookings.schedule.windowTooLong', {
+        days: MAX_PICKUP_WINDOW_DAYS,
+        defaultValue: `Khoảng ngày đón tối đa ${MAX_PICKUP_WINDOW_DAYS} ngày`,
+      });
+    }
     if (earliestPickup && dayjs(start).isBefore(earliestPickup, 'day')) {
       return t('bookings.schedule.tooEarly', { date: earliestPickup.format('DD/MM/YYYY') });
     }
@@ -1415,8 +1424,11 @@ export default function BookingWizard({
                           )
                         }
                         // Khóa các ngày trước ngày đón sớm nhất backend cho phép
-                        disabledDate={(current) =>
-                          current && current < (earliestPickup || dayjs()).startOf('day')
+                        // Khoảng đón tối đa MAX_PICKUP_WINDOW_DAYS ngày (khớp backend Booking:MaxPickupWindowDays)
+                        disabledDate={(current, info) =>
+                          !!current &&
+                          (current < (earliestPickup || dayjs()).startOf('day') ||
+                            (!!info?.from && Math.abs(current.diff(info.from, 'day')) > MAX_PICKUP_WINDOW_DAYS))
                         }
                         format="DD/MM/YYYY"
                         size="large"

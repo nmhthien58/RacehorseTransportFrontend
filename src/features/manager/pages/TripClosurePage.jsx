@@ -165,7 +165,8 @@ export default function TripClosurePage() {
     try {
       const closed = unwrapData(await tripService.closeTrip(selected.tripId, remarks.trim() ? { executiveRemarks: remarks.trim() } : {}));
       message.success(t('tripClose.success', { code: selected.tripCode, score: closed.kpiScore }));
-      setSelected(closed);
+      // Bồi thường giao trễ được tạo lúc đóng chuyến: tải lại biên bản, sự cố, bồi thường của chuyến
+      openTrip({ ...selected, ...closed });
       load();
     } catch (err) {
       message.error(getErrorMessage(err));

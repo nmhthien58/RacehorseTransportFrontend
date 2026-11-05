@@ -400,6 +400,38 @@ export default function BookingWizard({
     }
   }, [transportMode, pickupCountry, dropoffCountry, pickupAirportCode, dropoffAirportCode, airportsByCountry, setValue]);
 
+  // Ngựa đang nằm trong đơn còn mở của khách (khớp backend: đơn chưa xong, thời gian từ đầu khoảng đón tới hạn giao)
+  const [busyHorses, setBusyHorses] = useState([]);
+  useEffect(() => {
+    let active = true;
+    const OPEN = ['Submitted', 'PreApproved', 'RoutePlanned', 'Quoted', 'AwaitingDeposit', 'Approved', 'Assigned'];
+    (async () => {
+      try {
+        const list = unwrapList(await bookingService.getBookings({ size: 100 })).filter((b) => OPEN.includes(b.status));
+        const details = await Promise.all(
+          list.map((b) => bookingService.getBookingById(b.bookingId).then(unwrapData).catch(() => null)),
+        );
+        const busy = [];
+        details.filter(Boolean).forEach((d) => {
+          (d.horses || [])
+            .filter((h) => h.status !== 'Cancelled')
+            .forEach((h) => busy.push({
+              horseId: h.horseId,
+              bookingCode: d.bookingCode,
+              start: d.pickupWindowStart,
+              deadline: d.deliveryDeadline,
+            }));
+        });
+        if (active) setBusyHorses(busy);
+      } catch {
+        if (active) setBusyHorses([]);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   // Tải danh sách ngựa của khách hàng
   useEffect(() => {
     let isSubscribed = true;
@@ -1635,10 +1667,26 @@ export default function BookingWizard({
                 const horseGender = horse.gender || horse.Gender;
                 const horseMicrochip = horse.microchipNumber || horse.MicrochipNumber;
                 const targetPickupDate = pickupWindowEnd || pickupWindowStart || null;
-                const eligibility = checkHorseTransportEligibility(horse, i18n?.language || 'vi', {
+                let eligibility = checkHorseTransportEligibility(horse, i18n?.language || 'vi', {
                   pickupDate: targetPickupDate,
                   minAgeMonths,
                 });
+                // Ngựa đã nằm trong đơn khác có thời gian giao với đơn này thì khóa
+                const busy = busyHorses.find(
+                  (b) =>
+                    String(b.horseId) === String(horseId) &&
+                    (!pickupWindowStart || !deliveryDeadline ||
+                      (dayjs(b.start).isBefore(dayjs(deliveryDeadline)) && dayjs(b.deadline).isAfter(dayjs(pickupWindowStart)))),
+                );
+                if (busy && eligibility.eligible) {
+                  eligibility = {
+                    eligible: false,
+                    reason: 'IN_OTHER_BOOKING',
+                    tagText: `ĐANG Ở ĐƠN ${busy.bookingCode}`,
+                    tagColor: 'error',
+                    message: `Ngựa đang nằm trong đơn ${busy.bookingCode} có thời gian trùng với đơn này, không thể đặt thêm.`,
+                  };
+                }
                 const isEligible = eligibility.eligible;
                 const conditionError = horseConditionErrors[horseId] || horseConditionErrors[String(horseId)];
                 const cannotSelect = !isEligible;

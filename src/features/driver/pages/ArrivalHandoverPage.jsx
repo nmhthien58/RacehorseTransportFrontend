@@ -137,10 +137,14 @@ export default function ArrivalHandoverPage() {
     setVerified({});
     setSignature(null);
     const b = bookings.find((item) => item.bookingId === bookingId);
+    // Người nhận đã đăng ký của đơn (GET /api/trips/{id}/recipients); người nhận thay đã được khách duyệt thì ưu tiên
+    const r = recipients.find((item) => item.bookingId === bookingId);
+    const useAlternate = Boolean(r?.alternateRecipientApprovedAt && r?.alternateRecipientName);
     form.setFieldsValue({
-      recipientName: b?.recipientName || b?.customerName || '',
-      recipientPhone: b?.recipientPhone || b?.customerPhone || '',
-      recipientIdCard: b?.recipientIdNumber || b?.recipientIdCard || '',
+      recipientName: (useAlternate ? r.alternateRecipientName : r?.recipientName) || b?.recipientName || b?.customerName || '',
+      recipientPhone: r?.recipientPhone || b?.recipientPhone || b?.customerPhone || '',
+      recipientIdCard:
+        (useAlternate ? r.alternateRecipientIdNumber : r?.recipientIdNumber) || b?.recipientIdNumber || b?.recipientIdCard || '',
       overallCondition: 'Excellent',
     });
   };

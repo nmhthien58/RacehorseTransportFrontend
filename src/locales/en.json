@@ -949,7 +949,12 @@
         "quickReason4": "Insufficient notice period for customs pre-clearance",
         "reassignTitle": "Reassign Transport Specialist",
         "reassignNote": "Select a new Transport Specialist for this booking.",
-        "rejectionReason": "This request was rejected"
+        "rejectionReason": "This request was rejected",
+        "totalEstimated": "Total estimated cost",
+        "dossier": "Dossier",
+        "currentSpecialist": "Current specialist",
+        "newSpecialist": "New specialist",
+        "pendingRequestBadge": "Pending request"
       }
     },
     "pendingRequests": {

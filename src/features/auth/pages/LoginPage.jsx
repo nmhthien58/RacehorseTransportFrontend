@@ -8,7 +8,6 @@ import { useGoogleAuth } from '@features/auth/hooks/useGoogleAuth';
 import GoogleIcon from '@features/auth/components/GoogleIcon';
 import { ROUTES } from '@routes/routes';
 import { ROLES } from '@utils/constants';
-import usersData from '@/mocks/data/users.json';
 import logoImg from '@/assets/logo.svg';
 import styles from './AuthPages.module.css';
 
@@ -31,44 +30,13 @@ export default function LoginPage() {
       let token = null;
       let refreshToken = null;
 
-      try {
-        const res = await loginApi({
-          email: values.email,
-          password: values.password,
-        });
-
-        user = res.user || res.data?.user;
-        token = res.token || res.data?.accessToken || `mock-token-${user?.userId}`;
-        refreshToken = res.refreshToken || res.data?.refreshToken || null;
-      } catch (apiErr) {
-        // Fallback tự động tìm trong mock data và tài khoản đã đăng ký (Item 17)
-        console.warn('API login failed, checking local users fallback:', apiErr);
-        const emailLower = (values.email || '').trim().toLowerCase();
-        let localUser = usersData.find(
-          (u) => u.email.toLowerCase() === emailLower,
-        );
-
-        if (!localUser) {
-          try {
-            const rawRegistered = localStorage.getItem('racehorse_registered_users');
-            const registeredList = rawRegistered ? JSON.parse(rawRegistered) : [];
-            const foundReg = registeredList.find((u) => u.email?.toLowerCase() === emailLower);
-            if (foundReg) {
-              localUser = foundReg;
-            }
-          } catch (e) {
-            console.error('Lỗi đọc registered users:', e);
-          }
-        }
-
-        if (localUser) {
-          user = localUser;
-          token = `mock-token-${localUser.userId}`;
-          refreshToken = `mock-refresh-token-${localUser.userId}`;
-        } else {
-          throw apiErr;
-        }
-      }
+      const res = await loginApi({
+        email: values.email,
+        password: values.password,
+      });
+      user = res.user || res.data?.user;
+      token = res.accessToken || res.token || res.data?.accessToken;
+      refreshToken = res.refreshToken || res.data?.refreshToken || null;
 
       if (!user) {
         throw new Error('User not found');

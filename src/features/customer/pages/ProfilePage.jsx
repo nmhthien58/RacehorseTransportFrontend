@@ -27,6 +27,7 @@ import PageHeader from '@components/layout/PageHeader';
 import useProfile from '@features/customer/hooks/useProfile';
 import { useAuthStore } from '@features/auth/store/authStore';
 import authService from '@services/authService';
+import { getErrorMessage } from '@utils/apiHelpers';
 
 const { Title, Text } = Typography;
 
@@ -39,7 +40,7 @@ const { Title, Text } = Typography;
  */
 export default function ProfilePage() {
   const { t } = useTranslation();
-  const { data: profile, loading } = useProfile();
+  const { data: profile, loading, error, refresh } = useProfile();
   const { user, setUser } = useAuthStore();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -49,10 +50,6 @@ export default function ProfilePage() {
     form.setFieldsValue({
       fullName: profile?.fullName || profile?.FullName || '',
       phoneNumber: profile?.phoneNumber || profile?.PhoneNumber || '',
-      clubName: profile?.clubName || profile?.ClubName || '',
-      address: profile?.address || profile?.Address || '',
-      city: profile?.city || profile?.City || '',
-      country: profile?.country || profile?.Country || '',
     });
     setIsEditModalOpen(true);
   };
@@ -60,24 +57,15 @@ export default function ProfilePage() {
   const handleSaveProfile = async (values) => {
     try {
       setSaving(true);
-      await authService.updateProfile(values);
-      const updatedUser = {
-        ...user,
-        ...values,
-        fullName: values.fullName,
-        FullName: values.fullName,
-        phoneNumber: values.phoneNumber,
-        PhoneNumber: values.phoneNumber,
-        address: values.address,
-        Address: values.address,
-        clubName: values.clubName,
-        ClubName: values.clubName,
-      };
+      const payload = { fullName: values.fullName, phoneNumber: values.phoneNumber || null };
+      await authService.updateProfile(payload);
+      const updatedUser = { ...user, ...payload };
       setUser(updatedUser);
       message.success(t('profile.updateSuccess') || 'Cập nhật hồ sơ thành công!');
       setIsEditModalOpen(false);
+      refresh();
     } catch (err) {
-      message.error(t('profile.updateError') || 'Không thể cập nhật hồ sơ: ' + (err.message || ''));
+      message.error(getErrorMessage(err, t('profile.updateError') || 'Không thể cập nhật hồ sơ'));
     } finally {
       setSaving(false);
     }
@@ -90,6 +78,14 @@ export default function ProfilePage() {
         <Text type="secondary" style={{ display: 'block', marginTop: 16 }}>
           {t('common.loading')}
         </Text>
+      </div>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <div style={{ textAlign: 'center', padding: '100px 0' }}>
+        <Text type="danger">{getErrorMessage(error, 'Không tải được hồ sơ tài khoản')}</Text>
       </div>
     );
   }
@@ -173,17 +169,6 @@ export default function ProfilePage() {
                 {profile?.role || profile?.Role}
               </Tag>
               <Tag
-                color="purple"
-                style={{
-                  fontWeight: 700,
-                  borderRadius: 9999,
-                  padding: '2px 12px',
-                  margin: 0,
-                }}
-              >
-                {profile?.membershipTier || profile?.MembershipTier}
-              </Tag>
-              <Tag
                 color="success"
                 icon={<CheckCircleOutlined />}
                 style={{
@@ -243,37 +228,6 @@ export default function ProfilePage() {
             </Space>
           </Descriptions.Item>
 
-          <Descriptions.Item label={isCustomer ? (t('profile.club') || 'Câu lạc bộ / Tổ chức') : (t('profile.department') || 'Bộ phận / Phòng ban')}>
-            <strong style={{ color: '#0f172a' }}>
-              {isCustomer
-                ? (profile?.clubName || profile?.ClubName || 'CLB Ngựa Đua Vina Equine')
-                : (profile?.department || profile?.Department || 'Phòng Điều hành')}
-            </strong>
-          </Descriptions.Item>
-
-          <Descriptions.Item label={isCustomer ? (t('profile.feiOwnerId') || 'FEI Owner ID') : (t('profile.staffId') || 'Mã định danh cán bộ (Staff ID)')}>
-            <code
-              style={{
-                backgroundColor: '#f1f5f9',
-                padding: '3px 10px',
-                borderRadius: 6,
-                fontSize: 12.5,
-                fontFamily: 'monospace',
-                fontWeight: 700,
-                color: '#334155',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {isCustomer
-                ? (profile?.feiOwnerId || profile?.FEIOwnerID || 'VN-OWN-2024-0089')
-                : (profile?.staffId || profile?.StaffID || 'STAFF-001')}
-            </code>
-          </Descriptions.Item>
-
-          <Descriptions.Item label={t('profile.address')} span={2}>
-            <span>{profile?.address || profile?.Address}</span>
-          </Descriptions.Item>
-
           <Descriptions.Item label={t('profile.createdAt')}>
             <Space size="small">
               <CalendarOutlined style={{ color: '#64748b' }} />
@@ -284,9 +238,15 @@ export default function ProfilePage() {
           </Descriptions.Item>
 
           <Descriptions.Item label={t('profile.status')}>
-            <Tag color="success" style={{ borderRadius: 6, fontWeight: 700 }}>
-              {t('profile.activeStatus')}
-            </Tag>
+            {profile?.isActive === false ? (
+              <Tag color="default" style={{ borderRadius: 6, fontWeight: 700 }}>
+                {t('profile.inactiveStatus', 'Đã khóa')}
+              </Tag>
+            ) : (
+              <Tag color="success" style={{ borderRadius: 6, fontWeight: 700 }}>
+                {t('profile.activeStatus')}
+              </Tag>
+            )}
           </Descriptions.Item>
         </Descriptions>
       </Card>
@@ -323,26 +283,6 @@ export default function ProfilePage() {
             name="phoneNumber"
           >
             <Input size="large" placeholder="Ví dụ: +84 988 123 456" />
-          </Form.Item>
-
-          {isCustomer && (
-            <Form.Item
-              label={<strong>{t('profile.club') || 'Tên Trang trại / Câu lạc bộ ngựa'}</strong>}
-              name="clubName"
-            >
-              <Input size="large" placeholder="Ví dụ: Trang trại Đua ngựa Hoàng Gia" />
-            </Form.Item>
-          )}
-
-          <Form.Item
-            label={<strong>{t('profile.address') || 'Địa chỉ Trang trại / Nơi ở đón ngựa'}</strong>}
-            name="address"
-            tooltip="Địa chỉ này sẽ được dùng để tự động điền vào Detailed Pickup Address khi bạn tạo yêu cầu vận chuyển Door-to-Door hoặc Ground."
-          >
-            <Input.TextArea
-              rows={3}
-              placeholder="Ví dụ: Trang trại Đua ngựa Tân Uyên, Đường ĐT746, Bình Dương"
-            />
           </Form.Item>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>

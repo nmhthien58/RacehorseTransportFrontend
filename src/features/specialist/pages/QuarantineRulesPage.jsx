@@ -42,6 +42,7 @@ export default function QuarantineRulesPage() {
   const navigate = useNavigate();
   const {
     rules,
+    countries,
     loading,
     error,
     countryFilter,
@@ -145,13 +146,13 @@ export default function QuarantineRulesPage() {
       key: 'validityDays',
       width: 150,
       render: (_, record) => {
-        const isShort = record.validityDays <= 14;
+        const isShort = record.validityDays != null && record.validityDays <= 14;
         return (
           <Space direction="vertical" size={2}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <ClockCircleOutlined style={{ color: isShort ? '#D97706' : '#64748B', fontSize: 12 }} />
               <strong style={{ fontSize: 13, color: '#0F172A' }}>
-                {record.validityDays} {t('specialist.quarantineRules.days', 'ngày')}
+                {record.validityDays != null ? `${record.validityDays} ${t('specialist.quarantineRules.days', 'ngày')}` : 'Không giới hạn'}
               </strong>
             </div>
             {isShort && (
@@ -164,14 +165,14 @@ export default function QuarantineRulesPage() {
       },
     },
     {
-      title: t('specialist.quarantineRules.colAuthority', 'Cơ quan cấp phép'),
-      dataIndex: 'issuingAuthority',
-      key: 'issuingAuthority',
-      width: 220,
-      render: (text, record) => (
+      title: t('specialist.quarantineRules.colProcessing', 'Thời gian làm giấy'),
+      dataIndex: 'processingDays',
+      key: 'processingDays',
+      width: 160,
+      render: (days) => (
         <div style={{ fontSize: 12, color: '#334155', display: 'flex', alignItems: 'flex-start', gap: 6 }}>
           <SafetyCertificateOutlined style={{ color: '#0F172A', marginTop: 3, flexShrink: 0 }} />
-          <span>{typeof text === 'string' ? text : (record?.issuingAuthority || '---')}</span>
+          <span>{days != null ? `${days} ${t('specialist.quarantineRules.days', 'ngày')}` : '---'}</span>
         </div>
       ),
     },
@@ -351,12 +352,7 @@ export default function QuarantineRulesPage() {
               onChange={setCountryFilter}
               options={[
                 { value: 'all', label: t('specialist.quarantineRules.allCountries', 'Tất cả quốc gia') },
-                { value: 'VN', label: 'Việt Nam (VN)' },
-                { value: 'CN', label: 'Trung Quốc (CN)' },
-                { value: 'TH', label: 'Thái Lan (TH)' },
-                { value: 'SG', label: 'Singapore (SG)' },
-                { value: 'US', label: 'Hoa Kỳ (US)' },
-                { value: 'EU', label: 'Liên minh Châu Âu (EU)' },
+                ...countries.map((c) => ({ value: c.countryCode, label: `${c.nameVi || c.nameEn} (${c.countryCode})` })),
               ]}
             />
           </Col>
@@ -473,28 +469,19 @@ export default function QuarantineRulesPage() {
             {/* Khối điều kiện & Thời hạn */}
             <div>
               <Text strong style={{ fontSize: 13, color: '#0F172A', display: 'block', marginBottom: 8 }}>
-                Thời hạn & Cơ quan ban hành
+                Thời hạn & Thời gian làm giấy
               </Text>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div style={{ padding: '10px 12px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 4 }}>
                   <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Thời hạn tối đa:</Text>
-                  <strong style={{ fontSize: 14, color: '#0F172A' }}>{selectedRule.validityDays} ngày</strong>
+                  <strong style={{ fontSize: 14, color: '#0F172A' }}>{selectedRule.validityDays != null ? `${selectedRule.validityDays} ngày` : 'Không giới hạn'}</strong>
                 </div>
                 <div style={{ padding: '10px 12px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 4 }}>
-                  <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Hiệu lực áp dụng:</Text>
-                  <strong style={{ fontSize: 13, color: '#0F172A' }}>{selectedRule.effectiveDate || '2024-01-01'}</strong>
+                  <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Thời gian làm giấy:</Text>
+                  <strong style={{ fontSize: 13, color: '#0F172A' }}>
+                    {selectedRule.processingDays != null ? `${selectedRule.processingDays} ngày` : '---'}
+                  </strong>
                 </div>
-              </div>
-            </div>
-
-            {/* Cơ quan thẩm quyền */}
-            <div>
-              <Text strong style={{ fontSize: 13, color: '#0F172A', display: 'block', marginBottom: 6 }}>
-                Cơ quan cấp phép có thẩm quyền:
-              </Text>
-              <div style={{ padding: '10px 12px', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 4, fontSize: 12, color: '#334155' }}>
-                <SafetyCertificateOutlined style={{ marginRight: 6, color: '#0F172A' }} />
-                {selectedRule.issuingAuthority}
               </div>
             </div>
 

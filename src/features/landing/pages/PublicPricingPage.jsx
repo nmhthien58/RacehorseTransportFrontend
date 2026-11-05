@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Button,
   Card,
@@ -17,6 +17,8 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ROUTES } from '@routes/routes';
 import { useAuthStore } from '@features/auth/store/authStore';
+import countryService from '@services/countryService';
+import { unwrapList } from '@utils/apiHelpers';
 import LandingHeader from '../components/LandingHeader';
 import LandingFooter from '../components/LandingFooter';
 
@@ -24,144 +26,6 @@ import LandingFooter from '../components/LandingFooter';
 import heroBg from '@assets/landing/hero-bg.jpg';
 
 const { Title, Text, Paragraph } = Typography;
-
-// Dữ liệu bảng cước phí tham khảo từ Figma
-const internationalRates = [
-  {
-    key: '1',
-    id: 1,
-    destination: 'China (Guangzhou, Shanghai)',
-    modes: 'Road / Air',
-    duration: '2 - 5 days',
-    refPrice: '$2,150 - $4,200',
-    quarantine: '14 Days',
-    totalEstimated: '$3,650 - $5,350',
-    category: 'road',
-  },
-  {
-    key: '2',
-    id: 2,
-    destination: 'Hong Kong (SAR)',
-    modes: 'Air Freight',
-    duration: '1 - 3 days',
-    refPrice: '$3,200 - $4,800',
-    quarantine: '7 Days',
-    totalEstimated: '$4,600 - $6,400',
-    category: 'air',
-  },
-  {
-    key: '3',
-    id: 3,
-    destination: 'Japan (Tokyo, Osaka)',
-    modes: 'Air Freight',
-    duration: '2 - 4 days',
-    refPrice: '$5,500 - $7,200',
-    quarantine: '10 Days',
-    totalEstimated: '$7,800 - $10,100',
-    category: 'air',
-  },
-  {
-    key: '4',
-    id: 4,
-    destination: 'Australia (Sydney, Melbourne)',
-    modes: 'Air Freight',
-    duration: '3 - 5 days',
-    refPrice: '$7,800 - $11,500',
-    quarantine: '14 Days',
-    totalEstimated: '$11,500 - $15,200',
-    category: 'air',
-  },
-  {
-    key: '5',
-    id: 5,
-    destination: 'Europe (France, Germany, Netherlands)',
-    modes: 'Air Freight',
-    duration: '4 - 6 days',
-    refPrice: '$9,200 - $14,000',
-    quarantine: '21 Days',
-    totalEstimated: '$14,000 - $19,500',
-    category: 'all-inclusive',
-  },
-  {
-    key: '6',
-    id: 6,
-    destination: 'United Kingdom (London, Newmarket)',
-    modes: 'Air Freight',
-    duration: '4 - 6 days',
-    refPrice: '$9,500 - $14,500',
-    quarantine: '21 Days',
-    totalEstimated: '$14,500 - $20,000',
-    category: 'all-inclusive',
-  },
-  {
-    key: '7',
-    id: 7,
-    destination: 'United States (Lexington, Ocala, LA)',
-    modes: 'Air Freight',
-    duration: '5 - 7 days',
-    refPrice: '$10,500 - $16,000',
-    quarantine: '30 Days',
-    totalEstimated: '$16,000 - $22,500',
-    category: 'all-inclusive',
-  },
-];
-
-const roadRates = [
-  {
-    key: 'r1',
-    id: 1,
-    destination: 'Baotou (Inner Mongolia)',
-    transit: '1 - 2 days',
-    equipment: 'Dedicated Van',
-    sharedRate: '$1,500 - $2,200',
-    boxStallRate: '$2,100 - $3,100',
-  },
-  {
-    key: 'r2',
-    id: 2,
-    destination: 'Guangzhou (Guangdong)',
-    transit: '2 - 3 days',
-    equipment: 'Commercial Carrier',
-    sharedRate: '$2,500 - $3,500',
-    boxStallRate: '$3,500 - $4,900',
-  },
-  {
-    key: 'r3',
-    id: 3,
-    destination: 'Shenzhen (Guangdong)',
-    transit: '2 - 3 days',
-    equipment: 'Air-ride Van',
-    sharedRate: '$2,600 - $3,600',
-    boxStallRate: '$3,650 - $5,100',
-  },
-  {
-    key: 'r4',
-    id: 4,
-    destination: 'Kunming (Yunnan China)',
-    transit: '3 - 4 days',
-    equipment: 'Air-ride Van',
-    sharedRate: '$2,900 - $4,100',
-    boxStallRate: '$4,100 - $5,800',
-  },
-  {
-    key: 'r5',
-    id: 5,
-    destination: 'Vientiane (Laos PDR)',
-    transit: '3 - 5 days',
-    equipment: 'Cross-border Truck',
-    sharedRate: '$1,500 - $2,100',
-    boxStallRate: '$2,100 - $2,950',
-  },
-  {
-    key: 'r6',
-    id: 6,
-    destination: 'Phnom Penh (Cambodia)',
-    transit: '1 - 2 days',
-    equipment: 'Cross-border Van',
-    sharedRate: '$1,200 - $1,700',
-    boxStallRate: '$1,700 - $2,400',
-  },
-];
 
 export default function PublicPricingPage() {
   const { t } = useTranslation();
@@ -185,99 +49,82 @@ export default function PublicPricingPage() {
     }
   };
 
-  // Lọc tìm kiếm theo từ khóa
-  const filteredInternational = useMemo(() => {
-    return internationalRates.filter((item) => {
+  // Phạm vi dịch vụ thật: nước đang nhận và phương thức có giá cước (GET /api/countries/catalog, không cần đăng nhập)
+  const [countries, setCountries] = useState([]);
+  const [loadingCountries, setLoadingCountries] = useState(true);
+  useEffect(() => {
+    countryService
+      .getCatalog()
+      .then((res) => setCountries(unwrapList(res)))
+      .catch(() => setCountries([]))
+      .finally(() => setLoadingCountries(false));
+  }, []);
+
+  const filteredCountries = useMemo(() => {
+    const q = searchText.trim().toLowerCase();
+    return countries.filter((c) => {
       const matchSearch =
-        item.destination.toLowerCase().includes(searchText.toLowerCase()) ||
-        item.modes.toLowerCase().includes(searchText.toLowerCase());
-      if (activeTab === 'air') return matchSearch && item.category === 'air';
-      if (activeTab === 'road') return matchSearch && item.category === 'road';
-      if (activeTab === 'inclusive') return matchSearch && item.category === 'all-inclusive';
+        !q ||
+        c.nameVi?.toLowerCase().includes(q) ||
+        c.nameEn?.toLowerCase().includes(q) ||
+        c.countryCode?.toLowerCase().includes(q) ||
+        (c.airports || []).some((a) => a.iataCode?.toLowerCase().includes(q) || a.city?.toLowerCase().includes(q));
+      if (activeTab === 'air') return matchSearch && c.airAvailable;
+      if (activeTab === 'road') return matchSearch && c.groundAvailable;
       return matchSearch;
     });
-  }, [searchText, activeTab]);
+  }, [countries, searchText, activeTab]);
 
-  const filteredRoad = useMemo(() => {
-    return roadRates.filter((item) =>
-      item.destination.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.equipment.toLowerCase().includes(searchText.toLowerCase())
-    );
-  }, [searchText]);
+  const activeAirports = (c) => (c.airports || []).filter((a) => a.isActive !== false);
 
-  const intlColumns = [
+  const countryColumns = [
     {
-      title: '#',
-      dataIndex: 'id',
-      key: 'id',
-      width: 50,
-      render: (v) => <span style={{ fontWeight: 700, color: '#64748b' }}>{v}</span>,
-    },
-    {
-      title: 'ĐIỂM ĐẾN (DESTINATION)',
-      dataIndex: 'destination',
-      key: 'destination',
-      render: (text) => (
+      title: 'QUỐC GIA',
+      key: 'country',
+      render: (_, c) => (
         <div>
-          <span style={{ fontWeight: 800, color: '#0f172a', fontSize: 15 }}>{text}</span>
+          <span style={{ fontWeight: 800, color: '#0f172a', fontSize: 15 }}>{c.nameVi || c.nameEn}</span>
+          <span style={{ color: '#64748b', marginLeft: 8 }}>({c.countryCode})</span>
         </div>
       ),
     },
     {
-      title: 'HÌNH THỨC',
-      dataIndex: 'modes',
-      key: 'modes',
-      render: (modes) => (
-        <Tag color={modes.includes('Air') ? 'blue' : 'green'} style={{ fontWeight: 700 }}>
-          {modes}
-        </Tag>
-      ),
+      title: 'ĐƯỜNG BỘ',
+      key: 'ground',
+      render: (_, c) =>
+        c.groundAvailable ? <Tag color="green" style={{ fontWeight: 700 }}>Có</Tag> : <Tag>Không</Tag>,
     },
     {
-      title: 'THỜI GIAN',
-      dataIndex: 'duration',
-      key: 'duration',
-      render: (t) => <span style={{ color: '#475569' }}>{t}</span>,
+      title: 'ĐƯỜNG BAY',
+      key: 'air',
+      render: (_, c) =>
+        c.airAvailable ? <Tag color="blue" style={{ fontWeight: 700 }}>Có</Tag> : <Tag>Không</Tag>,
     },
     {
-      title: 'CƯỚC CƠ SỞ (REFERENCE)',
-      dataIndex: 'refPrice',
-      key: 'refPrice',
-      render: (price) => <span style={{ fontWeight: 700, color: '#334155' }}>{price}</span>,
-    },
-    {
-      title: 'CÁCH LY (QUARANTINE)',
-      dataIndex: 'quarantine',
-      key: 'quarantine',
-      render: (q) => (
-        <Tag color="orange" style={{ fontWeight: 600 }}>
-          {q}
-        </Tag>
-      ),
-    },
-    {
-      title: 'TỔNG DỰ TÍNH (ESTIMATED)',
-      dataIndex: 'totalEstimated',
-      key: 'totalEstimated',
-      render: (total) => (
-        <span style={{ fontWeight: 900, color: '#0f172a', fontSize: 16 }}>{total}</span>
-      ),
+      title: 'SÂN BAY',
+      key: 'airports',
+      render: (_, c) =>
+        activeAirports(c).length > 0 ? (
+          <span style={{ color: '#475569' }}>
+            {activeAirports(c)
+              .map((a) => `${a.iataCode}${a.city ? ` (${a.city})` : ''}`)
+              .join(', ')}
+          </span>
+        ) : (
+          <span style={{ color: '#94a3b8' }}>---</span>
+        ),
     },
     {
       title: 'THAO TÁC',
       key: 'action',
-      render: (_, record) => (
+      render: (_, c) => (
         <Button
           type="primary"
           size="small"
           onClick={() =>
             handleBookNow({
-              destination: record.destination,
-              dropoffAddress: record.destination,
-              transportMode: record.modes?.toLowerCase().includes('air') ? 'Air' : 'Ground',
-              totalHorses: 1,
-              stallClass: 'Comfort',
-              duration: record.duration,
+              destinationCountryCode: c.countryCode,
+              transportMode: c.groundAvailable ? 'Ground' : 'Air',
             })
           }
           style={{
@@ -288,7 +135,7 @@ export default function PublicPricingPage() {
             borderRadius: 9999,
           }}
         >
-          Đặt tuyến →
+          Nhận báo giá →
         </Button>
       ),
     },
@@ -322,7 +169,7 @@ export default function PublicPricingPage() {
               marginBottom: 16,
             }}
           >
-            BẢNG GIÁ DỰ TÍNH THAM KHẢO
+            PHẠM VI DỊCH VỤ & CÁCH TÍNH GIÁ
           </Tag>
 
           <Title
@@ -335,7 +182,7 @@ export default function PublicPricingPage() {
               marginBottom: 16,
             }}
           >
-            Transport <span style={{ color: '#FBA919' }}>Pricing & Rate Card</span>
+            Transport <span style={{ color: '#FBA919' }}>Pricing</span>
           </Title>
 
           <Paragraph
@@ -347,7 +194,7 @@ export default function PublicPricingPage() {
               marginBottom: 32,
             }}
           >
-            Tra cứu mức cước tham khảo theo tuyến đường quốc tế và nội địa. Dữ liệu công khai, minh bạch, giúp bạn dự trù ngân sách di chuyển cho ngựa đua chuẩn xác nhất.
+            Xem các nước công ty đang nhận vận chuyển và phương thức (đường bộ / đường bay). Giá được tính riêng cho từng chuyến theo quãng đường, số ngựa, hạng chuồng và giấy tờ của tuyến.
           </Paragraph>
 
           {/* Ô Tìm Kiếm Điểm Đến & Bộ Lọc Nhanh */}
@@ -363,7 +210,7 @@ export default function PublicPricingPage() {
             <Input
               size="large"
               prefix={<SearchOutlined style={{ color: '#94a3b8', fontSize: 18 }} />}
-              placeholder="Tìm kiếm điểm đến, quốc gia hoặc hình thức (VD: Hong Kong, Japan, Paris, Road, Air...)"
+              placeholder="Tìm quốc gia, mã nước hoặc sân bay (VD: Thái Lan, TH, BKK...)"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear
@@ -387,7 +234,7 @@ export default function PublicPricingPage() {
                     fontWeight: 600,
                   }}
                 >
-                  Tất cả tuyến đường
+                  Tất cả quốc gia
                 </Button>
                 <Button
                   type={activeTab === 'air' ? 'primary' : 'default'}
@@ -411,21 +258,10 @@ export default function PublicPricingPage() {
                 >
                   Đường bộ (Road)
                 </Button>
-                <Button
-                  type={activeTab === 'inclusive' ? 'primary' : 'default'}
-                  onClick={() => setActiveTab('inclusive')}
-                  style={{
-                    borderRadius: 9999,
-                    backgroundColor: activeTab === 'inclusive' ? '#0f172a' : undefined,
-                    fontWeight: 600,
-                  }}
-                >
-                  Trọn gói chuồng - chuồng
-                </Button>
               </Flex>
 
               <Text style={{ color: '#64748b', fontSize: 13 }}>
-                Hiển thị {filteredInternational.length} tuyến
+                Hiển thị {filteredCountries.length} quốc gia
               </Text>
             </Flex>
           </div>
@@ -449,7 +285,7 @@ export default function PublicPricingPage() {
         >
           <InfoCircleOutlined style={{ fontSize: 20, color: '#d97706' }} />
           <span>
-            <strong>Lưu ý:</strong> Bảng cước phí mang tính chất tham khảo (Reference Rate Card). Giá chính xác sẽ được tính toán chi tiết dựa trên thể trọng của ngựa, loại chuồng (Shared / Comfort / Private), bảo hiểm và yêu cầu kiểm dịch thú y cụ thể của từng chuyến đi.
+            <strong>Lưu ý:</strong> Khi gửi yêu cầu bạn nhận khoảng giá ước tính; báo giá chốt kèm hợp đồng được gửi sau khi công ty duyệt đơn (và duyệt lộ trình với đường bộ). Cước tính theo quãng đường thật × số ngựa (đường bộ) hoặc theo con theo vùng nước đến (đường bay), nhân hệ số hạng chuồng, cộng phụ phí và phí thủ tục của các nước trên tuyến.
           </span>
         </div>
       </div>
@@ -463,112 +299,24 @@ export default function PublicPricingPage() {
               boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
               border: '1px solid #e2e8f0',
               overflow: 'hidden',
-              marginBottom: 40,
             }}
             bodyStyle={{ padding: 0 }}
           >
             <div style={{ padding: '24px 24px 16px 24px', borderBottom: '1px solid #f1f5f9' }}>
               <Title level={4} style={{ margin: 0, fontWeight: 800, color: '#0f172a' }}>
-                International Shipping Rate Card
+                Quốc gia & phương thức đang phục vụ
               </Title>
               <Text style={{ color: '#64748b', fontSize: 13 }}>
-                Cước phí ước tính cho các tuyến bay quốc tế và liên vận xuất phát từ Việt Nam / Đông Nam Á
+                Đường bộ / đường bay có ở một nước khi công ty đã có giá cước cho tuyến đó
               </Text>
             </div>
             <Table
-              columns={intlColumns}
-              dataSource={filteredInternational}
+              columns={countryColumns}
+              dataSource={filteredCountries}
+              loading={loadingCountries}
               pagination={false}
-              rowKey="key"
-              scroll={{ x: 800 }}
-            />
-          </Card>
-
-          {/* Bảng Cước Đường Bộ (Road Transport) */}
-          <Card
-            style={{
-              borderRadius: 20,
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
-              border: '1px solid #e2e8f0',
-              overflow: 'hidden',
-            }}
-            bodyStyle={{ padding: 0 }}
-          >
-            <div style={{ padding: '24px 24px 16px 24px', borderBottom: '1px solid #f1f5f9' }}>
-              <Title level={4} style={{ margin: 0, fontWeight: 800, color: '#0f172a' }}>
-                Road Transport Rate Card (Đường Bộ & Xuyên Biên Giới)
-              </Title>
-              <Text style={{ color: '#64748b', fontSize: 13 }}>
-                Tuyến đường bộ nội địa và kết nối qua cửa khẩu quốc tế
-              </Text>
-            </div>
-            <Table
-              dataSource={filteredRoad}
-              pagination={false}
-              rowKey="key"
+              rowKey="countryCode"
               scroll={{ x: 700 }}
-              columns={[
-                {
-                  title: '#',
-                  dataIndex: 'id',
-                  key: 'id',
-                  width: 50,
-                  render: (v) => <span style={{ fontWeight: 700, color: '#64748b' }}>{v}</span>,
-                },
-                {
-                  title: 'ĐIỂM ĐẾN',
-                  dataIndex: 'destination',
-                  key: 'destination',
-                  render: (text) => <span style={{ fontWeight: 800, color: '#0f172a' }}>{text}</span>,
-                },
-                {
-                  title: 'THỜI GIAN',
-                  dataIndex: 'transit',
-                  key: 'transit',
-                  render: (t) => <span style={{ color: '#64748b' }}>{t}</span>,
-                },
-                {
-                  title: 'LOẠI XE & TRANG BỊ',
-                  dataIndex: 'equipment',
-                  key: 'equipment',
-                  render: (eq) => <Tag color="blue">{eq}</Tag>,
-                },
-                {
-                  title: 'CHUỒNG GHÉP (SHARED)',
-                  dataIndex: 'sharedRate',
-                  key: 'sharedRate',
-                  render: (r) => <span style={{ fontWeight: 700, color: '#059669' }}>{r}</span>,
-                },
-                {
-                  title: 'CHUỒNG RIÊNG 1.5X',
-                  dataIndex: 'boxStallRate',
-                  key: 'boxStallRate',
-                  render: (r) => <span style={{ fontWeight: 700, color: '#2563eb' }}>{r}</span>,
-                },
-                {
-                  title: 'ĐẶT XE',
-                  key: 'action',
-                  render: (_, rec) => (
-                    <Button
-                      type="default"
-                      size="small"
-                      onClick={() =>
-                        handleBookNow({
-                          destination: rec.destination,
-                          dropoffAddress: rec.destination,
-                          transportMode: 'Ground',
-                          totalHorses: 1,
-                          stallClass: 'Comfort',
-                          duration: rec.duration,
-                        })
-                      }
-                      style={{ fontWeight: 700, borderRadius: 9999 }}
-                    >
-                      Báo giá →
-                    </Button>
-                  ),
-                },
-              ]}
             />
           </Card>
         </div>

@@ -22,7 +22,7 @@ export default function StandardFormTemplateModal({
   const passport = horse?.PassportNumber || horse?.passportNumber || 'FEI-VN-2024-001';
   const breed = horse?.Breed || horse?.breed || 'Thoroughbred';
   const gender = horse?.Gender || horse?.gender || 'Stallion (Ngựa đực giống)';
-  const owner = horse?.OwnerName || horse?.ownerName || 'Jane Smith (Trang trại Ba Vì)';
+  const owner = horse?.OwnerName || horse?.ownerName || '---';
 
   // Cấu hình nội dung form theo từng loại giấy tờ
   const getFormConfig = () => {

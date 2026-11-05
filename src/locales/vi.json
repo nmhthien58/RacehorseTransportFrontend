@@ -948,7 +948,12 @@
         "quickReason4": "Thời gian yêu cầu quá gấp, không kịp làm thủ tục hải quan",
         "reassignTitle": "Phân công lại chuyên viên phụ trách",
         "reassignNote": "Thay đổi Transport Specialist phụ trách giám sát yêu cầu này.",
-        "rejectionReason": "Yêu cầu này đã bị từ chối"
+        "rejectionReason": "Yêu cầu này đã bị từ chối",
+        "totalEstimated": "Tổng chi phí dự kiến",
+        "dossier": "Hồ sơ",
+        "currentSpecialist": "Chuyên viên hiện tại",
+        "newSpecialist": "Chuyên viên mới",
+        "pendingRequestBadge": "Đơn đang chờ duyệt"
       }
     },
     "pendingRequests": {

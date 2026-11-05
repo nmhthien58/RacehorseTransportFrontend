@@ -28,6 +28,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@features/auth/store/authStore';
 import { ROLES } from '@utils/constants';
+import { formatHorsePosition } from '@utils/compartments';
 import dayjs from 'dayjs';
 import { useDriverMissions } from '../hooks/useDriverMissions';
 import { getTripStatusMeta } from '../services/driverService';
@@ -443,7 +444,7 @@ export default function DriverDashboard() {
                         <div>
                           <Text strong style={{ color: '#111827' }}>{horse.horseName}</Text>
                           <span style={{ color: '#6B7280', marginLeft: 8 }}>
-                            (Mã chip: {horse.microchipNumber} • Chuồng #{horse.stallSlotNumber || 1})
+                            (Mã chip: {horse.microchipNumber} • {formatHorsePosition(t, horse)})
                           </span>
                         </div>
                         <Tag color="cyan" style={{ margin: 0, fontSize: 11 }}>

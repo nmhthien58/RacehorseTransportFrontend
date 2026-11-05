@@ -1550,7 +1550,7 @@
       "crew": "Đoàn xe",
       "route": "Lộ trình",
       "bookings": "Các đơn trên chuyến",
-      "stallMap": "Sơ đồ chuồng & áp tải phụ trách"
+      "stallMap": "Sơ đồ khoang & áp tải phụ trách"
     },
     "fields": {
       "status": "Trạng thái",
@@ -1564,7 +1564,7 @@
       "rejections": "Số lần bị trả về",
       "lead": "Trưởng nhóm",
       "horseCount": "{{count}} ngựa",
-      "slot": "Ô chuồng",
+      "slot": "Khoang / Vị trí",
       "horse": "Ngựa",
       "booking": "Đơn",
       "stallClass": "Hạng chuồng",
@@ -1659,6 +1659,8 @@
       "incompleteCheckpoint": "Điền đủ tên, địa chỉ và giờ cho mọi mốc lộ trình",
       "overCapacity": "Vượt sức chứa của xe ({{capacity}} ngựa)",
       "needBookingForStop": "Mốc Điểm đón / Điểm trả phải chọn đơn",
+      "notEnoughCompartments": "Xe có {{have}} khoang, các ngựa đã chọn cần {{needed}} khoang",
+      "unplacedHorses": "Còn {{count}} con chưa xếp vào khoang. Kéo vào khoang hoặc bấm Tự xếp.",
       "suggestNeedInput": "Chọn ngựa và giờ khởi hành trước khi gợi ý lộ trình",
       "suggestFailed": "Không gợi ý được lộ trình",
       "suggested": "Đã thay lộ trình bằng gợi ý",
@@ -1697,7 +1699,51 @@
       "unassigned": "Chưa phân áp tải",
       "autoPlaceholder": "Tự phân khi lưu",
       "emptySlot": "Ô trống",
-      "hint": "Bấm một ô có ngựa rồi bấm ô khác để đổi chỗ. Mỗi người áp tải phụ trách tối đa 3 con; ô để trống áp tải sẽ được tự phân khi lưu (ô 1-3 cho người đầu tiên, trưởng nhóm trước)."
+      "hint": "Kéo thẻ ngựa vào khoang; thả lên ngựa khác để đổi chỗ, kéo về khay để bỏ xếp (bàn phím: Space để nhấc, mũi tên để di chuyển, Space để thả). Mỗi khoang chỉ một hạng chuồng. Mỗi người áp tải phụ trách tối đa 3 con; khoang để trống áp tải sẽ được tự phân khi lưu."
+    },
+    "compartments": {
+      "class": {
+        "Shared": "Ghép",
+        "Comfort": "Rưỡi",
+        "Private": "Riêng"
+      },
+      "classHint": {
+        "Shared": "Ghép: 3 con chung một khoang",
+        "Comfort": "Rưỡi: 2 con một khoang, rộng hơn",
+        "Private": "Riêng: 1 con một khoang"
+      },
+      "perCompartment": "{{count}} con/khoang",
+      "title": "Khoang {{number}}",
+      "count": "{{count}}/{{max}}",
+      "cabin": "Cabin",
+      "tray": "Ngựa chờ xếp ({{count}})",
+      "trayHint": "Kéo ngựa vào khoang, hoặc kéo về đây để bỏ xếp",
+      "trayEmpty": "Đã xếp hết ngựa vào khoang",
+      "positionEmpty": "Vị trí {{number}} · trống",
+      "positionBlocked": "Không dùng",
+      "needVsHave": "Cần {{needed}} khoang · xe có {{have}}",
+      "needOnly": "Cần {{needed}} khoang ({{detail}})",
+      "noVehicle": "Chọn xe để xếp ngựa vào khoang",
+      "autoArrange": "Tự xếp",
+      "arranged": "Đã xếp {{count}} con vào khoang",
+      "notEnough": "Xe chỉ có {{have}} khoang, cần {{needed}}: còn {{count}} con chưa có chỗ",
+      "vehicleCompartments": "{{count}} khoang",
+      "vehicleShort": "thiếu {{count}} khoang",
+      "positionShort": "Khoang {{compartment}} · VT {{position}}",
+      "unplacedShort": "Chưa xếp",
+      "reasons": {
+        "mixedClass": "Khoang {{number}} đang chở hạng {{current}}, không xếp chung ngựa hạng {{other}}",
+        "full": "Khoang {{number}} hạng {{current}} chỉ chở tối đa {{limit}} con"
+      },
+      "a11y": {
+        "instructions": "Nhấn Space hoặc Enter để nhấc ngựa, dùng phím mũi tên để di chuyển, nhấn Space hoặc Enter để thả, Esc để hủy.",
+        "pickUp": "Đã nhấc {{name}}",
+        "over": "{{name}} đang ở trên {{target}}",
+        "drop": "Đã thả {{name}} vào {{target}}",
+        "cancel": "Đã hủy kéo {{name}}",
+        "tray": "khay ngựa chờ xếp",
+        "position": "khoang {{compartment}} vị trí {{position}}"
+      }
     },
     "approvedRoute": {
       "title": "Tuyến đường đã được phê duyệt của đơn",
@@ -1945,6 +1991,8 @@
     "checkpointCancelled": "Mốc đã bỏ khi đổi tuyến",
     "healthTitle": "Nhật ký sức khỏe",
     "stall": "Ô chuồng {{number}}",
+    "position": "Khoang {{compartment}} · vị trí {{position}}",
+    "noPosition": "Chưa xếp khoang",
     "logCount": "{{count}} lần ghi",
     "noLogs": "Đoàn xe chưa ghi nhật ký sức khỏe nào cho con ngựa này",
     "log": {

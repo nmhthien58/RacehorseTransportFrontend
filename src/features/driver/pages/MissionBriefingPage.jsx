@@ -31,6 +31,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { formatHorsePosition } from '@utils/compartments';
 import { useDriverMissions } from '../hooks/useDriverMissions';
 import { getTripStatusMeta } from '../services/driverService';
 
@@ -410,7 +411,7 @@ export default function MissionBriefingPage() {
                             <span>
                               <Text strong>{h.horseName}</Text>
                               <span style={{ color: '#6B7280', marginLeft: 6 }}>
-                                (Chip: {h.microchipNumber} • Chuồng #{h.stallSlotNumber || 1}
+                                (Chip: {h.microchipNumber} • {formatHorsePosition(t, h)}
                                 {h.escortName ? ` • ${t('driver.escortAssign.escort', { name: h.escortName })}` : ''})
                               </span>
                             </span>

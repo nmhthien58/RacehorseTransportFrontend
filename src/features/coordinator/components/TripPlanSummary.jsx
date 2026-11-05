@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import StatusTag from '@components/common/StatusTag';
 import TripHorseStatusTag from '@components/common/TripHorseStatusTag';
 import StallMap from '@features/coordinator/components/StallMap';
+import { STALL_CLASS_COLORS, formatHorsePosition, positionOf, positionSortKey, vehicleCompartmentCount } from '@utils/compartments';
 // Đang sửa TripPlanSummary vì hiện vận đơn hàng không của chuyến cho mọi vai trò xem chuyến (FE-17)
 import AirWaybillCard from '@components/common/AirWaybillCard';
 
@@ -132,15 +133,17 @@ export default function TripPlanSummary({ trip }) {
       <Card size="small" title={t('tripPlan.sections.stallMap')} style={{ borderRadius: 12 }}>
         <StallMap
           readOnly
-          capacity={trip.vehicleCapacity || 0}
+          compartmentCount={vehicleCompartmentCount({ compartmentCount: trip.vehicleCompartmentCount, capacityHorses: trip.vehicleCapacity })}
           escorts={escortList}
           horses={(trip.horses || [])
             .filter((h) => h.status !== 'Cancelled' && h.status !== 'Offloaded')
             .map((h) => ({
               key: h.bookingHorseId,
-              slot: h.stallSlotNumber,
+              placement: positionOf(h),
               horseName: h.horseName,
               bookingCode: h.bookingCode,
+              bookingId: h.bookingId,
+              stallClass: h.stallClass,
               escortUserId: h.escortUserId,
             }))}
         />
@@ -151,10 +154,10 @@ export default function TripPlanSummary({ trip }) {
           size="small"
           rowKey="bookingHorseId"
           pagination={false}
-          dataSource={[...(trip.horses || [])].sort((a, b) => a.stallSlotNumber - b.stallSlotNumber)}
+          dataSource={[...(trip.horses || [])].sort((a, b) => positionSortKey(a) - positionSortKey(b))}
           scroll={{ x: 560 }}
           columns={[
-            { title: t('tripPlan.fields.slot'), dataIndex: 'stallSlotNumber', width: 70 },
+            { title: t('tripPlan.fields.slot'), width: 130, render: (_, h) => formatHorsePosition(t, h) },
             {
               title: t('tripPlan.fields.horse'),
               dataIndex: 'horseName',
@@ -167,7 +170,11 @@ export default function TripPlanSummary({ trip }) {
             },
             { title: t('tripPlan.fields.booking'), dataIndex: 'bookingCode' },
             { title: t('tripPlan.fields.escort'), dataIndex: 'escortName', render: (name) => name || '—' },
-            { title: t('tripPlan.fields.stallClass'), dataIndex: 'stallClass', render: (s) => <Tag>{s}</Tag> },
+            {
+              title: t('tripPlan.fields.stallClass'),
+              dataIndex: 'stallClass',
+              render: (s) => <Tag color={STALL_CLASS_COLORS[s || 'Shared']}>{t(`tripPlan.compartments.class.${s || 'Shared'}`)}</Tag>,
+            },
             { title: t('tripPlan.fields.dossier'), dataIndex: 'dossierStatus', render: (s) => <StatusTag status={s} /> },
             {
               title: t('tripPlan.fields.horseStatus'),

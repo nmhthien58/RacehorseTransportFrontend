@@ -14,6 +14,7 @@ import DeliveryFailedModal from '@features/driver/components/DeliveryFailedModal
 import recipientService from '@services/recipientService';
 import TripHorseStatusTag from '@components/common/TripHorseStatusTag';
 import { unwrapList, getErrorMessage } from '@utils/apiHelpers';
+import { formatHorsePosition } from '@utils/compartments';
 import { HANDOVER_CONDITIONS, HANDOVER_CONDITION_COLOR } from '@utils/incidents';
 
 const { Title, Text } = Typography;
@@ -375,7 +376,7 @@ export default function ArrivalHandoverPage() {
                     {[
                       horse.color,
                       horse.gender && t(`horses.genderOptions.${horse.gender.toLowerCase()}`, horse.gender),
-                      t('customerTrips.stall', { number: horse.stallSlotNumber })].filter(Boolean).join(' · ')}
+                      formatHorsePosition(t, horse)].filter(Boolean).join(' · ')}
                   </div>
                 </div>
                 <Checkbox

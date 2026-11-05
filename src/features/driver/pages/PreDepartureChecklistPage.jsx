@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import PageHeader from '@components/layout/PageHeader';
 import TripHorseStatusTag from '@components/common/TripHorseStatusTag';
+import DeliveryDeadlineList from '@components/common/DeliveryDeadlineList';
 import { ROUTES } from '@routes/routes';
 import { getTripStatusMeta } from '@features/driver/services/driverService';
 import { useMissionDetail } from '@features/driver/hooks/useDriverMissions';
@@ -496,6 +497,9 @@ export default function PreDepartureChecklistPage() {
                     : '—'}
                 </Descriptions.Item>
               </Descriptions>
+              <div style={{ marginTop: 12 }}>
+                <DeliveryDeadlineList bookings={mission.bookings || []} />
+              </div>
             </Card>
 
             <Card title={t('driver.checklist.operatingCrew')}>

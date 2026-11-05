@@ -13,6 +13,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import { getTripStatusMeta } from '../services/driverService';
+import DeliveryDeadlineList from '@components/common/DeliveryDeadlineList';
 
 const { Title, Text } = Typography;
 
@@ -200,6 +201,11 @@ export default function MissionHeaderCard({
           </div>
         </Col>
       </Row>
+
+      {/* Hạn giao khách đã đặt cho từng đơn, cảnh báo khi đã quá hạn */}
+      <div style={{ marginTop: 16 }}>
+        <DeliveryDeadlineList bookings={mission.bookings || []} />
+      </div>
 
       {/* Navigation Tabs giữa 4 màn của Flow */}
       <div

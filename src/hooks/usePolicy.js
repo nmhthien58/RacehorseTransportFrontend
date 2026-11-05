@@ -1,16 +1,15 @@
-import { useEffect, useState } from 'react';
-import { policyService } from '@services/policyService';
+import { useEffect, useState, useCallback } from 'react';
+import { policyService, DEFAULT_POLICY } from '@services/policyService';
 
-// Chính sách ít khi đổi: tải một lần trong phiên, các màn dùng chung kết quả
 let cachedPromise = null;
 
 const loadPolicy = () => {
   if (!cachedPromise) {
     cachedPromise = policyService
       .getPolicy()
-      .then((res) => res?.data ?? null)
+      .then((res) => res?.data ?? res ?? null)
       .catch((err) => {
-        cachedPromise = null; // lỗi mạng thì lần sau thử lại
+        cachedPromise = null;
         throw err;
       });
   }
@@ -18,21 +17,69 @@ const loadPolicy = () => {
 };
 
 /**
- * Chính sách dịch vụ hiện hành (phiên bản + giá trị cấu hình), dùng cho ô đồng ý chính sách và các con số hiển thị.
- * @returns {{ policy: Object | null, loading: boolean, error: Error | null }}
+ * @file usePolicy.js
+ * @description Hook lấy cấu hình chính sách dịch vụ dùng chung (FE-15).
+ * Lưu kết quả trong phiên làm việc để tái sử dụng.
+ *
+ * @returns {{
+ *   policy: Object,
+ *   loading: boolean,
+ *   error: Error|null,
+ *   refetch: () => Promise<Object>,
+ *   policyVersion: string,
+ *   effectiveDate: string
+ * }}
  */
-export default function usePolicy() {
-  const [state, setState] = useState({ policy: null, loading: true, error: null });
+export function usePolicy() {
+  const [state, setState] = useState({
+    policy: DEFAULT_POLICY,
+    loading: true,
+    error: null,
+  });
+
+  const fetchPolicy = useCallback(() => {
+    cachedPromise = null;
+    return loadPolicy()
+      .then((data) => {
+        const pol = data || DEFAULT_POLICY;
+        setState({ policy: pol, loading: false, error: null });
+        return pol;
+      })
+      .catch((err) => {
+        setState({ policy: DEFAULT_POLICY, loading: false, error: err });
+        return DEFAULT_POLICY;
+      });
+  }, []);
 
   useEffect(() => {
     let active = true;
     loadPolicy()
-      .then((policy) => active && setState({ policy, loading: false, error: null }))
-      .catch((error) => active && setState({ policy: null, loading: false, error }));
+      .then((data) => {
+        if (!active) return;
+        const pol = data || DEFAULT_POLICY;
+        setState({ policy: pol, loading: false, error: null });
+      })
+      .catch((err) => {
+        if (!active) return;
+        setState({ policy: DEFAULT_POLICY, loading: false, error: err });
+      });
     return () => {
       active = false;
     };
   }, []);
 
-  return state;
+  const policy = state.policy || DEFAULT_POLICY;
+  const policyVersion = policy?.version || policy?.PolicyVersion || DEFAULT_POLICY?.PolicyVersion || '1.0';
+  const effectiveDate = policy?.effectiveDate || policy?.EffectiveDate || DEFAULT_POLICY?.EffectiveDate || '';
+
+  return {
+    policy,
+    loading: state.loading,
+    error: state.error,
+    refetch: fetchPolicy,
+    policyVersion,
+    effectiveDate,
+  };
 }
+
+export default usePolicy;

@@ -53,16 +53,12 @@ export const useGoogleAuth = () => {
                 googleToken: tokenResponse.access_token,
               });
 
-              const user = authRes.user || {
-                userId: Date.now(),
-                fullName: profile.name || 'Google Customer',
-                email: profile.email,
-                role: 'Customer',
-                isActive: true,
-              };
-              const token = authRes.token || `mock-google-token-${user.userId}`;
+              const user = authRes.user || authRes.data?.user;
+              const token = authRes.accessToken || authRes.token || authRes.data?.accessToken;
+              const refreshToken = authRes.refreshToken || authRes.data?.refreshToken || null;
+              if (!user || !token) throw new Error('Google login failed');
 
-              login(user, token);
+              login(user, token, refreshToken);
               message.success(`Đăng nhập thành công với tài khoản Google: ${profile.email}`);
               navigate(ROUTES.CUSTOMER_DASHBOARD, { replace: true });
             } catch {
@@ -83,8 +79,8 @@ export const useGoogleAuth = () => {
     }
 
     // 2. Trường hợp chưa cấu hình Google Client ID trong .env:
-    // Mở hộp thoại thông báo hướng dẫn và cung cấp nút đăng nhập test với tài khoản Google giả lập
-    Modal.confirm({
+    // Mở hộp thoại hướng dẫn cấu hình
+    Modal.info({
       title: 'Cấu hình Google OAuth Client ID',
       width: 480,
       content: React.createElement(
@@ -125,30 +121,8 @@ export const useGoogleAuth = () => {
             ),
           ),
         ),
-        React.createElement(
-          'p',
-          { style: { margin: 0 } },
-          'Bạn có thể đăng nhập thử nghiệm ngay bây giờ bằng tài khoản Google demo (',
-          React.createElement('strong', null, 'Jane Smith'),
-          ' - customer@test.com)?',
-        ),
       ),
-      okText: 'Đăng nhập Google Test',
-      cancelText: 'Để sau',
-      onOk: async () => {
-        setIsGoogleLoading(true);
-        try {
-          const authRes = await googleLoginApi({
-            email: 'customer@test.com',
-            fullName: 'Jane Smith (Google)',
-          });
-          login(authRes.user, authRes.token);
-          message.success('Đăng nhập thành công với tài khoản Google test!');
-          navigate(ROUTES.CUSTOMER_DASHBOARD, { replace: true });
-        } finally {
-          setIsGoogleLoading(false);
-        }
-      },
+      okText: 'Đã hiểu',
     });
   };
 

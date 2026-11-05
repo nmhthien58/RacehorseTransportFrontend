@@ -1,21 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export const DEFAULT_CUSTOMER = {
-  userId: 5,
-  UserID: 5,
-  fullName: 'Jane Smith',
-  FullName: 'Jane Smith',
-  email: 'customer@test.com',
-  Email: 'customer@test.com',
-  role: 'Customer',
-  Role: 'Customer',
-  phoneNumber: '+84988111222',
-  Phone: '+84988111222',
-  MembershipTier: 'VIP Diamond Member',
-  FEIOwnerID: 'VN-OWN-2024-0089',
-};
-
 export const useAuthStore = create(
   persist(
     (set, get) => ({
@@ -27,7 +12,7 @@ export const useAuthStore = create(
       login: (user, token, refreshToken = null) =>
         set({
           user,
-          token: token || `mock-token-${user?.userId || Date.now()}`,
+          token,
           refreshToken: refreshToken || null,
           isAuthenticated: true,
         }),

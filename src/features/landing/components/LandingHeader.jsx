@@ -142,7 +142,7 @@ export default function LandingHeader({ activeKey = 'home' }) {
 
   const currentRole = user?.role || user?.Role || 'Customer';
   const isAdminOrManager = currentRole === ROLES.ADMIN || currentRole === ROLES.MANAGER;
-  const userFullName = user?.fullName || user?.FullName || (isAdminOrManager ? 'Admin Quản Trị' : 'Jane Smith');
+  const userFullName = user?.fullName || user?.FullName || '';
   const userEmail = user?.email || user?.Email || (isAdminOrManager ? 'admin@test.com' : 'customer@test.com');
 
   // Menu thả xuống cho User Profile (có My Profile, Dashboard, Logout)

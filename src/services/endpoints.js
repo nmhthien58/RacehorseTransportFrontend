@@ -290,6 +290,7 @@ export const ENDPOINTS = {
     SET_ACTIVE: (id) => `/price-items/${id}/active`,
   },
   COUNTRY_DOC_REQUIREMENTS: {
+    LIST: '/country-doc-requirements',
     CREATE: '/country-doc-requirements',
     UPDATE: (id) => `/country-doc-requirements/${id}`,
     DELETE: (id) => `/country-doc-requirements/${id}`,

@@ -8,8 +8,6 @@ import {
   Input,
   Layout,
   Space,
-  message,
-  Modal,
 } from 'antd';
 import {
   MenuFoldOutlined,
@@ -23,21 +21,14 @@ import {
   CreditCardOutlined,
   SettingOutlined,
   AuditOutlined,
-  SwapOutlined,
-  DownOutlined,
   SendOutlined,
   CompassOutlined,
   TeamOutlined,
-  ClearOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@routes/routes';
 import { ROLES } from '@utils/constants';
-import { useAuthStore } from '@features/auth/store/authStore';
-import usersData from '@mocks/data/users.json';
-import { getStoredUsers } from '@utils/userStorage';
-import { resetToCleanData } from '@utils/dataReset';
 import NotificationBell from './NotificationBell';
 
 const { Header } = Layout;
@@ -59,12 +50,11 @@ export default function AppHeader({
 }) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { login } = useAuthStore();
   // < md: ẩn ô tìm kiếm, chữ "Vai trò" và tên người dùng để header vừa màn điện thoại
   const screens = Grid.useBreakpoint();
   const isMobile = screens.md === false;
 
-  const userFullName = user?.fullName || user?.FullName || 'Jane Smith';
+  const userFullName = user?.fullName || user?.FullName || '';
   const userRole = user?.role || user?.Role;
   const isCustomer = userRole === ROLES.CUSTOMER;
   const isAdminOrManager = userRole === ROLES.ADMIN || userRole === ROLES.MANAGER;
@@ -73,69 +63,6 @@ export default function AppHeader({
     if (isAdminOrManager) return ROUTES.MANAGER_PROFILE;
     if (isCustomer) return ROUTES.CUSTOMER_PROFILE;
     return ROUTES.PROFILE;
-  };
-
-  // Danh sách các vai trò chuẩn hệ thống (Logistic Manager & Admin là 1)
-  const storedUsers = getStoredUsers();
-  const roleOptions = [
-    {
-      key: 'Customer',
-      title: 'Customer (Khách hàng)',
-      subtitle: `${userFullName} • Tạo yêu cầu vận chuyển ngựa`,
-      role: ROLES.CUSTOMER,
-      route: ROUTES.CUSTOMER_DASHBOARD,
-      user: storedUsers.find((u) => u.role === ROLES.CUSTOMER) || usersData.find((u) => u.role === ROLES.CUSTOMER),
-    },
-    {
-      key: 'LogisticsManager',
-      title: 'Logistics Manager (Quản lý & Admin)',
-      subtitle: 'Trần Quốc Bảo • Duyệt đơn khách & Duyệt kế hoạch lộ trình',
-      role: ROLES.MANAGER,
-      route: ROUTES.MANAGER_DASHBOARD,
-      user: storedUsers.find((u) => u.role === ROLES.MANAGER) || usersData.find((u) => u.role === ROLES.MANAGER),
-    },
-    {
-      key: 'FleetCoordinator',
-      title: 'Fleet & Route Coordinator (Điều phối)',
-      subtitle: 'Lê Hoàng Nam • Lập kế hoạch lộ trình, chọn xe, driver & escort',
-      role: ROLES.COORDINATOR,
-      route: ROUTES.COORDINATOR_DASHBOARD,
-      user: storedUsers.find((u) => u.role === ROLES.COORDINATOR) || usersData.find((u) => u.role === ROLES.COORDINATOR),
-    },
-    {
-      key: 'Driver',
-      title: 'Driver (Tài xế)',
-      subtitle: 'Phạm Văn Đức • Bắt đầu chuyến & Chạy lộ trình',
-      role: ROLES.DRIVER,
-      route: ROUTES.DRIVER_DASHBOARD,
-      user: storedUsers.find((u) => u.role === ROLES.DRIVER) || usersData.find((u) => u.role === ROLES.DRIVER),
-    },
-    {
-      key: 'Escort',
-      title: 'Escort (Bác sĩ áp tải)',
-      subtitle: 'Dr. Elena Rostova • Giám sát & Ghi log phúc lợi thú y',
-      role: ROLES.ESCORT,
-      route: ROUTES.DRIVER_DASHBOARD,
-      user: storedUsers.find((u) => u.role === ROLES.ESCORT) || usersData.find((u) => u.role === ROLES.ESCORT),
-    },
-    {
-      key: 'Specialist',
-      title: 'Transport Specialist (Kiểm dịch)',
-      subtitle: 'Nguyễn Thị Mai • Kiểm dịch & Hồ sơ xuất nhập cảnh',
-      role: ROLES.SPECIALIST,
-      route: ROUTES.SPECIALIST_DASHBOARD,
-      user: storedUsers.find((u) => u.role === ROLES.SPECIALIST) || usersData.find((u) => u.role === ROLES.SPECIALIST),
-    },
-  ];
-
-  const handleRoleSwitch = (opt) => {
-    if (!opt.user) return;
-    login(opt.user, `mock-token-${opt.user.userId}`);
-    message.success({
-      content: `Đã chuyển sang vai trò: ${opt.user.fullName} (${opt.title})`,
-      duration: 3,
-    });
-    navigate(opt.route);
   };
 
   const getRoleDisplayName = (role) => {
@@ -226,24 +153,6 @@ export default function AppHeader({
         ]
       : []),
     {
-      key: 'clean-data',
-      icon: <ClearOutlined style={{ color: '#ef4444' }} />,
-      label: <span style={{ color: '#ef4444', fontWeight: 600 }}>Dọn sạch dữ liệu mẫu (Reset Data)</span>,
-      onClick: () => {
-        Modal.confirm({
-          title: 'Xác nhận dọn dẹp dữ liệu mẫu?',
-          content: 'Toàn bộ đơn đặt chuyến, kế hoạch lộ trình, hồ sơ kiểm dịch và nhật ký vận chuyển sẽ được xóa sạch để bắt đầu từ đầu. MỌI TÀI KHOẢN NGƯỜI DÙNG ĐƯỢC GIỮ NGUYÊN 100%.',
-          okText: 'Dọn sạch ngay',
-          okType: 'danger',
-          cancelText: 'Hủy',
-          onOk: () => {
-            resetToCleanData();
-            message.success('Đã dọn dẹp dữ liệu mẫu thành công! Tất cả tài khoản người dùng vẫn được giữ nguyên.');
-          },
-        });
-      },
-    },
-    {
       type: 'divider',
     },
     {
@@ -311,55 +220,6 @@ export default function AppHeader({
 
       {/* Cụm bên phải: Ngôn ngữ, Chuông thông báo & Thông tin người dùng */}
       <Space size={isMobile ? 4 : 'middle'} align="center" style={{ flexShrink: 0 }}>
-        {/* Nút chuyển đổi nhanh vai trò hệ thống (Role Switcher) để test liền mạch */}
-        <Dropdown
-          menu={{
-            items: roleOptions.map((opt) => ({
-              key: opt.key,
-              label: (
-                <div style={{ padding: '4px 0' }}>
-                  <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 13 }}>
-                    {opt.title}
-                  </div>
-                  <div style={{ fontSize: 11, color: '#64748b' }}>
-                    {opt.subtitle}
-                  </div>
-                </div>
-              ),
-              onClick: () => handleRoleSwitch(opt),
-            })),
-          }}
-          placement="bottomRight"
-          trigger={['click']}
-        >
-          <Button
-            style={{
-              height: 38,
-              borderRadius: 20,
-              background: '#ffffff',
-              border: '1.5px solid #FBA919',
-              color: '#92400e',
-              fontWeight: 600,
-              fontSize: 13,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              boxShadow: '0 2px 4px rgba(251, 169, 25, 0.12)',
-            }}
-          >
-            <SwapOutlined style={{ color: '#d97706' }} />
-            {!isMobile && (
-              <span>
-                Vai trò:{' '}
-                <strong style={{ color: '#0f172a' }}>
-                  {getRoleDisplayName(userRole)}
-                </strong>
-              </span>
-            )}
-            <DownOutlined style={{ fontSize: 10, color: '#94a3b8' }} />
-          </Button>
-        </Dropdown>
-
         {/* Nút chuyển đổi ngôn ngữ */}
         <Button
           type="text"
@@ -403,7 +263,7 @@ export default function AppHeader({
                 {userFullName}
               </div>
               <div style={{ fontSize: 12, color: '#64748b' }}>
-                {isCustomer ? t('nav.ownerPortal', 'Owner Portal') : userRole || ''}
+                {isCustomer ? t('nav.ownerPortal', 'Owner Portal') : getRoleDisplayName(userRole)}
               </div>
             </div>
           </Flex>

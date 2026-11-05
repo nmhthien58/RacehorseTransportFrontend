@@ -1,5 +1,6 @@
 import api from '@services/api';
 import { ENDPOINTS } from '@services/endpoints';
+import { unwrapList } from '@utils/apiHelpers';
 
 /**
  * @file specialistDossierService.js
@@ -100,9 +101,19 @@ export const specialistDossierService = {
    * @param {{ countryCode?: string, direction?: string, search?: string }} [params]
    * @returns {Promise<{ data: import('@types/database').CountryDocRequirement[], total?: number }>}
    */
-  async getQuarantineRules() {
-    // Backend chưa có API đọc quy định giấy tờ theo quốc gia (API.md mục 14) -> hook dùng dữ liệu tham khảo
-    throw new Error('Quarantine rules API is not available yet');
+  async getQuarantineRules(params = {}) {
+    // GET /api/country-doc-requirements trả theo trang (tối đa 100 dòng / trang): đọc hết các trang
+    const size = 100;
+    const all = [];
+    for (let page = 1; page <= 20; page += 1) {
+      const res = await api.get(ENDPOINTS.COUNTRY_DOC_REQUIREMENTS.LIST, {
+        params: { countryCode: params.countryCode, direction: params.direction, page, size },
+      });
+      const items = unwrapList(res);
+      all.push(...items);
+      if (items.length < size) break;
+    }
+    return all;
   },
 
   /**

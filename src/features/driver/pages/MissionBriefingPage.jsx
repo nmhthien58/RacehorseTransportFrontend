@@ -368,7 +368,7 @@ export default function MissionBriefingPage() {
                         <Row gutter={8}>
                           <Col span={12}>
                             <Text type="secondary">Khách hàng: </Text>
-                            <strong>{mission.customerName || 'Jane Smith'}</strong>
+                            <strong>{mission.customerName || '---'}</strong>
                             <div style={{ color: '#6B7280', fontSize: 11 }}>
                               <PhoneOutlined style={{ marginRight: 4 }} />
                               {mission.customerPhone || '+84 988 111 222'}
@@ -376,7 +376,7 @@ export default function MissionBriefingPage() {
                           </Col>
                           <Col span={12}>
                             <Text type="secondary">Điều phối viên: </Text>
-                            <strong>{mission.coordinatorName || 'Lê Hoàng Nam'}</strong>
+                            <strong>{mission.coordinatorName || '---'}</strong>
                             <div style={{ color: '#6B7280', fontSize: 11 }}>
                               <PhoneOutlined style={{ marginRight: 4 }} />
                               {mission.coordinatorPhone || '+84 912 000 003'}

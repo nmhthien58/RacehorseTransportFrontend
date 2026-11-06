@@ -3757,5 +3757,24 @@
   "restCountdown": {
     "resting": "Ngựa đang nghỉ bắt buộc: còn {{time}} (đủ {{minutes}} phút lúc {{until}}). Chưa được rời mốc.",
     "rested": "Đã nghỉ đủ {{minutes}} phút, có thể rời mốc."
+  },
+  "refundConfirm": {
+    "title": "Xác nhận hoàn tiền bồi thường · {{code}}",
+    "ok": "Xác nhận duyệt & hoàn tiền",
+    "intro": "Duyệt khoản bồi thường {{amount}}.",
+    "how": "Khách không cần cung cấp số tài khoản: hệ thống gọi API hoàn tiền của VNPay theo mã giao dịch khách đã thanh toán, tiền về đúng thẻ / tài khoản đã dùng để trả. Giao dịch trả sau cùng được hoàn trước.",
+    "txn": "Mã giao dịch",
+    "vnpayNo": "Mã VNPay: {{no}}",
+    "original": "Giao dịch gốc",
+    "refund": "Hoàn lại",
+    "overflow": "Vượt số tiền khách đã trả {{amount}}: không hoàn qua VNPay được, hãy giảm số tiền duyệt.",
+    "type": {
+      "Deposit": "Đặt cọc",
+      "Balance": "Phần còn lại",
+      "Extra": "Phát sinh"
+    },
+    "manualHow": "Khoản khách trả ngoài hệ thống (Manual) không hoàn qua VNPay được: hệ thống tạo lệnh hoàn chờ xử lý, kế toán chuyển khoản tay rồi bấm \"Đã hoàn thủ công\" ở phần Thanh toán của đơn.",
+    "vnpayTag": "Hoàn tự động qua VNPay",
+    "manualTag": "Hoàn thủ công"
   }
 }

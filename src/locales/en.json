@@ -3758,5 +3758,24 @@
   "restCountdown": {
     "resting": "Mandatory rest: {{time}} left ({{minutes}} min, until {{until}}). You cannot leave yet.",
     "rested": "Rested {{minutes}} min, you can leave."
+  },
+  "refundConfirm": {
+    "title": "Confirm compensation refund · {{code}}",
+    "ok": "Approve & refund",
+    "intro": "Approve a compensation of {{amount}}.",
+    "how": "The customer does not need to give a bank account: the system calls VNPay's refund API on the customer's original transactions, so the money goes back to the card / account used to pay. The latest payment is refunded first.",
+    "txn": "Transaction",
+    "vnpayNo": "VNPay no.: {{no}}",
+    "original": "Original payment",
+    "refund": "Refund",
+    "overflow": "{{amount}} is more than the customer paid: it cannot be refunded through VNPay, lower the approved amount.",
+    "type": {
+      "Deposit": "Deposit",
+      "Balance": "Balance",
+      "Extra": "Extra charges"
+    },
+    "manualHow": "Payments made outside the system (Manual) cannot be refunded through VNPay: a pending refund is created, finance transfers it by hand and records it in the booking's Payments section.",
+    "vnpayTag": "Auto refund via VNPay",
+    "manualTag": "Manual refund"
   }
 }

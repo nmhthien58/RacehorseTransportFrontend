@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Card, Row, Col, Typography, Tag, Button, Form, Input, Radio, Spin, Alert, Empty, Image, Space, Checkbox, message } from 'antd';
+import { Card, Row, Col, Typography, Tag, Button, Form, Input, Radio, Spin, Alert, Empty, Image, Space, message } from 'antd';
 import { FileDoneOutlined, StopOutlined } from '@ant-design/icons';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +15,13 @@ import recipientService from '@services/recipientService';
 import TripHorseStatusTag from '@components/common/TripHorseStatusTag';
 import { unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import { HANDOVER_CONDITIONS, HANDOVER_CONDITION_COLOR } from '@utils/incidents';
+
+// Màu thẻ ngựa theo kết quả đối chiếu vi mạch
+const CHIP_BORDER = { empty: '#E7E5E4', match: '#86EFAC', mismatch: '#FCA5A5' };
+const CHIP_BG = { empty: '#FFFFFF', match: '#F0FDF4', mismatch: '#FEF2F2' };
+
+// Chỉ hiện 4 số cuối để tài xế phải quét thật, không chép lại mã
+const maskChip = (chip) => (chip ? `•••${String(chip).slice(-4)}` : '—');
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -39,7 +46,8 @@ export default function ArrivalHandoverPage() {
     searchParams.get('booking') ? Number(searchParams.get('booking')) : null,
   );
   // tripHorseId -> đã đối chiếu con ngựa thật với ảnh / dữ liệu trên hệ thống
-  const [verified, setVerified] = useState({});
+  // Mã vi mạch tài xế quét / nhập cho từng con: { [tripHorseId]: string }
+  const [scannedChips, setScannedChips] = useState({});
   const [signature, setSignature] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [sosModalOpen, setSosModalOpen] = useState(false);
@@ -129,12 +137,18 @@ export default function ArrivalHandoverPage() {
 
 
   const activeHorses = activeBooking ? onBoardOf(activeBooking.bookingId) : [];
-  const allVerified = activeHorses.length > 0 && activeHorses.every((h) => verified[h.tripHorseId]);
+  const normalizeChip = (value) => (value || '').replace(/\s/g, '').toUpperCase();
+  const chipState = (horse) => {
+    const typed = normalizeChip(scannedChips[horse.tripHorseId]);
+    if (!typed) return 'empty';
+    return typed === normalizeChip(horse.microchipNumber) ? 'match' : 'mismatch';
+  };
+  const allVerified = activeHorses.length > 0 && activeHorses.every((h) => chipState(h) === 'match');
 
   // Đang sửa ArrivalHandoverPage vì tự điền người nhận và chặn hoàn tất nếu ký thay chưa duyệt theo FE-13 (R-16)
   const openForm = (bookingId) => {
     setActiveBookingId(bookingId);
-    setVerified({});
+    setScannedChips({});
     setSignature(null);
     const b = bookings.find((item) => item.bookingId === bookingId);
     // Người nhận đã đăng ký của đơn (GET /api/trips/{id}/recipients); người nhận thay đã được khách duyệt thì ưu tiên
@@ -174,8 +188,8 @@ export default function ArrivalHandoverPage() {
         recipientIdCard: values.recipientIdCard.trim(),
         overallCondition: values.overallCondition,
         remarks: values.remarks?.trim(),
-        // Backend vẫn đối chiếu mã vi mạch với đơn: gửi mã trong hồ sơ của các con vừa được xác nhận
-        microchipNumbers: activeHorses.map((h) => h.microchipNumber),
+        // Gửi đúng mã tài xế đã quét; backend đối chiếu lại với hồ sơ đơn
+        microchipNumbers: activeHorses.map((h) => normalizeChip(scannedChips[h.tripHorseId])),
         signature: blob,
       });
       message.success(t('handover.form.success', { code: activeBooking.bookingCode }));
@@ -341,8 +355,8 @@ export default function ArrivalHandoverPage() {
                   padding: 12,
                   marginBottom: 10,
                   borderRadius: 8,
-                  border: `1px solid ${verified[horse.tripHorseId] ? '#86EFAC' : '#E7E5E4'}`,
-                  background: verified[horse.tripHorseId] ? '#F0FDF4' : '#FFFFFF',
+                  border: `1px solid ${CHIP_BORDER[chipState(horse)]}`,
+                  background: CHIP_BG[chipState(horse)],
                 }}
               >
                 {horse.photoUrl ? (
@@ -369,7 +383,7 @@ export default function ArrivalHandoverPage() {
                 <div style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 1.6 }}>
                   <Text strong style={{ fontSize: 14 }}>{horse.horseName}</Text>
                   <div>
-                    {t('handover.form.microchip')}: <Text code>{horse.microchipNumber || '—'}</Text>
+                    {t('handover.form.microchipOnFile', 'Vi mạch trong hồ sơ (4 số cuối)')}: <Text code>{maskChip(horse.microchipNumber)}</Text>
                   </div>
                   <div style={{ color: '#57534E' }}>
                     {[
@@ -378,12 +392,27 @@ export default function ArrivalHandoverPage() {
                       t('customerTrips.stall', { number: horse.stallSlotNumber })].filter(Boolean).join(' · ')}
                   </div>
                 </div>
-                <Checkbox
-                  checked={Boolean(verified[horse.tripHorseId])}
-                  onChange={(e) => setVerified((prev) => ({ ...prev, [horse.tripHorseId]: e.target.checked }))}
-                >
-                  {t('handover.form.verified')}
-                </Checkbox>
+                <div style={{ width: 230, flexShrink: 0 }}>
+                  <Input
+                    allowClear
+                    inputMode="numeric"
+                    maxLength={20}
+                    placeholder={t('handover.form.scanChip', 'Quét / nhập mã vi mạch')}
+                    status={chipState(horse) === 'mismatch' ? 'error' : undefined}
+                    value={scannedChips[horse.tripHorseId] || ''}
+                    onChange={(e) => setScannedChips((prev) => ({ ...prev, [horse.tripHorseId]: e.target.value }))}
+                  />
+                  {chipState(horse) === 'match' && (
+                    <Text type="success" style={{ fontSize: 12 }}>
+                      {t('handover.form.chipMatch', 'Khớp hồ sơ')}
+                    </Text>
+                  )}
+                  {chipState(horse) === 'mismatch' && (
+                    <Text type="danger" style={{ fontSize: 12 }}>
+                      {t('handover.form.chipMismatch', 'Không khớp hồ sơ, không được bàn giao con ngựa này')}
+                    </Text>
+                  )}
+                </div>
               </div>
             ))}
 

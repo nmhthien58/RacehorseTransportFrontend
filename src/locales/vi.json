@@ -2193,11 +2193,15 @@
       "verified": "Đã đối chiếu",
       "noPhoto": "Chưa có ảnh",
       "microchip": "Mã vi mạch",
-      "horsesNotVerified": "Còn ngựa chưa được đối chiếu",
+      "horsesNotVerified": "Còn ngựa chưa quét đúng mã vi mạch",
       "presenceConfirmed": "Đã xác nhận có mặt",
       "presenceUnconfirmed": "Chưa xác nhận có mặt",
       "alternateApproved": "Khách hàng đã chấp thuận cho người này nhận thay.",
-      "alternateWait": "Người ký khác người nhận trên đơn. Cần khách hàng xác nhận nhận thay trên ứng dụng trước khi hoàn tất."
+      "alternateWait": "Người ký khác người nhận trên đơn. Cần khách hàng xác nhận nhận thay trên ứng dụng trước khi hoàn tất.",
+      "microchipOnFile": "Vi mạch trong hồ sơ (4 số cuối)",
+      "scanChip": "Quét / nhập mã vi mạch",
+      "chipMatch": "Khớp hồ sơ",
+      "chipMismatch": "Không khớp hồ sơ, không được bàn giao con ngựa này"
     },
     "dropoffAt": "Điểm trả: {{name}} · dự kiến {{time}}",
     "waitingDropoff": "Chờ xe tới điểm trả",
@@ -2620,7 +2624,8 @@
     "status": "Trạng thái",
     "reason": "Nguyên nhân",
     "actions": {
-      "adjust": "Sửa số tiền"
+      "adjust": "Sửa số tiền",
+      "reject": "Từ chối"
     },
     "adjustModal": {
       "title": "Điều chỉnh số tiền bồi thường giao trễ",
@@ -2634,7 +2639,15 @@
       "approveFailed": "Duyệt thất bại",
       "reasonRequired": "Vui lòng nhập lý do điều chỉnh số tiền",
       "adjustedSuccess": "Đã điều chỉnh và duyệt số tiền bồi thường",
-      "adjustFailed": "Điều chỉnh thất bại"
+      "adjustFailed": "Điều chỉnh thất bại",
+      "rejectReasonRequired": "Vui lòng nhập lý do từ chối",
+      "rejected": "Đã từ chối bồi thường giao trễ",
+      "rejectFailed": "Từ chối thất bại"
+    },
+    "rejectModal": {
+      "title": "Từ chối bồi thường giao trễ",
+      "hint": "Chỉ từ chối khi lý do trễ không thuộc trách nhiệm công ty (bất khả kháng, lỗi khách hàng...). Khách sẽ nhận thông báo kèm lý do.",
+      "reasonPlaceholder": "Ví dụ: trễ do cửa khẩu đóng đột xuất (bất khả kháng)..."
     }
   },
   "claims": {

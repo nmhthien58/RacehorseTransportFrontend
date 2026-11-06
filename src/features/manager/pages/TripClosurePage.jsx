@@ -69,6 +69,8 @@ export default function TripClosurePage() {
   const [newAmount, setNewAmount] = useState(0);
   const [adjustReason, setAdjustReason] = useState('');
   const [actionCompLoading, setActionCompLoading] = useState(false);
+  const [rejectComp, setRejectComp] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
 
   // Danh sách chuyến chỉ có tóm tắt; tải chi tiết để có đơn, KPI, chi phí
   const load = useCallback(
@@ -155,6 +157,24 @@ export default function TripClosurePage() {
       if (selected) openTrip(selected);
     } catch (err) {
       message.error(getErrorMessage(err, t('delayCompensation.messages.adjustFailed', 'Điều chỉnh thất bại')));
+    } finally {
+      setActionCompLoading(false);
+    }
+  };
+
+  const handleRejectCompensation = async () => {
+    if (!rejectReason.trim()) {
+      message.warning(t('delayCompensation.messages.rejectReasonRequired', 'Vui lòng nhập lý do từ chối'));
+      return;
+    }
+    setActionCompLoading(true);
+    try {
+      await delayCompensationService.reject(rejectComp.delayCompensationId, { reason: rejectReason.trim() });
+      message.success(t('delayCompensation.messages.rejected', 'Đã từ chối bồi thường giao trễ'));
+      setRejectComp(null);
+      if (selected) openTrip(selected);
+    } catch (err) {
+      message.error(getErrorMessage(err, t('delayCompensation.messages.rejectFailed', 'Từ chối thất bại')));
     } finally {
       setActionCompLoading(false);
     }
@@ -338,6 +358,16 @@ export default function TripClosurePage() {
                         >
                           {t('delayCompensation.actions.adjust', 'Sửa số tiền')}
                         </Button>
+                        <Button
+                          size="small"
+                          danger
+                          onClick={() => {
+                            setRejectComp(comp);
+                            setRejectReason('');
+                          }}
+                        >
+                          {t('delayCompensation.actions.reject', 'Từ chối')}
+                        </Button>
                       </>
                     )}
                   </Space>
@@ -428,6 +458,28 @@ export default function TripClosurePage() {
             />
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        title={t('delayCompensation.rejectModal.title', 'Từ chối bồi thường giao trễ')}
+        open={Boolean(rejectComp)}
+        onCancel={() => setRejectComp(null)}
+        onOk={handleRejectCompensation}
+        confirmLoading={actionCompLoading}
+        okText={t('delayCompensation.actions.reject', 'Từ chối')}
+        okButtonProps={{ danger: true }}
+        destroyOnClose
+      >
+        <p style={{ marginTop: 12 }}>
+          {t('delayCompensation.rejectModal.hint', 'Chỉ từ chối khi lý do trễ không thuộc trách nhiệm công ty (bất khả kháng, lỗi khách hàng...). Khách sẽ nhận thông báo kèm lý do.')}
+        </p>
+        <TextArea
+          rows={3}
+          maxLength={500}
+          placeholder={t('delayCompensation.rejectModal.reasonPlaceholder', 'Ví dụ: trễ do cửa khẩu đóng đột xuất (bất khả kháng)...')}
+          value={rejectReason}
+          onChange={(e) => setRejectReason(e.target.value)}
+        />
       </Modal>
     </div>
   );

@@ -2194,11 +2194,15 @@
       "verified": "Checked",
       "noPhoto": "No photo",
       "microchip": "Microchip",
-      "horsesNotVerified": "Some horses have not been checked yet",
+      "horsesNotVerified": "Some horses do not have a matching microchip scan yet",
       "presenceConfirmed": "Presence Confirmed",
       "presenceUnconfirmed": "Presence Unconfirmed",
       "alternateApproved": "Customer approved this alternate recipient.",
-      "alternateWait": "Signer differs from booking recipient. Customer confirmation is required."
+      "alternateWait": "Signer differs from booking recipient. Customer confirmation is required.",
+      "microchipOnFile": "Microchip on file (last 4 digits)",
+      "scanChip": "Scan / enter microchip",
+      "chipMatch": "Matches the record",
+      "chipMismatch": "Does not match the record, this horse cannot be handed over"
     },
     "dropoffAt": "Drop-off: {{name}} · planned {{time}}",
     "waitingDropoff": "Waiting to reach the drop-off",
@@ -2621,7 +2625,8 @@
     "status": "Status",
     "reason": "Reason",
     "actions": {
-      "adjust": "Adjust Amount"
+      "adjust": "Adjust Amount",
+      "reject": "Reject"
     },
     "adjustModal": {
       "title": "Adjust Delay Compensation Amount",
@@ -2635,7 +2640,15 @@
       "approveFailed": "Approval failed",
       "reasonRequired": "Please enter adjustment reason",
       "adjustedSuccess": "Compensation adjusted and approved",
-      "adjustFailed": "Adjustment failed"
+      "adjustFailed": "Adjustment failed",
+      "rejectReasonRequired": "Please enter the rejection reason",
+      "rejected": "Delay compensation rejected",
+      "rejectFailed": "Rejection failed"
+    },
+    "rejectModal": {
+      "title": "Reject Delay Compensation",
+      "hint": "Only reject when the delay is not the company's responsibility (force majeure, customer fault...). The customer is notified with the reason.",
+      "reasonPlaceholder": "E.g. border gate closed unexpectedly (force majeure)..."
     }
   },
   "claims": {

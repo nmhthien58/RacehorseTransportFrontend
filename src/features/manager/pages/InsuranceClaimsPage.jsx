@@ -83,22 +83,8 @@ export default function InsuranceClaimsPage() {
     setDetailModalOpen(true);
   };
 
-  // Tính trần bồi thường tối đa theo chính sách R-13
-  const maxCap = useMemo(() => {
-    if (!selectedClaim) return 0;
-    const agreed = Number(selectedClaim.agreedValue || 50000);
-    const plan = selectedClaim.insurancePlan || 'Full';
-    const type = selectedClaim.claimType;
-
-    if (plan === 'Full') {
-      if (type === 'Death' || type === 'Loss') return agreed;
-      // Injury: chi phí thú y tối đa 15% giá trị thỏa thuận (theo chính sách)
-      return Math.round(agreed * 0.15);
-    }
-    // Plan === 'None': trách nhiệm cơ bản
-    if (type === 'Death' || type === 'Loss') return 10000;
-    return 3000;
-  }, [selectedClaim]);
+  // Trần chi trả do backend tính từ cài đặt chính sách (ClaimRules.Cap), không tự tính lại ở đây
+  const maxCap = useMemo(() => Number(selectedClaim?.cap ?? 0), [selectedClaim]);
 
   const handleReviewClaim = async () => {
     if (!selectedClaim) return;

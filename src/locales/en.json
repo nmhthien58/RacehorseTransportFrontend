@@ -1551,7 +1551,7 @@
       "crew": "Crew",
       "route": "Route",
       "bookings": "Bookings on this trip",
-      "stallMap": "Stall map & escorts in charge"
+      "stallMap": "Compartments & escorts in charge"
     },
     "fields": {
       "status": "Status",
@@ -1565,7 +1565,7 @@
       "rejections": "Times returned",
       "lead": "Lead",
       "horseCount": "{{count}} horse(s)",
-      "slot": "Slot",
+      "slot": "Compartment / Position",
       "horse": "Horse",
       "booking": "Booking",
       "stallClass": "Stall class",
@@ -1660,6 +1660,8 @@
       "incompleteCheckpoint": "Fill in name, address and time for every checkpoint",
       "overCapacity": "Exceeds vehicle capacity ({{capacity}} horses)",
       "needBookingForStop": "Pick-up / Drop-off stops need a booking",
+      "notEnoughCompartments": "The vehicle has {{have}} compartments; the selected horses need {{needed}}",
+      "unplacedHorses": "{{count}} horse(s) not placed in a compartment yet. Drag them in or click Auto-arrange.",
       "suggestNeedInput": "Choose horses and a departure time first",
       "suggestFailed": "Could not suggest a route",
       "suggested": "Route replaced with the suggestion",
@@ -1698,7 +1700,51 @@
       "unassigned": "No escort yet",
       "autoPlaceholder": "Auto on save",
       "emptySlot": "Empty stall",
-      "hint": "Click a stall with a horse, then another stall, to swap them. Each escort looks after at most 3 horses; stalls left without an escort are auto-assigned on save (stalls 1-3 to the first escort, lead escort first)."
+      "hint": "Drag a horse card into a compartment; drop it on another horse to swap, or back on the tray to unassign (keyboard: Space to pick up, arrow keys to move, Space to drop). Each compartment carries one stall class only. Each escort looks after at most 3 horses; compartments without an escort are auto-assigned on save."
+    },
+    "compartments": {
+      "class": {
+        "Shared": "Shared",
+        "Comfort": "Comfort",
+        "Private": "Private"
+      },
+      "classHint": {
+        "Shared": "Shared: 3 horses per compartment",
+        "Comfort": "Comfort: 2 horses per compartment, more room",
+        "Private": "Private: 1 horse per compartment"
+      },
+      "perCompartment": "{{count}}/compartment",
+      "title": "Compartment {{number}}",
+      "count": "{{count}}/{{max}}",
+      "cabin": "Cab",
+      "tray": "Horses to place ({{count}})",
+      "trayHint": "Drag horses into a compartment, or back here to unassign",
+      "trayEmpty": "All horses are placed",
+      "positionEmpty": "Position {{number}} · empty",
+      "positionBlocked": "Not used",
+      "needVsHave": "Needs {{needed}} compartments · vehicle has {{have}}",
+      "needOnly": "Needs {{needed}} compartments ({{detail}})",
+      "noVehicle": "Choose a vehicle to place horses in compartments",
+      "autoArrange": "Auto-arrange",
+      "arranged": "Placed {{count}} horse(s) in compartments",
+      "notEnough": "The vehicle has only {{have}} compartments but {{needed}} are needed: {{count}} horse(s) left without a place",
+      "vehicleCompartments": "{{count}} compartments",
+      "vehicleShort": "{{count}} compartment(s) short",
+      "positionShort": "Comp. {{compartment}} · Pos. {{position}}",
+      "unplacedShort": "Not placed",
+      "reasons": {
+        "mixedClass": "Compartment {{number}} carries {{current}} horses; a {{other}} horse cannot share it",
+        "full": "Compartment {{number}} ({{current}}) holds at most {{limit}} horse(s)"
+      },
+      "a11y": {
+        "instructions": "Press Space or Enter to pick up a horse, use the arrow keys to move, press Space or Enter to drop, Esc to cancel.",
+        "pickUp": "Picked up {{name}}",
+        "over": "{{name}} is over {{target}}",
+        "drop": "Dropped {{name}} on {{target}}",
+        "cancel": "Cancelled dragging {{name}}",
+        "tray": "the waiting tray",
+        "position": "compartment {{compartment}} position {{position}}"
+      }
     },
     "approvedRoute": {
       "title": "Approved Route Plan for Booking",
@@ -1946,6 +1992,8 @@
     "checkpointCancelled": "Dropped when the trip was rerouted",
     "healthTitle": "Health logs",
     "stall": "Stall {{number}}",
+    "position": "Compartment {{compartment}} · position {{position}}",
+    "noPosition": "Not placed yet",
     "logCount": "{{count}} entries",
     "noLogs": "The crew has not logged this horse yet",
     "log": {

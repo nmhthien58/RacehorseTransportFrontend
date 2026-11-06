@@ -33,6 +33,7 @@ import { useDriverMissions, useMissionDetail } from '../hooks/useDriverMissions'
 import { getTripStatusMeta, driverService } from '../services/driverService';
 import EmergencyReportModal from '../components/EmergencyReportModal';
 import { getErrorMessage } from '@utils/apiHelpers';
+import { formatHorsePosition } from '@utils/compartments';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -334,7 +335,7 @@ export default function ActiveTripPage() {
                       <div>
                         <Text strong style={{ fontSize: 14, color: '#1E293B' }}>{horse.horseName}</Text>
                         <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                          Mã chip: {horse.microchipNumber || '—'} • Chuồng #{horse.stallSlotNumber || 1}
+                          Mã chip: {horse.microchipNumber || '—'} • {formatHorsePosition(t, horse)}
                         </div>
                       </div>
                       {log && (

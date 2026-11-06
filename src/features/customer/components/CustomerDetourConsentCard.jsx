@@ -156,7 +156,16 @@ export default function CustomerDetourConsentCard({ booking, onChanged }) {
               type="warning"
               showIcon
               style={{ margin: '12px 0' }}
-              title={t('detourConsent.cost', { amount: formatUsd(inc.extraCostForCustomer) })}
+              title={
+                inc.myExtraCostShare != null
+                  ? t('detourConsent.myShare', {
+                      share: formatUsd(inc.myExtraCostShare),
+                      mine: inc.myHorsesOnBoard,
+                      total: inc.horsesOnBoard,
+                      amount: formatUsd(inc.extraCostForCustomer),
+                    })
+                  : t('detourConsent.cost', { amount: formatUsd(inc.extraCostForCustomer) })
+              }
               description={t('detourConsent.costNote')}
             />
             {mine && (

@@ -2809,6 +2809,10 @@
       "title": "Đã chấp nhận báo giá, chờ đặt cọc",
       "description": "Hãy đặt cọc {{amount}} trước {{time}}; quá hạn thì đơn tự đóng.",
       "pay": "Đặt cọc qua VNPay"
+    },
+    "disabledReason": {
+      "openContract": "Chưa bấm được: hãy bấm \"Xem hợp đồng\" và đọc hợp đồng trước.",
+      "tickAgreement": "Chưa bấm được: hãy tick ô đồng ý hợp đồng và chính sách ở trên."
     }
   },
   "contract": {
@@ -3213,7 +3217,8 @@
     "canChange": "có thể đổi tới khi có kết quả",
     "acceptedMsg": "Đã ghi nhận bạn đồng ý đi vòng",
     "declinedMsg": "Đã ghi nhận bạn không đồng ý",
-    "failed": "Không gửi được câu trả lời"
+    "failed": "Không gửi được câu trả lời",
+    "myShare": "Phần của bạn: {{share}} ({{mine}}/{{total}} ngựa trên xe; cả xe {{amount}})"
   },
   "companyDocs": {
     "uploadTitle": "Tải lên giấy công ty đã xin",

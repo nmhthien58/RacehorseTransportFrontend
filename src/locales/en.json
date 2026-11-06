@@ -2810,6 +2810,10 @@
       "title": "Quote accepted, deposit pending",
       "description": "Please pay the {{amount}} deposit before {{time}}, otherwise the booking closes.",
       "pay": "Pay deposit via VNPay"
+    },
+    "disabledReason": {
+      "openContract": "Not available yet: click \"View contract\" and read it first.",
+      "tickAgreement": "Not available yet: tick the contract and policy agreement above."
     }
   },
   "contract": {
@@ -3214,7 +3218,8 @@
     "canChange": "you can change it until there is a result",
     "acceptedMsg": "Your agreement has been recorded",
     "declinedMsg": "Your refusal has been recorded",
-    "failed": "Could not send your answer"
+    "failed": "Could not send your answer",
+    "myShare": "Your share: {{share}} ({{mine}}/{{total}} horses on board; whole vehicle {{amount}})"
   },
   "companyDocs": {
     "uploadTitle": "Upload a permit we obtained",

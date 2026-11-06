@@ -397,6 +397,12 @@ export default function CustomerQuoteCard({ booking, onChanged }) {
             >
               {t('quote.acceptAndPay')}
             </Button>
+            {/* Nút mờ thì nói rõ còn thiếu bước nào */}
+            {!canAccept && (
+              <Text type="warning" style={{ fontSize: 12 }}>
+                {!openedCurrent ? t('quote.disabledReason.openContract') : t('quote.disabledReason.tickAgreement')}
+              </Text>
+            )}
             <Text type="secondary" style={{ fontSize: 12 }}>
               {t('quote.acceptNote')}
             </Text>

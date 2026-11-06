@@ -21,6 +21,8 @@ import {
 import TripHorseStatusTag from '@components/common/TripHorseStatusTag';
 // Đang sửa TripJourney vì khách cần thấy kết quả sự cố: ngựa rời chuyến, quay về, phí đi vòng, nguyên nhân (FE-10)
 import IncidentOutcome from '@components/common/IncidentOutcome';
+// Khách xem ảnh hiện trường / biên bản thú y của sự cố
+import IncidentDocuments from '@components/common/IncidentDocuments';
 import styles from './TripJourney.module.css';
 
 const { Text } = Typography;
@@ -287,6 +289,9 @@ export default function TripJourney({ trip, lastLoadedAt, onRefresh }) {
                         <IncidentOutcome incident={inc} />
                       </div>
                     )}
+                    <div style={{ marginTop: 4 }}>
+                      <IncidentDocuments incident={inc} />
+                    </div>
                   </div>
                 ))
               )}
@@ -306,6 +311,33 @@ export default function TripJourney({ trip, lastLoadedAt, onRefresh }) {
                     {t('customerTrips.logCount', { count: horse.logs.length })} <TripHorseStatusTag status={horse.status} />
                     {horse.deliveredAt && <div>{t('customerTrips.deliveredAt', { time: formatTime(horse.deliveredAt) })}</div>}
                     {horse.offloadReason && <div>{t('customerTrips.offloadReason', { reason: horse.offloadReason })}</div>}
+                    {horse.vetClinic && (
+                      <Alert
+                        type="warning"
+                        showIcon
+                        style={{ marginTop: 8 }}
+                        title={t('incidentHealth.customer.clinicTitle', { horse: horse.horseName })}
+                        description={
+                          <div>
+                            <div>
+                              <strong>{horse.vetClinic.name}</strong> · {horse.vetClinic.address}
+                            </div>
+                            {(horse.vetClinic.phone || horse.vetClinic.attendingVetName) && (
+                              <div>{[horse.vetClinic.phone, horse.vetClinic.attendingVetName].filter(Boolean).join(' · ')}</div>
+                            )}
+                            {horse.vetExpenseAmount != null && (
+                              <div>
+                                {t('incidentHealth.clinic.expenseLine', { amount: `$${Number(horse.vetExpenseAmount).toLocaleString()}` })}{' '}
+                                <Tag color={horse.vetExpenseBearer === 'Company' ? 'green' : 'orange'}>
+                                  {t(`incidentHealth.clinic.bearer.${horse.vetExpenseBearer}`)}
+                                </Tag>
+                              </div>
+                            )}
+                            <div style={{ marginTop: 4 }}>{t('incidentHealth.customer.clinicNext')}</div>
+                          </div>
+                        }
+                      />
+                    )}
                   </div>
                 )}
               </div>

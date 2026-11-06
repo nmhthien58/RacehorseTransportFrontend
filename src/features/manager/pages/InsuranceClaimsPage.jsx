@@ -317,6 +317,12 @@ export default function InsuranceClaimsPage() {
                 <Text strong style={{ color: '#047857', fontSize: 15 }}>
                   {Number(maxCap).toLocaleString()} USD
                 </Text>
+                {/* Hồ sơ tử vong bổ sung: trần đã trừ phần đã duyệt cho con ngựa (Chính sách 9.6) */}
+                {Number(selectedClaim.priorApprovedForHorse) > 0 && (
+                  <div style={{ fontSize: 12, color: '#64748B' }}>
+                    {t('incidentHealth.claims.priorApproved', { amount: Number(selectedClaim.priorApprovedForHorse).toLocaleString() })}
+                  </div>
+                )}
               </Descriptions.Item>
             </Descriptions>
 

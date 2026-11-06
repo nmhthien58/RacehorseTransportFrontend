@@ -1,11 +1,87 @@
 import { useState } from 'react';
-import { Modal, Form, Select, Radio, Input, Typography, Button, Checkbox, message } from 'antd';
-import { AimOutlined } from '@ant-design/icons';
+import { Modal, Form, Select, Input, Typography, Button, Checkbox, Upload, message } from 'antd';
+import { AimOutlined, UploadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { INCIDENT_TYPES, INCIDENT_SEVERITIES, formatCoordinates, mapLinkOf } from '@utils/incidents';
+import { INCIDENT_TYPES, INCIDENT_SEVERITIES, SEVERITY_CONFIG, formatCoordinates, mapLinkOf } from '@utils/incidents';
 
 const { Text } = Typography;
 const { TextArea } = Input;
+
+/**
+ * Bộ chọn mức độ nghiêm trọng với dải màu trực quan (Xanh lá -> Vàng -> Cam -> Đỏ).
+ * Nhận value và onChange trực tiếp từ Form.Item của Ant Design.
+ */
+function SeveritySelector({ value, onChange }) {
+  const { t } = useTranslation();
+
+  return (
+    <div
+      role="radiogroup"
+      aria-label={t('incidents.fields.severity')}
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: 8,
+      }}
+    >
+      {INCIDENT_SEVERITIES.map((key) => {
+        const isSelected = value === key;
+        const cfg = SEVERITY_CONFIG[key] || {};
+
+        return (
+          <button
+            key={key}
+            type="button"
+            role="radio"
+            aria-checked={isSelected}
+            onClick={() => onChange?.(key)}
+            style={{
+              cursor: 'pointer',
+              borderRadius: 8,
+              padding: '10px 6px',
+              textAlign: 'center',
+              outline: 'none',
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              background: isSelected ? cfg.activeBg : '#FAFAFA',
+              border: `2px solid ${isSelected ? cfg.activeBorder : cfg.border || '#E5E7EB'}`,
+              boxShadow: isSelected ? `0 2px 8px ${cfg.activeBorder}33` : 'none',
+              transform: isSelected ? 'translateY(-1px)' : 'none',
+              userSelect: 'none',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 4,
+            }}
+          >
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                backgroundColor: cfg.dot,
+                boxShadow: isSelected ? `0 0 6px ${cfg.dot}` : 'none',
+                display: 'inline-block',
+                transition: 'transform 0.2s ease',
+                transform: isSelected ? 'scale(1.25)' : 'scale(1)',
+              }}
+            />
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: isSelected ? 600 : 500,
+                color: isSelected ? cfg.text : '#4B5563',
+                lineHeight: 1.2,
+              }}
+            >
+              {t(`incidents.severity.${key}`)}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 /**
  * Modal báo sự cố trên đường của đoàn xe (POST /trips/{tripId}/incidents).
@@ -24,6 +100,7 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
   const { t } = useTranslation();
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
+  const [fileList, setFileList] = useState([]);
   // Vị trí lấy từ GPS của thiết bị: 'idle' | 'locating' | 'ok' | 'error'
   const [geoStatus, setGeoStatus] = useState('idle');
   const [geoError, setGeoError] = useState('');
@@ -68,10 +145,15 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
         description: values.description.trim(),
         affectedTripHorseId: values.affectedTripHorseId || undefined,
         emergencyOffload: Boolean(values.emergencyOffload),
+        // Ảnh hiện trường / biên bản thú y: đính kèm vào sự cố ngay sau khi báo (POST /incidents/{id}/documents)
+        attachment: fileList.length > 0
+          ? { file: fileList[0].originFileObj || fileList[0], documentType: values.attachmentType || 'ScenePhoto' }
+          : undefined,
       });
       if (success) {
         message.success(t('incidents.report.success'));
         form.resetFields();
+        setFileList([]);
         onClose();
       }
     } finally {
@@ -97,6 +179,7 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
           locate();
         } else {
           setGeoStatus('idle');
+          setFileList([]);
           form.resetFields();
         }
       }}
@@ -133,10 +216,7 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
         </Form.Item>
 
         <Form.Item name="severity" label={t('incidents.fields.severity')} rules={[{ required: true }]}>
-          <Radio.Group
-            optionType="button"
-            options={INCIDENT_SEVERITIES.map((value) => ({ value, label: t(`incidents.severity.${value}`) }))}
-          />
+          <SeveritySelector />
         </Form.Item>
 
         <Form.Item
@@ -193,9 +273,34 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
             { required: true, whitespace: true, message: t('incidents.report.descriptionRequired') },
             { max: 2000 },
           ]}
+        >
+          <TextArea rows={3} placeholder={t('incidents.report.descriptionPlaceholder')} />
+        </Form.Item>
+
+        <Form.Item name="attachmentType" label={t('incidentHealth.report.attachmentType')} initialValue="ScenePhoto">
+          <Select
+            options={['ScenePhoto', 'VetReport'].map((value) => ({ value, label: t(`incidentHealth.documentType.${value}`) }))}
+          />
+        </Form.Item>
+        <Form.Item
+          label={t('incidentHealth.report.attachment')}
+          extra={t('incidentHealth.report.attachmentHint')}
           style={{ marginBottom: 0 }}
         >
-          <TextArea rows={4} placeholder={t('incidents.report.descriptionPlaceholder')} />
+          <Upload
+            maxCount={1}
+            accept="image/*,.pdf"
+            fileList={fileList}
+            beforeUpload={(file) => {
+              setFileList([file]);
+              return false;
+            }}
+            onRemove={() => setFileList([])}
+          >
+            <Button icon={<UploadOutlined />}>
+              {t('incidentHealth.report.chooseAttachment')}
+            </Button>
+          </Upload>
         </Form.Item>
       </Form>
     </Modal>

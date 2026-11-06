@@ -477,6 +477,13 @@ export default function CustomerBookingDetailPage() {
               {booking.pickupCountryCode || booking.PickupCountryCode} →{' '}
               {booking.dropoffCountryCode || booking.DropoffCountryCode}
             </Text>
+            {/* Đơn nối tiếp từ phòng khám (Chính sách 9.6) */}
+            {booking.parentBookingCode && (
+              <div style={{ marginTop: 4 }}>
+                <Tag color="purple">{t('incidentHealth.continuation.badge', { code: booking.parentBookingCode })}</Tag>
+                {booking.isFreeOfCharge && <Tag color="green">{t('incidentHealth.continuation.freeBadge')}</Tag>}
+              </div>
+            )}
           </div>
           <Flex gap={8} align="center">
             <CustomerStageTag stage={booking.customerStage} />

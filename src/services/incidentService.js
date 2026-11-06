@@ -1,6 +1,9 @@
 import api from './api';
 import { ENDPOINTS } from './endpoints';
 
+// Instance mặc định là JSON: ghi đè để axios gửi đúng multipart
+const MULTIPART = { headers: { 'Content-Type': 'multipart/form-data' } };
+
 /**
  * @file incidentService.js
  * @description Tầng Service xử lý nghiệp vụ quản lý sự cố phát sinh trên lộ trình (Flow 5: Incident Management)
@@ -101,6 +104,47 @@ export const incidentService = {
    */
   async customerConsent(id, payload) {
     return api.post(ENDPOINTS.INCIDENTS.CUSTOMER_CONSENT(id), payload);
+  },
+
+  /**
+   * Đính kèm tài liệu vào sự cố (multipart): ScenePhoto | VetReport | DeathCertificate | FitToTravel
+   * @param {number|string} id - IncidentID
+   * @param {{ documentType: string, file: File|Blob, note?: string }} payload
+   */
+  async uploadDocument(id, { documentType, file, note }) {
+    const form = new FormData();
+    form.append('documentType', documentType);
+    if (note) form.append('note', note);
+    form.append('file', file);
+    return api.post(ENDPOINTS.INCIDENTS.DOCUMENTS(id), form, MULTIPART);
+  },
+
+  /** Xóa tài liệu tải nhầm (người tải lên / quản lý, khi sự cố chưa duyệt) */
+  async deleteDocument(id, documentId) {
+    return api.delete(ENDPOINTS.INCIDENTS.DOCUMENT(id, documentId));
+  },
+
+  /** Quá hạn chủ ngựa chưa trả lời khuyến nghị an tử: áp dụng ủy quyền khẩn cấp (Chính sách 9.6) */
+  async emergencyAuthorize(id, payload) {
+    return api.post(ENDPOINTS.INCIDENTS.EMERGENCY_AUTHORIZE(id), payload);
+  },
+
+  /** Ghi viện phí của ngựa ở lại phòng khám; ai trả do backend tính theo nguyên nhân */
+  async recordVetExpense(tripId, tripHorseId, payload) {
+    return api.post(ENDPOINTS.INCIDENTS.VET_EXPENSE(tripId, tripHorseId), payload);
+  },
+
+  /** Ngựa chết khi đang điều trị tại phòng khám (kèm giấy chứng tử) */
+  async recordPostOffloadDeath(tripId, tripHorseId, { file, note }) {
+    const form = new FormData();
+    form.append('file', file);
+    if (note) form.append('note', note);
+    return api.post(ENDPOINTS.INCIDENTS.POST_OFFLOAD_DEATH(tripId, tripHorseId), form, MULTIPART);
+  },
+
+  /** Tạo đơn nối tiếp từ phòng khám tới đích cũ (cần sự cố đã đóng + giấy FitToTravel) */
+  async createContinuationBooking(tripId, tripHorseId, payload) {
+    return api.post(ENDPOINTS.INCIDENTS.CONTINUATION_BOOKING(tripId, tripHorseId), payload);
   },
 };
 

@@ -25,6 +25,8 @@ import handoverService from '@services/handoverService';
 // Đang sửa TripClosurePage vì bổ sung xét duyệt và điều chỉnh bồi thường giao trễ theo FE-12 (R-09, BE-13)
 import incidentService from '@services/incidentService';
 import delayCompensationService from '@services/delayCompensationService';
+// Xác nhận hoàn tiền qua VNPay theo mã giao dịch gốc trước khi duyệt bồi thường
+import RefundConfirmModal from '@components/common/RefundConfirmModal';
 import { Modal, InputNumber, Space } from 'antd';
 import { unwrapData, unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import {
@@ -70,6 +72,8 @@ export default function TripClosurePage() {
   const [adjustReason, setAdjustReason] = useState('');
   const [actionCompLoading, setActionCompLoading] = useState(false);
   const [rejectComp, setRejectComp] = useState(null);
+  // Khoản bồi thường chờ xác nhận hoàn tiền: { comp, amount, reason }
+  const [pendingRefund, setPendingRefund] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
 
   // Danh sách chuyến chỉ có tóm tắt; tải chi tiết để có đơn, KPI, chi phí
@@ -121,11 +125,18 @@ export default function TripClosurePage() {
   };
 
 
-  const handleApproveCompensation = async (comp) => {
+  // Bấm Duyệt: mở hộp xác nhận hoàn tiền trước
+  const handleApproveCompensation = (comp) => setPendingRefund({ comp, amount: compAmount(comp) });
+
+  // Đã xác nhận: duyệt, backend hoàn qua VNPay vào các giao dịch gốc
+  const confirmRefund = async () => {
+    const { comp, amount, reason } = pendingRefund;
     setActionCompLoading(true);
     try {
-      await delayCompensationService.approve(comp.delayCompensationId, { amount: compAmount(comp) });
+      await delayCompensationService.approve(comp.delayCompensationId, reason ? { amount, reason } : { amount });
       message.success(t('delayCompensation.messages.approved', 'Đã duyệt bồi thường giao trễ'));
+      setPendingRefund(null);
+      setAdjustModalOpen(false);
       if (selected) openTrip(selected);
     } catch (err) {
       message.error(getErrorMessage(err, t('delayCompensation.messages.approveFailed', 'Duyệt thất bại')));
@@ -141,25 +152,12 @@ export default function TripClosurePage() {
     setAdjustModalOpen(true);
   };
 
-  const handleSaveAdjustedCompensation = async () => {
+  const handleSaveAdjustedCompensation = () => {
     if (!adjustReason.trim()) {
       message.warning(t('delayCompensation.messages.reasonRequired', 'Vui lòng nhập lý do điều chỉnh số tiền'));
       return;
     }
-    setActionCompLoading(true);
-    try {
-      await delayCompensationService.approve(selectedComp.delayCompensationId, {
-        amount: Number(newAmount),
-        reason: adjustReason.trim(),
-      });
-      message.success(t('delayCompensation.messages.adjustedSuccess', 'Đã điều chỉnh và duyệt số tiền bồi thường'));
-      setAdjustModalOpen(false);
-      if (selected) openTrip(selected);
-    } catch (err) {
-      message.error(getErrorMessage(err, t('delayCompensation.messages.adjustFailed', 'Điều chỉnh thất bại')));
-    } finally {
-      setActionCompLoading(false);
-    }
+    setPendingRefund({ comp: selectedComp, amount: Number(newAmount), reason: adjustReason.trim() });
   };
 
   const handleRejectCompensation = async () => {
@@ -459,6 +457,17 @@ export default function TripClosurePage() {
           </div>
         </div>
       </Modal>
+
+      <RefundConfirmModal
+        open={Boolean(pendingRefund)}
+        bookingId={pendingRefund?.comp.bookingId}
+        bookingCode={pendingRefund?.comp.bookingCode}
+        amount={pendingRefund?.amount || 0}
+        currencyCode={pendingRefund?.comp.currencyCode || 'USD'}
+        confirmLoading={actionCompLoading}
+        onConfirm={confirmRefund}
+        onCancel={() => setPendingRefund(null)}
+      />
 
       <Modal
         title={t('delayCompensation.rejectModal.title', 'Từ chối bồi thường giao trễ')}

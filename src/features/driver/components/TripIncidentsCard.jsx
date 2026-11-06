@@ -5,6 +5,9 @@ import { INCIDENT_STATUS_COLOR, SEVERITY_COLOR, RESPONSE_ACTION_COLOR, buildInci
 import IncidentRouteChange from '@components/common/IncidentRouteChange';
 // Đang sửa TripIncidentsCard vì đoàn xe cần thấy hướng xử lý ngựa, quay về, phí đi vòng, nguyên nhân (FE-10)
 import IncidentOutcome from '@components/common/IncidentOutcome';
+// Tài xế bổ sung ảnh hiện trường / biên bản thú y sau lúc báo SOS
+import IncidentDocuments from '@components/common/IncidentDocuments';
+import { useAuthStore } from '@features/auth/store/authStore';
 
 const { Text, Paragraph } = Typography;
 
@@ -20,11 +23,12 @@ function formatTime(value) {
 
 /**
  * Sự cố của chuyến và phương án xử lý, để đoàn xe đọc lại chỉ đạo thay vì chỉ thấy qua thông báo.
- * @param {{ incidents: Array<Object>, trip?: Object }} props - incidents: GET /trips/{id}/incidents (mới nhất trước);
- *   trip: GET /trips/{id}, để hiện biển số xe / tên người của phương án đổi xe / đổi người
+ * @param {{ incidents: Array<Object>, trip?: Object, onChanged?: () => void }} props - incidents: GET /trips/{id}/incidents (mới nhất trước);
+ *   trip: GET /trips/{id}, để hiện biển số xe / tên người của phương án đổi xe / đổi người; onChanged: tải lại sau khi đính kèm tài liệu
  */
-export default function TripIncidentsCard({ incidents, trip }) {
+export default function TripIncidentsCard({ incidents, trip, onChanged }) {
   const { t } = useTranslation();
+  const currentUser = useAuthStore((st) => st.user);
   const lookup = buildIncidentLookup({ trip });
 
   if (!incidents?.length) return null;
@@ -57,6 +61,9 @@ export default function TripIncidentsCard({ incidents, trip }) {
               {inc.affectedHorseName ? ` · ${t('incidents.fields.horse')}: ${inc.affectedHorseName}` : ''}
             </div>
             <Paragraph style={{ margin: '6px 0 10px' }}>{inc.description}</Paragraph>
+            <div style={{ marginBottom: 10 }}>
+              <IncidentDocuments incident={inc} canUpload currentUserId={currentUser?.userId} onChanged={onChanged} />
+            </div>
 
             {planApproved ? (
               <Alert

@@ -173,6 +173,13 @@ export const ENDPOINTS = {
     RESOLVE: (id) => `/incidents/${id}/resolve`,
     // R-14: khách đồng ý / từ chối đi đường vòng có phí
     CUSTOMER_CONSENT: (id) => `/incidents/${id}/customer-consent`,
+    // Sức khỏe ngựa: tài liệu sự cố, ủy quyền khẩn cấp an tử, phòng khám, đơn nối tiếp
+    DOCUMENTS: (id) => `/incidents/${id}/documents`,
+    DOCUMENT: (id, documentId) => `/incidents/${id}/documents/${documentId}`,
+    EMERGENCY_AUTHORIZE: (id) => `/incidents/${id}/emergency-authorize`,
+    VET_EXPENSE: (tripId, tripHorseId) => `/trips/${tripId}/horses/${tripHorseId}/vet-expense`,
+    POST_OFFLOAD_DEATH: (tripId, tripHorseId) => `/trips/${tripId}/horses/${tripHorseId}/post-offload-death`,
+    CONTINUATION_BOOKING: (tripId, tripHorseId) => `/trips/${tripId}/horses/${tripHorseId}/continuation-booking`,
     // Bí danh tương thích ngược
     CREATE: '/incidents',
     APPROVE: (id) => `/incidents/${id}/approve`,

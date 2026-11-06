@@ -16,6 +16,8 @@ import {
   Space,
   Select,
   Radio,
+  Checkbox,
+  DatePicker,
   Upload,
   message,
 } from 'antd';
@@ -24,7 +26,6 @@ import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import incidentService from '@services/incidentService';
 import tripService from '@services/tripService';
-import fileService from '@services/fileService';
 import userService from '@services/userService';
 import assetService from '@services/assetService';
 import { unwrapList, unwrapData, getErrorMessage } from '@utils/apiHelpers';
@@ -43,6 +44,9 @@ import {
 import IncidentRouteChange from '@components/common/IncidentRouteChange';
 // Đang sửa IncidentBoard vì FE-10: hướng xử lý ngựa rời chuyến, quay về / chuồng tạm, phí đi vòng chờ khách đồng ý, nguyên nhân khi đóng
 import IncidentOutcome from '@components/common/IncidentOutcome';
+// Sức khỏe ngựa: tài liệu sự cố (biên bản thú y, giấy chứng tử, giấy đủ sức đi tiếp)
+import IncidentDocuments from '@components/common/IncidentDocuments';
+import { useAuthStore } from '@features/auth/store/authStore';
 import RerouteModal from './RerouteModal';
 import RouteChangeFields from './RouteChangeFields';
 
@@ -50,6 +54,10 @@ const { Text } = Typography;
 const { TextArea } = Input;
 
 const formatTime = (value) => (value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—');
+
+// Phương án ngựa chết cần ít nhất một biên bản thú y hoặc giấy chứng tử đã đính kèm vào sự cố
+const hasVetDocument = (incident) => (incident?.documents || []).some((d) => d.documentType === 'VetReport' || d.documentType === 'DeathCertificate');
+const hasDocument = (incident, type) => (incident?.documents || []).some((d) => d.documentType === type);
 
 // Ngựa còn phải chở (TripHorseStatuses.OnBoard của backend): xe thay thế phải đủ chỗ cho số này
 const ONBOARD_HORSE_STATUSES = ['Planned', 'InTransit'];
@@ -87,7 +95,18 @@ export default function IncidentBoard({ role }) {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rerouteOpen, setRerouteOpen] = useState(false);
   const [resolveOpen, setResolveOpen] = useState(false);
-  const [vetReport, setVetReport] = useState(null);
+  // Ủy quyền khẩn cấp / viện phí / ngựa chết tại phòng khám / đơn nối tiếp
+  const [emergencyOpen, setEmergencyOpen] = useState(false);
+  const [expenseOpen, setExpenseOpen] = useState(false);
+  const [deathOpen, setDeathOpen] = useState(false);
+  const [deathFile, setDeathFile] = useState(null);
+  const [continuationOpen, setContinuationOpen] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+  const currentUser = useAuthStore((st) => st.user);
+  const [emergencyForm] = Form.useForm();
+  const [expenseForm] = Form.useForm();
+  const [deathForm] = Form.useForm();
+  const [continuationForm] = Form.useForm();
   const [proposeForm] = Form.useForm();
   const [rejectForm] = Form.useForm();
   const [resolveForm] = Form.useForm();
@@ -240,8 +259,8 @@ export default function IncidentBoard({ role }) {
       return;
     }
     const isOffload = values.responseAction === 'OffloadHorse';
-    if (isOffload && values.offloadOutcome === 'Deceased' && !vetReport) {
-      message.warning(t('incidentPlan.vetReportRequired'));
+    if (isOffload && values.offloadOutcome === 'Deceased' && !hasVetDocument(selected)) {
+      message.warning(t('incidentHealth.plan.vetDocRequired'));
       return;
     }
     const isReplaceVehicle = values.responseAction === 'ReplaceVehicle';
@@ -252,9 +271,8 @@ export default function IncidentBoard({ role }) {
       message.warning(t('incidentPlan.removeCrewRequired'));
       return;
     }
-    const ok = await run(async () => {
-      // Biên bản thú y tải lên trước (POST /files, documents) rồi gửi path
-      const uploaded = isOffload && vetReport ? unwrapData(await fileService.upload(vetReport, 'documents')) : null;
+    const isWaitRecover = isOffload && values.offloadOutcome === 'WaitRecover';
+    await run(async () => {
       return incidentService.proposePlan(selected.incidentId, {
         responseAction: values.responseAction,
         proposedAction: values.proposedAction.trim(),
@@ -265,7 +283,17 @@ export default function IncidentBoard({ role }) {
         extraCostForCustomer: values.responseAction === 'Reroute' ? values.extraCostForCustomer || 0 : undefined,
         affectedTripHorseId: isOffload ? values.affectedTripHorseId || undefined : undefined,
         offloadOutcome: isOffload ? values.offloadOutcome : undefined,
-        vetReportPath: uploaded?.path,
+        // Ngựa còn sống, bác sĩ khuyến nghị an tử: duyệt xong chờ chủ ngựa đồng ý (Chính sách 9.6)
+        requiresEuthanasiaConsent: isOffload && values.offloadOutcome === 'Deceased' ? Boolean(values.requiresEuthanasiaConsent) : undefined,
+        // Ở lại phòng khám: bắt buộc tên + địa chỉ phòng khám
+        vetClinic: isWaitRecover
+          ? {
+              name: values.vetClinic.name.trim(),
+              address: values.vetClinic.address.trim(),
+              phone: values.vetClinic.phone?.trim() || undefined,
+              attendingVetName: values.vetClinic.attendingVetName?.trim() || undefined,
+            }
+          : undefined,
         // Chỉ gửi kèm đúng hành động, gửi với hành động khác backend trả 400
         replacementVehicleId: isReplaceVehicle ? values.replacementVehicleId : undefined,
         removeUserId: removed?.userId,
@@ -273,7 +301,83 @@ export default function IncidentBoard({ role }) {
         crewRole: removed?.crewRole,
       });
     }, t('incidents.actions.proposed'));
-    if (ok) setVetReport(null);
+  };
+
+  // Quá hạn chờ chủ ngựa trả lời khuyến nghị an tử: áp dụng ủy quyền khẩn cấp
+  const handleEmergency = async () => {
+    let values;
+    try {
+      values = await emergencyForm.validateFields();
+    } catch {
+      return;
+    }
+    const ok = await run(
+      () => incidentService.emergencyAuthorize(selected.incidentId, { note: values.note.trim() }),
+      t('incidentHealth.euthanasia.emergencyDone'),
+    );
+    if (ok) setEmergencyOpen(false);
+  };
+
+  const handleVetExpense = async () => {
+    let values;
+    try {
+      values = await expenseForm.validateFields();
+    } catch {
+      return;
+    }
+    const ok = await run(
+      () => incidentService.recordVetExpense(selected.tripId, selected.affectedTripHorseId, { amount: values.amount, note: values.note?.trim() || undefined }),
+      t('incidentHealth.clinic.expenseSaved'),
+    );
+    if (ok) setExpenseOpen(false);
+  };
+
+  const handleDeath = async () => {
+    let values;
+    try {
+      values = await deathForm.validateFields();
+    } catch {
+      return;
+    }
+    if (!deathFile) {
+      message.warning(t('incidentHealth.documents.fileRequired'));
+      return;
+    }
+    const ok = await run(
+      () => incidentService.recordPostOffloadDeath(selected.tripId, selected.affectedTripHorseId, { file: deathFile, note: values.note?.trim() }),
+      t('incidentHealth.clinic.deathSaved'),
+    );
+    if (ok) {
+      setDeathOpen(false);
+      setDeathFile(null);
+    }
+  };
+
+  const handleContinuation = async () => {
+    let values;
+    try {
+      values = await continuationForm.validateFields();
+    } catch {
+      return;
+    }
+    setActing(true);
+    try {
+      const res = await incidentService.createContinuationBooking(selected.tripId, selected.affectedTripHorseId, {
+        pickupCountryCode: values.pickupCountryCode.trim().toUpperCase(),
+        pickupWindowStart: values.pickupWindow[0].startOf('day').toISOString(),
+        pickupWindowEnd: values.pickupWindow[1].endOf('day').toISOString(),
+        deliveryDeadline: values.deliveryDeadline.endOf('day').toISOString(),
+        specialInstructions: values.specialInstructions?.trim() || undefined,
+      });
+      const booking = unwrapData(res);
+      message.success(t('incidentHealth.continuation.created', { code: booking?.bookingCode || '' }));
+      setContinuationOpen(false);
+      await load();
+    } catch (err) {
+      message.error(getErrorMessage(err));
+    } finally {
+      setActing(false);
+    }
   };
 
   const handleResolve = async () => {
@@ -401,6 +505,16 @@ export default function IncidentBoard({ role }) {
               </Descriptions.Item>
               <Descriptions.Item label={t('incidents.fields.description')}>{selected.description}</Descriptions.Item>
             </Descriptions>
+            <div style={{ marginTop: 12 }}>
+              <IncidentDocuments
+                incident={selected}
+                canUpload
+                defaultType={selected.offloadOutcome === 'WaitRecover' ? 'FitToTravel' : 'VetReport'}
+                currentUserId={currentUser?.userId}
+                canDeleteAny={role === 'manager'}
+                onChanged={load}
+              />
+            </div>
 
             <h4 style={{ margin: '20px 0 8px' }}>{t('incidents.planTitle')}</h4>
             {selected.status === 'Rejected' && selected.rejectionReason && (
@@ -424,6 +538,7 @@ export default function IncidentBoard({ role }) {
                   responseAction: selected.emergencyOffload ? 'OffloadHorse' : selected.responseAction || undefined,
                   affectedTripHorseId: selected.affectedTripHorseId || undefined,
                   offloadOutcome: selected.offloadOutcome || undefined,
+                  vetClinic: selected.actionPayload?.vetClinic || undefined,
                   extraCostForCustomer: selected.extraCostForCustomer || 0,
                   proposedAction: selected.proposedAction || '',
                   // Đề xuất lại sau khi bị từ chối: điền sẵn tuyến của lần trước
@@ -438,6 +553,7 @@ export default function IncidentBoard({ role }) {
                   additionalCost: selected.additionalCost || 0,
                   // Đề xuất lại phương án đổi xe / đổi người: điền sẵn lựa chọn lần trước
                   replacementVehicleId: selected.actionPayload?.replacementVehicleId || undefined,
+                  requiresEuthanasiaConsent: selected.requiresEuthanasiaConsent || false,
                   removeCrewKey: selected.actionPayload?.removeUserId
                     ? toCrewKey(selected.actionPayload.removeUserId, selected.actionPayload.crewRole)
                     : undefined,
@@ -483,32 +599,50 @@ export default function IncidentBoard({ role }) {
                     >
                       <Radio.Group style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {OFFLOAD_OUTCOMES.map((value) => (
-                          <Radio key={value} value={value} disabled={value === 'Deceased' && selected.severity !== 'Critical'}>
+                          <Radio key={value} value={value}>
                             {t(`incidentOutcome.outcome.${value}`)}
                             <div style={{ fontSize: 12, color: '#6B7280' }}>
-                              {value === 'Deceased' && selected.severity !== 'Critical'
-                                ? t('incidentPlan.deceasedNeedsCritical')
-                                : t(`incidentPlan.outcomeHint.${value}`)}
+                              {value === 'Deceased' ? t('incidentHealth.plan.deceasedHint') : t(`incidentPlan.outcomeHint.${value}`)}
                             </div>
                           </Radio>
                         ))}
                       </Radio.Group>
                     </Form.Item>
                     {offloadOutcome === 'Deceased' && (
-                      <Form.Item label={t('incidentPlan.vetReport')} required>
-                        <Upload
-                          maxCount={1}
-                          accept=".pdf,image/*"
-                          beforeUpload={(file) => {
-                            setVetReport(file);
-                            return false;
-                          }}
-                          onRemove={() => setVetReport(null)}
-                          fileList={vetReport ? [{ uid: '-1', name: vetReport.name, status: 'done' }] : []}
+                      <>
+                        {!hasVetDocument(selected) && (
+                          <Alert type="error" showIcon style={{ marginBottom: 12 }} title={t('incidentHealth.plan.vetDocRequired')} />
+                        )}
+                        <Form.Item name="requiresEuthanasiaConsent" valuePropName="checked" extra={t('incidentHealth.plan.euthanasiaHint')}>
+                          <Checkbox>{t('incidentHealth.plan.euthanasiaConsent')}</Checkbox>
+                        </Form.Item>
+                      </>
+                    )}
+                    {offloadOutcome === 'WaitRecover' && (
+                      <>
+                        <Form.Item
+                          name={['vetClinic', 'name']}
+                          label={t('incidentHealth.clinic.name')}
+                          rules={[{ required: true, whitespace: true, message: t('handover.form.required') }, { max: 150 }]}
                         >
-                          <Button icon={<UploadOutlined />}>{t('incidentPlan.chooseVetReport')}</Button>
-                        </Upload>
-                      </Form.Item>
+                          <Input placeholder={t('incidentHealth.clinic.namePlaceholder')} />
+                        </Form.Item>
+                        <Form.Item
+                          name={['vetClinic', 'address']}
+                          label={t('incidentHealth.clinic.address')}
+                          rules={[{ required: true, whitespace: true, message: t('handover.form.required') }, { max: 255 }]}
+                        >
+                          <Input />
+                        </Form.Item>
+                        <Space.Compact block style={{ marginBottom: 12, gap: 8 }}>
+                          <Form.Item name={['vetClinic', 'phone']} label={t('incidentHealth.clinic.phone')} rules={[{ max: 30 }]} style={{ flex: 1, marginBottom: 0 }}>
+                            <Input />
+                          </Form.Item>
+                          <Form.Item name={['vetClinic', 'attendingVetName']} label={t('incidentHealth.clinic.vet')} rules={[{ max: 100 }]} style={{ flex: 1, marginBottom: 0 }}>
+                            <Input />
+                          </Form.Item>
+                        </Space.Compact>
+                      </>
                     )}
                   </div>
                 )}
@@ -617,9 +751,104 @@ export default function IncidentBoard({ role }) {
                 <IncidentOutcome incident={selected} lookup={lookup} />
               </div>
             )}
-            {selected.status === 'AwaitingConsent' && (
+            {selected.status === 'AwaitingConsent' && selected.pendingConsentType !== 'Euthanasia' && (
               <Alert type="info" showIcon style={{ marginTop: 12 }} title={t('incidentPlan.awaitingConsent')} />
             )}
+            {selected.status === 'AwaitingConsent' && selected.pendingConsentType === 'Euthanasia' && (
+              <Alert
+                type="warning"
+                showIcon
+                style={{ marginTop: 12 }}
+                title={t('incidentHealth.euthanasia.boardWaiting', { horse: selected.affectedHorseName || '' })}
+                description={
+                  <Space direction="vertical" size={6}>
+                    <Text>
+                      {now >= dayjs(selected.consentDeadline).valueOf()
+                        ? t('incidentHealth.euthanasia.deadlinePassed', { time: formatTime(selected.consentDeadline) })
+                        : t('incidentHealth.euthanasia.minutesLeft', {
+                            minutes: Math.max(1, Math.ceil((dayjs(selected.consentDeadline).valueOf() - now) / 60000)),
+                            time: formatTime(selected.consentDeadline),
+                          })}
+                    </Text>
+                    <Space>
+                      <Button size="small" onClick={() => setNow(Date.now())}>
+                        {t('customerTrips.refresh')}
+                      </Button>
+                      <Button
+                        size="small"
+                        danger
+                        disabled={now < dayjs(selected.consentDeadline).valueOf()}
+                        onClick={() => {
+                          emergencyForm.resetFields();
+                          setEmergencyOpen(true);
+                        }}
+                      >
+                        {t('incidentHealth.euthanasia.emergencyButton')}
+                      </Button>
+                    </Space>
+                  </Space>
+                }
+              />
+            )}
+            {selected.responseAction === 'OffloadHorse' &&
+              selected.offloadOutcome === 'WaitRecover' &&
+              ['Approved', 'Resolved'].includes(selected.status) &&
+              (() => {
+                const clinicHorse = (currentTrip?.horses || []).find((h) => h.tripHorseId === selected.affectedTripHorseId);
+                const atClinic = clinicHorse?.status === 'Offloaded';
+                const resolved = selected.status === 'Resolved';
+                return (
+                  <div style={{ marginTop: 16, border: '1px solid #FDE68A', background: '#FFFBEB', borderRadius: 8, padding: 12 }}>
+                    <Text strong>{t('incidentHealth.clinic.title', { horse: selected.affectedHorseName || '' })}</Text>
+                    {clinicHorse?.vetClinic && (
+                      <div style={{ fontSize: 13, color: '#57534E', marginTop: 4 }}>
+                        {clinicHorse.vetClinic.name} · {clinicHorse.vetClinic.address}
+                        {clinicHorse.vetClinic.phone ? ` · ${clinicHorse.vetClinic.phone}` : ''}
+                      </div>
+                    )}
+                    {clinicHorse?.vetExpenseAmount != null && (
+                      <div style={{ fontSize: 13, marginTop: 4 }}>
+                        {t('incidentHealth.clinic.expenseLine', { amount: formatUsd(clinicHorse.vetExpenseAmount) })}{' '}
+                        <Tag color={clinicHorse.vetExpenseBearer === 'Company' ? 'green' : 'orange'}>
+                          {t(`incidentHealth.clinic.bearer.${clinicHorse.vetExpenseBearer}`)}
+                        </Tag>
+                      </div>
+                    )}
+                    {clinicHorse?.status === 'Deceased' && <Tag color="red" style={{ marginTop: 6 }}>{t('incidentHealth.clinic.diedAtClinic')}</Tag>}
+                    {!resolved && <div style={{ fontSize: 12, color: '#92400E', marginTop: 6 }}>{t('incidentHealth.clinic.resolveFirst')}</div>}
+                    <Space wrap style={{ marginTop: 8 }}>
+                      <Button
+                        size="small"
+                        disabled={!resolved}
+                        onClick={() => {
+                          expenseForm.setFieldsValue({ amount: clinicHorse?.vetExpenseAmount ?? undefined, note: clinicHorse?.vetExpenseNote || '' });
+                          setExpenseOpen(true);
+                        }}
+                      >
+                        {t('incidentHealth.clinic.recordExpense')}
+                      </Button>
+                      <Button
+                        size="small"
+                        type="primary"
+                        disabled={!resolved || !atClinic || !hasDocument(selected, 'FitToTravel')}
+                        title={!hasDocument(selected, 'FitToTravel') ? t('incidentHealth.continuation.needFit') : undefined}
+                        onClick={() => {
+                          continuationForm.resetFields();
+                          setContinuationOpen(true);
+                        }}
+                      >
+                        {t('incidentHealth.continuation.create')}
+                      </Button>
+                      <Button size="small" danger disabled={!atClinic} onClick={() => setDeathOpen(true)}>
+                        {t('incidentHealth.clinic.recordDeath')}
+                      </Button>
+                    </Space>
+                    {resolved && atClinic && !hasDocument(selected, 'FitToTravel') && (
+                      <div style={{ fontSize: 12, color: '#6B7280', marginTop: 6 }}>{t('incidentHealth.continuation.needFit')}</div>
+                    )}
+                  </div>
+                );
+              })()}
             {!canPropose && selected.routeChange && (
               <div style={{ marginTop: 12 }}>
                 <IncidentRouteChange routeChange={selected.routeChange} checkpoints={routeCheckpoints} />
@@ -712,6 +941,120 @@ export default function IncidentBoard({ role }) {
             />
           )}
           <Form.Item name="faultNote" label={t('incidentPlan.faultNote')} rules={[{ max: 500 }]}>
+            <TextArea rows={2} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={t('incidentHealth.euthanasia.emergencyTitle', { code: selected?.incidentCode || '' })}
+        open={emergencyOpen}
+        onCancel={() => setEmergencyOpen(false)}
+        onOk={handleEmergency}
+        okText={t('incidentHealth.euthanasia.emergencyButton')}
+        okButtonProps={{ danger: true, loading: acting }}
+        cancelText={t('common.cancel')}
+        destroyOnHidden
+      >
+        <Alert type="warning" showIcon style={{ marginBottom: 12 }} title={t('incidentHealth.euthanasia.emergencyWarning')} />
+        <Form form={emergencyForm} layout="vertical" requiredMark={false}>
+          <Form.Item
+            name="note"
+            label={t('incidentHealth.euthanasia.emergencyNote')}
+            rules={[{ required: true, whitespace: true, message: t('handover.form.required') }, { max: 500 }]}
+          >
+            <TextArea rows={3} placeholder={t('incidentHealth.euthanasia.emergencyNotePlaceholder')} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={t('incidentHealth.clinic.recordExpense')}
+        open={expenseOpen}
+        onCancel={() => setExpenseOpen(false)}
+        onOk={handleVetExpense}
+        okButtonProps={{ loading: acting }}
+        cancelText={t('common.cancel')}
+        destroyOnHidden
+      >
+        <Alert type="info" showIcon style={{ marginBottom: 12 }} title={t('incidentHealth.clinic.bearerRule')} />
+        <Form form={expenseForm} layout="vertical" requiredMark={false}>
+          <Form.Item name="amount" label={t('incidentHealth.clinic.amount')} rules={[{ required: true, message: t('handover.form.required') }]}>
+            <InputNumber min={0} max={1000000} prefix="$" style={{ width: 220 }} />
+          </Form.Item>
+          <Form.Item name="note" label={t('incidentHealth.documents.note')} rules={[{ max: 500 }]}>
+            <TextArea rows={2} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={t('incidentHealth.clinic.recordDeath')}
+        open={deathOpen}
+        onCancel={() => setDeathOpen(false)}
+        onOk={handleDeath}
+        okButtonProps={{ danger: true, loading: acting }}
+        cancelText={t('common.cancel')}
+        destroyOnHidden
+      >
+        <Alert type="warning" showIcon style={{ marginBottom: 12 }} title={t('incidentHealth.clinic.deathWarning')} />
+        <Form form={deathForm} layout="vertical" requiredMark={false}>
+          <Form.Item label={t('incidentHealth.documentType.DeathCertificate')} required extra={t('incidentHealth.documents.fileHint')}>
+            <Upload
+              maxCount={1}
+              accept="image/*,.pdf"
+              fileList={deathFile ? [{ uid: '-1', name: deathFile.name, status: 'done' }] : []}
+              beforeUpload={(file) => {
+                setDeathFile(file);
+                return false;
+              }}
+              onRemove={() => setDeathFile(null)}
+            >
+              <Button icon={<UploadOutlined />}>{t('incidentHealth.documents.choose')}</Button>
+            </Upload>
+          </Form.Item>
+          <Form.Item name="note" label={t('incidentHealth.documents.note')} rules={[{ max: 500 }]}>
+            <TextArea rows={2} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={t('incidentHealth.continuation.title', { horse: selected?.affectedHorseName || '' })}
+        open={continuationOpen}
+        onCancel={() => setContinuationOpen(false)}
+        onOk={handleContinuation}
+        okText={t('incidentHealth.continuation.create')}
+        okButtonProps={{ loading: acting }}
+        cancelText={t('common.cancel')}
+        destroyOnHidden
+      >
+        <Alert
+          type={selected?.faultParty === 'Company' ? 'success' : 'info'}
+          showIcon
+          style={{ marginBottom: 12 }}
+          title={selected?.faultParty === 'Company' ? t('incidentHealth.continuation.free') : t('incidentHealth.continuation.paid')}
+        />
+        <Form form={continuationForm} layout="vertical" requiredMark={false} initialValues={{ pickupCountryCode: 'VN' }}>
+          <Form.Item
+            name="pickupCountryCode"
+            label={t('incidentHealth.continuation.country')}
+            rules={[{ required: true, message: t('handover.form.required') }, { pattern: /^[A-Za-z]{2}$/, message: t('incidentHealth.continuation.countryFormat') }]}
+          >
+            <Input maxLength={2} style={{ width: 100 }} />
+          </Form.Item>
+          <Form.Item
+            name="pickupWindow"
+            label={t('incidentHealth.continuation.pickupWindow')}
+            rules={[{ required: true, message: t('handover.form.required') }]}
+            extra={t('incidentHealth.continuation.leadHint')}
+          >
+            <DatePicker.RangePicker format="DD/MM/YYYY" disabledDate={(d) => d && d < dayjs().startOf('day')} />
+          </Form.Item>
+          <Form.Item name="deliveryDeadline" label={t('incidentHealth.continuation.deadline')} rules={[{ required: true, message: t('handover.form.required') }]}>
+            <DatePicker format="DD/MM/YYYY" disabledDate={(d) => d && d < dayjs().startOf('day')} />
+          </Form.Item>
+          <Form.Item name="specialInstructions" label={t('incidentHealth.continuation.notes')} rules={[{ max: 1000 }]}>
             <TextArea rows={2} />
           </Form.Item>
         </Form>

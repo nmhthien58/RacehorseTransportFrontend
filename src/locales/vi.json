@@ -3062,7 +3062,7 @@
     "emergencyOffload": "Đã dỡ khẩn cấp",
     "offloadOutcome": "Ngựa rời chuyến",
     "outcome": {
-      "WaitRecover": "Chờ hồi phục rồi đi chuyến khác",
+      "WaitRecover": "Ở lại phòng khám điều trị",
       "ReturnToOrigin": "Đưa ngựa về nơi đi",
       "HandOverHere": "Khách nhận ngựa tại nơi dỡ",
       "Deceased": "Ngựa chết"
@@ -3105,7 +3105,7 @@
     "horsePlaceholder": "Chọn ngựa",
     "outcome": "Hướng xử lý tiếp",
     "outcomeHint": {
-      "WaitRecover": "Ngựa về lại hàng chờ xếp chuyến",
+      "WaitRecover": "Đơn của con ngựa kết thúc tại phòng khám (hoàn phần cước chưa đi theo nguyên nhân); khỏi bệnh thì tạo đơn nối tiếp. Bắt buộc nhập phòng khám.",
       "ReturnToOrigin": "Điều phối sắp xếp chở về; ngựa xong với đơn",
       "HandOverHere": "Đoàn xe ký e-POD tại chỗ với khách",
       "Deceased": "Bắt buộc biên bản thú y; tự mở hồ sơ bồi thường"
@@ -3481,6 +3481,145 @@
       "FleetCoordinator": "Fleet Coordinator",
       "DriverEscort": "Driver / Escort",
       "Customer": "Khách hàng"
+    }
+  },
+  "incidentHealth": {
+    "initialSeverity": "Mức độ lúc báo",
+    "documentType": {
+      "ScenePhoto": "Ảnh hiện trường",
+      "VetReport": "Biên bản thú y",
+      "DeathCertificate": "Giấy chứng tử",
+      "FitToTravel": "Giấy đủ sức đi tiếp"
+    },
+    "documents": {
+      "title": "Tài liệu sự cố",
+      "none": "Chưa có",
+      "add": "Bổ sung tài liệu",
+      "view": "Xem",
+      "noLink": "(không mở được link)",
+      "deleteConfirm": "Xóa tài liệu này?",
+      "deleted": "Đã xóa tài liệu",
+      "uploaded": "Đã đính kèm tài liệu vào sự cố",
+      "modalTitle": "Đính kèm tài liệu cho sự cố {{code}}",
+      "upload": "Tải lên",
+      "type": "Loại tài liệu",
+      "note": "Ghi chú",
+      "notePlaceholder": "Ví dụ: bác sĩ trạm Lạng Sơn khám lúc 14:20",
+      "file": "File",
+      "fileHint": "Ảnh JPG / PNG hoặc PDF, tối đa 10 MB.",
+      "choose": "Chọn file",
+      "fileRequired": "Vui lòng chọn file"
+    },
+    "report": {
+      "attachmentType": "Loại tài liệu đính kèm",
+      "attachment": "Ảnh hiện trường / biên bản thú y (nếu có)",
+      "attachmentHint": "Có thể bổ sung sau trong mục Sự cố của chuyến khi bác sĩ gửi biên bản.",
+      "chooseAttachment": "Chụp ảnh / chọn file"
+    },
+    "plan": {
+      "deceasedHint": "Cần biên bản thú y hoặc giấy chứng tử trong tài liệu sự cố. Khi duyệt, mức độ tự nâng lên Nghiêm trọng.",
+      "vetDocRequired": "Sự cố chưa có biên bản thú y hoặc giấy chứng tử. Bổ sung ở mục Tài liệu sự cố phía trên trước khi đề xuất.",
+      "euthanasiaConsent": "Ngựa còn sống, bác sĩ khuyến nghị an tử: cần chủ ngựa đồng ý",
+      "euthanasiaHint": "Duyệt xong, hệ thống hỏi chủ ngựa. Hết thời gian chờ mà không liên lạc được thì được áp dụng ủy quyền khẩn cấp (Chính sách 9.6)."
+    },
+    "clinic": {
+      "label": "Phòng khám",
+      "title": "{{horse}} ở lại phòng khám",
+      "name": "Tên phòng khám thú y",
+      "namePlaceholder": "Ví dụ: Phòng khám thú y Lạng Sơn",
+      "address": "Địa chỉ phòng khám",
+      "phone": "Số điện thoại",
+      "vet": "Bác sĩ phụ trách",
+      "resolveFirst": "Đóng sự cố (chọn nguyên nhân) trước để ghi viện phí và tạo đơn nối tiếp.",
+      "recordExpense": "Ghi viện phí",
+      "recordDeath": "Báo ngựa chết tại phòng khám",
+      "amount": "Viện phí (USD)",
+      "bearerRule": "Lỗi công ty: công ty trả. Ngựa tự phát bệnh / bất khả kháng / lỗi khách, hoặc chủ ngựa đã từ chối an tử: chủ ngựa trả cho phòng khám.",
+      "expenseLine": "Viện phí: {{amount}}",
+      "expenseSaved": "Đã ghi viện phí và báo khách",
+      "bearer": {
+        "Company": "Công ty trả",
+        "Customer": "Chủ ngựa trả"
+      },
+      "deathWarning": "Con ngựa sẽ được ghi nhận đã chết, giấy chứng tử lưu vào sự cố và hệ thống tự mở hồ sơ bảo hiểm tử vong.",
+      "deathSaved": "Đã ghi nhận ngựa chết tại phòng khám",
+      "diedAtClinic": "Đã chết tại phòng khám"
+    },
+    "euthanasia": {
+      "label": "Khuyến nghị an tử",
+      "afterApproval": "Hỏi chủ ngựa sau khi duyệt",
+      "waiting": "Chờ chủ ngựa trả lời tới {{time}}",
+      "ownerAgreed": "Chủ ngựa đồng ý",
+      "ownerDeclined": "Chủ ngựa từ chối",
+      "emergencyApplied": "Ủy quyền khẩn cấp: {{name}} · {{time}}",
+      "boardWaiting": "Đang chờ chủ của {{horse}} trả lời khuyến nghị an tử",
+      "minutesLeft": "Còn khoảng {{minutes}} phút (tới {{time}}).",
+      "deadlinePassed": "Đã quá hạn chờ ({{time}}). Có thể áp dụng ủy quyền khẩn cấp nếu vẫn không liên lạc được.",
+      "emergencyButton": "Áp dụng ủy quyền khẩn cấp",
+      "emergencyTitle": "Ủy quyền khẩn cấp cho sự cố {{code}}",
+      "emergencyWarning": "Chỉ dùng khi đã cố liên lạc chủ ngựa mà không được và bác sĩ chỉ định an tử. Con ngựa sẽ được ghi nhận đã chết.",
+      "emergencyNote": "Đã liên lạc với chủ ngựa thế nào",
+      "emergencyNotePlaceholder": "Ví dụ: gọi 3 lần lúc 14:05, 14:20, 14:40 không được; email không phản hồi",
+      "emergencyDone": "Đã áp dụng ủy quyền khẩn cấp"
+    },
+    "continuation": {
+      "create": "Tạo đơn nối tiếp",
+      "title": "Đơn nối tiếp cho {{horse}}",
+      "free": "Sự cố do lỗi công ty: đơn nối tiếp miễn cước (báo giá chốt bằng 0).",
+      "paid": "Khách trả theo báo giá của chặng mới (phần cước chưa đi của đơn gốc đã được hoàn theo nguyên nhân).",
+      "country": "Nước của phòng khám",
+      "countryFormat": "Nhập mã nước 2 chữ cái, ví dụ VN",
+      "pickupWindow": "Khoảng đón ngựa tại phòng khám",
+      "leadHint": "Lịch đón vẫn theo thời gian chuẩn bị của tuyến như đơn thường (duyệt, hồ sơ kiểm dịch, xếp chuyến).",
+      "deadline": "Hạn giao tới đích cũ",
+      "notes": "Ghi chú",
+      "needFit": "Cần đính kèm Giấy đủ sức đi tiếp vào sự cố trước.",
+      "created": "Đã tạo đơn nối tiếp {{code}}",
+      "badge": "Đơn nối tiếp của {{code}}",
+      "freeBadge": "Miễn cước"
+    },
+    "customer": {
+      "euthanasiaTitle": "Cần quyết định của bạn về {{horse}}",
+      "euthanasiaIntro": "Trên chuyến {{trip}}, bác sĩ thú y khuyến nghị an tử nhân đạo cho con ngựa. Vui lòng đọc biên bản thú y bên dưới trước khi trả lời.",
+      "deadline": "Vui lòng trả lời trước {{time}}",
+      "emergencyClause": "Nếu hết thời gian mà công ty không liên lạc được với bạn, công ty được làm theo chỉ định của bác sĩ để ngựa không phải chịu đau đớn thêm (Chính sách 9.6).",
+      "agree": "Đồng ý an tử",
+      "agreeConfirm": "Bạn đồng ý để bác sĩ an tử con ngựa?",
+      "decline": "Từ chối, tiếp tục điều trị",
+      "declineConfirm": "Từ chối khuyến nghị an tử?",
+      "declineConfirmDesc": "Con ngựa tiếp tục được điều trị; chi phí điều trị từ lúc này do bạn chịu (Chính sách 9.6).",
+      "agreedMsg": "Đã ghi nhận bạn đồng ý",
+      "declinedMsg": "Đã ghi nhận bạn từ chối; điều phối viên sẽ báo bước tiếp theo",
+      "clinicTitle": "{{horse}} đang điều trị tại phòng khám",
+      "clinicNext": "Khi con ngựa khỏe, công ty tạo đơn nối tiếp từ phòng khám tới điểm giao (miễn cước nếu sự cố do lỗi công ty), hoặc bạn có thể tự đón ngựa tại phòng khám."
+    },
+    "settings": {
+      "euthanasiaMinutes": "Thời gian chờ chủ ngựa trả lời khuyến nghị an tử (Incident.EuthanasiaConsentMinutes)",
+      "euthanasiaMinutesHelp": "Quá thời gian này mà không liên lạc được, điều phối / quản lý được áp dụng ủy quyền khẩn cấp (5 – 1440 phút)",
+      "euthanasiaMinutesRange": "Từ 5 đến 1440 phút",
+      "minutes": "phút"
+    },
+    "claims": {
+      "priorApproved": "Đã trừ {{amount}} USD đã duyệt ở hồ sơ khác của con ngựa này"
+    },
+    "policy": {
+      "title": "Ngựa điều trị tại phòng khám, an tử và ngựa chết",
+      "clinicTitle": "Ở lại phòng khám:",
+      "clinic": "Khách được báo tên, địa chỉ, số điện thoại phòng khám và bác sĩ phụ trách. Đơn của con ngựa kết thúc tại phòng khám; phần cước chưa đi được hoàn theo bảng 9.1 (lỗi Khách thì không hoàn).",
+      "vetCostTitle": "Viện phí:",
+      "vetCost": "Sự cố do lỗi công ty thì công ty trả; ngựa tự phát bệnh, bất khả kháng hoặc lỗi Khách thì Khách trả trực tiếp cho phòng khám.",
+      "continuationTitle": "Đi tiếp khi khỏi bệnh:",
+      "continuation": "Khi bác sĩ cấp giấy đủ sức đi tiếp, công ty tạo đơn nối tiếp từ phòng khám tới điểm giao cũ (đi qua các bước như đơn thường). Sự cố do lỗi công ty thì đơn nối tiếp miễn cước. Khách cũng có thể tự đón ngựa tại phòng khám.",
+      "euthanasiaTitle": "Khuyến nghị an tử:",
+      "euthanasia": "Chỉ bác sĩ thú y được khuyến nghị an tử, vì lý do nhân đạo khẩn cấp. Khi ngựa còn sống, công ty hỏi ý chủ ngựa qua ứng dụng và email; chủ ngựa có {{minutes}} phút để trả lời.",
+      "declineTitle": "Chủ ngựa từ chối:",
+      "decline": "Ngựa tiếp tục được điều trị, đoàn xe vẫn đi tiếp. Chi phí điều trị từ lúc đó do chủ ngựa chịu, kể cả khi sự cố ban đầu do lỗi công ty.",
+      "emergencyTitle": "Ủy quyền khẩn cấp:",
+      "emergency": "Hết thời gian trên mà không liên lạc được và bác sĩ chỉ định an tử để ngựa không phải chịu đau đớn thêm, công ty được làm theo chỉ định của bác sĩ, ghi lại các lần đã liên lạc và báo ngay cho Khách.",
+      "deathTitle": "Ngựa chết:",
+      "death": "Công ty báo Khách ngay, lập biên bản có xác nhận của bác sĩ thú y (giấy chứng tử) và mở hồ sơ bồi thường (mục 8). Phần cước chưa đi được hoàn theo bảng 9.1.",
+      "deathClaimTitle": "Hồ sơ tử vong bổ sung:",
+      "deathClaim": "Nếu trước đó đã có hồ sơ thương tích được duyệt cho con ngựa, hồ sơ tử vong chỉ trả phần còn lại: tổng hai hồ sơ không vượt mức tối đa khi chết / mất ở mục 8."
     }
   }
 }

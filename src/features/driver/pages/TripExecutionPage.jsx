@@ -264,7 +264,7 @@ export default function TripExecutionPage() {
       </Card>
 
       {/* Sự cố của chuyến và phương án xử lý đã duyệt */}
-      <TripIncidentsCard incidents={incidents} trip={mission} />
+      <TripIncidentsCard incidents={incidents} trip={mission} onChanged={fetchMission} />
 
       {/* Danh sách các Mốc Lộ trình & Trạm kiểm soát */}
       <Card

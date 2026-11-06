@@ -103,10 +103,50 @@ export function toRouteChangePayload(values) {
   return { deactivateCheckpointIds, newCheckpoints, insertAfterCheckpointId: values.insertAfterCheckpointId || undefined };
 }
 
-/** Mức độ sự cố, từ nhẹ tới nặng */
+/** Mức độ sự cố, từ nhẹ tới nặng: Xanh lá -> Vàng -> Cam -> Đỏ */
 export const INCIDENT_SEVERITIES = ['Minor', 'Moderate', 'Major', 'Critical'];
 
-export const SEVERITY_COLOR = { Minor: 'default', Moderate: 'gold', Major: 'orange', Critical: 'red' };
+export const SEVERITY_COLOR = { Minor: 'green', Moderate: 'gold', Major: 'orange', Critical: 'red' };
+
+/** Cấu hình giao diện và dải màu trực quan (xanh -> vàng -> cam -> đỏ) */
+export const SEVERITY_CONFIG = {
+  Minor: {
+    color: 'green',
+    dot: '#16A34A',
+    bg: '#F0FDF4',
+    border: '#BBF7D0',
+    activeBg: '#DCFCE7',
+    activeBorder: '#16A34A',
+    text: '#15803D',
+  },
+  Moderate: {
+    color: 'gold',
+    dot: '#D97706',
+    bg: '#FFFBEB',
+    border: '#FDE68A',
+    activeBg: '#FEF3C7',
+    activeBorder: '#D97706',
+    text: '#B45309',
+  },
+  Major: {
+    color: 'orange',
+    dot: '#EA580C',
+    bg: '#FFF7ED',
+    border: '#FDBA74',
+    activeBg: '#FFEDD5',
+    activeBorder: '#EA580C',
+    text: '#C2410C',
+  },
+  Critical: {
+    color: 'red',
+    dot: '#DC2626',
+    bg: '#FEF2F2',
+    border: '#FECACA',
+    activeBg: '#FEE2E2',
+    activeBorder: '#DC2626',
+    text: '#B91C1C',
+  },
+};
 
 /** Trạng thái sự cố: Reported -> PlanProposed -> Approved -> Resolved (hoặc Rejected rồi đề xuất lại) */
 // AwaitingConsent: phương án đi vòng có phí đã duyệt, chờ mọi khách có ngựa trên xe đồng ý (R-14)
@@ -165,3 +205,8 @@ export function mapLinkOf(location) {
   const query = match ? `${match[1]},${match[2]}` : location || '';
   return `https://www.google.com/maps?q=${encodeURIComponent(query)}`;
 }
+
+/** Loại tài liệu sự cố (khớp IncidentDocumentTypes ở backend) */
+export const INCIDENT_DOCUMENT_TYPES = ['ScenePhoto', 'VetReport', 'DeathCertificate', 'FitToTravel'];
+
+export const DOCUMENT_TYPE_COLOR = { ScenePhoto: 'blue', VetReport: 'gold', DeathCertificate: 'red', FitToTravel: 'green' };

@@ -285,6 +285,20 @@ export default function PaymentSettingsPage() {
           <InputNumber min={0} max={30} precision={0} suffix={t('policy.units.days', 'ngày')} style={{ width: '100%' }} />
         </Form.Item>
       </Col>
+      <Col xs={24} md={12}>
+        {/* Chính sách 9.6: chờ chủ ngựa trả lời khuyến nghị an tử trước khi được ủy quyền khẩn cấp */}
+        <Form.Item
+          name="euthanasiaConsentMinutes"
+          label={t('incidentHealth.settings.euthanasiaMinutes')}
+          extra={t('incidentHealth.settings.euthanasiaMinutesHelp')}
+          rules={[
+            { required: true, message: t('payments.settings.required', 'Bắt buộc nhập') },
+            { type: 'number', min: 5, max: 1440, message: t('incidentHealth.settings.euthanasiaMinutesRange') },
+          ]}
+        >
+          <InputNumber min={5} max={1440} precision={0} suffix={t('incidentHealth.settings.minutes')} style={{ width: '100%' }} />
+        </Form.Item>
+      </Col>
     </Row>
   );
 

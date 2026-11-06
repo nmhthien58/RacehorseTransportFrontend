@@ -1,13 +1,15 @@
 // Đang tạo CustomerDetourConsentCard vì khách phải đồng ý / từ chối đi đường vòng có phí trên trang đơn (FE-10, R-14)
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, Button, Card, Flex, Popconfirm, Space, Tag, Typography, message } from 'antd';
-import { CheckOutlined, CloseOutlined, NodeIndexOutlined } from '@ant-design/icons';
+import { CheckOutlined, CloseOutlined, MedicineBoxOutlined, NodeIndexOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import IncidentRouteChange from '@components/common/IncidentRouteChange';
 import incidentService from '@services/incidentService';
 import { unwrapList, getErrorMessage } from '@utils/apiHelpers';
 import { formatUsd } from '@utils/incidents';
+// Khuyến nghị an tử: khách xem biên bản thú y trước khi trả lời
+import IncidentDocuments from '@components/common/IncidentDocuments';
 
 const { Text, Paragraph } = Typography;
 const ACTIVE_TRIP_STATUSES = ['Scheduled', 'InTransit', 'EmergencyRerouting'];
@@ -35,6 +37,8 @@ export default function CustomerDetourConsentCard({ booking, onChanged }) {
     return [...new Set(ids)];
   }, [booking]);
   const tripKey = tripIds.join(',');
+  // Tên các con ngựa của đơn: khuyến nghị an tử chỉ hỏi chủ của con ngựa đó
+  const horseKey = (booking?.horses || []).map((h) => h.horseName).join('|');
 
   useEffect(() => {
     if (!tripKey) return undefined;
@@ -43,13 +47,20 @@ export default function CustomerDetourConsentCard({ booking, onChanged }) {
       tripKey.split(',').map((id) => incidentService.getIncidents({ tripId: id, size: 50 }).then(unwrapList).catch(() => [])),
     )
       .then((lists) => {
-        if (active) setIncidents(lists.flat().filter((i) => i.status === 'AwaitingConsent'));
+        const horseNames = horseKey.split('|');
+        if (active)
+          setIncidents(
+            lists
+              .flat()
+              .filter((i) => i.status === 'AwaitingConsent')
+              .filter((i) => i.pendingConsentType !== 'Euthanasia' || horseNames.includes(i.affectedHorseName)),
+          );
       })
       .catch(() => active && setIncidents([]));
     return () => {
       active = false;
     };
-  }, [tripKey, refreshKey]);
+  }, [tripKey, horseKey, refreshKey]);
 
   if (!tripKey || incidents.length === 0) return null;
 
@@ -57,7 +68,12 @@ export default function CustomerDetourConsentCard({ booking, onChanged }) {
     setAnsweringId(incident.incidentId);
     try {
       await incidentService.customerConsent(incident.incidentId, { accept });
-      message.success(accept ? t('detourConsent.acceptedMsg') : t('detourConsent.declinedMsg'));
+      const euthanasia = incident.pendingConsentType === 'Euthanasia';
+      message.success(
+        euthanasia
+          ? t(accept ? 'incidentHealth.customer.agreedMsg' : 'incidentHealth.customer.declinedMsg')
+          : t(accept ? 'detourConsent.acceptedMsg' : 'detourConsent.declinedMsg'),
+      );
       setRefreshKey((k) => k + 1);
       onChanged?.();
     } catch (err) {
@@ -70,7 +86,55 @@ export default function CustomerDetourConsentCard({ booking, onChanged }) {
   return (
     <Flex vertical gap={12}>
       {incidents.map((inc) => {
-        const mine = (inc.consents || []).find((c) => c.bookingId === booking.bookingId);
+        const mine = (inc.consents || []).find((c) => c.bookingId === booking.bookingId && c.consentType !== 'Euthanasia');
+        if (inc.pendingConsentType === 'Euthanasia') {
+          return (
+            <Card
+              key={inc.incidentId}
+              style={{ borderColor: '#dc2626' }}
+              title={
+                <Space>
+                  <MedicineBoxOutlined style={{ color: '#dc2626' }} />
+                  {t('incidentHealth.customer.euthanasiaTitle', { horse: inc.affectedHorseName || '' })}
+                </Space>
+              }
+            >
+              <Paragraph style={{ marginBottom: 8 }}>{t('incidentHealth.customer.euthanasiaIntro', { trip: inc.tripCode })}</Paragraph>
+              <Paragraph style={{ marginBottom: 8 }}>
+                <Text strong>{t('incidents.fields.description')}: </Text>
+                {inc.description}
+              </Paragraph>
+              <IncidentDocuments incident={inc} />
+              <Alert
+                type="error"
+                showIcon
+                style={{ margin: '12px 0' }}
+                title={t('incidentHealth.customer.deadline', { time: inc.consentDeadline ? dayjs(inc.consentDeadline).format('HH:mm DD/MM/YYYY') : '—' })}
+                description={t('incidentHealth.customer.emergencyClause')}
+              />
+              <Space wrap>
+                <Popconfirm
+                  title={t('incidentHealth.customer.agreeConfirm')}
+                  okButtonProps={{ danger: true }}
+                  onConfirm={() => answer(inc, true)}
+                >
+                  <Button danger type="primary" icon={<CheckOutlined />} loading={answeringId === inc.incidentId}>
+                    {t('incidentHealth.customer.agree')}
+                  </Button>
+                </Popconfirm>
+                <Popconfirm
+                  title={t('incidentHealth.customer.declineConfirm')}
+                  description={t('incidentHealth.customer.declineConfirmDesc')}
+                  onConfirm={() => answer(inc, false)}
+                >
+                  <Button icon={<CloseOutlined />} loading={answeringId === inc.incidentId}>
+                    {t('incidentHealth.customer.decline')}
+                  </Button>
+                </Popconfirm>
+              </Space>
+            </Card>
+          );
+        }
         return (
           <Card
             key={inc.incidentId}

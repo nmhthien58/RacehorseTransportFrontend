@@ -20,7 +20,7 @@ export default function IncidentOutcome({ incident, lookup }) {
   if (!incident) return null;
   const rows = [];
   const payload = incident.actionPayload;
-  const userName = (id) => lookup.users?.[id] || `#${id}`;
+  const userName = (id) => lookup?.users?.[id] || `#${id}`;
 
   // Đổi xe (BE-14a): biển số xe mới; khi duyệt chuyến chuyển sang xe này
   if (incident.responseAction === 'ReplaceVehicle' && payload?.replacementVehicleId && lookup) {
@@ -66,15 +66,65 @@ export default function IncidentOutcome({ incident, lookup }) {
       </div>,
     );
   }
+  // Ở lại phòng khám (WaitRecover): phòng khám nơi con ngựa điều trị
+  const clinic = payload?.vetClinic;
+  if (incident.offloadOutcome === 'WaitRecover' && clinic) {
+    rows.push(
+      <div key="clinic">
+        <Text type="secondary">{t('incidentHealth.clinic.label')}: </Text>
+        <Text strong>{clinic.name}</Text>
+        <Text type="secondary"> · {clinic.address}</Text>
+        {clinic.phone && <Text type="secondary"> · {clinic.phone}</Text>}
+        {clinic.attendingVetName && <Text type="secondary"> · {clinic.attendingVetName}</Text>}
+      </div>,
+    );
+  }
+  // Khuyến nghị an tử: chờ chủ ngựa / đã trả lời / ủy quyền khẩn cấp (Chính sách 9.6)
+  const euthanasiaAnswer = (incident.consents || []).find((c) => c.consentType === 'Euthanasia');
+  if (incident.requiresEuthanasiaConsent || euthanasiaAnswer || incident.emergencyAuthorizedAt) {
+    let state;
+    if (incident.emergencyAuthorizedAt) {
+      state = (
+        <Tag color="volcano">
+          {t('incidentHealth.euthanasia.emergencyApplied', {
+            name: incident.emergencyAuthorizedByName || '—',
+            time: dayjs(incident.emergencyAuthorizedAt).format('DD/MM HH:mm'),
+          })}
+        </Tag>
+      );
+    } else if (euthanasiaAnswer) {
+      state = (
+        <Tag color={euthanasiaAnswer.accepted ? 'green' : 'red'}>
+          {euthanasiaAnswer.accepted ? t('incidentHealth.euthanasia.ownerAgreed') : t('incidentHealth.euthanasia.ownerDeclined')} ·{' '}
+          {dayjs(euthanasiaAnswer.decidedAt).format('DD/MM HH:mm')}
+        </Tag>
+      );
+    } else if (incident.pendingConsentType === 'Euthanasia') {
+      state = (
+        <Tag color="gold">
+          {t('incidentHealth.euthanasia.waiting', { time: incident.consentDeadline ? dayjs(incident.consentDeadline).format('DD/MM HH:mm') : '—' })}
+        </Tag>
+      );
+    } else {
+      state = <Tag>{t('incidentHealth.euthanasia.afterApproval')}</Tag>;
+    }
+    rows.push(
+      <div key="euthanasia">
+        <Text type="secondary">{t('incidentHealth.euthanasia.label')}: </Text>
+        {state}
+        {incident.emergencyAuthorizationNote && <Text type="secondary">{incident.emergencyAuthorizationNote}</Text>}
+      </div>,
+    );
+  }
   if (Number(incident.extraCostForCustomer) > 0) {
     rows.push(
       <div key="detour">
         <Text type="secondary">{t('incidentOutcome.detourCost')}: </Text>
         <Text strong>{formatUsd(incident.extraCostForCustomer)}</Text>
-        {(incident.consents || []).length > 0 && (
+        {(incident.consents || []).some((c) => c.consentType !== 'Euthanasia') && (
           <Space size={4} wrap style={{ marginLeft: 8 }}>
-            {incident.consents.map((c) => (
-              <Tag key={c.bookingId} color={c.accepted ? 'green' : 'red'}>
+            {incident.consents.filter((c) => c.consentType !== 'Euthanasia').map((c) => (
+              <Tag key={`${c.consentType}-${c.bookingId}`} color={c.accepted ? 'green' : 'red'}>
                 {c.bookingCode}: {c.accepted ? t('incidentOutcome.accepted') : t('incidentOutcome.declined')} · {dayjs(c.decidedAt).format('DD/MM HH:mm')}
               </Tag>
             ))}
@@ -88,6 +138,15 @@ export default function IncidentOutcome({ incident, lookup }) {
     rows.push(
       <div key="replacement">
         <Tag color={RESPONSE_ACTION_COLOR[incident.responseAction]}>{t(`incidents.action.${incident.responseAction}`)}</Tag>
+      </div>,
+    );
+  }
+  // Mức độ bị nâng lên khi duyệt ngựa chết: giữ mức tài xế báo lúc đầu
+  if (incident.initialSeverity && incident.initialSeverity !== incident.severity) {
+    rows.push(
+      <div key="severity">
+        <Text type="secondary">{t('incidentHealth.initialSeverity')}: </Text>
+        <Tag>{t(`incidents.severity.${incident.initialSeverity}`)}</Tag>
       </div>,
     );
   }

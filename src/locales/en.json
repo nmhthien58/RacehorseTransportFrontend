@@ -3063,7 +3063,7 @@
     "emergencyOffload": "Offloaded in an emergency",
     "offloadOutcome": "Horse leaves the trip",
     "outcome": {
-      "WaitRecover": "Recover, then travel on another trip",
+      "WaitRecover": "Stay at a vet clinic for treatment",
       "ReturnToOrigin": "Take the horse back to origin",
       "HandOverHere": "Customer receives the horse here",
       "Deceased": "Horse died"
@@ -3106,7 +3106,7 @@
     "horsePlaceholder": "Choose the horse",
     "outcome": "Next step",
     "outcomeHint": {
-      "WaitRecover": "The horse goes back to the trip planning queue",
+      "WaitRecover": "The booking ends for this horse at the clinic (unused fare refunded by cause); create a continuation booking once it is fit. The clinic is required.",
       "ReturnToOrigin": "Coordinator arranges the return; the horse is done with this booking",
       "HandOverHere": "The crew signs the e-POD with the customer on the spot",
       "Deceased": "Veterinary report required; an insurance claim opens automatically"
@@ -3482,6 +3482,145 @@
       "FleetCoordinator": "Fleet Coordinator",
       "DriverEscort": "Driver / Escort",
       "Customer": "Customer"
+    }
+  },
+  "incidentHealth": {
+    "initialSeverity": "Severity when reported",
+    "documentType": {
+      "ScenePhoto": "Scene photo",
+      "VetReport": "Vet report",
+      "DeathCertificate": "Death certificate",
+      "FitToTravel": "Fit-to-travel certificate"
+    },
+    "documents": {
+      "title": "Incident documents",
+      "none": "None yet",
+      "add": "Add document",
+      "view": "View",
+      "noLink": "(link unavailable)",
+      "deleteConfirm": "Delete this document?",
+      "deleted": "Document deleted",
+      "uploaded": "Document attached to the incident",
+      "modalTitle": "Attach a document to incident {{code}}",
+      "upload": "Upload",
+      "type": "Document type",
+      "note": "Note",
+      "notePlaceholder": "e.g. examined by the Lang Son station vet at 14:20",
+      "file": "File",
+      "fileHint": "JPG / PNG photo or PDF, up to 10 MB.",
+      "choose": "Choose file",
+      "fileRequired": "Please choose a file"
+    },
+    "report": {
+      "attachmentType": "Attachment type",
+      "attachment": "Scene photo / vet report (optional)",
+      "attachmentHint": "You can add it later under the trip's incidents when the vet sends the report.",
+      "chooseAttachment": "Take a photo / choose a file"
+    },
+    "plan": {
+      "deceasedHint": "Needs a vet report or death certificate in the incident documents. Severity becomes Critical on approval.",
+      "vetDocRequired": "The incident has no vet report or death certificate yet. Add one under Incident documents above before proposing.",
+      "euthanasiaConsent": "The horse is alive and the vet recommends euthanasia: the owner must agree",
+      "euthanasiaHint": "After approval the owner is asked. If they cannot be reached in time, the emergency authorisation clause applies (policy 9.6)."
+    },
+    "clinic": {
+      "label": "Vet clinic",
+      "title": "{{horse}} stays at a vet clinic",
+      "name": "Vet clinic name",
+      "namePlaceholder": "e.g. Lang Son Veterinary Clinic",
+      "address": "Clinic address",
+      "phone": "Phone",
+      "vet": "Attending vet",
+      "resolveFirst": "Resolve the incident (choose the cause) first to record vet costs and create the continuation booking.",
+      "recordExpense": "Record vet bill",
+      "recordDeath": "Horse died at the clinic",
+      "amount": "Vet bill (USD)",
+      "bearerRule": "Company fault: the company pays. Illness / force majeure / customer fault, or the owner declined euthanasia: the owner pays the clinic.",
+      "expenseLine": "Vet bill: {{amount}}",
+      "expenseSaved": "Vet bill recorded and the customer notified",
+      "bearer": {
+        "Company": "Company pays",
+        "Customer": "Owner pays"
+      },
+      "deathWarning": "The horse is recorded as deceased, the certificate is attached to the incident and a death claim is opened.",
+      "deathSaved": "Death at the clinic recorded",
+      "diedAtClinic": "Died at the clinic"
+    },
+    "euthanasia": {
+      "label": "Euthanasia advice",
+      "afterApproval": "Owner is asked after approval",
+      "waiting": "Waiting for the owner until {{time}}",
+      "ownerAgreed": "Owner agreed",
+      "ownerDeclined": "Owner declined",
+      "emergencyApplied": "Emergency authorisation: {{name}} · {{time}}",
+      "boardWaiting": "Waiting for the owner of {{horse}} to answer the euthanasia advice",
+      "minutesLeft": "About {{minutes}} minute(s) left (until {{time}}).",
+      "deadlinePassed": "The waiting time is over ({{time}}). Emergency authorisation can be applied if the owner still cannot be reached.",
+      "emergencyButton": "Apply emergency authorisation",
+      "emergencyTitle": "Emergency authorisation for incident {{code}}",
+      "emergencyWarning": "Only use this after trying to reach the owner and when the vet orders euthanasia. The horse will be recorded as deceased.",
+      "emergencyNote": "How the owner was contacted",
+      "emergencyNotePlaceholder": "e.g. called 3 times at 14:05, 14:20, 14:40 with no answer; no reply to email",
+      "emergencyDone": "Emergency authorisation applied"
+    },
+    "continuation": {
+      "create": "Create continuation booking",
+      "title": "Continuation booking for {{horse}}",
+      "free": "The incident was the company's fault: the continuation is free of charge (final quote 0).",
+      "paid": "The customer pays the quote of the new leg (the unused fare of the original booking was refunded by cause).",
+      "country": "Clinic country",
+      "countryFormat": "Enter a 2-letter country code, e.g. VN",
+      "pickupWindow": "Pickup window at the clinic",
+      "leadHint": "The pickup still follows the route's preparation time like a normal booking (review, clearance, trip planning).",
+      "deadline": "Delivery deadline to the original destination",
+      "notes": "Notes",
+      "needFit": "Attach the fit-to-travel certificate to the incident first.",
+      "created": "Continuation booking {{code}} created",
+      "badge": "Continuation of {{code}}",
+      "freeBadge": "Free of charge"
+    },
+    "customer": {
+      "euthanasiaTitle": "Your decision is needed about {{horse}}",
+      "euthanasiaIntro": "On trip {{trip}}, the veterinarian recommends humane euthanasia for the horse. Please read the vet report below before answering.",
+      "deadline": "Please answer before {{time}}",
+      "emergencyClause": "If we cannot reach you in time, we may follow the vet's advice to spare the horse further suffering (policy 9.6).",
+      "agree": "Agree to euthanasia",
+      "agreeConfirm": "Do you agree that the vet puts the horse down?",
+      "decline": "Decline, continue treatment",
+      "declineConfirm": "Decline the euthanasia advice?",
+      "declineConfirmDesc": "The horse stays under treatment; treatment costs from now on are yours (policy 9.6).",
+      "agreedMsg": "Your agreement has been recorded",
+      "declinedMsg": "Your decision has been recorded; the coordinator will tell you the next step",
+      "clinicTitle": "{{horse}} is being treated at a vet clinic",
+      "clinicNext": "Once the horse is fit, we create a continuation booking from the clinic to the destination (free if the incident was our fault), or you may collect the horse at the clinic."
+    },
+    "settings": {
+      "euthanasiaMinutes": "Time for the owner to answer euthanasia advice (Incident.EuthanasiaConsentMinutes)",
+      "euthanasiaMinutesHelp": "After this, if the owner cannot be reached, a coordinator / manager may apply emergency authorisation (5 – 1440 minutes)",
+      "euthanasiaMinutesRange": "From 5 to 1440 minutes",
+      "minutes": "min"
+    },
+    "claims": {
+      "priorApproved": "{{amount}} USD already approved on another claim for this horse is deducted"
+    },
+    "policy": {
+      "title": "Treatment at a vet clinic, euthanasia and death",
+      "clinicTitle": "Staying at a clinic:",
+      "clinic": "The customer is told the clinic's name, address, phone and attending vet. The booking ends for this horse at the clinic; the unused fare is refunded per table 9.1 (no refund when the customer is at fault).",
+      "vetCostTitle": "Vet costs:",
+      "vetCost": "Company fault: the company pays. Illness, force majeure or customer fault: the customer pays the clinic directly.",
+      "continuationTitle": "Travelling on after recovery:",
+      "continuation": "Once the vet certifies the horse fit to travel, the company creates a continuation booking from the clinic to the original destination (normal booking steps). It is free of charge when the incident was the company's fault. The customer may also collect the horse at the clinic.",
+      "euthanasiaTitle": "Euthanasia advice:",
+      "euthanasia": "Only a veterinarian may advise euthanasia, for urgent humane reasons. While the horse is alive, the company asks the owner in the app and by email; the owner has {{minutes}} minutes to answer.",
+      "declineTitle": "Owner declines:",
+      "decline": "The horse stays under treatment and the convoy carries on. Treatment costs from then on are the owner's, even when the original incident was the company's fault.",
+      "emergencyTitle": "Emergency authorisation:",
+      "emergency": "If the owner cannot be reached in time and the vet orders euthanasia to spare the horse further suffering, the company follows the vet's order, records its contact attempts and informs the customer at once.",
+      "deathTitle": "Death:",
+      "death": "The company informs the customer at once, records a vet-certified report (death certificate) and opens a claim (section 8). The unused fare is refunded per table 9.1.",
+      "deathClaimTitle": "Supplementary death claim:",
+      "deathClaim": "If an injury claim was already approved for the horse, the death claim pays only the remainder: both claims together never exceed the death / loss maximum in section 8."
     }
   }
 }

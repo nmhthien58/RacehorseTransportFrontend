@@ -44,6 +44,7 @@ function toPolicyView(raw) {
       MaxWaitingHours: del.maxWaitingHours,
       DeadlineBufferDays: raw?.values?.['Delivery.DeadlineBufferDays'] ?? del.deadlineBufferDays ?? 2,
     },
+    Incident: { EuthanasiaConsentMinutes: raw?.values?.['Incident.EuthanasiaConsentMinutes'] ?? raw?.incident?.euthanasiaConsentMinutes },
   };
 }
 
@@ -582,6 +583,16 @@ export default function PolicyPage() {
                   <Text strong style={{ color: '#1c1917' }}>{t('policy.sec9.horseHealthTitle', 'Sức khỏe ngựa giữa đường:')}</Text>{' '}
                   {t('policy.sec9.horseHealthDesc', 'Ngựa có thể được chỉ định dỡ khẩn cấp tại phòng khám thú y hoặc chuồng lưu trú gần nhất theo quyết định của bác sĩ thú y áp tải để đảm bảo an toàn tính mạng.')}
                 </Paragraph>
+                {/* Chính sách 1.2, mục 9.6: phòng khám, đơn nối tiếp, khuyến nghị an tử, ngựa chết */}
+                <Title level={4} style={{ color: '#1c1917', fontSize: 16, margin: '16px 0 8px' }}>
+                  9.6 {t('incidentHealth.policy.title')}
+                </Title>
+                {['clinic', 'vetCost', 'continuation', 'euthanasia', 'decline', 'emergency', 'death', 'deathClaim'].map((key) => (
+                  <Paragraph key={key} style={paragraphStyle}>
+                    <Text strong style={{ color: '#1c1917' }}>{t(`incidentHealth.policy.${key}Title`)}</Text>{' '}
+                    {t(`incidentHealth.policy.${key}`, { minutes: policy.Incident.EuthanasiaConsentMinutes ?? '—' })}
+                  </Paragraph>
+                ))}
               </Card>
 
               {/* Mục 10 */}

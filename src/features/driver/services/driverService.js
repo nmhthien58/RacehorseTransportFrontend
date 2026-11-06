@@ -1,6 +1,7 @@
 import api from '@services/api';
 import { ENDPOINTS } from '@services/endpoints';
-import { toFormData } from '@utils/apiHelpers';
+import { toFormData, unwrapData } from '@utils/apiHelpers';
+import incidentService from '@services/incidentService';
 
 /**
  * @file driverService.js
@@ -147,7 +148,14 @@ export const driverService = {
    * @returns {Promise<any>}
    */
   async reportIncident(tripId, incidentData) {
-    return api.post(ENDPOINTS.INCIDENTS.CREATE_FOR_TRIP(tripId), incidentData);
+    const { attachment, ...body } = incidentData;
+    const res = await api.post(ENDPOINTS.INCIDENTS.CREATE_FOR_TRIP(tripId), body);
+    // Ảnh hiện trường / biên bản thú y kèm lúc báo: đính kèm vào sự cố vừa tạo
+    if (attachment?.file) {
+      const created = unwrapData(res);
+      await incidentService.uploadDocument(created.incidentId, attachment);
+    }
+    return res;
   },
 
   /**

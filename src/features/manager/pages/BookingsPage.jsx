@@ -12,6 +12,7 @@ import {
   Segmented,
   Select,
   Table,
+  Tag,
   Tooltip,
   Typography,
   message,
@@ -244,10 +245,21 @@ export default function ManagerBookings({ isDashboardView = false }) {
       dataIndex: 'bookingCode',
       key: 'bookingCode',
       width: 130,
-      render: (code) => (
-        <Text strong style={{ color: '#0f172a', fontFamily: 'monospace', fontSize: 13 }}>
-          #{code}
-        </Text>
+      render: (code, record) => (
+        <>
+          <Text strong style={{ color: '#0f172a', fontFamily: 'monospace', fontSize: 13 }}>
+            #{code}
+          </Text>
+          {/* Đơn nối tiếp từ phòng khám (Chính sách 9.6) */}
+          {record.parentBookingCode && (
+            <div>
+              <Tag color="purple" style={{ marginTop: 4 }}>
+                {t('incidentHealth.continuation.badge', { code: record.parentBookingCode })}
+              </Tag>
+              {record.isFreeOfCharge && <Tag color="green">{t('incidentHealth.continuation.freeBadge')}</Tag>}
+            </div>
+          )}
+        </>
       ),
     },
     {

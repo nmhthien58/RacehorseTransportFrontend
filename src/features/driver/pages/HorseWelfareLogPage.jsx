@@ -431,7 +431,7 @@ export default function HorseWelfareLogPage() {
                           physicalCondition: status.physicalCondition,
                           feedStatus: status.feedStatus,
                         });
-                        message.success(`Đã chọn trạng thái: ${status.title}`);
+                        message.success(t('welfareCards.picked', { status: t(`welfareCards.${status.key}.title`) }));
                       }}
                       style={{
                         border: `2px solid ${isSelected ? status.borderColor : '#CBD5E1'}`,
@@ -455,16 +455,16 @@ export default function HorseWelfareLogPage() {
                             margin: 0,
                           }}
                         >
-                          {status.title}
+                          {t(`welfareCards.${status.key}.title`)}
                         </Tag>
                         {isSelected && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: status.iconColor, fontWeight: 700, fontSize: 12 }}>
-                            <CheckCircleOutlined /> Đang chọn
+                            <CheckCircleOutlined /> {t('welfareCards.selected')}
                           </div>
                         )}
                       </Flex>
                       <div style={{ fontSize: 12, color: isSelected ? '#1E293B' : '#64748B', marginTop: 4, fontWeight: isSelected ? 600 : 400 }}>
-                        {status.description}
+                        {t(`welfareCards.${status.key}.description`)}
                       </div>
                     </div>
                   </Col>

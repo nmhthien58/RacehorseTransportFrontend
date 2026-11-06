@@ -30,6 +30,7 @@ import {
 } from '@ant-design/icons';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { formatHorsePosition, positionSortKey } from '@utils/compartments';
 import { useAuthStore } from '@features/auth/store/authStore';
 import { Tooltip } from 'antd';
 import { useMissionDetail } from '../hooks/useDriverMissions';
@@ -657,7 +658,7 @@ export default function TripExecutionPage() {
         {(mission?.horses || [])
           .filter((h) => !showOnlyMine || isMyHorse(h))
           .slice()
-          .sort((a, b) => a.stallSlotNumber - b.stallSlotNumber)
+          .sort((a, b) => positionSortKey(a) - positionSortKey(b))
           .map((h, idx) => (
             <Row
               key={h.tripHorseId}
@@ -668,7 +669,7 @@ export default function TripExecutionPage() {
               <Col xs={24} md={14}>
                 <Text strong>{h.horseName}</Text>
                 <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
-                  {h.bookingCode} · {t('customerTrips.stall', { number: h.stallSlotNumber })}
+                  {h.bookingCode} · {formatHorsePosition(t, h)}
                   {h.escortName ? ` · ${t('driver.escortAssign.escort', { name: h.escortName })}` : ''}
                 </Text>
                 {isMyHorse(h) && (

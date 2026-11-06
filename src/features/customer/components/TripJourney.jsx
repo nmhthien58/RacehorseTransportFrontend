@@ -12,6 +12,7 @@ import {
 import incidentService from '@services/incidentService';
 import handoverService from '@services/handoverService';
 import { unwrapList } from '@utils/apiHelpers';
+import { formatHorsePosition } from '@utils/compartments';
 import {
   SEVERITY_COLOR,
   INCIDENT_STATUS_COLOR,
@@ -301,7 +302,7 @@ export default function TripJourney({ trip, lastLoadedAt, onRefresh }) {
                 <h2 className={styles.sectionTitle}>{t('customerTrips.healthTitle')}</h2>
                 {horse && (
                   <div className={styles.muted}>
-                    {horse.horseName} · {t('customerTrips.stall', { number: horse.stallSlotNumber })} ·{' '}
+                    {horse.horseName} · {formatHorsePosition(t, horse)} ·{' '}
                     {t('customerTrips.logCount', { count: horse.logs.length })} <TripHorseStatusTag status={horse.status} />
                     {horse.deliveredAt && <div>{t('customerTrips.deliveredAt', { time: formatTime(horse.deliveredAt) })}</div>}
                     {horse.offloadReason && <div>{t('customerTrips.offloadReason', { reason: horse.offloadReason })}</div>}

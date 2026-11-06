@@ -17,6 +17,7 @@ import {
   Switch,
   Table,
   Tag,
+  Tooltip,
   Typography,
   message,
 } from 'antd';
@@ -30,6 +31,7 @@ import {
   CopyOutlined,
   CompassOutlined,
   EnvironmentOutlined,
+  InfoCircleOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
@@ -42,6 +44,17 @@ import StatusTag from '@components/common/StatusTag';
 import RouteSuggestionPanel from '@features/coordinator/components/RouteSuggestionPanel';
 import StallMap from '@features/coordinator/components/StallMap';
 import { unwrapData, unwrapList, getErrorMessage, toIsoString } from '@utils/apiHelpers';
+import {
+  STALL_CLASS_COLORS,
+  STALL_CLASS_ORDER,
+  autoArrange,
+  compartmentLimit,
+  compartmentsNeeded,
+  findPlacementProblem,
+  positionOf,
+  toSlotNumber,
+  vehicleCompartmentCount,
+} from '@utils/compartments';
 
 const { Text, Title } = Typography;
 const { RangePicker } = DatePicker;
@@ -179,8 +192,9 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
   const [crew, setCrew] = useState(() =>
     (trip?.crew || []).map((c, idx) => ({ key: `c-${idx}`, userId: c.userId, crewRole: c.crewRole, isLead: c.isLead, duty: c.duty || '' })),
   );
-  const [slots, setSlots] = useState(() =>
-    Object.fromEntries((trip?.horses || []).map((h) => [h.bookingHorseId, h.stallSlotNumber])),
+  // Vị trí của từng con trên xe: bookingHorseId -> { compartmentNo, positionNo }; chưa có = đang ở khay chờ
+  const [placements, setPlacements] = useState(() =>
+    Object.fromEntries((trip?.horses || []).map((h) => [h.bookingHorseId, positionOf(h)])),
   );
   // Escort phụ trách từng con (R-06): bookingHorseId -> userId; bỏ trống = backend tự phân theo ô chuồng
   const [escortOf, setEscortOf] = useState(() =>
@@ -274,7 +288,13 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
   const vehicleOptions = useMemo(() => {
     const list = [...vehicles];
     if (trip && !list.some((v) => v.assetId === trip.vehicleId)) {
-      list.unshift({ assetId: trip.vehicleId, assetCode: trip.vehicleCode, assetType: trip.vehicleType, capacityHorses: trip.vehicleCapacity });
+      list.unshift({
+        assetId: trip.vehicleId,
+        assetCode: trip.vehicleCode,
+        assetType: trip.vehicleType,
+        capacityHorses: trip.vehicleCapacity,
+        compartmentCount: trip.vehicleCompartmentCount,
+      });
     }
     return list;
   }, [vehicles, trip]);
@@ -287,7 +307,8 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
   }, [crewOptions, trip]);
 
   const selectedVehicle = vehicleOptions.find((v) => v.assetId === vehicleId);
-  const capacity = selectedVehicle?.capacityHorses || 0;
+  const compartmentCount = vehicleCompartmentCount(selectedVehicle);
+  const neededCompartments = compartmentsNeeded(selectedHorses);
   const driverCount = crew.filter((c) => c.crewRole === 'Driver' && c.userId).length;
   const escortCount = crew.filter((c) => c.crewRole === 'Escort' && c.userId).length;
   const escortsNeeded = Math.ceil(selectedHorses.length / HORSES_PER_ESCORT);
@@ -418,19 +439,12 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
     return tripEscorts.some((e) => e.userId === userId) ? userId : null;
   };
 
-  // Ô chuồng: giữ số đã nhập, ngựa mới chọn được gán ô trống nhỏ nhất
-  const slotOf = (bookingHorseId) => {
-    if (slots[bookingHorseId]) return slots[bookingHorseId];
-    const used = new Set(selectedIds.map((id) => slots[id]).filter(Boolean));
-    let next = 1;
-    for (const id of selectedIds) {
-      if (slots[id]) continue;
-      while (used.has(next)) next += 1;
-      if (id === bookingHorseId) return next;
-      used.add(next);
-    }
-    return next;
+  // Vị trí đang dùng của một con; khoang vượt số khoang của xe đang chọn (đổi sang xe nhỏ hơn) coi như chưa xếp
+  const placementOf = (bookingHorseId) => {
+    const placement = placements[bookingHorseId];
+    return placement && placement.compartmentNo <= compartmentCount ? placement : null;
   };
+  const unplacedCount = selectedIds.filter((id) => !placementOf(id)).length;
 
   const toggleHorse = (horse, checked) => {
     if (checked && mode && horse.transportMode !== mode) {
@@ -439,7 +453,7 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
     }
     setSelectedIds((prev) => (checked ? [...prev, horse.bookingHorseId] : prev.filter((id) => id !== horse.bookingHorseId)));
     if (!checked) {
-      setSlots((prev) => {
+      setPlacements((prev) => {
         const next = { ...prev };
         delete next[horse.bookingHorseId];
         return next;
@@ -447,21 +461,45 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
     }
   };
 
-  // Sơ đồ chuồng: đổi chỗ hai ô (ô đích trống thì chỉ chuyển sang)
-  const moveHorse = (fromSlot, toSlot) => {
-    const current = Object.fromEntries(selectedIds.map((id) => [id, slotOf(id)]));
-    const fromId = selectedIds.find((id) => current[id] === fromSlot);
-    const toId = selectedIds.find((id) => current[id] === toSlot);
-    if (!fromId) return;
-    setSlots({ ...current, [fromId]: toSlot, ...(toId ? { [toId]: fromSlot } : {}) });
+  // Tự xếp: Riêng trước, rồi Rưỡi, rồi Ghép; ngựa cùng đơn gom vào cùng khoang
+  const arrangeHorses = () => {
+    const { placements: next, unplaced } = autoArrange(
+      selectedHorses.map((h) => ({ key: h.bookingHorseId, stallClass: h.stallClass, bookingId: h.bookingId })),
+      compartmentCount,
+    );
+    setPlacements(next);
+    if (unplaced > 0) {
+      message.warning(t('tripPlan.compartments.notEnough', { have: compartmentCount, needed: neededCompartments, count: unplaced }));
+    } else {
+      message.success(t('tripPlan.compartments.arranged', { count: selectedHorses.length }));
+    }
   };
 
-  // Tự phân công giống backend: xếp theo ô chuồng, ô 1-3 cho escort đầu tiên, 4-6 cho escort thứ hai...
+  // Tự phân công theo khoang: đi lần lượt từ khoang 1, mỗi áp tải nhận trọn khoang cho tới khi đủ 3 con
+  // (một khoang không chia cho hai người); ngựa còn ở khay để trống cho backend tự phân khi lưu
   const autoAssignEscorts = () => {
-    const ordered = [...selectedIds].sort((a, b) => slotOf(a) - slotOf(b));
-    setEscortOf(
-      Object.fromEntries(ordered.map((id, idx) => [id, tripEscorts[Math.floor(idx / HORSES_PER_ESCORT)]?.userId ?? null])),
-    );
+    const byCompartment = new Map();
+    selectedIds.forEach((id) => {
+      const placement = placementOf(id);
+      if (placement) byCompartment.set(placement.compartmentNo, [...(byCompartment.get(placement.compartmentNo) || []), id]);
+    });
+    const next = {};
+    let escortIdx = 0;
+    let load = 0;
+    [...byCompartment.keys()]
+      .sort((a, b) => a - b)
+      .forEach((no) => {
+        const ids = byCompartment.get(no);
+        if (load > 0 && load + ids.length > HORSES_PER_ESCORT) {
+          escortIdx += 1;
+          load = 0;
+        }
+        ids.forEach((id) => {
+          next[id] = tripEscorts[escortIdx]?.userId ?? null;
+        });
+        load += ids.length;
+      });
+    setEscortOf(next);
   };
 
   const updateCrew = (key, patch) => setCrew((prev) => prev.map((c) => (c.key === key ? { ...c, ...patch } : c)));
@@ -590,7 +628,10 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
       .map((c) => ({ userId: c.userId, crewRole: c.crewRole, isLead: Boolean(c.isLead), duty: c.duty?.trim() || null })),
     horses: selectedIds.map((id) => ({
       bookingHorseId: id,
-      stallSlotNumber: slotOf(id),
+      compartmentNo: placementOf(id)?.compartmentNo ?? null,
+      positionNo: placementOf(id)?.positionNo ?? null,
+      // Số ô cũ để backend chưa có khoang vẫn nhận
+      stallSlotNumber: placementOf(id) ? toSlotNumber(placementOf(id).compartmentNo, placementOf(id).positionNo) : null,
       escortUserId: escortIdOf(id),
       notes: pool.find((h) => h.bookingHorseId === id)?.notes || null,
     })),
@@ -610,6 +651,24 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
     if (selectedIds.length === 0) return t('tripPlan.messages.needHorse');
     if (!periodValid) return t('tripPlan.messages.needPeriod');
     if (!vehicleId) return t('tripPlan.messages.needVehicle');
+    if (neededCompartments > compartmentCount) {
+      return t('tripPlan.messages.notEnoughCompartments', { have: compartmentCount, needed: neededCompartments });
+    }
+    if (unplacedCount > 0) return t('tripPlan.messages.unplacedHorses', { count: unplacedCount });
+    // Kế hoạch cũ (xếp theo ô) có thể để hai hạng chung một khoang: bắt xếp lại trước khi lưu
+    const problem = findPlacementProblem(
+      selectedHorses.map((h) => ({ key: h.bookingHorseId, stallClass: h.stallClass })),
+      Object.fromEntries(selectedIds.map((id) => [id, placementOf(id)])),
+      Array.from({ length: compartmentCount }, (_, i) => i + 1),
+    );
+    if (problem) {
+      return t(`tripPlan.compartments.reasons.${problem.reason}`, {
+        number: problem.compartmentNo,
+        current: t(`tripPlan.compartments.class.${problem.stallClass}`),
+        other: t(`tripPlan.compartments.class.${problem.otherClass || problem.stallClass}`),
+        limit: problem.limit,
+      });
+    }
     if (driverCount < 1) return t('tripPlan.messages.needDriver');
     if (submit && isDriverWarning) {
       return t('tripPlan.messages.needTwoDrivers', {
@@ -736,12 +795,29 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
                     '—'
                   ),
               },
-              { title: t('tripPlan.fields.stallClass'), dataIndex: 'stallClass', width: 90, render: (s) => <Tag>{s}</Tag> },
+              {
+                title: t('tripPlan.fields.stallClass'),
+                dataIndex: 'stallClass',
+                width: 90,
+                render: (s) => (
+                  <Tooltip title={t(`tripPlan.compartments.classHint.${s || 'Shared'}`)}>
+                    <Tag color={STALL_CLASS_COLORS[s || 'Shared']}>{t(`tripPlan.compartments.class.${s || 'Shared'}`)}</Tag>
+                  </Tooltip>
+                ),
+              },
               { title: t('tripPlan.fields.dossier'), dataIndex: 'dossierStatus', width: 120, render: (s) => <StatusTag status={s} /> },
               {
                 title: t('tripPlan.fields.slot'),
-                width: 80,
-                render: (_, h) => (selectedIds.includes(h.bookingHorseId) ? slotOf(h.bookingHorseId) : null),
+                width: 110,
+                render: (_, h) => {
+                  if (!selectedIds.includes(h.bookingHorseId)) return null;
+                  const placement = placementOf(h.bookingHorseId);
+                  return placement ? (
+                    t('tripPlan.compartments.positionShort', { compartment: placement.compartmentNo, position: placement.positionNo })
+                  ) : (
+                    <Text type="secondary">{t('tripPlan.compartments.unplacedShort')}</Text>
+                  );
+                },
               },
             ]}
           />
@@ -771,21 +847,54 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
                 />
               </div>
               <div>
-                <Text strong>{t('tripPlan.fields.vehicle')}</Text>
+                <Text strong>{t('tripPlan.fields.vehicle')}</Text>{' '}
+                <Tooltip title={STALL_CLASS_ORDER.map((cls) => t(`tripPlan.compartments.classHint.${cls}`)).join(' · ')}>
+                  <InfoCircleOutlined style={{ color: '#94a3b8' }} />
+                </Tooltip>
+                {/* Xe thiếu khoang vẫn hiện nhưng không chọn được, kèm lý do */}
                 <Select
                   style={{ width: '100%', marginTop: 6 }}
                   placeholder={periodValid ? t('tripPlan.placeholders.vehicle') : t('tripPlan.placeholders.choosePeriod')}
                   disabled={!periodValid}
                   value={vehicleId}
                   onChange={setVehicleId}
-                  options={vehicleOptions.map((v) => ({
-                    value: v.assetId,
-                    label: `${v.assetCode} · ${v.assetType} · ${t('tripPlan.fields.capacity', { count: v.capacityHorses })}${v.hasClimateControl ? ' · ❄' : ''}`,
-                  }))}
+                  options={vehicleOptions.map((v) => {
+                    const have = vehicleCompartmentCount(v);
+                    return {
+                      value: v.assetId,
+                      short: neededCompartments - have,
+                      disabled: neededCompartments > have && v.assetId !== vehicleId,
+                      label: `${v.assetCode} · ${v.assetType} · ${t('tripPlan.compartments.vehicleCompartments', { count: have })}${v.hasClimateControl ? ' · ❄' : ''}`,
+                    };
+                  })}
+                  // Lý do xuống dòng riêng để không bị cắt chữ trên màn hẹp
+                  optionRender={(option) => (
+                    <div style={{ whiteSpace: 'normal' }}>
+                      {option.data.label}
+                      {option.data.short > 0 && (
+                        <div style={{ fontSize: 12, color: '#dc2626' }}>
+                          {t('tripPlan.compartments.vehicleShort', { count: option.data.short })}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 />
-                {capacity > 0 && selectedHorses.length > capacity && (
-                  <Text type="danger" style={{ fontSize: 12 }}>
-                    {t('tripPlan.messages.overCapacity', { capacity })}
+                {selectedHorses.length > 0 && (
+                  <Text
+                    type={selectedVehicle && neededCompartments > compartmentCount ? 'danger' : 'secondary'}
+                    style={{ fontSize: 12, display: 'block', marginTop: 4 }}
+                  >
+                    {selectedVehicle
+                      ? t('tripPlan.compartments.needVsHave', { needed: neededCompartments, have: compartmentCount })
+                      : t('tripPlan.compartments.needOnly', {
+                          needed: neededCompartments,
+                          detail: STALL_CLASS_ORDER.map((cls) => {
+                            const n = selectedHorses.filter((h) => (h.stallClass || 'Shared') === cls).length;
+                            return n ? `${n} ${t(`tripPlan.compartments.class.${cls}`)} → ${Math.ceil(n / compartmentLimit(cls))}` : null;
+                          })
+                            .filter(Boolean)
+                            .join(', '),
+                        })}
                   </Text>
                 )}
               </div>
@@ -885,17 +994,22 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
       {/* 4. Sơ đồ chuồng + escort phụ trách (R-06) */}
       <Card title={<Title level={5} style={{ margin: 0 }}>{t('tripPlan.sections.stallMap')}</Title>} style={{ borderRadius: 14 }}>
         <StallMap
-          capacity={capacity}
+          compartmentCount={compartmentCount}
           escorts={tripEscorts}
           horses={selectedHorses.map((h) => ({
             key: h.bookingHorseId,
-            slot: slotOf(h.bookingHorseId),
             horseName: h.horseName,
             bookingCode: h.bookingCode,
+            bookingId: h.bookingId,
+            stallClass: h.stallClass,
+            placement: placementOf(h.bookingHorseId),
             escortUserId: escortIdOf(h.bookingHorseId),
           }))}
-          onMove={moveHorse}
-          onAssign={(key, userId) => setEscortOf((prev) => ({ ...prev, [key]: userId }))}
+          onPlace={(changes) => setPlacements((prev) => ({ ...prev, ...changes }))}
+          onAssign={(keys, userId) =>
+            setEscortOf((prev) => ({ ...prev, ...Object.fromEntries(keys.map((key) => [key, userId])) }))
+          }
+          onAutoArrange={arrangeHorses}
           onAutoAssign={autoAssignEscorts}
         />
       </Card>

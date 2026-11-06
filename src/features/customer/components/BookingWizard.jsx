@@ -458,7 +458,7 @@ export default function BookingWizard({
         }
       } catch (err) {
         if (isSubscribed) {
-          message.error(getErrorMessage(err, 'Không thể tải danh sách hồ sơ ngựa'));
+          message.error(getErrorMessage(err, t('bookingWizardUi.loadHorsesFailed')));
         }
       } finally {
         if (isSubscribed) {
@@ -472,7 +472,7 @@ export default function BookingWizard({
     return () => {
       isSubscribed = false;
     };
-  }, [initialValues]);
+  }, [initialValues, t]);
 
   // Toggle chọn cá thể ngựa
   const handleToggleHorse = (horseId) => {
@@ -714,7 +714,7 @@ export default function BookingWizard({
       } catch (err) {
         if (!cancelled) {
           setQuote(null);
-          setQuoteError(getErrorMessage(err, 'Không tính được báo giá cho tuyến đường này'));
+          setQuoteError(getErrorMessage(err, t('bookingWizardUi.quoteFailed')));
         }
       } finally {
         if (!cancelled) setQuoteLoading(false);
@@ -725,7 +725,7 @@ export default function BookingWizard({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [currentStep, quoteRequest]);
+  }, [currentStep, quoteRequest, t]);
 
   const quoteItems = (quote?.lines || []).map((line, idx) => ({ key: `${line.code}-${idx}`, ...line }));
   const currencyCode = quote?.currencyCode || 'USD';
@@ -745,7 +745,7 @@ export default function BookingWizard({
 
     if (currentStep === 0 || targetStep >= 1) {
       if (getValues('PickupCountryCode') === getValues('DropoffCountryCode')) {
-        message.error('Quốc gia xuất phát và quốc gia đích không được trùng nhau.');
+        message.error(t('bookingWizardUi.sameCountry'));
         return;
       }
       if (!groundPointsReady()) return;
@@ -761,7 +761,7 @@ export default function BookingWizard({
 
     if (targetStep >= 3) {
       if (selectedHorseIds.length === 0) {
-        message.warning('Vui lòng chọn ít nhất 1 cá thể ngựa đủ điều kiện.');
+        message.warning(t('bookingWizardUi.pickHorse'));
         return;
       }
       const targetPickupDate = pickupWindowEnd || pickupWindowStart || null;
@@ -786,7 +786,7 @@ export default function BookingWizard({
 
       if (hasError) {
         setHorseConditionErrors((prev) => ({ ...prev, ...conditionErrors }));
-        message.error('Có cá thể ngựa chưa đạt điều kiện vận chuyển theo chính sách. Vui lòng kiểm tra lại!');
+        message.error(t('bookingWizardUi.ineligibleHorse'));
         return;
       }
       const valueProblem = validateHorseValues();
@@ -806,7 +806,7 @@ export default function BookingWizard({
         return;
       }
       if (getValues('PickupCountryCode') === getValues('DropoffCountryCode')) {
-        message.error('Quốc gia xuất phát và quốc gia đích không được trùng nhau.');
+        message.error(t('bookingWizardUi.sameCountry'));
         return;
       }
       if (!groundPointsReady()) return;
@@ -822,7 +822,7 @@ export default function BookingWizard({
 
     if (currentStep === 2) {
       if (selectedHorseIds.length === 0) {
-        message.warning('Vui lòng chọn ít nhất 1 cá thể ngựa để tiếp tục.');
+        message.warning(t('bookingWizardUi.pickHorse'));
         return;
       }
       const targetPickupDate = pickupWindowEnd || pickupWindowStart || null;
@@ -847,7 +847,7 @@ export default function BookingWizard({
 
       if (hasError) {
         setHorseConditionErrors((prev) => ({ ...prev, ...conditionErrors }));
-        message.error('Có cá thể ngựa chưa đạt điều kiện vận chuyển theo chính sách. Vui lòng kiểm tra lại!');
+        message.error(t('bookingWizardUi.ineligibleHorse'));
         return;
       }
       const valueProblem = validateHorseValues();
@@ -973,10 +973,10 @@ export default function BookingWizard({
   };
 
   const stepItems = [
-    { title: 'Lộ trình & Phương thức', icon: <EnvironmentOutlined /> },
-    { title: 'Lịch trình & Dịch vụ', icon: <CalendarOutlined /> },
-    { title: 'Ngựa & Hạng chuồng', icon: <CheckOutlined /> },
-    { title: 'Xem lại & Báo giá', icon: <DollarOutlined /> },
+    { title: t('bookingWizardUi.step1'), icon: <EnvironmentOutlined /> },
+    { title: t('bookingWizardUi.step2'), icon: <CalendarOutlined /> },
+    { title: t('bookingWizardUi.step3'), icon: <CheckOutlined /> },
+    { title: t('bookingWizardUi.step4'), icon: <DollarOutlined /> },
   ];
 
   return (
@@ -994,17 +994,17 @@ export default function BookingWizard({
         <Flex align="center" justify="space-between" wrap="wrap" gap={12}>
           <div>
             <Title level={4} style={{ margin: 0, fontWeight: 700, color: '#0f172a' }}>
-              Đặt chuyến vận chuyển ngựa
+              {t('bookingWizardUi.title')}
             </Title>
             <Text type="secondary" style={{ fontSize: 13 }}>
-              {currentStep === 0 && 'Lựa chọn phương thức vận chuyển và địa điểm giao nhận'}
-              {currentStep === 1 && 'Thiết lập thời gian khởi hành và dịch vụ chăm sóc'}
-              {currentStep === 2 && 'Chọn danh sách ngựa vận chuyển và đăng ký hạng chuồng'}
-              {currentStep === 3 && 'Kiểm tra bảng báo giá ước tính và xác nhận gửi đơn'}
+              {currentStep === 0 && t('bookingWizardUi.step1Desc')}
+              {currentStep === 1 && t('bookingWizardUi.step2Desc')}
+              {currentStep === 2 && t('bookingWizardUi.step3Desc')}
+              {currentStep === 3 && t('bookingWizardUi.step4Desc')}
             </Text>
           </div>
           <Tag color="gold" style={{ fontWeight: 600, borderRadius: 20, padding: '2px 12px' }}>
-            Bước {currentStep + 1} / 4
+            {t('bookingWizardUi.stepOf', { step: currentStep + 1, total: 4 })}
           </Tag>
         </Flex>
       </div>
@@ -1028,7 +1028,7 @@ export default function BookingWizard({
           {/* PHẦN 1: CHỌN PHƯƠNG THỨC VẬN CHUYỂN */}
           <div style={{ marginBottom: 24 }}>
             <Text strong style={{ fontSize: 14, color: '#0f172a', display: 'block', marginBottom: 10 }}>
-              1. Chọn phương thức vận chuyển
+              {t('bookingWizardUi.modeTitle')}
             </Text>
             <Row gutter={[16, 16]}>
               {TRANSPORT_MODES.map((mode) => {
@@ -1074,7 +1074,7 @@ export default function BookingWizard({
                         </Flex>
                         {isSelected && (
                           <Tag color="gold" style={{ margin: 0, fontWeight: 600 }}>
-                            Đang chọn
+                            {t('bookingWizardUi.selected')}
                           </Tag>
                         )}
                       </Flex>
@@ -1102,7 +1102,7 @@ export default function BookingWizard({
           {/* PHẦN 2: QUỐC GIA & ĐỊA ĐIỂM GIAO NHẬN */}
           <div>
             <Text strong style={{ fontSize: 14, color: '#0f172a', display: 'block', marginBottom: 12 }}>
-              2. Lộ trình giao nhận
+              {t('bookingWizardUi.routeTitle')}
             </Text>
 
             <Row gutter={16}>
@@ -1119,7 +1119,7 @@ export default function BookingWizard({
                   styles={{ body: { padding: '16px 18px' } }}
                 >
                   <Tag color="orange" style={{ marginBottom: 12, fontWeight: 600 }}>
-                    ĐIỂM XUẤT PHÁT
+                    {t('bookingWizardUi.originTag')}
                   </Tag>
 
                   <Controller
@@ -1127,7 +1127,7 @@ export default function BookingWizard({
                     control={control}
                     rules={{ required: true }}
                     render={({ field }) => (
-                      <Form.Item label="Quốc gia xuất phát" required style={{ marginBottom: 12 }}>
+                      <Form.Item label={t('bookingWizardUi.originCountry')} required style={{ marginBottom: 12 }}>
                         <Select
                           {...field}
                           size="large"
@@ -1157,7 +1157,7 @@ export default function BookingWizard({
                       render={({ field }) => {
                         const airports = airportsByCountry[pickupCountry] || [];
                         return (
-                          <Form.Item label="Sân bay / Cảng xuất phát" required style={{ marginBottom: 0 }}>
+                          <Form.Item label={t('bookingWizardUi.originAirport')} required style={{ marginBottom: 0 }}>
                             <Select
                               {...field}
                               size="large"
@@ -1200,7 +1200,7 @@ export default function BookingWizard({
                   styles={{ body: { padding: '16px 18px' } }}
                 >
                   <Tag color="green" style={{ marginBottom: 12, fontWeight: 600 }}>
-                    ĐIỂM ĐÍCH ĐẾN
+                    {t('bookingWizardUi.destinationTag')}
                   </Tag>
 
                   <Controller
@@ -1208,7 +1208,7 @@ export default function BookingWizard({
                     control={control}
                     rules={{ required: true }}
                     render={({ field }) => (
-                      <Form.Item label="Quốc gia đến" required style={{ marginBottom: 12 }}>
+                      <Form.Item label={t('bookingWizardUi.destinationCountry')} required style={{ marginBottom: 12 }}>
                         <Select
                           {...field}
                           size="large"
@@ -1242,7 +1242,7 @@ export default function BookingWizard({
                       render={({ field }) => {
                         const airports = airportsByCountry[dropoffCountry] || [];
                         return (
-                          <Form.Item label="Sân bay / Cảng tiếp nhận" required style={{ marginBottom: 0 }}>
+                          <Form.Item label={t('bookingWizardUi.destinationAirport')} required style={{ marginBottom: 0 }}>
                             <Select
                               {...field}
                               size="large"
@@ -1500,7 +1500,7 @@ export default function BookingWizard({
           {/* Dịch vụ bảo vệ & Tiện ích khoang */}
           <div style={{ marginBottom: 24 }}>
             <Text strong style={{ fontSize: 14, color: '#0f172a', display: 'block', marginBottom: 12 }}>
-              2. Tiện ích khoang & Bảo hiểm hành trình
+              {t('bookingWizardUi.servicesTitle')}
             </Text>
 
             <Row gutter={[16, 16]}>
@@ -1530,12 +1530,12 @@ export default function BookingWizard({
                       >
                         <Flex justify="space-between" align="center" style={{ marginBottom: 6 }}>
                           <strong style={{ fontSize: 14, color: '#0f172a' }}>
-                            Khoang kiểm soát nhiệt độ (Climate Control)
+                            {t('bookingWizardUi.climate')}
                           </strong>
                           <Checkbox checked={isChecked} />
                         </Flex>
                         <Text type="secondary" style={{ fontSize: 12.5, lineHeight: 1.45, display: 'block' }}>
-                          Duy trì ổn định 18°C - 22°C suốt hành trình, đảm bảo hô hấp và sức bền cho ngựa thi đấu.
+                          {t('bookingWizardUi.climateDesc')}
                         </Text>
                         {/* Phụ phí SUR_CLIMATE trong Bảng giá chung (hiện 10%) */}
                         <Tag color="orange" style={{ marginTop: 8 }}>
@@ -1556,7 +1556,7 @@ export default function BookingWizard({
           {/* Ghi chú hướng dẫn đặc biệt */}
           <div>
             <Text strong style={{ fontSize: 14, color: '#0f172a', display: 'block', marginBottom: 8 }}>
-              3. Hướng dẫn chăm sóc đặc biệt (Tùy chọn)
+              {t('bookingWizardUi.careTitle')}
             </Text>
             <Controller
               name="SpecialInstructions"
@@ -1565,7 +1565,7 @@ export default function BookingWizard({
                 <TextArea
                   {...field}
                   rows={3}
-                  placeholder="Ghi chú chế độ ăn cỏ, bổ sung nước điện giải, tiền sử say xe hoặc yêu cầu chăm sóc của bác sĩ thú y..."
+                  placeholder={t('bookingWizardUi.carePlaceholder')}
                   style={{ borderRadius: 8, padding: '10px 12px' }}
                 />
               )}
@@ -1583,10 +1583,10 @@ export default function BookingWizard({
             <Flex justify="space-between" align="center" wrap="wrap" gap={8}>
               <div>
                 <Text strong style={{ fontSize: 14, color: '#0f172a' }}>
-                  Danh sách ngựa tham gia chuyến vận chuyển
+                  {t('bookingWizardUi.horsesTitle')}
                 </Text>
                 <Text type="secondary" style={{ display: 'block', fontSize: 12.5 }}>
-                  Chọn ít nhất 1 cá thể ngựa đủ điều kiện sức khỏe và cấu hình hạng chuồng phù hợp.
+                  {t('bookingWizardUi.horsesHint')}
                 </Text>
               </div>
               <Button
@@ -1595,7 +1595,7 @@ export default function BookingWizard({
                 onClick={() => navigate(ROUTES.CUSTOMER_HORSES_NEW)}
                 style={{ borderRadius: 8 }}
               >
-                Thêm hồ sơ ngựa mới
+                {t('bookingWizardUi.addHorse')}
               </Button>
             </Flex>
           </div>
@@ -1615,7 +1615,7 @@ export default function BookingWizard({
 
           {loadingHorses ? (
             <div style={{ textAlign: 'center', padding: '36px 0' }}>
-              <Text type="secondary">Đang tải danh sách hồ sơ ngựa...</Text>
+              <Text type="secondary">{t('bookingWizardUi.loadingHorses')}</Text>
             </div>
           ) : availableHorses.length === 0 ? (
             <Card
@@ -1633,10 +1633,10 @@ export default function BookingWizard({
                 description={
                   <div>
                     <strong style={{ fontSize: 15, color: '#0f172a', display: 'block', marginBottom: 4 }}>
-                      Bạn chưa có hồ sơ ngựa nào trong hệ thống
+                      {t('bookingWizardUi.noHorses')}
                     </strong>
                     <Text type="secondary" style={{ fontSize: 13 }}>
-                      Vui lòng tạo hồ sơ ngựa trước khi gửi yêu cầu vận chuyển mới.
+                      {t('bookingWizardUi.noHorsesHint')}
                     </Text>
                   </div>
                 }
@@ -1653,7 +1653,7 @@ export default function BookingWizard({
                     marginTop: 10,
                   }}
                 >
-                  Tạo hồ sơ ngựa ngay
+                  {t('bookingWizardUi.createHorse')}
                 </Button>
               </Empty>
             </Card>
@@ -1682,9 +1682,9 @@ export default function BookingWizard({
                   eligibility = {
                     eligible: false,
                     reason: 'IN_OTHER_BOOKING',
-                    tagText: `ĐANG Ở ĐƠN ${busy.bookingCode}`,
+                    tagText: t('bookingWizardUi.busyTag', { code: busy.bookingCode }),
                     tagColor: 'error',
-                    message: `Ngựa đang nằm trong đơn ${busy.bookingCode} có thời gian trùng với đơn này, không thể đặt thêm.`,
+                    message: t('bookingWizardUi.busyMessage', { code: busy.bookingCode }),
                   };
                 }
                 const isEligible = eligibility.eligible;
@@ -1725,7 +1725,7 @@ export default function BookingWizard({
                       </Flex>
 
                       <div style={{ fontSize: 12.5, color: '#64748b', marginLeft: 24, marginBottom: 8 }}>
-                        Giới tính: {horseGender} · Mã Microchip: <code>{horseMicrochip || 'Chưa cập nhật'}</code>
+                        {t('bookingWizardUi.gender')}: {horseGender} · {t('bookingWizardUi.microchip')}: <code>{horseMicrochip || t('bookingWizardUi.notSet')}</code>
                       </div>
 
                       {conditionError && (
@@ -1757,7 +1757,7 @@ export default function BookingWizard({
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Text strong style={{ fontSize: 12.5, color: '#0f172a', display: 'block', marginBottom: 8 }}>
-                            Hạng chuồng vận chuyển:
+                            {t('bookingWizardUi.stallClass')}
                           </Text>
                           <Row gutter={[8, 8]}>
                             {STALL_CLASSES.map((stall) => {
@@ -1802,7 +1802,7 @@ export default function BookingWizard({
                                 [horseId]: e.target.value,
                               }))
                             }
-                            placeholder="Ghi chú khẩu phần hoặc thể trạng riêng cho con này..."
+                            placeholder={t('bookingWizardUi.horseNotePlaceholder')}
                             style={{ borderRadius: 6, marginTop: 8 }}
                           />
 
@@ -1893,7 +1893,7 @@ export default function BookingWizard({
       {currentStep === 3 && (
         <div>
           <Title level={5} style={{ margin: '0 0 16px', fontWeight: 700, color: '#0f172a' }}>
-            Xem lại thông tin & Dự toán cước phí
+            {t('bookingWizardUi.reviewTitle')}
           </Title>
 
           <Row gutter={16}>
@@ -1911,15 +1911,15 @@ export default function BookingWizard({
               >
                 <Flex justify="space-between" align="center" style={{ marginBottom: 12 }}>
                   <Text strong style={{ fontSize: 14, color: '#0f172a' }}>
-                    Thông tin lộ trình
+                    {t('bookingWizardUi.routeInfo')}
                   </Text>
                   <Tag color={transportMode === 'Air' ? 'blue' : 'orange'} style={{ fontWeight: 600 }}>
-                    {transportMode === 'Air' ? 'Hàng không (Air Freight)' : `Đường bộ · ${distanceKm || 0} km`}
+                    {transportMode === 'Air' ? t('bookingWizardUi.air') : t('bookingWizardUi.ground', { km: distanceKm || 0 })}
                   </Tag>
                 </Flex>
 
                 <div style={{ marginBottom: 10 }}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>Điểm xuất phát ({pickupCountry}):</Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>{t('bookingWizardUi.origin', { country: pickupCountry })}</Text>
                   <div style={{ fontSize: 13.5, fontWeight: 600, color: '#0f172a' }}>
                     {transportMode === 'Ground' ? pickupDetail.text : getValues('PickupAddress')}
                     {transportMode === 'Ground' && getValues('PickupCity') ? `, ${getValues('PickupCity')}` : ''}
@@ -1927,7 +1927,7 @@ export default function BookingWizard({
                 </div>
 
                 <div style={{ marginBottom: 10 }}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>Điểm giao đến ({dropoffCountry}):</Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>{t('bookingWizardUi.destination', { country: dropoffCountry })}</Text>
                   <div style={{ fontSize: 13.5, fontWeight: 600, color: '#0f172a' }}>
                     {transportMode === 'Ground' ? dropoffDetail.text : getValues('DropoffAddress')}
                     {transportMode === 'Ground' && getValues('DropoffCity') ? `, ${getValues('DropoffCity')}` : ''}
@@ -1959,7 +1959,7 @@ export default function BookingWizard({
                   >
                     <Flex justify="space-between" align="center">
                       <span style={{ fontSize: 12.5, color: '#92400e', fontWeight: 600 }}>
-                        Quãng đường cước phí: {distanceKm || quote?.distanceKm || 0} km
+                        {t('bookingWizardUi.distance', { km: distanceKm || quote?.distanceKm || 0 })}
                       </span>
 
                     </Flex>
@@ -1989,7 +1989,7 @@ export default function BookingWizard({
                 <Divider style={{ margin: '12px 0' }} />
 
                 <Text strong style={{ fontSize: 13, color: '#0f172a', display: 'block', marginBottom: 8 }}>
-                  Ngựa vận chuyển ({selectedHorseIds.length} con)
+                  {t('bookingWizardUi.horsesCount', { count: selectedHorseIds.length })}
                 </Text>
                 <Space direction="vertical" size="small" style={{ width: '100%' }}>
                   {availableHorses
@@ -2010,7 +2010,7 @@ export default function BookingWizard({
                           }}
                         >
                           <div>
-                            <strong>{h.name || h.Name}</strong> ({h.breed || 'Ngựa đua'})
+                            <strong>{h.name || h.Name}</strong> ({h.breed || t('bookingWizardUi.racehorse')})
                           </div>
                           <Space size={4}>
                             <Tag color="gold" style={{ fontWeight: 600, margin: 0 }}>
@@ -2053,7 +2053,7 @@ export default function BookingWizard({
                   <Alert
                     type="warning"
                     showIcon
-                    message="Chưa đủ thông tin để tính giá (cần chọn ngựa, ngày vận chuyển và quãng đường nếu đi đường bộ)."
+                    message={t('bookingWizardUi.quoteMissing')}
                     style={{ marginBottom: 12, borderRadius: 8 }}
                   />
                 )}
@@ -2065,13 +2065,13 @@ export default function BookingWizard({
                   size="small"
                   columns={[
                     {
-                      title: 'Hạng mục chi phí',
+                      title: t('bookingWizardUi.costItem'),
                       dataIndex: 'name',
                       key: 'name',
                       render: (name) => <span style={{ fontSize: 12 }}>{name}</span>,
                     },
                     {
-                      title: 'SL',
+                      title: t('bookingWizardUi.qty'),
                       dataIndex: 'quantity',
                       key: 'quantity',
                       align: 'center',
@@ -2079,7 +2079,7 @@ export default function BookingWizard({
                       render: (q) => <span style={{ fontSize: 12 }}>{q}</span>,
                     },
                     {
-                      title: 'Thành tiền',
+                      title: t('bookingWizardUi.amount'),
                       dataIndex: 'amount',
                       key: 'amount',
                       align: 'right',
@@ -2181,7 +2181,7 @@ export default function BookingWizard({
               height: 40,
             }}
           >
-            Gửi yêu cầu vận chuyển
+            {t('bookingWizardUi.submit')}
           </Button>
         )}
       </Flex>

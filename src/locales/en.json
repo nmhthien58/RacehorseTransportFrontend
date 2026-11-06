@@ -3670,5 +3670,88 @@
       "deathClaimTitle": "Supplementary death claim:",
       "deathClaim": "If an injury claim was already approved for the horse, the death claim pays only the remainder: both claims together never exceed the death / loss maximum in section 8."
     }
+  },
+  "bookingWizardUi": {
+    "loadHorsesFailed": "Could not load your horses",
+    "quoteFailed": "Could not price this route",
+    "sameCountry": "The origin and destination countries must be different.",
+    "pickHorse": "Please choose at least one eligible horse.",
+    "ineligibleHorse": "Some horses do not meet the transport conditions in the policy. Please check again.",
+    "step1": "Route & mode",
+    "step2": "Schedule & services",
+    "step3": "Horses & stall class",
+    "step4": "Review & quote",
+    "title": "Book a horse transport",
+    "step1Desc": "Choose the transport mode and the pickup / drop-off places",
+    "step2Desc": "Set the departure time and care services",
+    "step3Desc": "Choose the horses and their stall class",
+    "step4Desc": "Check the estimated quote and send the request",
+    "stepOf": "Step {{step}} / {{total}}",
+    "modeTitle": "1. Choose the transport mode",
+    "selected": "Selected",
+    "routeTitle": "2. Pickup and drop-off",
+    "originTag": "ORIGIN",
+    "originCountry": "Origin country",
+    "originAirport": "Departure airport / port",
+    "destinationTag": "DESTINATION",
+    "destinationCountry": "Destination country",
+    "destinationAirport": "Arrival airport / port",
+    "servicesTitle": "2. Stall services & journey insurance",
+    "climate": "Climate-controlled stall",
+    "climateDesc": "Keeps 18°C - 22°C for the whole journey to protect the breathing and stamina of race horses.",
+    "careTitle": "3. Special care instructions (optional)",
+    "carePlaceholder": "Notes on hay diet, electrolytes, travel sickness history or vet care requests...",
+    "horsesTitle": "Horses on this transport",
+    "horsesHint": "Choose at least one healthy, eligible horse and its stall class.",
+    "loadingHorses": "Loading your horses...",
+    "noHorses": "You have no horses yet",
+    "noHorsesHint": "Please add a horse before sending a transport request.",
+    "createHorse": "Add a horse now",
+    "busyTag": "IN BOOKING {{code}}",
+    "busyMessage": "This horse is in booking {{code}} for an overlapping period and cannot be added.",
+    "gender": "Gender",
+    "stallClass": "Stall class:",
+    "horseNotePlaceholder": "Notes on feed or condition for this horse...",
+    "reviewTitle": "Review & estimated price",
+    "routeInfo": "Route",
+    "air": "Air freight",
+    "origin": "Origin ({{country}}):",
+    "destination": "Destination ({{country}}):",
+    "distance": "Charged distance: {{km}} km",
+    "horsesCount": "Horses ({{count}})",
+    "racehorse": "Racehorse",
+    "quoteMissing": "Not enough information to price yet (choose horses, dates and, for ground transport, the distance).",
+    "costItem": "Cost item",
+    "qty": "Qty",
+    "amount": "Amount",
+    "microchip": "Microchip",
+    "notSet": "Not set",
+    "ground": "Ground · {{km}} km",
+    "addHorse": "Add a new horse",
+    "submit": "Send transport request"
+  },
+  "welfareCards": {
+    "HEALTHY": {
+      "title": "HEALTHY",
+      "description": "Normal breathing, calm, alert"
+    },
+    "STRESSED": {
+      "title": "STRESSED",
+      "description": "Agitated, head tossing, sweating"
+    },
+    "NOT_EATING": {
+      "title": "NOT EATING / DEHYDRATED",
+      "description": "Refused feed, skin pinch > 2s"
+    },
+    "CLIMATE_AFFECTED": {
+      "title": "CLIMATE AFFECTED / ELEVATED TEMP",
+      "description": "Heavy sweating, shivering, rapid breathing"
+    },
+    "picked": "Status selected: {{status}}",
+    "selected": "Selected"
+  },
+  "restCountdown": {
+    "resting": "Mandatory rest: {{time}} left ({{minutes}} min, until {{until}}). You cannot leave yet.",
+    "rested": "Rested {{minutes}} min, you can leave."
   }
 }

@@ -38,6 +38,8 @@ import MissionHeaderCard from '../components/MissionHeaderCard';
 import TripHorseStatusTag from '@components/common/TripHorseStatusTag';
 import EmergencyReportModal from '../components/EmergencyReportModal';
 import TripIncidentsCard from '../components/TripIncidentsCard';
+// Đếm ngược thời gian nghỉ bắt buộc tại mốc (backend chặn rời mốc khi chưa nghỉ đủ)
+import RestCountdown, { restRemainingMs } from '../components/RestCountdown';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -582,6 +584,9 @@ export default function TripExecutionPage() {
 
                         {/* 3. Rời mốc: cửa khẩu sau khi Cleared, mốc khác ngay sau khi Arrived; điểm giao không có bước rời */}
                         {!isDestination && !handoverPendingHere && (cp.status === 'Cleared' || (cp.status === 'Arrived' && !isBorder)) && (
+                          <RestCountdown arrivedAt={cp.actualArrivalTime} restMinutes={cp.mandatoryRestMinutes} />
+                        )}
+                        {!isDestination && !handoverPendingHere && (cp.status === 'Cleared' || (cp.status === 'Arrived' && !isBorder)) && (
                           <Tooltip title={!canUpdateRoute ? "Chỉ thành viên đoàn xe của chuyến này mới cập nhật được hành trình" : ""}>
                             <Popconfirm
                               title="Xác nhận rời trạm kiểm soát?"
@@ -589,13 +594,13 @@ export default function TripExecutionPage() {
                               onConfirm={() => handleDepart(cp)}
                               okText="Rời trạm"
                               cancelText="Kiểm tra lại"
-                              disabled={!canUpdateRoute}
+                              disabled={!canUpdateRoute || restRemainingMs(cp.actualArrivalTime, cp.mandatoryRestMinutes) > 0}
                             >
                               <Button
                                 type="primary"
                                 icon={<LogoutOutlined />}
                                 loading={actionLoading}
-                                disabled={!canUpdateRoute}
+                                disabled={!canUpdateRoute || restRemainingMs(cp.actualArrivalTime, cp.mandatoryRestMinutes) > 0}
                                 style={{
                                   backgroundColor: '#10B981',
                                   borderColor: '#10B981',

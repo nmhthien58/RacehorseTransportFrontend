@@ -3669,5 +3669,88 @@
       "deathClaimTitle": "Hồ sơ tử vong bổ sung:",
       "deathClaim": "Nếu trước đó đã có hồ sơ thương tích được duyệt cho con ngựa, hồ sơ tử vong chỉ trả phần còn lại: tổng hai hồ sơ không vượt mức tối đa khi chết / mất ở mục 8."
     }
+  },
+  "bookingWizardUi": {
+    "loadHorsesFailed": "Không thể tải danh sách hồ sơ ngựa",
+    "quoteFailed": "Không tính được báo giá cho tuyến đường này",
+    "sameCountry": "Quốc gia xuất phát và quốc gia đích không được trùng nhau.",
+    "pickHorse": "Vui lòng chọn ít nhất 1 con ngựa đủ điều kiện.",
+    "ineligibleHorse": "Có ngựa chưa đạt điều kiện vận chuyển theo chính sách. Vui lòng kiểm tra lại!",
+    "step1": "Lộ trình & Phương thức",
+    "step2": "Lịch trình & Dịch vụ",
+    "step3": "Ngựa & Hạng chuồng",
+    "step4": "Xem lại & Báo giá",
+    "title": "Đặt chuyến vận chuyển ngựa",
+    "step1Desc": "Lựa chọn phương thức vận chuyển và địa điểm giao nhận",
+    "step2Desc": "Thiết lập thời gian khởi hành và dịch vụ chăm sóc",
+    "step3Desc": "Chọn danh sách ngựa vận chuyển và đăng ký hạng chuồng",
+    "step4Desc": "Kiểm tra bảng báo giá ước tính và xác nhận gửi đơn",
+    "stepOf": "Bước {{step}} / {{total}}",
+    "modeTitle": "1. Chọn phương thức vận chuyển",
+    "selected": "Đang chọn",
+    "routeTitle": "2. Lộ trình giao nhận",
+    "originTag": "ĐIỂM XUẤT PHÁT",
+    "originCountry": "Quốc gia xuất phát",
+    "originAirport": "Sân bay / Cảng xuất phát",
+    "destinationTag": "ĐIỂM ĐÍCH ĐẾN",
+    "destinationCountry": "Quốc gia đến",
+    "destinationAirport": "Sân bay / Cảng tiếp nhận",
+    "servicesTitle": "2. Tiện ích khoang & Bảo hiểm hành trình",
+    "climate": "Khoang kiểm soát nhiệt độ (Climate Control)",
+    "climateDesc": "Duy trì ổn định 18°C - 22°C suốt hành trình, đảm bảo hô hấp và sức bền cho ngựa thi đấu.",
+    "careTitle": "3. Hướng dẫn chăm sóc đặc biệt (Tùy chọn)",
+    "carePlaceholder": "Ghi chú chế độ ăn cỏ, bổ sung nước điện giải, tiền sử say xe hoặc yêu cầu chăm sóc của bác sĩ thú y...",
+    "horsesTitle": "Danh sách ngựa tham gia chuyến vận chuyển",
+    "horsesHint": "Chọn ít nhất 1 con ngựa đủ điều kiện sức khỏe và chọn hạng chuồng phù hợp.",
+    "loadingHorses": "Đang tải danh sách hồ sơ ngựa...",
+    "noHorses": "Bạn chưa có hồ sơ ngựa nào trong hệ thống",
+    "noHorsesHint": "Vui lòng tạo hồ sơ ngựa trước khi gửi yêu cầu vận chuyển mới.",
+    "createHorse": "Tạo hồ sơ ngựa ngay",
+    "busyTag": "ĐANG Ở ĐƠN {{code}}",
+    "busyMessage": "Ngựa đang nằm trong đơn {{code}} có thời gian trùng với đơn này, không thể đặt thêm.",
+    "gender": "Giới tính",
+    "stallClass": "Hạng chuồng vận chuyển:",
+    "horseNotePlaceholder": "Ghi chú khẩu phần hoặc thể trạng riêng cho con này...",
+    "reviewTitle": "Xem lại thông tin & Dự toán cước phí",
+    "routeInfo": "Thông tin lộ trình",
+    "air": "Hàng không (Air Freight)",
+    "origin": "Điểm xuất phát ({{country}}):",
+    "destination": "Điểm giao đến ({{country}}):",
+    "distance": "Quãng đường tính cước: {{km}} km",
+    "horsesCount": "Ngựa vận chuyển ({{count}} con)",
+    "racehorse": "Ngựa đua",
+    "quoteMissing": "Chưa đủ thông tin để tính giá (cần chọn ngựa, ngày vận chuyển và quãng đường nếu đi đường bộ).",
+    "costItem": "Hạng mục chi phí",
+    "qty": "SL",
+    "amount": "Thành tiền",
+    "microchip": "Mã vi mạch",
+    "notSet": "Chưa cập nhật",
+    "ground": "Đường bộ · {{km}} km",
+    "addHorse": "Thêm hồ sơ ngựa mới",
+    "submit": "Gửi yêu cầu vận chuyển"
+  },
+  "welfareCards": {
+    "HEALTHY": {
+      "title": "KHỎE MẠNH",
+      "description": "Thở đều, bình tĩnh, tỉnh táo"
+    },
+    "STRESSED": {
+      "title": "CĂNG THẲNG",
+      "description": "Bồn chồn, hất đầu, ra mồ hôi"
+    },
+    "NOT_EATING": {
+      "title": "BỎ ĂN / MẤT NƯỚC",
+      "description": "Bỏ ăn, véo da > 2 giây mới trở lại"
+    },
+    "CLIMATE_AFFECTED": {
+      "title": "ẢNH HƯỞNG NHIỆT / SỐT",
+      "description": "Ra mồ hôi nhiều, run, thở gấp"
+    },
+    "picked": "Đã chọn trạng thái: {{status}}",
+    "selected": "Đang chọn"
+  },
+  "restCountdown": {
+    "resting": "Ngựa đang nghỉ bắt buộc: còn {{time}} (đủ {{minutes}} phút lúc {{until}}). Chưa được rời mốc.",
+    "rested": "Đã nghỉ đủ {{minutes}} phút, có thể rời mốc."
   }
 }

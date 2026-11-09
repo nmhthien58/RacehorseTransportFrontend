@@ -69,7 +69,7 @@ export default function RerouteModal({ open, incident, onClose, onDone }) {
       okText={t('incidents.reroute.submit')}
       cancelText={t('common.cancel')}
       confirmLoading={submitting}
-      width={760}
+      width={960}
       destroyOnHidden
     >
       {loading ? (

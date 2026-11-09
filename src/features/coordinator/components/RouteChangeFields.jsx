@@ -4,6 +4,7 @@ import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import RouteMap from '@components/common/map/RouteMap';
+import AddressSearchInput from '@components/common/map/AddressSearchInput';
 import geoService from '@services/geoService';
 import { unwrapData } from '@utils/apiHelpers';
 
@@ -76,8 +77,21 @@ export default function RouteChangeFields({ checkpoints, prefix = [] }) {
       // Không lấy được địa chỉ: coordinator tự nhập
     }
   };
-  // Bấm bản đồ: thêm trạm nghỉ mới, giờ dự kiến sau mốc chèn 1 giờ
+  // Mốc mới đang chờ chọn vị trí trên bản đồ (bấm nút ghim ở ô địa chỉ)
+  const [placingIndex, setPlacingIndex] = useState(null);
+  const setStopPlace = (index, place) => {
+    form.setFieldValue([...listPath, index, 'latitude'], place.lat);
+    form.setFieldValue([...listPath, index, 'longitude'], place.lng);
+    if (place.displayName) form.setFieldValue([...listPath, index, 'address'], place.displayName.slice(0, 255));
+  };
+  // Bấm bản đồ: đặt vị trí cho mốc đang chọn, nếu không thì thêm trạm nghỉ mới (giờ dự kiến sau mốc chèn 1 giờ)
   const addStopOnMap = (point) => {
+    if (placingIndex != null) {
+      setStopPlace(placingIndex, point);
+      void fillAddress(placingIndex, point.lat, point.lng);
+      setPlacingIndex(null);
+      return;
+    }
     const list = form.getFieldValue(listPath) || [];
     // Mốc chèn sau: mốc đã chọn, không chọn thì mốc cuối cùng xe đã tới; giờ mới không sớm hơn hiện tại
     const anchor =
@@ -141,14 +155,16 @@ export default function RouteChangeFields({ checkpoints, prefix = [] }) {
             totalDistanceKm={routeData?.totalDistanceKm}
             totalDurationHours={routeData?.totalDurationHours}
             isEstimate={!routeData || routeData.isEstimate}
-            height={300}
+            height={380}
             editable
             showList={false}
             onAddStop={addStopOnMap}
             onMoveStop={moveStopOnMap}
           />
           <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 6 }}>
-            Bản đồ là tuyến sau khi sửa. Bấm lên bản đồ để thêm mốc mới (đổi loại thành Cửa khẩu nếu cần), kéo ghim của mốc mới để dời.
+            {placingIndex != null
+              ? 'Bấm lên bản đồ để đặt vị trí cho mốc đang chọn.'
+              : 'Bản đồ là tuyến sau khi sửa. Gõ địa chỉ ở mốc mới để chọn gợi ý, hoặc bấm lên bản đồ để thêm trạm nghỉ (đổi loại thành Cửa khẩu nếu cần), kéo ghim của mốc mới để dời. Mốc chưa có vị trí (nút ghim đỏ) thì bấm nút đó rồi bấm lên bản đồ.'}
           </Text>
         </div>
       )}
@@ -190,7 +206,18 @@ export default function RouteChangeFields({ checkpoints, prefix = [] }) {
                       label={t('incidents.reroute.address')}
                       rules={[{ required: true, whitespace: true, message: t('handover.form.required') }, { max: 255 }]}
                     >
-                      <Input />
+                      <AddressSearchInput
+                        size="middle"
+                        hasCoords={added?.[field.name]?.latitude != null}
+                        placing={placingIndex === field.name}
+                        onPlacingToggle={() => setPlacingIndex((i) => (i === field.name ? null : field.name))}
+                        onSelectPlace={(place) => {
+                          setStopPlace(field.name, place);
+                          const nameField = [...listPath, field.name, 'checkpointName'];
+                          if (!form.getFieldValue(nameField)?.trim()) form.setFieldValue(nameField, place.displayName.split(',')[0].trim().slice(0, 100));
+                          if (placingIndex === field.name) setPlacingIndex(null);
+                        }}
+                      />
                     </Form.Item>
                   </Col>
                   <Col xs={18} md={8}>
@@ -205,7 +232,10 @@ export default function RouteChangeFields({ checkpoints, prefix = [] }) {
                     <InputNumber />
                   </Form.Item>
                   <Col xs={6} md={2} style={{ display: 'flex', alignItems: 'center', paddingTop: 6 }}>
-                    <Button type="text" danger icon={<DeleteOutlined />} onClick={() => remove(field.name)} />
+                    <Button type="text" danger icon={<DeleteOutlined />} onClick={() => {
+                        setPlacingIndex(null);
+                        remove(field.name);
+                      }} />
                   </Col>
                 </Row>
               </div>

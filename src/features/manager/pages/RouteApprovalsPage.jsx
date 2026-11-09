@@ -47,12 +47,13 @@ export default function RouteApprovalsPage() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedId = searchParams.get('id') ? Number(searchParams.get('id')) : null;
+  const paramTab = searchParams.get('tab');
 
   const [statusFilter, setStatusFilter] = useState('PendingApproval');
   const [trips, setTrips] = useState([]);
   const [routeBookings, setRouteBookings] = useState([]);
   const [selectedBookingId, setSelectedBookingId] = useState(null);
-  const [approvalTab, setApprovalTab] = useState('bookingRoutes');
+  const [approvalTab, setApprovalTab] = useState(paramTab || 'bookingRoutes');
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -83,6 +84,9 @@ export default function RouteApprovalsPage() {
         if (planned.length > 0) {
           setSelectedBookingId((prev) => prev || planned[0].bookingId || planned[0].BookingID);
         }
+        if (!paramTab && planned.length === 0 && unwrapList(tRes).length > 0) {
+          setApprovalTab('tripPlans');
+        }
       })
       .catch((err) => {
         if (active) message.error(getErrorMessage(err, t('tripPlan.messages.loadFailed')));
@@ -93,7 +97,7 @@ export default function RouteApprovalsPage() {
     return () => {
       active = false;
     };
-  }, [statusFilter, refreshKey, t]);
+  }, [statusFilter, refreshKey, t, paramTab]);
 
   // Mặc định mở chuyến đầu danh sách
   const activeId = selectedId || trips[0]?.tripId || null;
@@ -172,7 +176,14 @@ const selectedBooking = routeBookings.find((b) => (b.bookingId || b.BookingID) =
 
         <Tabs
           activeKey={approvalTab}
-          onChange={setApprovalTab}
+          onChange={(key) => {
+            setApprovalTab(key);
+            setSearchParams((prev) => {
+              const next = new URLSearchParams(prev);
+              next.set('tab', key);
+              return next;
+            });
+          }}
           style={{ marginBottom: 16 }}
           items={[
             {

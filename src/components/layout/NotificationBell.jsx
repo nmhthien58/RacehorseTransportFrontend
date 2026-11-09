@@ -8,6 +8,7 @@ import { ROUTES } from '@routes/routes';
 import { useNotifications } from '@hooks/useNotifications';
 import incidentService from '@services/incidentService';
 import { unwrapData } from '@utils/apiHelpers';
+import playNotificationSound from '@utils/notificationSound';
 
 /**
  * Trang mở ra khi bấm một thông báo, theo role người dùng và loại đối tượng thông báo nhắc tới.
@@ -82,6 +83,9 @@ export default function NotificationBell({ role }) {
 
   const handleReceived = useCallback(
     (item) => {
+      // Phát âm thanh ting-ting khi có thông báo realtime mới
+      playNotificationSound();
+
       const key = `notification-${item.notificationId}`;
       notification.open({
         key,

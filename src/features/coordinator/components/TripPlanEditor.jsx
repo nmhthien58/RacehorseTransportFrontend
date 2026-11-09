@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
+  AutoComplete,
   Button,
   Card,
   Checkbox,
@@ -22,20 +23,31 @@ import {
   message,
 } from 'antd';
 import {
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  CompassOutlined,
+  CopyOutlined,
   DeleteOutlined,
+  EnvironmentOutlined,
+  EyeInvisibleOutlined,
+  EyeOutlined,
+  InfoCircleOutlined,
   NodeIndexOutlined,
   PlusOutlined,
+  ReloadOutlined,
   SaveOutlined,
   SendOutlined,
-  ReloadOutlined,
-  CopyOutlined,
-  CompassOutlined,
-  EnvironmentOutlined,
-  InfoCircleOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
-import { formatDeliveryDeadline, formatPickupWindow } from '@utils/bookingSchedule';
+import {
+  formatDeliveryDeadline,
+  formatPickupWindow,
+  getPickupWindowStart,
+  getPickupWindowEnd,
+  getDeliveryDeadline,
+  toLocalDateTimeString,
+} from '@utils/bookingSchedule';
 import tripService from '@services/tripService';
 import RouteMap from '@components/common/map/RouteMap';
 import routePlanService from '@services/routePlanService';
@@ -75,6 +87,41 @@ const TRUCK_AVERAGE_SPEED_KMH = 55;
 const SINGLE_DRIVER_LIMIT_HOURS = 9;
 
 const modeFromVehicleType = (vehicleType) => (vehicleType === 'AirStall' ? 'Air' : 'Ground');
+
+/**
+ * Tính toán khoảng thời gian gợi ý cho chuyến đi dựa trên ngày đón mong muốn của các đơn được chọn.
+ * Ngày xuất phát = MAX(pickupWindowStart) lúc 06:00 sáng; Ngày kết thúc = MIN(deliveryDeadline).
+ * @param {Array<any>} horses
+ * @param {Object|null} trip
+ * @param {[any, any]|null} currentPeriod
+ * @returns {[dayjs.Dayjs, dayjs.Dayjs]|null}
+ */
+function computeSuggestedPeriod(horses, trip, currentPeriod = null) {
+  if (trip) return [dayjs(trip.plannedStartDate), dayjs(trip.plannedEndDate)];
+  if (!horses || horses.length === 0) return null;
+  const validStarts = horses
+    .map((h) => {
+      const raw = getPickupWindowStart(h) || h.pickupWindowStart || h.PickupWindowStart;
+      return raw ? dayjs(raw).hour(6).minute(0).second(0) : null;
+    })
+    .filter((d) => d && d.isValid());
+  if (validStarts.length === 0) return null;
+  const maxPickupStart = validStarts.sort((a, b) => b - a)[0];
+
+  // Nếu đã có period và ngày đi không bị sớm hơn ngày đón mong muốn thì giữ nguyên
+  if (currentPeriod?.[0] && !currentPeriod[0].isBefore(maxPickupStart)) {
+    return currentPeriod;
+  }
+
+  const validEnds = horses
+    .map((h) => {
+      const raw = getDeliveryDeadline(h) || h.deliveryDeadline || h.DeliveryDeadline;
+      return raw ? dayjs(raw) : null;
+    })
+    .filter((d) => d && d.isValid());
+  const minDeadline = validEnds.length > 0 ? validEnds.sort((a, b) => a - b)[0] : maxPickupStart.add(2, 'day');
+  return [maxPickupStart, minDeadline];
+}
 
 /**
  * Tạo 2 mốc mặc định (Origin, Destination) từ địa chỉ của ngựa đầu tiên và khoảng thời gian chuyến.
@@ -137,6 +184,102 @@ function toApprovedRoute(plan) {
 }
 
 /**
+ * Ô nhập địa chỉ mốc với AutoComplete tìm kiếm địa chỉ qua geoService.search,
+ * tự động cập nhật tọa độ lat/lng và có nút chọn trên bản đồ.
+ */
+function CheckpointAddressInput({ value, hasCoords, placing, onPlacingToggle, onSelectPlace, onChangeText }) {
+  const [text, setText] = useState(value || '');
+  const [prevValue, setPrevValue] = useState(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
+    setText(value || '');
+  }
+
+  const [options, setOptions] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const timerRef = useRef(null);
+  const placesRef = useRef([]);
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  const handleSearch = (q) => {
+    setText(q);
+    onChangeText?.(q);
+    clearTimeout(timerRef.current);
+    if (!q || q.trim().length < 2) {
+      setOptions([]);
+      return;
+    }
+    timerRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await geoService.search(q.trim());
+        const list = unwrapList(res);
+        placesRef.current = list;
+        setOptions(
+          list.map((p, i) => ({
+            value: p.displayName,
+            key: `place-${i}-${p.lat}-${p.lng}`,
+            place: p,
+            label: (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontWeight: 500, fontSize: 12 }}>{p.displayName}</span>
+                {p.countryCode && (
+                  <span style={{ fontSize: 10, color: '#94a3b8' }}>Quốc gia: {p.countryCode}</span>
+                )}
+              </div>
+            ),
+          })),
+        );
+      } catch {
+        setOptions([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 400);
+  };
+
+  const handleSelect = (val, option) => {
+    const place = option?.place || placesRef.current.find((p) => p.displayName === val);
+    if (!place) return;
+    setText(place.displayName);
+    onSelectPlace?.(place);
+  };
+
+  return (
+    <Space.Compact style={{ width: '100%' }}>
+      <AutoComplete
+        style={{ flex: 1 }}
+        value={text}
+        options={options}
+        onSearch={handleSearch}
+        onSelect={handleSelect}
+        onChange={(val) => {
+          setText(val);
+          onChangeText?.(val);
+        }}
+        notFoundContent={searching ? <Spin size="small" style={{ padding: 8 }} /> : null}
+      >
+        <Input
+          size="small"
+          maxLength={255}
+          placeholder="Nhập địa chỉ (gợi ý vị trí)..."
+          allowClear
+        />
+      </AutoComplete>
+      <Button
+        size="small"
+        type={placing ? 'primary' : 'default'}
+        icon={<EnvironmentOutlined />}
+        title="Chọn vị trí mốc trên bản đồ"
+        onClick={onPlacingToggle}
+        danger={!hasCoords && !placing}
+      />
+    </Space.Compact>
+  );
+}
+
+/**
  * Form lập / sửa bản nháp chuyến (Flow 3): chọn ngựa từ hàng chờ, khoảng thời gian, xe, đoàn xe,
  * ô chuồng, các mốc lộ trình và chi phí dự kiến. Gọi POST /trips hoặc PUT /trips/{id}, rồi có thể trình duyệt.
  *
@@ -176,16 +319,8 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
   const mode = selectedHorses[0]?.transportMode || null;
 
   const [period, setPeriod] = useState(() => {
-    if (trip) return [dayjs(trip.plannedStartDate), dayjs(trip.plannedEndDate)];
     const chosen = pool.filter((h) => preselected.includes(h.bookingHorseId));
-    if (chosen.length === 0) return null;
-    // Gợi ý: chạy ngày đầu khoảng pickup muộn nhất (để nằm trong khoảng pickup của mọi đơn),
-    // kết thúc trước hạn giao sớm nhất trong các đơn đã chọn
-    const start = chosen
-      .map((h) => dayjs(h.pickupWindowStart).hour(6).minute(0))
-      .sort((a, b) => b - a)[0];
-    const end = chosen.map((h) => dayjs(h.deliveryDeadline)).sort((a, b) => a - b)[0];
-    return [start, end];
+    return computeSuggestedPeriod(chosen, trip);
   });
 
   const [vehicleId, setVehicleId] = useState(trip?.vehicleId || null);
@@ -260,8 +395,8 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
   }, [selectedHorses]);
 
   const periodValid = Boolean(period?.[0] && period?.[1] && period[1].isAfter(period[0]));
-  const fromIso = periodValid ? toIsoString(period[0]) : null;
-  const toIso = periodValid ? toIsoString(period[1]) : null;
+  const fromIso = periodValid ? toLocalDateTimeString(period[0]) || toIsoString(period[0]) : null;
+  const toIso = periodValid ? toLocalDateTimeString(period[1]) || toIsoString(period[1]) : null;
 
   // Xe và người còn rảnh trong khoảng thời gian (backend loại các xe/người đã vướng chuyến khác)
   useEffect(() => {
@@ -326,6 +461,7 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
   const [approvedRoutes, setApprovedRoutes] = useState({});
   const [loadingApprovedRoutes, setLoadingApprovedRoutes] = useState(false);
   const [selectedRouteBookingId, setSelectedRouteBookingId] = useState(null);
+  const [collapsedApprovedRoute, setCollapsedApprovedRoute] = useState(false);
   const [routeBackendError, setRouteBackendError] = useState(null);
 
   useEffect(() => {
@@ -451,7 +587,13 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
       message.warning(t('tripPlan.messages.mixedMode'));
       return;
     }
-    setSelectedIds((prev) => (checked ? [...prev, horse.bookingHorseId] : prev.filter((id) => id !== horse.bookingHorseId)));
+    const nextIds = checked ? [...selectedIds, horse.bookingHorseId] : selectedIds.filter((id) => id !== horse.bookingHorseId);
+    setSelectedIds(nextIds);
+    if (!trip) {
+      const nextHorses = pool.filter((h) => nextIds.includes(h.bookingHorseId));
+      const nextPeriod = computeSuggestedPeriod(nextHorses, trip, period);
+      if (nextPeriod) setPeriod(nextPeriod);
+    }
     if (!checked) {
       setPlacements((prev) => {
         const next = { ...prev };
@@ -563,12 +705,24 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
       message.warning(t('tripPlan.messages.suggestNeedInput'));
       return;
     }
+
+    // Kiểm tra cảnh báo nếu ngày khởi hành trước ngày đón mong muốn của bất kỳ đơn nào
+    for (const h of selectedHorses) {
+      const start = getPickupWindowStart(h) || h.pickupWindowStart || h.PickupWindowStart;
+      if (start && period[0].isBefore(dayjs(start).startOf('day'))) {
+        message.error(
+          `Ngày xuất phát (${period[0].format('DD/MM/YYYY')}) không được trước ngày đón mong muốn (${dayjs(start).format('DD/MM/YYYY')}) của đơn ${h.bookingCode || h.BookingCode}!`,
+        );
+        return;
+      }
+    }
+
     setSuggesting(true);
     try {
       const result = unwrapData(
         await tripService.suggestRoute({
           bookingHorseIds: selectedIds,
-          plannedStartDate: toIsoString(period[0]),
+          plannedStartDate: toLocalDateTimeString(period[0]) || toIsoString(period[0]),
           driverCount: Math.max(1, driverCount),
         }),
       );
@@ -618,6 +772,16 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
     });
   };
 
+  const moveCheckpoint = (index, delta) => {
+    const target = index + delta;
+    if (target < 0 || target >= checkpoints.length) return;
+    setCheckpoints((prev) => {
+      const next = [...prev];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
   const buildPayload = () => ({
     vehicleId,
     plannedStartDate: fromIso,
@@ -639,7 +803,7 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
       checkpointName: c.checkpointName?.trim(),
       checkpointType: c.checkpointType,
       address: c.address?.trim(),
-      plannedTime: toIsoString(c.plannedTime),
+      plannedTime: toLocalDateTimeString(c.plannedTime) || toIsoString(c.plannedTime),
       mandatoryRestMinutes: Number(c.mandatoryRestMinutes) || 0,
       bookingId: BOOKING_STOP_TYPES.includes(c.checkpointType) ? c.bookingId || null : null,
       latitude: c.latitude ?? null,
@@ -655,6 +819,26 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
       return t('tripPlan.messages.notEnoughCompartments', { have: compartmentCount, needed: neededCompartments });
     }
     if (unplacedCount > 0) return t('tripPlan.messages.unplacedHorses', { count: unplacedCount });
+
+    // R-04: Kiểm tra khoảng ngày đón mong muốn của từng đơn
+    for (const h of selectedHorses) {
+      const start = getPickupWindowStart(h) || h.pickupWindowStart || h.PickupWindowStart;
+      const end = getPickupWindowEnd(h) || h.pickupWindowEnd || h.PickupWindowEnd;
+      const deadline = getDeliveryDeadline(h) || h.deliveryDeadline || h.DeliveryDeadline;
+      const code = h.bookingCode || h.BookingCode || `#${h.bookingId}`;
+      const horseName = h.horseName || h.HorseName || '';
+
+      if (start && period[0] && period[0].isBefore(dayjs(start).startOf('day'))) {
+        return `Ngựa ${horseName} (đơn ${code}) chỉ sẵn sàng đón từ ngày ${dayjs(start).format('DD/MM/YYYY')}. Kế hoạch khởi hành (${period[0].format('DD/MM/YYYY')}) không được sớm hơn ngày đón mong muốn!`;
+      }
+      if (end && period[0] && period[0].isAfter(dayjs(end).endOf('day'))) {
+        return `Đơn ${code} có khoảng đón kết thúc vào ngày ${dayjs(end).format('DD/MM/YYYY')}. Thời gian khởi hành (${period[0].format('DD/MM/YYYY')}) không được sau khoảng đón!`;
+      }
+      if (deadline && period[1] && period[1].isAfter(dayjs(deadline).endOf('day'))) {
+        return `Đơn ${code} có hạn giao trễ nhất là ${dayjs(deadline).format('DD/MM/YYYY')}. Kế hoạch kết thúc chuyến (${period[1].format('DD/MM/YYYY')}) bị trễ hạn giao!`;
+      }
+    }
+
     // Kế hoạch cũ (xếp theo ô) có thể để hai hạng chung một khoang: bắt xếp lại trước khi lưu
     const problem = findPlacementProblem(
       selectedHorses.map((h) => ({ key: h.bookingHorseId, stallClass: h.stallClass })),
@@ -682,6 +866,23 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
     if (checkpoints.some((c) => BOOKING_STOP_TYPES.includes(c.checkpointType) && !c.bookingId)) {
       return t('tripPlan.messages.needBookingForStop');
     }
+
+    // Kiểm tra thứ tự thời gian giữa các mốc: mốc sau phải diễn ra sau mốc trước
+    for (let i = 1; i < checkpoints.length; i++) {
+      const prev = checkpoints[i - 1];
+      const curr = checkpoints[i];
+      if (prev.plannedTime && curr.plannedTime && !curr.plannedTime.isAfter(prev.plannedTime)) {
+        return `Thời gian không hợp lệ: Mốc #${i + 1} "${curr.checkpointName || 'Mốc ' + (i + 1)}" (${curr.plannedTime.format('DD/MM/YYYY HH:mm')}) không được trước hoặc cùng giờ với mốc #${i} "${prev.checkpointName || 'Mốc ' + i}" (${prev.plannedTime.format('DD/MM/YYYY HH:mm')}). Vui lòng điều chỉnh lại giờ của mốc theo đúng trình tự di chuyển!`;
+      }
+    }
+
+    if (period?.[0] && checkpoints[0]?.plannedTime && checkpoints[0].plannedTime.isBefore(period[0])) {
+      return `Giờ xuất phát tại mốc đầu tiên (${checkpoints[0].plannedTime.format('DD/MM/YYYY HH:mm')}) không được trước thời gian bắt đầu chuyến đi (${period[0].format('DD/MM/YYYY HH:mm')})!`;
+    }
+    if (period?.[1] && checkpoints[checkpoints.length - 1]?.plannedTime && checkpoints[checkpoints.length - 1].plannedTime.isAfter(period[1])) {
+      return `Giờ đến mốc cuối (${checkpoints[checkpoints.length - 1].plannedTime.format('DD/MM/YYYY HH:mm')}) không được sau thời gian kết thúc chuyến đi (${period[1].format('DD/MM/YYYY HH:mm')})!`;
+    }
+
     return null;
   };
 
@@ -843,7 +1044,22 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
                     setPeriod(v);
                     setVehicleId((prev) => (trip && prev === trip.vehicleId ? prev : null));
                   }}
-                  disabledDate={(d) => d && d.isBefore(dayjs(), 'day')}
+                  disabledDate={(d) => {
+                    if (!d) return false;
+                    if (d.isBefore(dayjs(), 'day')) return true;
+                    // Không cho chọn ngày xuất phát trước ngày đón mong muốn của các đơn đã chọn
+                    if (selectedHorses.length > 0) {
+                      const starts = selectedHorses
+                        .map((h) => getPickupWindowStart(h) || h.pickupWindowStart || h.PickupWindowStart)
+                        .filter(Boolean)
+                        .map((s) => dayjs(s).startOf('day'));
+                      if (starts.length > 0) {
+                        const maxPickupStart = starts.sort((a, b) => b - a)[0];
+                        if (d.isBefore(maxPickupStart, 'day')) return true;
+                      }
+                    }
+                    return false;
+                  }}
                 />
               </div>
               <div>
@@ -1052,12 +1268,14 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
             type="inner"
             size="small"
             title={
-              <Flex justify="space-between" align="center" wrap="wrap" gap={8}>
-                <Space>
-                  <CompassOutlined style={{ color: '#d97706' }} />
-                  <Text strong>{t('tripPlan.approvedRoute.title', { defaultValue: 'Tuyến đường đã được phê duyệt của đơn' })}</Text>
-                </Space>
-                {selectedBookings.length > 1 && (
+              <Space>
+                <CompassOutlined style={{ color: '#d97706' }} />
+                <Text strong>{t('tripPlan.approvedRoute.title', { defaultValue: 'Tuyến đường đã được phê duyệt của đơn' })}</Text>
+              </Space>
+            }
+            extra={
+              <Space size={8} wrap>
+                {selectedBookings.length > 1 && !collapsedApprovedRoute && (
                   <Select
                     size="small"
                     value={selectedRouteBookingId}
@@ -1069,15 +1287,26 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
                     }))}
                   />
                 )}
-              </Flex>
+                <Button
+                  size="small"
+                  type="text"
+                  icon={collapsedApprovedRoute ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+                  onClick={() => setCollapsedApprovedRoute((prev) => !prev)}
+                  title={collapsedApprovedRoute ? 'Hiện thông tin tuyến đã duyệt' : 'Tạm ẩn thông tin tuyến đã duyệt'}
+                >
+                  {collapsedApprovedRoute ? 'Hiện' : 'Tạm ẩn'}
+                </Button>
+              </Space>
             }
+            styles={collapsedApprovedRoute ? { body: { display: 'none' } } : undefined}
             style={{ marginBottom: 16, backgroundColor: '#fdfcfb', borderColor: '#fed7aa', borderRadius: 10 }}
           >
-            {loadingApprovedRoutes ? (
-              <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                <Spin size="small" /> <Text type="secondary"> {t('tripPlan.approvedRoute.loading', { defaultValue: 'Đang tải tuyến đã duyệt...' })}</Text>
-              </div>
-            ) : selectedRoutePlan ? (
+            {!collapsedApprovedRoute && (
+              loadingApprovedRoutes ? (
+                <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                  <Spin size="small" /> <Text type="secondary"> {t('tripPlan.approvedRoute.loading', { defaultValue: 'Đang tải tuyến đã duyệt...' })}</Text>
+                </div>
+              ) : selectedRoutePlan ? (
               <div>
                 <Flex justify="space-between" align="center" wrap="wrap" gap={8} style={{ marginBottom: 12 }}>
                   <div>
@@ -1189,7 +1418,7 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
               <Text type="secondary" style={{ fontSize: 12 }}>
                 {t('tripPlan.approvedRoute.empty', { defaultValue: 'Chưa có thông tin tuyến được duyệt cho đơn này.' })}
               </Text>
-            )}
+            ))}
           </Card>
         )}
 
@@ -1245,17 +1474,22 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
             {
               title: t('tripPlan.fields.address'),
               render: (_, c) => (
-                <Space.Compact style={{ width: '100%' }}>
-                  <Input size="small" maxLength={255} value={c.address} onChange={(e) => updateCheckpoint(c.key, { address: e.target.value })} />
-                  <Button
-                    size="small"
-                    type={placingKey === c.key ? 'primary' : 'default'}
-                    icon={<EnvironmentOutlined />}
-                    title="Chọn vị trí mốc trên bản đồ"
-                    onClick={() => setPlacingKey((k) => (k === c.key ? null : c.key))}
-                    danger={c.latitude == null && placingKey !== c.key}
-                  />
-                </Space.Compact>
+                <CheckpointAddressInput
+                  value={c.address}
+                  hasCoords={c.latitude != null}
+                  placing={placingKey === c.key}
+                  onPlacingToggle={() => setPlacingKey((k) => (k === c.key ? null : c.key))}
+                  onChangeText={(val) => updateCheckpoint(c.key, { address: val })}
+                  onSelectPlace={(place) => {
+                    updateCheckpoint(c.key, {
+                      address: place.displayName,
+                      latitude: place.lat,
+                      longitude: place.lng,
+                      ...(c.checkpointName?.trim() ? {} : { checkpointName: place.displayName.split(',')[0].trim() }),
+                    });
+                    if (placingKey === c.key) setPlacingKey(null);
+                  }}
+                />
               ),
             },
             {
@@ -1286,9 +1520,34 @@ export default function TripPlanEditor({ trip, queue, preselected = [], onSaved,
             },
             {
               title: '',
-              width: 40,
-              render: (_, c) => (
-                <Button size="small" type="text" danger icon={<DeleteOutlined />} onClick={() => setCheckpoints((prev) => prev.filter((x) => x.key !== c.key))} />
+              width: 110,
+              render: (_, c, idx) => (
+                <Space size={2}>
+                  <Button
+                    size="small"
+                    type="text"
+                    icon={<ArrowUpOutlined />}
+                    disabled={idx === 0}
+                    title="Chuyển mốc lên trên"
+                    onClick={() => moveCheckpoint(idx, -1)}
+                  />
+                  <Button
+                    size="small"
+                    type="text"
+                    icon={<ArrowDownOutlined />}
+                    disabled={idx === checkpoints.length - 1}
+                    title="Chuyển mốc xuống dưới"
+                    onClick={() => moveCheckpoint(idx, 1)}
+                  />
+                  <Button
+                    size="small"
+                    type="text"
+                    danger
+                    icon={<DeleteOutlined />}
+                    title="Xóa mốc"
+                    onClick={() => setCheckpoints((prev) => prev.filter((x) => x.key !== c.key))}
+                  />
+                </Space>
               ),
             },
           ]}

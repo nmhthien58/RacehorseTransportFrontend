@@ -495,6 +495,33 @@ export default function BookingDetailPage() {
                       render: (sc) => <Tag style={{ margin: 0 }}>{sc || 'Shared'}</Tag>,
                     },
                     {
+                      title: t('quote.agreedValue', 'Giá trị khai báo'),
+                      dataIndex: 'declaredValue',
+                      key: 'declaredValue',
+                      render: (v, r) => (
+                        <Space direction="vertical" size={2}>
+                          <Text strong>
+                            {v != null ? `$${Number(v).toLocaleString('en-US')}` : '—'}
+                          </Text>
+                          {r.agreedValue != null && Number(r.agreedValue) !== Number(v) && (
+                            <Text type="secondary" style={{ fontSize: 11 }}>
+                              Chốt: ${Number(r.agreedValue).toLocaleString('en-US')}
+                            </Text>
+                          )}
+                        </Space>
+                      ),
+                    },
+                    {
+                      title: t('quote.insurance', 'Bảo hiểm'),
+                      dataIndex: 'insurancePlan',
+                      key: 'insurancePlan',
+                      render: (plan) => (
+                        <Tag color={plan === 'Full' ? 'green' : 'default'} style={{ margin: 0 }}>
+                          {plan === 'Full' ? 'Bảo hiểm Full' : 'Không'}
+                        </Tag>
+                      ),
+                    },
+                    {
                       title: t('manager.bookings.modals.horseNotes'),
                       dataIndex: 'notes',
                       key: 'notes',

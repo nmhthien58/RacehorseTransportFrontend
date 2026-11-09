@@ -31,8 +31,8 @@ export const bookingService = {
    * @param {{ customerUserId?: number, status?: string, search?: string, sort?: string, page?: number, size?: number }} [params]
    * @returns {Promise<{ data: import('../types/database').Booking[], pagination?: any }>}
    */
-  async getBookings(params) {
-    return api.get(ENDPOINTS.BOOKINGS.LIST, { params });
+  async getBookings(params = {}) {
+    return api.get(ENDPOINTS.BOOKINGS.LIST, { params: { size: 100, ...params } });
   },
 
   /**

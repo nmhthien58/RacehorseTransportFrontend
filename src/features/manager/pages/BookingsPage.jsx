@@ -1,6 +1,7 @@
 // Đang sửa BookingsPage vì cập nhật thống kê đơn chờ duyệt và cấu hình thanh toán
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
+  Alert,
   Button,
   Card,
   Col,
@@ -32,6 +33,8 @@ import { unwrapList } from '@utils/apiHelpers';
 import StatusTag from '@components/common/StatusTag';
 import bookingService from '@services/bookingService';
 import userService from '@services/userService';
+import routePlanService from '@services/routePlanService';
+import tripService from '@services/tripService';
 import { BOOKING_STATUS, TRANSPORT_MODE } from '@utils/constants';
 import { formatBookingCost } from '@utils/bookingCost';
 
@@ -52,6 +55,7 @@ export default function ManagerBookings({ isDashboardView = false }) {
   // Dữ liệu danh sách đơn và chuyên viên
   const [bookings, setBookings] = useState([]);
   const [specialists, setSpecialists] = useState([]);
+  const [pendingTrips, setPendingTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -98,13 +102,43 @@ export default function ManagerBookings({ isDashboardView = false }) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [bookingsRes, staffRes] = await Promise.all([
-          bookingService.getBookings(),
+        const [bookingsRes, staffRes, pendingTripsRes] = await Promise.all([
+          bookingService.getBookings({ size: 100, sort: '-createdAt' }),
           userService.getStaff('TransportSpecialist').catch(() => null),
+          tripService.getTrips({ status: 'PendingApproval', size: 50 }).catch(() => null),
         ]);
         if (active) {
           const list = unwrapList(bookingsRes);
-          setBookings(Array.isArray(list) ? list : []);
+          const rawBookings = Array.isArray(list) ? list : [];
+          setPendingTrips(unwrapList(pendingTripsRes));
+
+          // Các đơn PreApproved có thể đã được Coordinator trình duyệt tuyến (chờ duyệt tuyến)
+          const preApproved = rawBookings.filter((b) => (b.status || b.Status) === 'PreApproved');
+          let submittedMap = new Set();
+          if (preApproved.length > 0) {
+            try {
+              const checks = await Promise.all(
+                preApproved.map(async (b) => {
+                  const id = b.bookingId || b.BookingID;
+                  const plans = unwrapList(await routePlanService.getForBooking(id).catch(() => []));
+                  return plans.some((p) => p.status === 'Submitted') ? id : null;
+                }),
+              );
+              submittedMap = new Set(checks.filter(Boolean));
+            } catch {
+              // Bỏ qua lỗi mạng nếu có
+            }
+          }
+
+          const enriched = rawBookings.map((b) => {
+            const id = b.bookingId || b.BookingID;
+            if (submittedMap.has(id)) {
+              return { ...b, effectiveStatus: 'RoutePlanned' };
+            }
+            return b;
+          });
+
+          setBookings(enriched);
           const staffList = unwrapList(staffRes);
           setSpecialists(Array.isArray(staffList) ? staffList : []);
         }
@@ -129,7 +163,7 @@ export default function ManagerBookings({ isDashboardView = false }) {
   // Thống kê 4 chỉ số tổng quan tối giản
   const stats = useMemo(() => {
     const total = bookings.length;
-    const getStatus = (b) => b?.status || b?.Status || '';
+    const getStatus = (b) => b?.effectiveStatus || b?.status || b?.Status || '';
     const pending = bookings.filter((b) => {
       const s = getStatus(b);
       return (
@@ -161,7 +195,7 @@ export default function ManagerBookings({ isDashboardView = false }) {
   const filteredBookings = useMemo(() => {
     return bookings.filter((item) => {
       // 1. Lọc theo trạng thái
-      const bStatus = item.status || item.Status;
+      const bStatus = item.effectiveStatus || item.status || item.Status;
       if (statusFilter !== 'All' && bStatus !== statusFilter) {
         return false;
       }
@@ -340,7 +374,7 @@ export default function ManagerBookings({ isDashboardView = false }) {
       key: 'status',
       width: 120,
       align: 'center',
-      render: (status) => <StatusTag status={status} />,
+      render: (status, record) => <StatusTag status={record.effectiveStatus || status} />,
     },
     {
       title: t('manager.bookings.columns.specialist'),
@@ -416,6 +450,46 @@ export default function ManagerBookings({ isDashboardView = false }) {
         ))}
       </Row>
 
+      {/* Banner thông báo Chuyến đi chờ duyệt */}
+      {pendingTrips.length > 0 && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{
+            marginBottom: 16,
+            borderRadius: 12,
+            border: '1px solid #fed7aa',
+            backgroundColor: '#fffbeb',
+          }}
+          message={
+            <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
+              <div>
+                <Text strong style={{ color: '#b45309', fontSize: 13.5 }}>
+                  Có {pendingTrips.length} kế hoạch chuyến đi đang chờ bạn phê duyệt
+                </Text>
+                <div style={{ fontSize: 12, color: '#92400e', marginTop: 2 }}>
+                  Mã chuyến: {pendingTrips.map((tr) => tr.tripCode || `#${tr.tripId}`).join(', ')}
+                  {pendingTrips.some((tr) => tr.horses?.length > 0) &&
+                    ` · Bao gồm ${pendingTrips.reduce((acc, tr) => acc + (tr.horses?.length || 0), 0)} cá thể ngựa`}
+                </div>
+              </div>
+              <Button
+                type="primary"
+                size="small"
+                style={{
+                  backgroundColor: '#d97706',
+                  borderColor: '#d97706',
+                  fontWeight: 600,
+                }}
+                onClick={() => navigate('/manager/route-approvals?tab=tripPlans')}
+              >
+                Phê duyệt chuyến đi ngay →
+              </Button>
+            </Flex>
+          }
+        />
+      )}
+
       {/* 3. KHỐI BỘ LỌC TỔNG HỢP GỌN GÀNG, KHÔNG ICON THỪA */}
       <Card
         bordered
@@ -438,11 +512,11 @@ export default function ManagerBookings({ isDashboardView = false }) {
                 value: BOOKING_STATUS.SUBMITTED,
               },
               {
-                label: `${t('status.preApproved', 'Chờ lập tuyến')} (${bookings.filter((b) => (b.status || b.Status) === 'PreApproved').length})`,
+                label: `${t('status.preApproved', 'Chờ lập tuyến')} (${bookings.filter((b) => (b.effectiveStatus || b.status || b.Status) === 'PreApproved').length})`,
                 value: 'PreApproved',
               },
               {
-                label: `${t('status.routePlanned', 'Chờ duyệt tuyến')} (${bookings.filter((b) => (b.status || b.Status) === 'RoutePlanned').length})`,
+                label: `${t('status.routePlanned', 'Chờ duyệt tuyến')} (${bookings.filter((b) => (b.effectiveStatus || b.status || b.Status) === 'RoutePlanned').length})`,
                 value: 'RoutePlanned',
               },
               {

@@ -59,6 +59,18 @@ function getExpiryText(createdAt) {
 }
 
 /**
+ * Tính phần trăm thời gian còn lại (100% khi mới tạo, giảm dần về 0% khi hết hạn 48h).
+ * @param {string} createdAt
+ * @returns {number}
+ */
+function getExpiryPercent(createdAt) {
+  if (!createdAt) return 0;
+  const minutesLeft = dayjs(createdAt).add(EXPIRY_HOURS, 'hour').diff(dayjs(), 'minute');
+  if (minutesLeft <= 0) return 0;
+  return Math.min(100, Math.max(2, Math.round((minutesLeft / (EXPIRY_HOURS * 60)) * 100)));
+}
+
+/**
  * Trang Pending Requests dành cho Quản lý / Admin
  * - Hiển thị danh sách các yêu cầu vận chuyển đang chờ duyệt (nhiều hơn)
  * - Khi bấm vào từng đơn sẽ chuyển sang xem Full Detail ngay trên trang
@@ -586,10 +598,48 @@ export default function PendingRequestsPage() {
                       render: (s) => <Tag style={{ margin: 0 }}>{s || '—'}</Tag>,
                     },
                     {
-                      title: 'NOTES',
-                      dataIndex: 'notes',
-                      key: 'notes',
-                      render: (n) => <span style={{ fontSize: 13, color: '#475569' }}>{n || '—'}</span>,
+                      title: 'DECLARED VALUE',
+                      dataIndex: 'declaredValue',
+                      key: 'declaredValue',
+                      render: (v, r) => (
+                        <Space direction="vertical" size={2}>
+                          <Text strong style={{ fontSize: 13, color: '#0f172a' }}>
+                            {v != null ? `$${Number(v).toLocaleString('en-US')}` : '—'}
+                          </Text>
+                          {r.valueProofUrl && (
+                            <a
+                              href={r.valueProofUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                fontSize: 11,
+                                color: '#2563eb',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 3,
+                              }}
+                            >
+                              <FilePdfOutlined /> Chứng từ
+                            </a>
+                          )}
+                        </Space>
+                      ),
+                    },
+                    {
+                      title: 'INSURANCE',
+                      dataIndex: 'insurancePlan',
+                      key: 'insurancePlan',
+                      render: (plan) => {
+                        const isFull = plan === 'Full';
+                        return (
+                          <Tag
+                            color={isFull ? 'green' : 'default'}
+                            style={{ margin: 0, fontWeight: 600 }}
+                          >
+                            {isFull ? 'Bảo hiểm Full' : 'Cơ bản (None)'}
+                          </Tag>
+                        );
+                      },
                     },
                     {
                       title: 'MICROCHIP',
@@ -600,6 +650,12 @@ export default function PendingRequestsPage() {
                           {m || '—'}
                         </span>
                       ),
+                    },
+                    {
+                      title: 'NOTES',
+                      dataIndex: 'notes',
+                      key: 'notes',
+                      render: (n) => <span style={{ fontSize: 13, color: '#475569' }}>{n || '—'}</span>,
                     },
                   ]}
                 />
@@ -746,22 +802,18 @@ export default function PendingRequestsPage() {
                     marginBottom: 16,
                   }}
                 >
-                  <Flex align="center" gap={8} style={{ marginBottom: 4 }}>
+                  <Flex align="center" gap={8} style={{ marginBottom: 6 }}>
                     <ClockCircleOutlined style={{ color: '#d97706', fontSize: 14 }} />
                     <Text strong style={{ fontSize: 13, color: '#b45309' }}>
                       {getExpiryText(activeBooking.createdAt)}
                     </Text>
                   </Flex>
-                  <Text type="secondary" style={{ fontSize: 11, color: '#92400e', display: 'block' }}>
-                    {t('manager.pendingRequests.slaWindow')}
-                  </Text>
                   <Progress
-                    percent={75}
+                    percent={getExpiryPercent(activeBooking.createdAt)}
                     showInfo={false}
                     strokeColor="#f59e0b"
                     trailColor="#fde68a"
                     size="small"
-                    style={{ marginTop: 8 }}
                   />
                 </div>
 

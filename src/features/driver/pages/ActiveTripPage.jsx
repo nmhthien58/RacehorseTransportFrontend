@@ -84,7 +84,10 @@ export default function ActiveTripPage() {
   const handleReportSOS = async (incidentData) => {
     if (!activeTrip) return false;
     try {
-      await driverService.reportIncident(activeTrip.tripId, incidentData);
+      const res = await driverService.reportIncident(activeTrip.tripId, incidentData);
+      if (res?.attachmentFailed) {
+        message.warning('Đã gửi sự cố nhưng chưa đính kèm được tệp. Hãy tải tệp lên lại trong mục sự cố của chuyến.');
+      }
       refresh();
       return true;
     } catch (err) {

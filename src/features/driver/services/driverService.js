@@ -150,10 +150,15 @@ export const driverService = {
   async reportIncident(tripId, incidentData) {
     const { attachment, ...body } = incidentData;
     const res = await api.post(ENDPOINTS.INCIDENTS.CREATE_FOR_TRIP(tripId), body);
-    // Ảnh hiện trường / biên bản thú y kèm lúc báo: đính kèm vào sự cố vừa tạo
+    // Ảnh hiện trường / biên bản thú y kèm lúc báo: đính kèm vào sự cố vừa tạo.
+    // Sự cố đã lưu rồi nên tải tệp lỗi không được ném lỗi ra ngoài: người dùng sẽ bấm gửi lại và tạo trùng sự cố.
     if (attachment?.file) {
       const created = unwrapData(res);
-      await incidentService.uploadDocument(created.incidentId, attachment);
+      try {
+        await incidentService.uploadDocument(created.incidentId, attachment);
+      } catch {
+        return { ...res, attachmentFailed: true };
+      }
     }
     return res;
   },

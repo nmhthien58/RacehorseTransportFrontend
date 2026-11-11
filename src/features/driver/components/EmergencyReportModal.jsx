@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Modal, Form, Select, Input, Typography, Button, Checkbox, Upload, message } from 'antd';
 import { AimOutlined, UploadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
@@ -100,6 +100,8 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
   const { t } = useTranslation();
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
+  // Khóa đồng bộ: state `submitting` chỉ cập nhật ở lần render sau, nên chạm nhanh 2-3 lần vẫn lọt qua và tạo trùng sự cố
+  const submittingRef = useRef(false);
   const [fileList, setFileList] = useState([]);
   // Vị trí lấy từ GPS của thiết bị: 'idle' | 'locating' | 'ok' | 'error'
   const [geoStatus, setGeoStatus] = useState('idle');
@@ -130,10 +132,13 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
   };
 
   const handleSubmit = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     let values;
     try {
       values = await form.validateFields();
     } catch {
+      submittingRef.current = false;
       return;
     }
     setSubmitting(true);
@@ -157,6 +162,7 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
         onClose();
       }
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };

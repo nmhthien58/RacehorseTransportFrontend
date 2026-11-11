@@ -234,7 +234,10 @@ export function useMissionDetail(tripId) {
   const reportIncident = async (incidentData) => {
     setActionLoading(true);
     try {
-      await driverService.reportIncident(tripId, incidentData);
+      const res = await driverService.reportIncident(tripId, incidentData);
+      if (res?.attachmentFailed) {
+        message.warning('Đã gửi sự cố nhưng chưa đính kèm được tệp. Hãy tải tệp lên lại trong mục sự cố của chuyến.');
+      }
       fetchMission();
       return true;
     } catch (err) {

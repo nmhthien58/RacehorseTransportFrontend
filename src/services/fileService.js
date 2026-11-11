@@ -1,4 +1,5 @@
 import api from './api';
+import { prepareUploadFile } from '@utils/uploadFile';
 import { ENDPOINTS } from './endpoints';
 
 /**
@@ -15,7 +16,7 @@ export const fileService = {
    */
   async upload(file, category) {
     const form = new FormData();
-    form.append('file', file);
+    form.append('file', await prepareUploadFile(file));
     form.append('category', category);
     return api.post(ENDPOINTS.FILES.UPLOAD, form, { headers: { 'Content-Type': 'multipart/form-data' } });
   },

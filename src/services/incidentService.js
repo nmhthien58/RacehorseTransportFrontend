@@ -1,5 +1,4 @@
 import api from './api';
-import { prepareUploadFile } from '@utils/uploadFile';
 import { ENDPOINTS } from './endpoints';
 
 // Instance mặc định là JSON: ghi đè để axios gửi đúng multipart
@@ -116,7 +115,7 @@ export const incidentService = {
     const form = new FormData();
     form.append('documentType', documentType);
     if (note) form.append('note', note);
-    form.append('file', await prepareUploadFile(file));
+    form.append('file', file);
     return api.post(ENDPOINTS.INCIDENTS.DOCUMENTS(id), form, MULTIPART);
   },
 
@@ -138,7 +137,7 @@ export const incidentService = {
   /** Ngựa chết khi đang điều trị tại phòng khám (kèm giấy chứng tử) */
   async recordPostOffloadDeath(tripId, tripHorseId, { file, note }) {
     const form = new FormData();
-    form.append('file', await prepareUploadFile(file));
+    form.append('file', file);
     if (note) form.append('note', note);
     return api.post(ENDPOINTS.INCIDENTS.POST_OFFLOAD_DEATH(tripId, tripHorseId), form, MULTIPART);
   },

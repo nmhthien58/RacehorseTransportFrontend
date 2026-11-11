@@ -17,6 +17,15 @@ const isJpegOrPng = (file) =>
   ['image/jpeg', 'image/png'].includes(file.type) || ['jpg', 'jpeg', 'png'].includes(extensionOf(file.name));
 const isImage = (file) => file.type.startsWith('image/') || ['heic', 'heif', 'webp', 'gif', 'bmp'].includes(extensionOf(file.name));
 
+// Định dạng thật đọc từ vài byte đầu: ảnh lưu từ web hay là WEBP nhưng đặt đuôi .jpg, backend kiểm tra nội dung nên từ chối
+async function sniffType(file) {
+  const b = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'jpeg';
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return 'png';
+  if (b[0] === 0x25 && b[1] === 0x50 && b[2] === 0x44 && b[3] === 0x46) return 'pdf';
+  return 'other';
+}
+
 const uploadError = (userMessage) => Object.assign(new Error(userMessage), { userMessage });
 
 /** Giải mã ảnh bằng trình duyệt; định dạng trình duyệt không đọc được (HEIC trên Chrome / Android) thì lỗi */
@@ -61,7 +70,10 @@ async function toJpeg(file) {
 export async function prepareUploadFile(file) {
   if (!file) return file;
 
+  const actual = await sniffType(file);
+
   if (isPdf(file)) {
+    if (actual !== 'pdf') throw uploadError('Tệp PDF bị hỏng hoặc không phải PDF thật.');
     if (file.size > MAX_UPLOAD_BYTES) throw uploadError('Tệp PDF quá lớn (tối đa 10 MB).');
     return file;
   }
@@ -70,7 +82,10 @@ export async function prepareUploadFile(file) {
     throw uploadError('Chỉ nhận ảnh (JPG, PNG) hoặc tệp PDF.');
   }
 
-  if (isJpegOrPng(file) && file.size <= KEEP_ORIGINAL_BYTES) return file;
+  // Đuôi .jpg/.png phải khớp nội dung thật thì mới gửi nguyên bản
+  const genuine = (actual === 'jpeg' || actual === 'png') && isJpegOrPng(file)
+    && (actual === 'png') === (extensionOf(file.name) === 'png');
+  if (genuine && file.size <= KEEP_ORIGINAL_BYTES) return file;
 
   try {
     const converted = await toJpeg(file);
@@ -79,7 +94,7 @@ export async function prepareUploadFile(file) {
   } catch (err) {
     if (err.userMessage) throw err;
     // Ảnh JPG/PNG gốc vẫn gửi được nếu không quá 10 MB
-    if (isJpegOrPng(file) && file.size <= MAX_UPLOAD_BYTES) return file;
+    if (genuine && file.size <= MAX_UPLOAD_BYTES) return file;
     throw uploadError('Không đọc được ảnh này (ví dụ ảnh HEIC). Hãy chọn ảnh JPG / PNG hoặc chụp lại ở chế độ "Tương thích nhất".');
   }
 }

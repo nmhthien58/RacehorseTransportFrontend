@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '@features/auth/store/authStore';
+import { prepareUploadFile } from '@utils/uploadFile';
 
 const isMock = import.meta.env.VITE_USE_MOCK !== 'false';
 
@@ -63,6 +64,19 @@ const getRefreshToken = () => {
   }
   return null;
 };
+
+// Request interceptor - chuẩn hóa mọi tệp gửi lên (backend chỉ nhận JPG / PNG / PDF thật, tối đa 10 MB):
+// ảnh WEBP / HEIC / đổi đuôi / quá nặng được đổi sang JPEG, tệp không dùng được báo lỗi rõ thay vì 400 khó hiểu
+api.interceptors.request.use(async (config) => {
+  if (config.data instanceof FormData) {
+    const form = new FormData();
+    for (const [key, value] of config.data.entries()) {
+      form.append(key, value instanceof File ? await prepareUploadFile(value) : value);
+    }
+    config.data = form;
+  }
+  return config;
+});
 
 // Request interceptor - tự động gắn token
 api.interceptors.request.use(

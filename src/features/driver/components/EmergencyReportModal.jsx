@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Modal, Form, Select, Input, Typography, Button, Checkbox, Upload, message } from 'antd';
 import { AimOutlined, UploadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import { prepareUploadFile } from '@utils/uploadFile';
 import { INCIDENT_TYPES, INCIDENT_SEVERITIES, SEVERITY_CONFIG, formatCoordinates, mapLinkOf } from '@utils/incidents';
 
 const { Text } = Typography;
@@ -108,6 +109,18 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
   const [geoError, setGeoError] = useState('');
   const location = Form.useWatch('location', form);
   const incidentType = Form.useWatch('incidentType', form);
+
+  /** Ảnh WEBP / HEIC / quá nặng được đổi sang JPEG ngay lúc chọn; tệp không dùng được thì báo luôn */
+  const pickFile = async (file) => {
+    try {
+      const ready = await prepareUploadFile(file);
+      ready.uid = file.uid;
+      setFileList([ready]);
+    } catch (err) {
+      setFileList([]);
+      message.error(err.userMessage || err.message);
+    }
+  };
 
   /** Lấy tọa độ hiện tại của thiết bị và điền vào ô Vị trí (không cho gõ tay). */
   const locate = () => {
@@ -298,7 +311,7 @@ export default function EmergencyReportModal({ open, onClose, tripCode, horses =
             accept="image/*,.pdf"
             fileList={fileList}
             beforeUpload={(file) => {
-              setFileList([file]);
+              pickFile(file);
               return false;
             }}
             onRemove={() => setFileList([])}

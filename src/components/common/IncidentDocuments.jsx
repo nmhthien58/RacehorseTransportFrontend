@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import incidentService from '@services/incidentService';
 import { getErrorMessage } from '@utils/apiHelpers';
 import { INCIDENT_DOCUMENT_TYPES, DOCUMENT_TYPE_COLOR } from '@utils/incidents';
+import { prepareUploadFile } from '@utils/uploadFile';
 
 const { Text } = Typography;
 
@@ -32,6 +33,18 @@ export default function IncidentDocuments({ incident, canUpload = false, types =
   const documents = incident?.documents || [];
   // Phương án đã duyệt / đã đóng thì tài liệu giữ làm bằng chứng (backend chặn xóa)
   const locked = incident?.status === 'Approved' || incident?.status === 'Resolved';
+
+  /** Ảnh WEBP / HEIC / quá nặng được đổi sang JPEG ngay lúc chọn; tệp không dùng được thì báo luôn */
+  const pickFile = async (file) => {
+    try {
+      const ready = await prepareUploadFile(file);
+      ready.uid = file.uid;
+      setFileList([ready]);
+    } catch (err) {
+      setFileList([]);
+      message.error(err.userMessage || err.message);
+    }
+  };
 
   const handleUpload = async () => {
     let values;
@@ -133,7 +146,7 @@ export default function IncidentDocuments({ incident, canUpload = false, types =
               accept="image/*,.pdf"
               fileList={fileList}
               beforeUpload={(file) => {
-                setFileList([file]);
+                pickFile(file);
                 return false;
               }}
               onRemove={() => setFileList([])}
